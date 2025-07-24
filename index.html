@@ -196,16 +196,20 @@
       const id = `quiz-${timestamp}`;
       localStorage.setItem(id, JSON.stringify(quizData));
 
+      const shortId = btoa(id).slice(0, 8); // base64-like short ID
+      const shortLink = `${location.origin}${location.pathname.replace(/\/[^\/]*$/, '')}/generate-quiz.html?id=${id}`;
       const link = `${location.origin}${location.pathname.replace(/\/[^\/]*$/, '')}/generate-quiz.html?id=${id}`;
 
-      const quizItem = document.createElement('div');
-      quizItem.className = 'quiz-item';
-      quizItem.innerHTML = `
-        <button onclick="window.open('${link}', '_blank')">Open</button>
-        <span>${title}</span>
-        <span id="${id}-status"></span>
-      `;
-      document.getElementById('generatedQuizzes').appendChild(quizItem);
+ // Display the link with buttons
+  const quizItem = document.createElement('div');
+  quizItem.className = 'quiz-item';
+  quizItem.innerHTML = `
+    <button onclick="window.open('${shortLink}', '_blank')">🔓 Open</button>
+    <button onclick="copyLink('${shortLink}')">🔗 Copy Link</button>
+    <span>${title}</span>
+    <span id="${id}-status"></span>
+  `;
+  document.getElementById('generatedQuizzes').appendChild(quizItem);
 
       // Expiry countdown
       const interval = setInterval(() => {
