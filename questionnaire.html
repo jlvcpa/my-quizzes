@@ -139,6 +139,63 @@
       { topic: "Art", question: "Painter of Mona Lisa?", options: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], answer: "Da Vinci" }
     ];
 
+    // 🧾 Activity log storage
+const activityLog = [];
+let inactivityTimer;
+let warningTimer;
+let warningCountdown = 60; // seconds
+
+function logActivity(message) {
+  const timestamp = new Date().toLocaleString();
+  activityLog.push({ time: timestamp, message });
+  localStorage.setItem('activityLog', JSON.stringify(activityLog));
+}
+
+// 🧠 Reset inactivity timer
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  clearInterval(warningTimer);
+  warningCountdown = 60;
+
+  inactivityTimer = setTimeout(() => {
+    showInactivityWarning();
+  }, 2 * 60 * 1000); // 2 minutes before warning
+}
+
+// 🔔 Show warning before refresh
+function showInactivityWarning() {
+  logActivity("⚠️ Inactivity warning triggered");
+
+  warningTimer = setInterval(() => {
+    if (warningCountdown <= 0) {
+      clearInterval(warningTimer);
+      logActivity("⏱️ Quiz refreshed due to inactivity");
+      alert("Quiz is now refreshing due to inactivity.");
+      location.reload();
+    } else {
+      alert(`⚠️ You’ve been inactive. Quiz will refresh in ${warningCountdown} seconds.`);
+      warningCountdown -= 15; // alert every 15 seconds
+    }
+  }, 15 * 1000);
+}
+
+// 🎯 Events that count as activity
+['keydown', 'click', 'touchstart', 'mousemove'].forEach(event => {
+  document.addEventListener(event, () => {
+    logActivity(`🟢 ${event} detected`);
+    resetInactivityTimer();
+  });
+});
+
+// ⏱️ Start tracking
+resetInactivityTimer();
+
+// 📜 Disclosure (optional)
+window.addEventListener('load', () => {
+  alert("📢 This quiz monitors keyboard, touch, and inactivity. If inactive for 3 minutes, it will refresh automatically.");
+  logActivity("📢 Disclosure shown to student");
+});
+    
     const selectedQuestions = questionBank
       .filter(q => quizData.topics.includes(q.topic))
       .sort(() => 0.5 - Math.random())
