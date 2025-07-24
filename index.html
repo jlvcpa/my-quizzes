@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <title>New Quiz Creation</title>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
-  <script>
+  <!-- Firebase Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
       authDomain: "jlvcpa-quizzes.firebaseapp.com",
@@ -17,8 +18,13 @@
       appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Expose Firestore globally
+    window.db = db;
+    window.setDoc = setDoc;
+    window.doc = doc;
   </script>
 
   <style>
@@ -224,60 +230,70 @@
       });
     }
 
-    function generateQuiz() {
+    async function generateQuiz() {
       const title = document.getElementById('quizTitle').value.trim();
       const section = document.getElementById('gradeSection').value.trim();
       const type = document.getElementById('testType').value.trim();
       const time = parseInt(document.getElementById('timeLimit').value);
       const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
       const num = parseInt(document.getElementById('numQuestions').value);
-      const instructions = document.getElementById('instructions').value.trim();
+      const instructions = document.getElementById('instructions').
+            const instructions = document.getElementById('instructions').value.trim();
       const rubricHTML = document.getElementById('rubricTable').outerHTML;
       const timestamp = Date.now();
       const expiry = timestamp + 5 * 60 * 1000;
 
       const quizData = {
-        title, section, type, time, topics, num, instructions, rubric: rubricHTML, timestamp, expiry
+        title,
+        section,
+        type,
+        time,
+        topics,
+        num,
+        instructions,
+        rubric: rubricHTML,
+        timestamp,
+        expiry
       };
+
       const id = `quiz-${timestamp}`;
+      const quizRef = doc(window.db, "quizzes", id);
 
-      db.collection("quizzes").doc(id).set(quizData)
-        .then(() => {
-          console.log("✅ Quiz saved to Firebase");
+      try {
+        await window.setDoc(quizRef, quizData);
+        console.log("✅ Quiz saved to Firebase");
 
-          const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
-          const quizLink = `${basePath}/generate-quiz.html?id=${encodeURIComponent(id)}`;
+        const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
+        const quizLink = `${basePath}/generate-quiz.html?id=${encodeURIComponent(id)}`;
 
-          const quizItem = document.createElement('div');
-          quizItem.className = 'quiz-item';
-          quizItem.innerHTML = `
-            <button onclick="window.open('${quizLink}', '_blank')">🔓 Open</button>
-            <button onclick="copyLink('${quizLink}')">🔗 Copy Link</button>
-            <span>${title}</span>
-            <span id="${id}-status"></span>
-          `;
-          document.getElementById('generatedQuizzes').appendChild(quizItem);
+        const quizItem = document.createElement('div');
+        quizItem.className = 'quiz-item';
+        quizItem.innerHTML = `
+          <button onclick="window.open('${quizLink}', '_blank')">🔓 Open</button>
+          <button onclick="copyLink('${quizLink}')">🔗 Copy Link</button>
+          <span>${title}</span>
+          <span id="${id}-status"></span>
+        `;
+        document.getElementById('generatedQuizzes').appendChild(quizItem);
 
-          const interval = setInterval(() => {
-            const now = Date.now();
-            const status = document.getElementById(`${id}-status`);
-            if (now > expiry) {
-              status.textContent = '⏱️ Expired';
-              status.className = 'expired';
-              clearInterval(interval);
-            } else {
-              const remaining = Math.ceil((expiry - now) / 1000);
-              status.textContent = `⏳ Expires in ${remaining}s`;
-            }
-          }, 1000);
-        })
-        .catch(error => {
-          console.error("❌ Error saving quiz:", error);
-          alert("Failed to save quiz to Firebase.");
-        });
+        const interval = setInterval(() => {
+          const now = Date.now();
+          const status = document.getElementById(`${id}-status`);
+          if (now > expiry) {
+            status.textContent = '⏱️ Expired';
+            status.className = 'expired';
+            clearInterval(interval);
+          } else {
+            const remaining = Math.ceil((expiry - now) / 1000);
+            status.textContent = `⏳ Expires in ${remaining}s`;
+          }
+        }, 1000);
+      } catch (error) {
+        console.error("❌ Error saving quiz:", error);
+        alert("Failed to save quiz to Firebase.");
+      }
     }
   </script>
 
 </body>
 </html>
-     
