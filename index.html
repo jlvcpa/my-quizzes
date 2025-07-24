@@ -240,7 +240,40 @@
       };
 
       const id = `quiz-${timestamp}`;
-      localStorage.setItem(id, JSON.stringify(quizData));
+      db.collection("quizzes").doc(id).set(quizData)
+  .then(() => {
+    console.log("✅ Quiz saved to Firebase");
+
+    const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
+    const quizLink = `${basePath}/generate-quiz.html?id=${encodeURIComponent(id)}`;
+
+    const quizItem = document.createElement('div');
+    quizItem.className = 'quiz-item';
+    quizItem.innerHTML = `
+      <button onclick="window.open('${quizLink}', '_blank')">🔓 Open</button>
+      <button onclick="copyLink('${quizLink}')">🔗 Copy Link</button>
+      <span>${title}</span>
+      <span id="${id}-status"></span>
+    `;
+    document.getElementById('generatedQuizzes').appendChild(quizItem);
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const status = document.getElementById(`${id}-status`);
+      if (now > expiry) {
+        status.textContent = '⏱️ Expired';
+        status.className = 'expired';
+        clearInterval(interval);
+      } else {
+        const remaining = Math.ceil((expiry - now) / 1000);
+        status.textContent = `⏳ Expires in ${remaining}s`;
+      }
+    }, 1000);
+  })
+  .catch(error => {
+    console.error("❌ Error saving quiz:", error);
+    alert("Failed to save quiz to Firebase.");
+  });
 
       const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
       const quizLink = `${basePath}/generate-quiz.html?id=${encodeURIComponent(id)}`;
