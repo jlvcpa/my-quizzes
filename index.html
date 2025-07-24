@@ -237,8 +237,7 @@
       const time = parseInt(document.getElementById('timeLimit').value);
       const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
       const num = parseInt(document.getElementById('numQuestions').value);
-      const instructions = document.getElementById('instructions').
-            const instructions = document.getElementById('instructions').value.trim();
+      const instructions = document.getElementById('instructions').value.trim();
       const rubricHTML = document.getElementById('rubricTable').outerHTML;
       const timestamp = Date.now();
       const expiry = timestamp + 5 * 60 * 1000;
@@ -257,12 +256,10 @@
       };
 
       const id = `quiz-${timestamp}`;
-      const quizRef = doc(window.db, "quizzes", id);
+      const quizRef = window.doc(window.db, "quizzes", id);
 
       try {
         await window.setDoc(quizRef, quizData);
-        console.log("✅ Quiz saved to Firebase");
-
         const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
         const quizLink = `${basePath}/generate-quiz.html?id=${encodeURIComponent(id)}`;
 
@@ -293,6 +290,10 @@
         alert("Failed to save quiz to Firebase.");
       }
     }
+
+    // ✅ Expose functions to global scope
+    window.generateQuiz = generateQuiz;
+    window.addRubricRow = addRubricRow;
   </script>
 
 </body>
