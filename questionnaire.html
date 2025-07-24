@@ -246,155 +246,152 @@
       }
     }
 
-function submitQuiz() {
-  clearInterval(timerInterval);
+    function submitQuiz() {
+      clearInterval(timerInterval);
 
-  let score = 0;
-  const answeredOrder = Object.keys(responses).map(i => parseInt(i));
-  const percentage = Math.round((answeredOrder.filter(i => responses[i] === selectedQuestions[i].answer).length / selectedQuestions.length) * 100);
-  let grade = '';
-  if (percentage >= 95) grade = 'A';
-  else if (percentage >= 85) grade = 'P';
-  else if (percentage >= 75) grade = 'D';
-  else grade = 'IR';
+      let score = 0;
+      const answeredOrder = Object.keys(responses).map(i => parseInt(i));
+      answeredOrder.forEach(i => {
+        if (responses[i] === selectedQuestions[i].answer) score++;
+      });
 
-  const resultWindow = window.open('', '_blank');
-  resultWindow.document.write(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>${quizData.title} - Completed Quiz</title>
-      <style>
-        body {
-          font-family: 'Segoe UI', sans-serif;
-          background: #fff;
-          padding: 20px;
-        }
-        h1, h2 {
-          text-align: center;
-          color: #2c3e50;
-        }
-        .header {
-          text-align: center;
-          margin-bottom: 20px;
-        }
-        .student-info {
-          display: flex;
-          justify-content: space-between;
-          font-weight: bold;
-          margin-bottom: 10px;
-        }
-        .grade-block {
-          text-align: right;
-          font-weight: bold;
-          font-size: 20px;
-          color: #007acc;
-        }
-        .score {
-          text-align: right;
-          font-size: 16px;
-          font-weight: bold;
-          color: #28a745;
-          margin-bottom: 10px;
-        }
-        .question-block {
-          background: #f9f9f9;
-          padding: 15px;
-          margin-bottom: 15px;
-          border-radius: 8px;
-          border-left: 5px solid #007acc;
-        }
-        .question-block h3 {
-          margin-top: 0;
-          color: #34495e;
-        }
-        .answer {
-          margin-top: 10px;
-          font-weight: bold;
-          color: #333;
-        }
-        .correct {
-          color: #28a745;
-        }
-        .incorrect {
-          color: #d9534f;
-        }
-        textarea {
-          width: 100%;
-          margin-top: 10px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        table, th, td {
-          border: 1px solid #ccc;
-          padding: 8px;
-          text-align: center;
-        }
-        .print-btn {
-          text-align: center;
-          margin-top: 20px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h2>${quizData.title}</h2>
-        <div class="grade-block">Grade: ${grade}</div>
-        <div class="score">Score: ${answeredOrder.filter(i => responses[i] === selectedQuestions[i].answer).length} / ${selectedQuestions.length} = ${percentage}%</div>
-      </div>
+      const percentage = Math.round((score / selectedQuestions.length) * 100);
+      let grade = '';
+      if (percentage >= 95) grade = 'A';
+      else if (percentage >= 85) grade = 'P';
+      else if (percentage >= 75) grade = 'D';
+      else grade = 'IR';
 
-      <div class="student-info">
-        <div>CN NO: ${cnNo}<br>Name: ${lastName}, ${firstName}</div>
-        <div>Grade Level and Section: ${quizData.section}</div>
-      </div>
-
-      <p><strong>Test Type:</strong> ${quizData.type}</p>
-      <p><strong>Instructions:</strong></p>
-      <textarea readonly rows="4">${quizData.instructions}</textarea>
-      ${quizData.rubric}
-
-      ${answeredOrder.map(i => {
-        const q = selectedQuestions[i];
-        const userAnswer = responses[i];
-        const isCorrect = userAnswer === q.answer;
-        return `
-          <div class="question-block">
-            <h3>Q${i + 1}: ${q.question}</h3>
-            <div class="answer ${isCorrect ? 'correct' : 'incorrect'}">
-              Answered: ${userAnswer} ${isCorrect ? '✔' : '❌'}<br>
-              Correct Answer: ${q.answer}
-            </div>
+      const resultWindow = window.open('', '_blank');
+      resultWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>${quizData.title} - Completed Quiz</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', sans-serif;
+              background: #fff;
+              padding: 20px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            .student-info {
+              display: flex;
+              justify-content: space-between;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .grade-block {
+              text-align: right;
+              font-weight: bold;
+              font-size: 20px;
+              color: #007acc;
+            }
+            .score {
+              text-align: right;
+              font-size: 16px;
+              font-weight: bold;
+              color: #28a745;
+              margin-bottom: 10px;
+            }
+            .question-block {
+              background: #f9f9f9;
+              padding: 15px;
+              margin-bottom: 15px;
+              border-radius: 8px;
+              border-left: 5px solid #007acc;
+            }
+            .question-block h3 {
+              margin-top: 0;
+              color: #34495e;
+            }
+            .answer {
+              margin-top: 10px;
+              font-weight: bold;
+              color: #333;
+            }
+            .correct {
+              color: #28a745;
+            }
+            .incorrect {
+              color: #d9534f;
+            }
+            textarea {
+              width: 100%;
+              margin-top: 10px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 10px;
+            }
+            table, th, td {
+              border: 1px solid #ccc;
+              padding: 8px;
+              text-align: center;
+            }
+            .print-btn {
+              text-align: center;
+              margin-top: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>${quizData.title}</h2>
+            <div class="grade-block">Grade: ${grade}</div>
+            <div class="score">Score: ${score} / ${selectedQuestions.length} = ${percentage}%</div>
           </div>
-        `;
-      }).join('')}
 
-      <div class="print-btn">
-        <button onclick="window.print()">🖨️ Print This Page</button>
-      </div>
-    </body>
-    </html>
-  `);
+          <div class="student-info">
+            <div>CN NO: ${cnNo}<br>Name: ${lastName}, ${firstName}</div>
+            <div>Grade Level and Section: ${quizData.section}</div>
+          </div>
 
-  resultWindow.document.close();
+          <p><strong>Test Type:</strong> ${quizData.type}</p>
+          <p><strong>Instructions:</strong></p>
+          <textarea readonly rows="4">${quizData.instructions}</textarea>
+          ${quizData.rubric}
 
-  // Save result for later access
-  const resultData = {
-    cnNo,
-    lastName,
-    firstName,
-    score,
-    percentage,
-    grade,
-    responses,
-    quizTitle: quizData.title,
-    timestamp: Date.now()
-  };
-  localStorage.setItem(`result-${studentId}`, JSON.stringify(resultData));
-}
+          ${answeredOrder.map(i => {
+            const q = selectedQuestions[i];
+            const userAnswer = responses[i];
+            const isCorrect = userAnswer === q.answer;
+            return `
+              <div class="question-block">
+                <h3>Q${i + 1}: ${q.question}</h3>
+                <div class="answer ${isCorrect ? 'correct' : 'incorrect'}">
+                  Answered: ${userAnswer} ${isCorrect ? '✔' : '❌'}<br>
+                  Correct Answer: ${q.answer}
+                </div>
+              </div>
+            `;
+          }).join('')}
+
+          <div class="print-btn">
+            <button onclick="window.print()">🖨️ Print This Page</button>
+          </div>
+        </body>
+        </html>
+      `);
+
+      resultWindow.document.close();
+
+      const resultData = {
+        cnNo,
+        lastName,
+        firstName,
+        score,
+        percentage,
+        grade,
+        responses,
+        quizTitle: quizData.title,
+        timestamp: Date.now()
+      };
 
       localStorage.setItem(`result-${studentId}`, JSON.stringify(resultData));
 
