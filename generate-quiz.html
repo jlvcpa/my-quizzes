@@ -226,10 +226,11 @@
           warningCountdown -= 15;
         }
       }, 15 * 1000);
-    }
+          }
 
+    // 🎯 Track activity events
     ['keydown', 'click', 'touchstart', 'mousemove'].forEach(event => {
-            document.addEventListener(event, () => {
+      document.addEventListener(event, () => {
         logActivity(`🟢 ${event} detected`);
         resetInactivityTimer();
       });
@@ -247,4 +248,3 @@
 
 </body>
 </html>
-                                
