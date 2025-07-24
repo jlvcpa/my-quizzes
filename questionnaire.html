@@ -87,6 +87,31 @@
       margin-bottom: 10px;
       font-style: italic;
     }
+
+    .rubric-block h3 {
+  margin-bottom: 10px;
+  color: #007acc;
+}
+
+.rubric-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.rubric-table th, .rubric-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+  vertical-align: top;
+  font-size: 14px;
+}
+
+.rubric-table thead {
+  background-color: #eef6fc;
+  font-weight: bold;
+}
+    
     .question-block h3 {
       margin-top: 0;
       color: #34495e;
@@ -196,7 +221,10 @@
       <p><strong>Instructions:</strong></p>
       <textarea readonly rows="4">${quizData.instructions}</textarea>
     </div>
-    <div class="rubric-block">${quizData.rubric}</div>
+    <div class="rubric-block">
+      <h3>Rubric</h3>
+      <div class="rubric-table">${quizData.rubric}</div>
+    </div>
   `;
 
   // 🧾 Activity log storage
