@@ -382,7 +382,9 @@ ${answeredOrder.map(i => {
       <h3>${i + 1}. ${q.question}</h3>
       ${optionsHTML}
       ${feedback}
-      <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
+
+      <!-- Explanation section hidden until content is available, errase the comment in /* and out */ to see it again -->
+      /*<div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>*/
     </div>
   `;
 }).join('')}
