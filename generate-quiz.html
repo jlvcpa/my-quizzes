@@ -25,6 +25,24 @@
     const params = new URLSearchParams(window.location.search);
     const quizId = params.get('id');
 
+    function populateQuizDetails(data) {
+      document.getElementById('quizTitleDisplay').textContent = data.title;
+      document.getElementById('gradeSectionDisplay').textContent = data.section;
+      document.getElementById('testTypeDisplay').textContent = data.type;
+      document.getElementById('timeLimitDisplay').textContent = data.time;
+      document.getElementById('topicsDisplay').textContent = data.topics.join(', ');
+      document.getElementById('instructionsDisplay').value = data.instructions;
+      document.getElementById('rubricDisplay').innerHTML = data.rubric;
+    }
+
+    function waitForDOMThenPopulate(data) {
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', () => populateQuizDetails(data));
+      } else {
+        populateQuizDetails(data);
+      }
+    }
+
     getDoc(doc(db, "quizzes", quizId))
       .then(docSnap => {
         if (!docSnap.exists()) {
@@ -40,16 +58,7 @@
           return;
         }
 
-        // ✅ Wait for DOM to be ready before populating
-        window.addEventListener('DOMContentLoaded', () => {
-          document.getElementById('quizTitleDisplay').textContent = quizData.title;
-          document.getElementById('gradeSectionDisplay').textContent = quizData.section;
-          document.getElementById('testTypeDisplay').textContent = quizData.type;
-          document.getElementById('timeLimitDisplay').textContent = quizData.time;
-          document.getElementById('topicsDisplay').textContent = quizData.topics.join(', ');
-          document.getElementById('instructionsDisplay').value = quizData.instructions;
-          document.getElementById('rubricDisplay').innerHTML = quizData.rubric;
-        });
+        waitForDOMThenPopulate(quizData);
 
         setTimeout(() => {
           alert("⏱️ This quiz link has expired.");
