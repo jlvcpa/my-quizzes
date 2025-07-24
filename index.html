@@ -229,7 +229,7 @@
       const title = document.getElementById('quizTitle').value.trim();
       const section = document.getElementById('gradeSection').value.trim();
       const type = document.getElementById('testType').value.trim();
-      const time = parseInt(document.getElementById('timeLimit').value);
+     // const time = parseInt(document.getElementById('timeLimit').value);
       const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
       const num = parseInt(document.getElementById('numQuestions').value);
       const instructions = document.getElementById('instructions').value.trim();
@@ -248,7 +248,6 @@
         title,
         section,
         type,
-        time,
         topics,
         num,
         instructions,
