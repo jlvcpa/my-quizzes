@@ -128,24 +128,27 @@
     <textarea id="instructions" rows="5" placeholder="Enter instructions here..."></textarea>
 
     <label for="rubric">Rubric</label>
-    <table id="rubric">
-      <thead>
-        <tr>
-          <th>Criteria</th>
-          <th>Excellent</th>
-          <th>Good</th>
-          <th>Needs Improvement</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Accuracy</td><td></td><td></td><td></td>
-        </tr>
-        <tr>
-          <td>Completion</td><td></td><td></td><td></td>
-        </tr>
-      </tbody>
-    </table>
+<table id="rubricTable">
+  <thead>
+    <tr>
+      <th style="width:20%;">Criteria</th>
+      <th style="width:20%;">Advance</th>
+      <th style="width:20%;">Proficient</th>
+      <th style="width:20%;">Developing</th>
+      <th style="width:20%;">Intervention Required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td contenteditable="true"></td>
+      <td contenteditable="true"></td>
+      <td contenteditable="true"></td>
+      <td contenteditable="true"></td>
+      <td contenteditable="true"></td>
+    </tr>
+  </tbody>
+</table>
+<button type="button" onclick="addRubricRow()">➕ Add Row</button>
 
     <button onclick="generateQuiz()">🎯 Generate Quiz</button>
   </div>
