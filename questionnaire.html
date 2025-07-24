@@ -187,16 +187,203 @@
   const { cnNo, lastName, firstName, password, quizData } = studentData;
 
   const questionBank = [
-    { topic: "Geography", question: "Capital of France?", options: ["Berlin", "Madrid", "Paris", "Rome"], answer: "Paris" },
-    { topic: "Astronomy", question: "Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"], answer: "Mars" },
-    { topic: "Literature", question: "Author of 'To Kill a Mockingbird'?", options: ["Harper Lee", "Mark Twain", "Hemingway", "Fitzgerald"], answer: "Harper Lee" },
-    { topic: "Science", question: "Largest ocean?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], answer: "Pacific" },
-    { topic: "Chemistry", question: "Symbol 'O'?", options: ["Gold", "Oxygen", "Osmium", "Iron"], answer: "Oxygen" },
-    { topic: "History", question: "WWII end year?", options: ["1945", "1939", "1918", "1963"], answer: "1945" },
-    { topic: "Mathematics", question: "√64?", options: ["6", "7", "8", "9"], answer: "8" },
-    { topic: "Language", question: "Language in Brazil?", options: ["Spanish", "Portuguese", "French", "English"], answer: "Portuguese" },
-    { topic: "Physics", question: "Boiling point of water?", options: ["90°C", "100°C", "110°C", "120°C"], answer: "100°C" },
-    { topic: "Art", question: "Painter of Mona Lisa?", options: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], answer: "Da Vinci" }
+    {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "Why was accounting important in ancient Egypt and Babylon?",
+  options: [
+    "To build pyramids",
+    "To manage agricultural production and state wealth",
+    "To trade with Rome",
+    "To perform religious rituals"
+  ],
+  answer: "To manage agricultural production and state wealth",
+  explanation: "✅ Accounting in ancient Egypt and Babylon was used to manage agricultural output and state resources, making it essential for economic control."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What does the term 'ad rationes' suggest about Roman accounting?",
+  options: [
+    "It was a form of taxation",
+    "It involved storytelling",
+    "It referred to financial documentation",
+    "It was a religious practice"
+  ],
+  answer: "It referred to financial documentation",
+  explanation: "✅ 'Ad rationes' was the Roman term for documenting revenues and expenditures, showing their early use of financial records."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "How did temple economies contribute to accounting practices?",
+  options: [
+    "They ignored recordkeeping",
+    "They used accounting for rituals",
+    "They maintained meticulous records",
+    "They traded with Babylon"
+  ],
+  answer: "They maintained meticulous records",
+  explanation: "✅ Temple economies kept detailed records to manage offerings, resources, and operations, laying foundations for accounting systems."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What role did accounting play in the Roman Empire?",
+  options: [
+    "It was used for entertainment",
+    "It documented public revenues and expenditures",
+    "It helped build roads",
+    "It was used in warfare"
+  ],
+  answer: "It documented public revenues and expenditures",
+  explanation: "✅ The Romans used accounting to track government income and spending, demonstrating its role in public administration."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What does the evolution of accounting from temple economies to empires indicate?",
+  options: [
+    "Accounting became less important",
+    "It shifted from agriculture to warfare",
+    "It expanded in scope and complexity",
+    "It was replaced by trade"
+  ],
+  answer: "It expanded in scope and complexity",
+  explanation: "✅ Accounting evolved from managing temple resources to overseeing state finances, showing its growing importance and sophistication."
+},
+    {
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which ancient civilizations practiced early accounting?",
+  options: [
+    "Greece and Rome",
+    "Egypt and Babylon",
+    "China and India",
+    "Persia and Greece"
+  ],
+  answer: "Egypt and Babylon",
+  explanation: "✅ Egypt and Babylon were among the earliest civilizations to use accounting for managing agricultural and temple resources."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What was the Roman term for financial documentation?",
+  options: [
+    "Ad rationes",
+    "De numeris",
+    "Tabulae",
+    "Scriptura"
+  ],
+  answer: "Ad rationes",
+  explanation: "✅ 'Ad rationes' was the Latin term used by Romans to refer to their financial records and accounting practices."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What did ancient accounting help manage?",
+  options: [
+    "Military campaigns",
+    "Agricultural production and state wealth",
+    "Religious ceremonies",
+    "Trade routes"
+  ],
+  answer: "Agricultural production and state wealth",
+  explanation: "✅ Early accounting systems were designed to manage agricultural yields and the wealth of the state."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which empire documented public revenues and expenditures?",
+  options: [
+    "Babylonian",
+    "Egyptian",
+    "Roman",
+    "Greek"
+  ],
+  answer: "Roman",
+  explanation: "✅ The Roman Empire used accounting to record public income and spending, a precursor to modern financial statements."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What kind of economies used meticulous recordkeeping?",
+  options: [
+    "Temple economies",
+    "Trade economies",
+    "Nomadic economies",
+    "Industrial economies"
+  ],
+  answer: "Temple economies",
+  explanation: "✅ Temple economies required detailed records to manage offerings, resources, and operations, forming the basis of accounting."
+},
+    {
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How did accounting practices reflect the priorities of ancient civilizations?",
+  options: [
+    "They focused on entertainment",
+    "They emphasized religious rituals",
+    "They prioritized resource management and governance",
+    "They ignored documentation"
+  ],
+  answer: "They prioritized resource management and governance",
+  explanation: "✅ Ancient accounting systems were designed to manage resources and support governance, reflecting societal priorities."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What does the use of 'ad rationes' in Rome suggest about their administrative sophistication?",
+  options: [
+    "They had no formal systems",
+    "They relied on oral traditions",
+    "They had structured financial records",
+    "They used accounting for trade only"
+  ],
+  answer: "They had structured financial records",
+  explanation: "✅ The Roman use of 'ad rationes' shows their advanced administrative systems and reliance on written financial documentation."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "Why might temple economies have required meticulous recordkeeping?",
+  options: [
+    "To track donations",
+    "To manage complex agricultural and religious operations",
+    "To entertain priests",
+    "To communicate with other temples"
+  ],
+  answer: "To manage complex agricultural and religious operations",
+  explanation: "✅ Temples managed both spiritual and economic activities, requiring detailed records to ensure accountability and efficiency."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How does the evolution of accounting from Egypt to Rome illustrate its expanding role?",
+  options: [
+    "It became less relevant",
+    "It shifted from agriculture to public finance",
+    "It was used only in temples",
+    "It focused on warfare"
+  ],
+  answer: "It shifted from agriculture to public finance",
+  explanation: "✅ Accounting evolved from managing agricultural resources to overseeing public finances, showing its broader societal role."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What can we infer about the importance of accounting in ancient governance?",
+  options: [
+    "It was ceremonial",
+    "It was central to managing resources and public funds",
+    "It was used for entertainment",
+    "It was rarely practiced"
+  ],
+  answer: "It was central to managing resources and public funds",
+  explanation: "✅ Accounting was a key tool in ancient governance, enabling leaders to track and control economic activities."
+}
+    
+  // ADD QUESTIONS ABOVE HERE
   ];
 
   const selectedQuestions = questionBank
