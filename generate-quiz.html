@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Generate Quiz</title>
-    <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
-  <script>
+
+  <!-- Firebase Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
       authDomain: "jlvcpa-quizzes.firebaseapp.com",
@@ -16,8 +18,12 @@
       appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.doc = doc;
+    window.getDoc = getDoc;
   </script>
 
   <style>
@@ -122,114 +128,43 @@
   </div>
 
   <script>
-    // Load quiz data from localStorage using ID from URL
+    let quizData;
     const params = new URLSearchParams(window.location.search);
     const quizId = params.get('id');
-    db.collection("quizzes").doc(quizId).get()
-  .then(doc => {
-    if (!doc.exists) {
-      alert("Quiz link expired or invalid.");
-      document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
-    } else {
-      const quizData = doc.data();
-      if (Date.now() > quizData.expiry) {
-        alert("⏱️ This quiz link has expired.");
-        document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
-        return;
-      }
 
-      // ✅ Proceed to display quiz data
-      document.getElementById('quizTitleDisplay').textContent = quizData.title;
-      document.getElementById('gradeSectionDisplay').textContent = quizData.section;
-      document.getElementById('testTypeDisplay').textContent = quizData.type;
-      document.getElementById('timeLimitDisplay').textContent = quizData.time;
-      document.getElementById('topicsDisplay').textContent = quizData.topics.join(', ');
-      document.getElementById('instructionsDisplay').value = quizData.instructions;
-      document.getElementById('rubricDisplay').innerHTML = quizData.rubric;
-    }
-  })
-  .catch(error => {
-    console.error("❌ Error loading quiz:", error);
-    document.body.innerHTML = "<h2 style='text-align:center;'>⚠️ Failed to load quiz.</h2>";
-  });
+    window.getDoc(window.doc(window.db, "quizzes", quizId))
+      .then(docSnap => {
+        if (!docSnap.exists()) {
+          alert("Quiz link expired or invalid.");
+          document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
+          return;
+        }
 
-    if (!quizData) {
-      alert("Quiz link expired or invalid.");
-      document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
-    } else {
-      document.getElementById('quizTitleDisplay').textContent = quizData.title;
-      document.getElementById('gradeSectionDisplay').textContent = quizData.section;
-      document.getElementById('testTypeDisplay').textContent = quizData.type;
-      document.getElementById('timeLimitDisplay').textContent = quizData.time;
-      document.getElementById('topicsDisplay').textContent = quizData.topics.join(', ');
-      document.getElementById('instructionsDisplay').value = quizData.instructions;
-      document.getElementById('rubricDisplay').innerHTML = quizData.rubric;
+        quizData = docSnap.data();
+        if (Date.now() > quizData.expiry) {
+          alert("⏱️ This quiz link has expired.");
+          document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
+          return;
+        }
 
-        // ⏱️ Auto-close after 5 minutes
-  setTimeout(() => {
-    alert("⏱️ This quiz link has expired.");
-    window.close();
-  }, 5 * 60 * 1000); // 5 minutes
+        document.getElementById('quizTitleDisplay').textContent = quizData.title;
+        document.getElementById('gradeSectionDisplay').textContent = quizData.section;
+        document.getElementById('testTypeDisplay').textContent = quizData.type;
+        document.getElementById('timeLimitDisplay').textContent = quizData.time;
+        document.getElementById('topicsDisplay').textContent = quizData.topics.join(', ');
+        document.getElementById('instructionsDisplay').value = quizData.instructions;
+        document.getElementById('rubricDisplay').innerHTML = quizData.rubric;
 
-    }
+        setTimeout(() => {
+          alert("⏱️ This quiz link has expired.");
+          window.close();
+        }, 5 * 60 * 1000);
+      })
+      .catch(error => {
+        console.error("❌ Error loading quiz:", error);
+        document.body.innerHTML = "<h2 style='text-align:center;'>⚠️ Failed to load quiz.</h2>";
+      });
 
-    // 🧾 Activity log storage
-const activityLog = [];
-let inactivityTimer;
-let warningTimer;
-let warningCountdown = 60; // seconds
-
-function logActivity(message) {
-  const timestamp = new Date().toLocaleString();
-  activityLog.push({ time: timestamp, message });
-  localStorage.setItem('activityLog', JSON.stringify(activityLog));
-}
-
-// 🧠 Reset inactivity timer
-function resetInactivityTimer() {
-  clearTimeout(inactivityTimer);
-  clearInterval(warningTimer);
-  warningCountdown = 60;
-
-  inactivityTimer = setTimeout(() => {
-    showInactivityWarning();
-  }, 2 * 60 * 1000); // 2 minutes before warning
-}
-
-// 🔔 Show warning before refresh
-function showInactivityWarning() {
-  logActivity("⚠️ Inactivity warning triggered");
-
-  warningTimer = setInterval(() => {
-    if (warningCountdown <= 0) {
-      clearInterval(warningTimer);
-      logActivity("⏱️ Quiz refreshed due to inactivity");
-      alert("Quiz is now refreshing due to inactivity.");
-      location.reload();
-    } else {
-      alert(`⚠️ You’ve been inactive. Quiz will refresh in ${warningCountdown} seconds.`);
-      warningCountdown -= 15; // alert every 15 seconds
-    }
-  }, 15 * 1000);
-}
-
-// 🎯 Events that count as activity
-['keydown', 'click', 'touchstart', 'mousemove'].forEach(event => {
-  document.addEventListener(event, () => {
-    logActivity(`🟢 ${event} detected`);
-    resetInactivityTimer();
-  });
-});
-
-// ⏱️ Start tracking
-resetInactivityTimer();
-
-// 📜 Disclosure (optional)
-window.addEventListener('load', () => {
-  alert("📢 This quiz monitors keyboard, touch, and inactivity. If inactive for 3 minutes, it will refresh automatically.");
-  logActivity("📢 Disclosure shown to student");
-});
-    
     function generateQuestionnaire() {
       const cnNo = document.getElementById('cnNo').value.trim();
       const lastName = document.getElementById('lastName').value.trim();
@@ -254,7 +189,62 @@ window.addEventListener('load', () => {
       localStorage.setItem(`questionnaire-${studentId}`, JSON.stringify(studentData));
       window.location.href = `questionnaire.html?student=${encodeURIComponent(studentId)}`;
     }
+
+    // 🧾 Activity log storage
+    const activityLog = [];
+    let inactivityTimer;
+    let warningTimer;
+    let warningCountdown = 60;
+
+    function logActivity(message) {
+      const timestamp = new Date().toLocaleString();
+      activityLog.push({ time: timestamp, message });
+      localStorage.setItem('activityLog', JSON.stringify(activityLog));
+    }
+
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      clearInterval(warningTimer);
+      warningCountdown = 60;
+
+      inactivityTimer = setTimeout(() => {
+        showInactivityWarning();
+      }, 2 * 60 * 1000);
+    }
+
+    function showInactivityWarning() {
+      logActivity("⚠️ Inactivity warning triggered");
+
+      warningTimer = setInterval(() => {
+        if (warningCountdown <= 0) {
+          clearInterval(warningTimer);
+          logActivity("⏱️ Quiz refreshed due to inactivity");
+          alert("Quiz is now refreshing due to inactivity.");
+          location.reload();
+        } else {
+          alert(`⚠️ You’ve been inactive. Quiz will refresh in ${warningCountdown} seconds.`);
+          warningCountdown -= 15;
+        }
+      }, 15 * 1000);
+    }
+
+    ['keydown', 'click', 'touchstart', 'mousemove'].forEach(event => {
+            document.addEventListener(event, () => {
+        logActivity(`🟢 ${event} detected`);
+        resetInactivityTimer();
+      });
+    });
+
+    // ⏱️ Start tracking
+    resetInactivityTimer();
+
+    // 📜 Disclosure
+    window.addEventListener('load', () => {
+      alert("📢 This quiz monitors keyboard, touch, and inactivity. If inactive for 3 minutes, it will refresh automatically.");
+      logActivity("📢 Disclosure shown to student");
+    });
   </script>
 
 </body>
 </html>
+                                
