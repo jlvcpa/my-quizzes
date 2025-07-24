@@ -175,7 +175,8 @@
       const id = `quiz-${timestamp}`;
       localStorage.setItem(id, JSON.stringify(quizData));
 
-      const link = `${location.origin}/generate-quiz.html?id=${id}`;
+      const link = `${location.origin}${location.pathname.replace(/\/[^\/]*$/, '')}/generate-quiz.html?id=${id}`;
+
       const quizItem = document.createElement('div');
       quizItem.className = 'quiz-item';
       quizItem.innerHTML = `
