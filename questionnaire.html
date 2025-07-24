@@ -1091,7 +1091,7 @@
   let viewedIndexes = new Set();
   let responses = {};
   let timerInterval;
-  const endTime = Date.now() + quizData.time * 60 * 1000;
+  const endTime = quizData.endTime;
 
   document.getElementById('quizHeader').innerHTML = `
     <div class="quiz-title">${quizData.title}</div>
