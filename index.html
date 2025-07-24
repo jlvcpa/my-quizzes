@@ -176,6 +176,24 @@
   </div>
 
   <script>
+      const allowedUser = "jlvcpa";
+  const allowedPass = "password";
+
+  const stored = sessionStorage.getItem("authenticated");
+
+  if (!stored) {
+    const username = prompt("Enter username:");
+    const password = prompt("Enter password:");
+
+    if (username !== allowedUser || password !== allowedPass) {
+      alert("⛔ Access denied.");
+      document.body.innerHTML = "<h2 style='text-align:center;'>Unauthorized Access</h2>";
+      throw new Error("Unauthorized");
+    } else {
+      sessionStorage.setItem("authenticated", "true");
+    }
+  }
+
     function addRubricRow() {
   const table = document.getElementById('rubricTable').getElementsByTagName('tbody')[0];
   const newRow = table.insertRow();
