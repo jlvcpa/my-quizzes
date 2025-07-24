@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dynamic Topic Extractor</title>
+  <title>Topic Extractor</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f0f0f0;
+      background: #f9f9f9;
       padding: 20px;
     }
 
@@ -36,7 +36,7 @@
 
     button {
       display: block;
-      margin: 0 auto;
+      margin: 10px auto;
       padding: 10px 20px;
       font-size: 16px;
       background-color: #3498db;
@@ -65,12 +65,10 @@
     <select id="topicSelector" multiple></select>
   </div>
 
-  <button onclick="handleCopyClick()">📋 Copy Topic List</button>
+  <button onclick="copyAsHTML()">📋 Copy as HTML &lt;select&gt;</button>
   <div id="copyMessage"></div>
 
   <script>
-    let copyClicks = 0;
-
     async function extractTopicsFromGitHub() {
       try {
         const response = await fetch('https://raw.githubusercontent.com/jlvcpa/my-quizzes/main/questionnaire.html');
@@ -91,7 +89,6 @@
           selector.appendChild(option);
         });
 
-        // Store for copy function
         window.extractedTopics = topics;
       } catch (err) {
         console.error("❌ Error extracting topics:", err);
@@ -99,24 +96,18 @@
       }
     }
 
-    function handleCopyClick() {
-      copyClicks++;
-      if (copyClicks >= 3) {
-        const topics = window.extractedTopics || [];
-        const formatted = `<select id="topicSelector" multiple>\n` +
-          topics.map(t => `  <option value="${t}">${t}</option>`).join('\n') +
-          `\n</select>`;
+    function copyAsHTML() {
+      const topics = window.extractedTopics || [];
+      const formatted = `<select id="topicSelector" multiple>\n` +
+        topics.map(t => `  <option value="${t}">${t}</option>`).join('\n') +
+        `\n</select>`;
 
-        navigator.clipboard.writeText(formatted).then(() => {
-          document.getElementById('copyMessage').textContent = "✅ Topic list copied to clipboard!";
-          copyClicks = 0;
-        }).catch(err => {
-          console.error("Clipboard error:", err);
-          document.getElementById('copyMessage').textContent = "❌ Failed to copy.";
-        });
-      } else {
-        document.getElementById('copyMessage').textContent = `Click ${3 - copyClicks} more time(s) to copy.`;
-      }
+      navigator.clipboard.writeText(formatted).then(() => {
+        document.getElementById('copyMessage').textContent = "✅ Copied as HTML <select>!";
+      }).catch(err => {
+        console.error("Clipboard error:", err);
+        document.getElementById('copyMessage').textContent = "❌ Failed to copy.";
+      });
     }
 
     extractTopicsFromGitHub();
