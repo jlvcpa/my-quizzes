@@ -125,7 +125,33 @@
     // Load quiz data from localStorage using ID from URL
     const params = new URLSearchParams(window.location.search);
     const quizId = params.get('id');
-    const quizData = JSON.parse(localStorage.getItem(quizId));
+    db.collection("quizzes").doc(quizId).get()
+  .then(doc => {
+    if (!doc.exists) {
+      alert("Quiz link expired or invalid.");
+      document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
+    } else {
+      const quizData = doc.data();
+      if (Date.now() > quizData.expiry) {
+        alert("⏱️ This quiz link has expired.");
+        document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
+        return;
+      }
+
+      // ✅ Proceed to display quiz data
+      document.getElementById('quizTitleDisplay').textContent = quizData.title;
+      document.getElementById('gradeSectionDisplay').textContent = quizData.section;
+      document.getElementById('testTypeDisplay').textContent = quizData.type;
+      document.getElementById('timeLimitDisplay').textContent = quizData.time;
+      document.getElementById('topicsDisplay').textContent = quizData.topics.join(', ');
+      document.getElementById('instructionsDisplay').value = quizData.instructions;
+      document.getElementById('rubricDisplay').innerHTML = quizData.rubric;
+    }
+  })
+  .catch(error => {
+    console.error("❌ Error loading quiz:", error);
+    document.body.innerHTML = "<h2 style='text-align:center;'>⚠️ Failed to load quiz.</h2>";
+  });
 
     if (!quizData) {
       alert("Quiz link expired or invalid.");
