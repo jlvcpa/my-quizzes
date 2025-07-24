@@ -362,20 +362,30 @@
           <textarea readonly rows="4">${quizData.instructions}</textarea>
           ${quizData.rubric}
 
-          ${answeredOrder.map(i => {
-            const q = selectedQuestions[i];
-            const userAnswer = responses[i];
-            const isCorrect = userAnswer === q.answer;
-            return `
-              <div class="question-block">
-                <h3>Q${i + 1}: ${q.question}</h3>
-                <div class="answer ${isCorrect ? 'correct' : 'incorrect'}">
-                  Answered: ${userAnswer} ${isCorrect ? '✔' : '❌'}<br>
-                  Correct Answer: ${q.answer}
-                </div>
-              </div>
-            `;
-          }).join('')}
+${answeredOrder.map(i => {
+  const q = selectedQuestions[i];
+  const userAnswer = responses[i];
+  const isCorrect = userAnswer === q.answer;
+
+  const letterLabels = ['A', 'B', 'C', 'D'];
+  const optionsHTML = q.options.map((opt, idx) => {
+    const label = letterLabels[idx] || String.fromCharCode(65 + idx);
+    return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
+  }).join('');
+
+  const feedback = isCorrect
+    ? `<div style="color:green; font-weight:bold;">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
+    : `<div style="color:red; font-weight:bold;">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`;
+
+  return `
+    <div class="question-block">
+      <h3>${i + 1}. ${q.question}</h3>
+      ${optionsHTML}
+      ${feedback}
+      <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
+    </div>
+  `;
+}).join('')}
 
           <div class="print-btn">
             <button onclick="window.print()">🖨️ Print This Page</button>
