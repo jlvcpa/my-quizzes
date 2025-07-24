@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generate Quiz</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    #schoolLogo {
+      max-height: 100px;
+      margin-bottom: 10px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .quiz-info, .login-form {
+      max-width: 800px;
+      margin: 0 auto 30px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <img id="schoolLogo" src="" alt="School Logo"><br>
+    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+    <span style="color:#000;">SY 2025–2026</span><br>
+    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">FABM 1</span>
+  </div>
+
+  <div class="quiz-info">
+    <h2 id="quizTitleDisplay">Quiz Title</h2>
+    <p><strong>Grade Level and Section:</strong> <span id="gradeSectionDisplay"></span></p>
+    <p><strong>Test Type:</strong> <span id="testTypeDisplay"></span></p>
+    <p><strong>Time Limit:</strong> <span id="timeLimitDisplay"></span> minutes</p>
+    <p><strong>Topics:</strong> <span id="topicsDisplay"></span></p>
+    <label><strong>Instructions:</strong></label>
+    <textarea id="instructionsDisplay" readonly rows="5"></textarea>
+    <label><strong>Rubric:</strong></label>
+    <div id="rubricDisplay"></div>
+  </div>
+
+  <div class="login-form">
+    <h2>Student Login</h2>
+    <label for="cnNo">Class Number (CN NO)</label>
+    <input type="text" id="cnNo" placeholder="e.g. 12345">
+
+    <label for="lastName">Last Name</label>
+    <input type="text" id="lastName" placeholder="e.g. Dela Cruz">
+
+    <label for="firstName">First Name</label>
+    <input type="text" id="firstName" placeholder="e.g. Juan">
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Create a password">
+
+    <button onclick="generateQuestionnaire()">🎯 Start Quiz</button>
+  </div>
+
+  <script>
+    // Load quiz data from localStorage using ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const quizId = params.get('id');
+    const quizData = JSON.parse(localStorage.getItem(quizId));
+
+    if (!quizData) {
+      alert("Quiz link expired or invalid.");
+      document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
+    } else {
+      document.getElementById('quizTitleDisplay').textContent = quizData.title;
+      document.getElementById('gradeSectionDisplay').textContent = quizData.section;
+      document.getElementById('testTypeDisplay').textContent = quizData.type;
+      document.getElementById('timeLimitDisplay').textContent = quizData.time;
+      document.getElementById('topicsDisplay').textContent = quizData.topics.join(', ');
+      document.getElementById('instructionsDisplay').value = quizData.instructions;
+      document.getElementById('rubricDisplay').innerHTML = quizData.rubric;
+    }
+
+    function generateQuestionnaire() {
+      const cnNo = document.getElementById('cnNo').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const firstName = document.getElementById('firstName').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!cnNo || !lastName || !firstName || !password) {
+        alert("Please fill in all login fields.");
+        return;
+      }
+
+      const studentId = `${cnNo}-${lastName}-${firstName}`;
+      const studentData = {
+        quizId,
+        cnNo,
+        lastName,
+        firstName,
+        password,
+        quizData
+      };
+
+      localStorage.setItem(`questionnaire-${studentId}`, JSON.stringify(studentData));
+      window.location.href = `questionnaire.html?student=${encodeURIComponent(studentId)}`;
+    }
+  </script>
+
+</body>
+</html>

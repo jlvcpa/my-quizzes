@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Questionnaire</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    #schoolLogo {
+      max-height: 100px;
+      margin-bottom: 10px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .info-block, .quiz-box {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .student-info {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .grade-block {
+      text-align: right;
+      font-weight: bold;
+      font-size: 20px;
+      color: #007acc;
+    }
+    .score {
+      text-align: right;
+      font-size: 16px;
+      font-weight: bold;
+      color: #28a745;
+      margin-bottom: 10px;
+    }
+    .topic-label {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    .question-block h3 {
+      margin-top: 0;
+      color: #34495e;
+    }
+    .option {
+      margin: 5px 0;
+    }
+    #navigation {
+      text-align: center;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    #submitBtn {
+      background-color: #28a745;
+    }
+    #submitBtn:hover {
+      background-color: #218838;
+    }
+    #timer, #warningMessage, #viewedCounter, #result {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #result {
+      color: #28a745;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <img id="schoolLogo" src="" alt="School Logo"><br>
+    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+    <span style="color:#000;">SY 2025–2026</span><br>
+    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">FABM 1</span>
+  </div>
+
+  <div class="info-block" id="quizHeader"></div>
+  <div id="timer"></div>
+  <div id="warningMessage"></div>
+  <div class="quiz-box" id="quizContainer"></div>
+  <div id="navigation">
+    <button onclick="prevQuestion()">⬅ Previous</button>
+    <button onclick="nextQuestion()">Next ➡</button>
+    <button id="submitBtn" onclick="submitQuiz()">✅ Submit Quiz</button>
+  </div>
+  <div id="viewedCounter"></div>
+  <div id="result"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const studentId = params.get('student');
+    const studentData = JSON.parse(localStorage.getItem(`questionnaire-${studentId}`));
+    if (!studentData) {
+      alert("Quiz data not found.");
+      document.body.innerHTML = "<h2 style='text-align:center;'>⛔ Quiz not found or expired.</h2>";
+    }
+
+    const { cnNo, lastName, firstName, password, quizData } = studentData;
+    const questionBank = [
+      { topic: "Geography", question: "Capital of France?", options: ["Berlin", "Madrid", "Paris", "Rome"], answer: "Paris" },
+      { topic: "Astronomy", question: "Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"], answer: "Mars" },
+      { topic: "Literature", question: "Author of 'To Kill a Mockingbird'?", options: ["Harper Lee", "Mark Twain", "Hemingway", "Fitzgerald"], answer: "Harper Lee" },
+      { topic: "Science", question: "Largest ocean?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], answer: "Pacific" },
+      { topic: "Chemistry", question: "Symbol 'O'?", options: ["Gold", "Oxygen", "Osmium", "Iron"], answer: "Oxygen" },
+      { topic: "History", question: "WWII end year?", options: ["1945", "1939", "1918", "1963"], answer: "1945" },
+      { topic: "Mathematics", question: "√64?", options: ["6", "7", "8", "9"], answer: "8" },
+      { topic: "Language", question: "Language in Brazil?", options: ["Spanish", "Portuguese", "French", "English"], answer: "Portuguese" },
+      { topic: "Physics", question: "Boiling point of water?", options: ["90°C", "100°C", "110°C", "120°C"], answer: "100°C" },
+      { topic: "Art", question: "Painter of Mona Lisa?", options: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], answer: "Da Vinci" }
+    ];
+
+    const selectedQuestions = questionBank
+      .filter(q => quizData.topics.includes(q.topic))
+      .sort(() => 0.5 - Math.random())
+      .slice(0, quizData.num);
+
+    let currentIndex = 0;
+    let viewedIndexes = new Set();
+    let responses = {};
+    let timerInterval;
+    let timeLimit = quizData.time * 60;
+
+    document.getElementById('quizHeader').innerHTML = `
+      <div class="student-info">
+        <div>CN NO: ${cnNo}<br>Name: ${lastName}, ${firstName}</div>
+        <div>Grade Level and Section: ${quizData.section}</div>
+      </div>
+      <div class="grade-block">${quizData.title}</div>
+      <p><strong>Test Type:</strong> ${quizData.type}</p>
+      <p><strong>Instructions:</strong></p>
+      <textarea readonly rows="4">${quizData.instructions}</textarea>
+      ${quizData.rubric}
+    `;
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        if (timeLimit <= 0) {
+          clearInterval(timerInterval);
+          submitQuiz();
+        } else {
+          const min = Math.floor(timeLimit / 60);
+          const sec = timeLimit % 60;
+          document.getElementById('timer').textContent = `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
+          timeLimit--;
+        }
+      }, 1000);
+    }
+
+    function showQuestion(index) {
+      const container = document.getElementById('quizContainer');
+      const q = selectedQuestions[index];
+      container.innerHTML = '';
+
+      const topicLabel = document.createElement('div');
+      topicLabel.className = 'topic-label';
+      topicLabel.textContent = `Topic: ${q.topic}`;
+      container.appendChild(topicLabel);
+
+      const questionTitle = document.createElement('h3');
+      questionTitle.textContent = `Q${index + 1}: ${q.question}`;
+      container.appendChild(questionTitle);
+
+      q.options.forEach(opt => {
+        const label = document.createElement('label');
+        label.className = 'option';
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = `question${index}`;
+        input.value = opt;
+        input.checked = responses[index] === opt;
+        input.onchange = () => {
+          responses[index] = opt;
+          updateWarning();
+        };
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(` ${opt}`));
+        container.appendChild(label);
+        container.appendChild(document.createElement('br'));
+      });
+
+      viewedIndexes.add(index);
+      updateViewedCounter();
+      updateWarning();
+    }
+
+    function nextQuestion() {
+      if (!responses[currentIndex]) {
+        document.getElementById('warningMessage').textContent =
+          `⚠️ Question ${currentIndex + 1} has not been answered.`;
+      }
+      if (currentIndex < selectedQuestions.length - 1) {
+        currentIndex++;
+        showQuestion(currentIndex);
+      }
+    }
+
+    function prevQuestion() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        showQuestion(currentIndex);
+      }
+    }
+
+    function updateViewedCounter() {
+      document.getElementById('viewedCounter').textContent =
+        `${viewedIndexes.size} of ${selectedQuestions.length} questions viewed`;
+    }
+
+    function updateWarning() {
+      const unanswered = [...viewedIndexes].filter(i => !responses[i]);
+      if (unanswered.length > 0) {
+        document.getElementById('warningMessage').textContent =
+          `⚠️ Unanswered question(s): ${unanswered.map(i => i + 1).join(', ')}`;
+      } else {
+        document.getElementById('warningMessage').textContent = '';
+      }
+    }
+
+    function submitQuiz() {
+      clearInterval(timerInterval);
+      let score = 0;
+      selectedQuestions.forEach((q, i) => {
+        if (responses[i] === q.answer) score++;
+      });
+
+      const percentage = Math.round((score / selectedQuestions.length) * 100);
+      let grade = '';
+      if (percentage >= 95) grade = 'A';
+      else if (percentage >= 85) grade = 'P';
+      else if (percentage >= 75) grade = 'D';
+      else grade = 'IR';
+
+      document.getElementById('result').innerHTML =
+        `✅ Final Score: ${score} / ${selectedQuestions.length} = ${percentage}% (${grade})`;
+
+      const resultData = {
+        cnNo,
+        lastName,
+        firstName,
+        score,
+        percentage,
+        grade,
+        responses,
+        quizTitle: quizData.title,
+        timestamp: Date.now()
+      };
+
+      localStorage.setItem(`result-${studentId}`, JSON.stringify(resultData));
+
+      document.getElementById('navigation').style.display = 'none';
+      document.getElementById('quizContainer').innerHTML = '<h3>✅ Quiz submitted. You may now close this page.</h3>';
+    }
+
+    window.onload = () => {
+      startTimer();
+      showQuestion(currentIndex);
+    };
+  </script>
+
+</body>
+</html>
