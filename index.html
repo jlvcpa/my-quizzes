@@ -176,12 +176,15 @@
       const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
       const num = parseInt(document.getElementById('numQuestions').value);
       const instructions = document.getElementById('instructions').value.trim();
-      const rubric = document.getElementById('rubric').outerHTML;
+      //const rubric = document.getElementById('rubric').outerHTML;
+      const rubricHTML = document.getElementById('rubricTable').outerHTML;
       const timestamp = Date.now();
       const expiry = timestamp + 5 * 60 * 1000; // 5 minutes
 
+      //const quizData = {
+        //title, section, type, time, topics, num, instructions, rubric, timestamp, expiry
       const quizData = {
-        title, section, type, time, topics, num, instructions, rubric, timestamp, expiry
+        title, section, type, time, topics, num, instructions, rubric: rubricHTML, timestamp, expiry
       };
 
       const id = `quiz-${timestamp}`;
