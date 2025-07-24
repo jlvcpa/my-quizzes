@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teacher Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #007acc;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    button {
+      padding: 6px 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📋 Student Quiz Results</h2>
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>CN NO</th>
+        <th>Name</th>
+        <th>Score</th>
+        <th>Grade</th>
+        <th>Submitted</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    function loadResults() {
+      const tbody = document.querySelector('#resultsTable tbody');
+      tbody.innerHTML = '';
+
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('result-')) {
+          const data = JSON.parse(localStorage.getItem(key));
+          const row = document.createElement('tr');
+
+          row.innerHTML = `
+            <td>${data.cnNo}</td>
+            <td>${data.lastName}, ${data.firstName}</td>
+            <td>${data.score}</td>
+            <td>${data.grade}</td>
+            <td>${new Date(data.timestamp).toLocaleString()}</td>
+            <td><button onclick="viewReport('${key}')">🖨️ View</button></td>
+          `;
+
+          tbody.appendChild(row);
+        }
+      });
+    }
+
+    function viewReport(key) {
+      const data = JSON.parse(localStorage.getItem(key));
+      const resultWindow = window.open('', '_blank');
+
+      const letterLabels = ['A', 'B', 'C', 'D'];
+      const questions = data.questions || []; // fallback if not stored
+      const responses = data.responses || {};
+      const rubric = data.rubric || '';
+
+      resultWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>${data.quizTitle} - Report</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', sans-serif;
+              padding: 20px;
+              background: #fff;
+            }
+            h2 {
+              text-align: center;
+              color: #2c3e50;
+            }
+            .info {
+              margin-bottom: 20px;
+              font-weight: bold;
+            }
+            .question-block {
+              background: #f9f9f9;
+              padding: 15px;
+              margin-bottom: 15px;
+              border-left: 5px solid #007acc;
+              border-radius: 6px;
+            }
+            .question-block h3 {
+              margin-top: 0;
+              color: #34495e;
+            }
+            .answer {
+              margin-top: 10px;
+              font-weight: bold;
+            }
+            .correct {
+              color: green;
+            }
+            .incorrect {
+              color: red;
+            }
+            .explanation {
+              margin-top: 10px;
+              font-style: italic;
+              color: #555;
+            }
+            .print-btn {
+              text-align: center;
+              margin-top: 20px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 10px;
+            }
+            th, td {
+              border: 1px solid #ccc;
+              padding: 8px;
+            }
+            thead th {
+              text-align: center;
+              background-color: #007acc;
+              color: white;
+            }
+            tbody td {
+              text-align: left;
+              vertical-align: top;
+              white-space: pre-wrap;
+              line-height: 1.4;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>${data.quizTitle}</h2>
+          <div class="info">
+            CN NO: ${data.cnNo}<br>
+            Name: ${data.lastName}, ${data.firstName}<br>
+            Score: ${data.score}<br>
+            Grade: ${data.grade}<br>
+            Submitted: ${new Date(data.timestamp).toLocaleString()}
+          </div>
+
+          ${rubric}
+
+          ${questions.length > 0 ? questions.map((q, i) => {
+            const userAnswer = responses[i];
+            const isCorrect = userAnswer === q.answer;
+            const correctLetter = letterLabels[q.options.indexOf(q.answer)];
+            const userLetter = letterLabels[q.options.indexOf(userAnswer)];
+
+            const optionsHTML = q.options.map((opt, idx) => {
+              return `<div style="margin-left:20px;">${letterLabels[idx]}. ${opt}</div>`;
+            }).join('');
+
+            const feedback = isCorrect
+              ? `<div class="answer correct">Answered: ${userLetter} ✔</div>`
+              : `<div class="answer incorrect">Answered: ${userLetter} ❌<br>Correct Answer: ${correctLetter}</div>`;
+
+            return `
+              <div class="question-block">
+                <h3>${i + 1}. ${q.question}</h3>
+                ${optionsHTML}
+                ${feedback}
+                <div class="explanation">Explanation: ${q.explanation || 'No explanation provided.'}</div>
+              </div>
+            `;
+          }).join('') : '<p>No question data available.</p>'}
+
+          <div class="print-btn">
+            <button onclick="window.print()">🖨️ Print This Report</button>
+          </div>
+        </body>
+        </html>
+      `);
+
+      resultWindow.document.close();
+    }
+
+    window.onload = loadResults;
+  </script>
+
+</body>
+</html>
