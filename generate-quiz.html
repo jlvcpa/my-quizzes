@@ -121,6 +121,13 @@
       document.getElementById('topicsDisplay').textContent = quizData.topics.join(', ');
       document.getElementById('instructionsDisplay').value = quizData.instructions;
       document.getElementById('rubricDisplay').innerHTML = quizData.rubric;
+
+        // ⏱️ Auto-close after 5 minutes
+  setTimeout(() => {
+    alert("⏱️ This quiz link has expired.");
+    window.close();
+  }, 5 * 60 * 1000); // 5 minutes
+
     }
 
     function generateQuestionnaire() {
