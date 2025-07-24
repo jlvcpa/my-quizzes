@@ -40,33 +40,25 @@
       margin-top: 5px;
       font-size: 16px;
     }
-
     #rubricTable {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-#rubricTable th,
-#rubricTable td {
-  border: 1px solid #ccc;
-  padding: 8px;
-}
-
-/* Header row: center-aligned */
-#rubricTable thead th {
-  text-align: center;
-  vertical-align: middle;
-}
-
-/* Body rows: left-aligned and readable */
-#rubricTable tbody td {
-  text-align: left;
-  vertical-align: top;
-  white-space: pre-wrap;
-  line-height: 1.4;
-}
-
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    #rubricTable th, #rubricTable td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    #rubricTable thead th {
+      text-align: center;
+      vertical-align: middle;
+    }
+    #rubricTable tbody td {
+      text-align: left;
+      vertical-align: top;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
     button {
       margin-top: 20px;
       padding: 10px 20px;
@@ -100,6 +92,26 @@
   </style>
 </head>
 <body>
+
+  <script>
+    const allowedUser = "jlvcpa";
+    const allowedPass = "14344230321";
+
+    const stored = sessionStorage.getItem("authenticated");
+
+    if (!stored) {
+      const username = prompt("Enter username:");
+      const password = prompt("Enter password:");
+
+      if (username !== allowedUser || password !== allowedPass) {
+        alert("⛔ Access denied.");
+        document.body.innerHTML = "<h2 style='text-align:center;'>Unauthorized Access</h2>";
+        throw new Error("Unauthorized");
+      } else {
+        sessionStorage.setItem("authenticated", "true");
+      }
+    }
+  </script>
 
   <div class="header">
     <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
@@ -145,27 +157,27 @@
     <textarea id="instructions" rows="5" placeholder="Enter instructions here..."></textarea>
 
     <label for="rubric">Rubric</label>
-<table id="rubricTable">
-  <thead>
-    <tr>
-      <th style="width:20%;">Criteria</th>
-      <th style="width:20%;">Advance</th>
-      <th style="width:20%;">Proficient</th>
-      <th style="width:20%;">Developing</th>
-      <th style="width:20%;">Intervention Required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td contenteditable="true"></td>
-      <td contenteditable="true"></td>
-      <td contenteditable="true"></td>
-      <td contenteditable="true"></td>
-      <td contenteditable="true"></td>
-    </tr>
-  </tbody>
-</table>
-<button type="button" onclick="addRubricRow()">➕ Add Row</button>
+    <table id="rubricTable">
+      <thead>
+        <tr>
+          <th style="width:20%;">Criteria</th>
+          <th style="width:20%;">Advance</th>
+          <th style="width:20%;">Proficient</th>
+          <th style="width:20%;">Developing</th>
+          <th style="width:20%;">Intervention Required</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td contenteditable="true"></td>
+          <td contenteditable="true"></td>
+          <td contenteditable="true"></td>
+          <td contenteditable="true"></td>
+          <td contenteditable="true"></td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" onclick="addRubricRow()">➕ Add Row</button>
 
     <button onclick="generateQuiz()">🎯 Generate Quiz</button>
   </div>
@@ -176,33 +188,24 @@
   </div>
 
   <script>
-      const allowedUser = "jlvcpa";
-  const allowedPass = "14344230321";
-
-  const stored = sessionStorage.getItem("authenticated");
-
-  if (!stored) {
-    const username = prompt("Enter username:");
-    const password = prompt("Enter password:");
-
-    if (username !== allowedUser || password !== allowedPass) {
-      alert("⛔ Access denied.");
-      document.body.innerHTML = "<h2 style='text-align:center;'>Unauthorized Access</h2>";
-      throw new Error("Unauthorized");
-    } else {
-      sessionStorage.setItem("authenticated", "true");
-    }
-  }
-
     function addRubricRow() {
-  const table = document.getElementById('rubricTable').getElementsByTagName('tbody')[0];
-  const newRow = table.insertRow();
-  for (let i = 0; i < 5; i++) {
-    const cell = newRow.insertCell();
-    cell.contentEditable = "true";
-  }
-}
-    
+      const table = document.getElementById('rubricTable').getElementsByTagName('tbody')[0];
+      const newRow = table.insertRow();
+      for (let i = 0; i < 5; i++) {
+        const cell = newRow.insertCell();
+        cell.contentEditable = "true";
+      }
+    }
+
+    function copyLink(link) {
+      navigator.clipboard.writeText(link).then(() => {
+        alert("✅ Link copied to clipboard!");
+      }).catch(err => {
+        alert("❌ Failed to copy link.");
+        console.error(err);
+      });
+    }
+
     function generateQuiz() {
       const title = document.getElementById('quizTitle').value.trim();
       const section = document.getElementById('gradeSection').value.trim();
@@ -211,13 +214,10 @@
       const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
       const num = parseInt(document.getElementById('numQuestions').value);
       const instructions = document.getElementById('instructions').value.trim();
-      //const rubric = document.getElementById('rubric').outerHTML;
       const rubricHTML = document.getElementById('rubricTable').outerHTML;
       const timestamp = Date.now();
-      const expiry = timestamp + 5 * 60 * 1000; // 5 minutes
+      const expiry = timestamp + 5 * 60 * 1000;
 
-      //const quizData = {
-        //title, section, type, time, topics, num, instructions, rubric, timestamp, expiry
       const quizData = {
         title, section, type, time, topics, num, instructions, rubric: rubricHTML, timestamp, expiry
       };
@@ -225,22 +225,20 @@
       const id = `quiz-${timestamp}`;
       localStorage.setItem(id, JSON.stringify(quizData));
 
-      const shortId = btoa(id).slice(0, 8); // base64-like short ID
-      const shortLink = `${location.origin}${location.pathname.replace(/\/[^\/]*$/, '')}/generate-quiz.html?id=${id}`;
-      const link = `${location.origin}${location.pathname.replace(/\/[^\/]*$/, '')}/generate-quiz.html?id=${id}`;
+      const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
+      const quizLink = `${basePath}/generate-quiz.html?id=${encodeURIComponent(id)}`;
 
- // Display the link with buttons
-  const quizItem = document.createElement('div');
-  quizItem.className = 'quiz-item';
-  quizItem.innerHTML = `
-    <button onclick="window.open('${shortLink}', '_blank')">🔓 Open</button>
-    <button onclick="copyLink('${shortLink}')">🔗 Copy Link</button>
-    <span>${title}</span>
-    <span id="${id}-status"></span>
-  `;
-  document.getElementById('generatedQuizzes').appendChild(quizItem);
+      const quizItem = document.createElement('div');
+      quizItem.className = 'quiz-item';
+      quizItem.innerHTML = `
+        <button onclick="window.open('${quizLink}', '_blank')">🔓 Open</button>
+                <button onclick="copyLink('${quizLink}')">🔗 Copy Link</button>
+        <span>${title}</span>
+        <span id="${id}-status"></span>
+      `;
+      document.getElementById('generatedQuizzes').appendChild(quizItem);
 
-      // Expiry countdown
+      // ⏳ Expiry countdown
       const interval = setInterval(() => {
         const now = Date.now();
         const status = document.getElementById(`${id}-status`);
