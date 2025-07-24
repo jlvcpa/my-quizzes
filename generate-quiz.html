@@ -25,15 +25,22 @@
     const params = new URLSearchParams(window.location.search);
     const quizId = params.get('id');
 
-    function populateQuizDetails(data) {
-      document.getElementById('quizTitleDisplay').textContent = data.title;
-      document.getElementById('gradeSectionDisplay').textContent = data.section;
-      document.getElementById('testTypeDisplay').textContent = data.type;
-      document.getElementById('timeLimitDisplay').textContent = data.time;
-      document.getElementById('topicsDisplay').textContent = data.topics.join(', ');
-      document.getElementById('instructionsDisplay').value = data.instructions;
-      document.getElementById('rubricDisplay').innerHTML = data.rubric;
-    }
+function populateQuizDetails(data) {
+  document.getElementById('quizTitleDisplay').textContent = data.title;
+  document.getElementById('gradeSectionDisplay').textContent = data.section;
+  document.getElementById('testTypeDisplay').textContent = data.type;
+
+  // ✅ Show exact deadline only
+  const endTimeText = data.endTime
+    ? new Date(data.endTime).toLocaleString()
+    : 'Not set';
+
+  document.getElementById('timeLimitDisplay').textContent = `Deadline: ${endTimeText}`;
+
+  document.getElementById('topicsDisplay').textContent = data.topics.join(', ');
+  document.getElementById('instructionsDisplay').value = data.instructions;
+  document.getElementById('rubricDisplay').innerHTML = data.rubric;
+}
 
     function waitForDOMThenPopulate(data) {
       if (document.readyState === 'loading') {
