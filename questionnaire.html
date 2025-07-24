@@ -87,31 +87,26 @@
       margin-bottom: 10px;
       font-style: italic;
     }
-
     .rubric-block h3 {
-  margin-bottom: 10px;
-  color: #007acc;
-}
-
-.rubric-table table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.rubric-table th, .rubric-table td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
-  vertical-align: top;
-  font-size: 14px;
-}
-
-.rubric-table thead {
-  background-color: #eef6fc;
-  font-weight: bold;
-}
-    
+      margin-bottom: 10px;
+      color: #007acc;
+    }
+    .rubric-table table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .rubric-table th, .rubric-table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    .rubric-table thead {
+      background-color: #eef6fc;
+      font-weight: bold;
+    }
     .question-block h3 {
       margin-top: 0;
       color: #34495e;
@@ -173,7 +168,6 @@
   </div>
   <div id="viewedCounter"></div>
   <div id="result"></div>
-
   <script>
   const params = new URLSearchParams(window.location.search);
   const studentId = params.get('student');
@@ -1087,8 +1081,7 @@
     
     
   // ADD QUESTIONS ABOVE HERE
-  ];
-
+  ];    
   const selectedQuestions = questionBank
     .filter(q => quizData.topics.includes(q.topic))
     .sort(() => 0.5 - Math.random())
@@ -1098,7 +1091,7 @@
   let viewedIndexes = new Set();
   let responses = {};
   let timerInterval;
-  let timeLimit = quizData.time * 60;
+  const endTime = Date.now() + quizData.time * 60 * 1000;
 
   document.getElementById('quizHeader').innerHTML = `
     <div class="quiz-title">${quizData.title}</div>
@@ -1171,14 +1164,17 @@
 
   function startTimer() {
     timerInterval = setInterval(() => {
-      if (timeLimit <= 0) {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+
+      if (remaining <= 0) {
         clearInterval(timerInterval);
         submitQuiz();
       } else {
-        const min = Math.floor(timeLimit / 60);
-        const sec = timeLimit % 60;
-        document.getElementById('timer').textContent = `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
-        timeLimit--;
+        const min = Math.floor(remaining / 60);
+        const sec = remaining % 60;
+        document.getElementById('timer').textContent =
+          `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
       }
     }, 1000);
   }
@@ -1253,8 +1249,10 @@
       document.getElementById('warningMessage').textContent = '';
     }
   }
+    function submitQuiz() {
+    // 🛡️ Prevent multiple submissions
+    if (document.getElementById('navigation').style.display === 'none') return;
 
-  function submitQuiz() {
     clearInterval(timerInterval);
 
     let score = 0;
