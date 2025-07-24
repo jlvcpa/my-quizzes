@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Topic Extractor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    select {
+      width: 100%;
+      height: 200px;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📚 Extracted Topics from questionnaire.html</h2>
+  <select id="topicSelector" multiple></select>
+
+  <script>
+    async function extractTopicsFromGitHub() {
+      try {
+        // 🔧 Replace with your actual GitHub raw URL
+        const response = await fetch('https://raw.githubusercontent.com/jlvcpa/my-quizzes/main/questionnaire.html');
+        const htmlText = await response.text();
+
+        // 🧠 Extract questionBank using regex
+        const match = htmlText.match(/const\s+questionBank\s*=\s*(\[[\s\S]*?\]);/);
+        if (!match) throw new Error("questionBank not found");
+
+        const questionBank = eval(match[1]); // ⚠️ Use with trusted content only
+
+        const topics = [...new Set(questionBank.map(q => q.topic))].sort();
+
+        const selector = document.getElementById('topicSelector');
+        topics.forEach(topic => {
+          const option = document.createElement('option');
+          option.value = topic;
+          option.textContent = topic;
+          selector.appendChild(option);
+        });
+      } catch (err) {
+        console.error("❌ Error extracting topics:", err);
+        document.body.innerHTML += `<p style="color:red;">Failed to extract topics. Check your GitHub URL or questionBank format.</p>`;
+      }
+    }
+
+    extractTopicsFromGitHub();
+  </script>
+</body>
+</html>
