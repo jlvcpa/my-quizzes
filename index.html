@@ -157,8 +157,8 @@
     <label for="testType">Test Type</label>
     <input type="text" id="testType" placeholder="e.g. MULTIPLE CHOICE">
 
-    <label for="timeLimit">Time Limit (minutes)</label>
-    <input type="number" id="timeLimit" min="1" value="20">
+<label for="endTime">Set Quiz End Time:</label>
+<input type="datetime-local" id="endTime" required>
 
     <label for="topicSelector">Select Topics</label>
 <select id="topicSelector" multiple>
@@ -235,8 +235,15 @@
       const instructions = document.getElementById('instructions').value.trim();
       const rubricHTML = document.getElementById('rubricTable').outerHTML;
       const timestamp = Date.now();
-      const expiry = timestamp + 5 * 60 * 1000;
+      
+       // ✅ NEW: Get exact end time
+  const endTimeStr = document.getElementById('endTime').value;
+  const endTime = new Date(endTimeStr).getTime(); // convert to timestamp
 
+  if (isNaN(endTime) || endTime <= timestamp) {
+    alert("Please select a valid future end time.");
+    return;
+  }
       const quizData = {
         title,
         section,
@@ -247,7 +254,7 @@
         instructions,
         rubric: rubricHTML,
         timestamp,
-        expiry
+        endTime // ✅ store exact end time
       };
 
       const id = `quiz-${timestamp}`;
