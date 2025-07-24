@@ -52,11 +52,11 @@
         }
 
         quizData = docSnap.data();
-        if (Date.now() > quizData.expiry) {
-          alert("⏱️ This quiz link has expired.");
-          document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
-          return;
-        }
+if (Date.now() > quizData.endTime) {
+  alert("⏱️ This quiz link has expired.");
+  document.body.innerHTML = "<h2 style='text-align:center;'>⏱️ This quiz link has expired.</h2>";
+  return;
+}
 
         waitForDOMThenPopulate(quizData);
 
