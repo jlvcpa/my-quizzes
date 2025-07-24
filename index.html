@@ -40,18 +40,29 @@
       margin-top: 5px;
       font-size: 16px;
     }
-#rubricTable {
+
+    #rubricTable {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
-#rubricTable th, #rubricTable td {
+
+#rubricTable th,
+#rubricTable td {
   border: 1px solid #ccc;
   padding: 8px;
-  text-align: left; /* 👈 This aligns content to the left */
-  vertical-align: top;
 }
-    #rubricTable td {
+
+/* Header row: center-aligned */
+#rubricTable thead th {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Body rows: left-aligned and readable */
+#rubricTable tbody td {
+  text-align: left;
+  vertical-align: top;
   white-space: pre-wrap;
   line-height: 1.4;
 }
