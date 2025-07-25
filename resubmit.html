@@ -102,6 +102,7 @@
   <script>
     const resultList = document.getElementById('resultList');
     const statusMessage = document.getElementById('statusMessage');
+    let submittedCount = 0;
 
     const resultKeys = Object.keys(localStorage).filter(k => k.startsWith('result-'));
 
@@ -140,10 +141,11 @@
 
             db.collection("results").doc(studentId).set(data)
               .then(() => {
+                submittedCount++;
                 card.classList.add('submitted');
                 card.innerHTML += `<p style="color:#28a745;"><strong>✅ Submitted to Firebase</strong></p>`;
                 statusMessage.innerHTML = `
-                  <p>✅ Result for ${data.firstName} ${data.lastName} submitted.</p>
+                  <p>✅ ${submittedCount} result${submittedCount > 1 ? 's' : ''} submitted successfully.</p>
                   <p>⏳ This page will close in 5 seconds.</p>
                 `;
               })
