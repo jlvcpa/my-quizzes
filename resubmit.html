@@ -36,7 +36,7 @@
       margin-bottom: 10px;
     }
     .info-block {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       background: #fff;
       padding: 20px;
@@ -47,42 +47,32 @@
       text-align: center;
       color: #2c3e50;
     }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
+    .result-card {
       background: #eef6fc;
       margin: 10px 0;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    .btn-group {
-      text-align: center;
-      margin-top: 20px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
+      padding: 15px;
+      border-radius: 8px;
       cursor: pointer;
+      transition: background 0.3s;
+      border-left: 5px solid #007acc;
     }
-    #submitBtn {
-      background-color: #28a745;
-      color: white;
+    .result-card:hover {
+      background: #d0e9ff;
     }
-    #cancelBtn {
-      background-color: #d9534f;
-      color: white;
+    .submitted {
+      background: #d4edda !important;
+      border-left-color: #28a745 !important;
+      cursor: default;
     }
-    #submitBtn:hover {
-      background-color: #218838;
+    .submitted:hover {
+      background: #d4edda !important;
     }
-    #cancelBtn:hover {
-      background-color: #c9302c;
+    .result-card h3 {
+      margin: 0;
+      color: #007acc;
+    }
+    .result-card p {
+      margin: 5px 0;
     }
     #statusMessage {
       text-align: center;
@@ -103,67 +93,56 @@
   </div>
 
   <div class="info-block">
-    <h2>📄 Resubmit Quiz Results</h2>
-    <p>The following quiz results were found on your device and will be sent to <strong>Mr. Villarta</strong>:</p>
-    <ul id="resultList"></ul>
-
-    <div class="btn-group">
-      <button id="submitBtn" onclick="submitAllResults()">✅ OK – Submit</button>
-      <button id="cancelBtn" onclick="cancelSubmission()">❌ Cancel</button>
-    </div>
-
+    <h2>📄 Select Quiz Result to Resubmit</h2>
+    <p>Tap or click a result below to send it to <strong>Mr. Villarta</strong>.</p>
+    <div id="resultList"></div>
     <div id="statusMessage"></div>
   </div>
 
   <script>
     const resultList = document.getElementById('resultList');
     const statusMessage = document.getElementById('statusMessage');
-    const foundResults = [];
 
-    // Scan localStorage for result-* keys
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('result-')) {
+    const resultKeys = Object.keys(localStorage).filter(k => k.startsWith('result-'));
+
+    if (resultKeys.length === 0) {
+      resultList.innerHTML = "<p>❌ No quiz results found on this device.</p>";
+    } else {
+      resultKeys.forEach(key => {
         try {
           const data = JSON.parse(localStorage.getItem(key));
-          foundResults.push({ key, data });
+          const studentId = key.replace('result-', '');
+
+          const card = document.createElement('div');
+          card.className = 'result-card';
+          card.innerHTML = `
+            <h3>${data.quizTitle}</h3>
+            <p><strong>Name:</strong> ${data.lastName}, ${data.firstName}</p>
+            <p><strong>Score:</strong> ${data.score} / ${Object.keys(data.responses).length}</p>
+            <p><strong>Grade:</strong> ${data.grade}</p>
+            <p><strong>CN NO:</strong> ${data.cnNo}</p>
+          `;
+
+          card.onclick = () => {
+            if (card.classList.contains('submitted')) return;
+
+            db.collection("results").doc(studentId).set(data)
+              .then(() => {
+                card.classList.add('submitted');
+                card.innerHTML += `<p style="color:#28a745;"><strong>✅ Submitted to Firebase</strong></p>`;
+                statusMessage.textContent = `✅ Result for ${data.firstName} ${data.lastName} submitted.`;
+              })
+              .catch((error) => {
+                console.error("❌ Error submitting result:", error);
+                statusMessage.textContent = "❌ Submission failed. Please try again.";
+              });
+          };
+
+          resultList.appendChild(card);
         } catch (e) {
           console.warn("Invalid result format:", key);
         }
-      }
-    });
-
-    // Display found results
-    if (foundResults.length === 0) {
-      resultList.innerHTML = "<li>❌ No quiz results found on this device.</li>";
-      document.getElementById('submitBtn').disabled = true;
-    } else {
-      foundResults.forEach(({ data }) => {
-        const item = document.createElement('li');
-        item.textContent = `${data.lastName}, ${data.firstName} — ${data.quizTitle} — Score: ${data.score}/${data.responses ? Object.keys(data.responses).length : '?'} — Grade: ${data.grade}`;
-        resultList.appendChild(item);
       });
-    }
-
-    function submitAllResults() {
-      let submitted = 0;
-      foundResults.forEach(({ key, data }) => {
-        const studentId = key.replace('result-', '');
-        db.collection("results").doc(studentId).set(data)
-          .then(() => {
-            submitted++;
-            if (submitted === foundResults.length) {
-              statusMessage.textContent = "✅ All results successfully submitted to Firebase.";
-            }
-          })
-          .catch((error) => {
-            console.error("❌ Error submitting result:", error);
-            statusMessage.textContent = "❌ Some results failed to submit. Please try again.";
-          });
-      });
-    }
-
-    function cancelSubmission() {
-      statusMessage.textContent = "🚫 Submission cancelled. No data was sent.";
     }
   </script>
 
