@@ -56,6 +56,20 @@
       color: green;
       font-weight: bold;
     }
+
+    #validationResults {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 6px;
+      color: #856404;
+    }
+
+    #validationResults ul {
+      margin: 0;
+      padding-left: 20px;
+    }
   </style>
 </head>
 <body>
@@ -68,6 +82,8 @@
   <button onclick="copyAsHTML()">📋 Copy as HTML &lt;select&gt;</button>
   <div id="copyMessage"></div>
 
+  <div id="validationResults"></div>
+
   <script>
     async function extractTopicsFromGitHub() {
       try {
@@ -79,8 +95,8 @@
 
         const questionBank = eval(match[1]); // ⚠️ Use with trusted content only
 
+        // Extract unique topics
         const topics = [...new Set(questionBank.map(q => q.topic))].sort();
-
         const selector = document.getElementById('topicSelector');
         topics.forEach(topic => {
           const option = document.createElement('option');
@@ -90,6 +106,21 @@
         });
 
         window.extractedTopics = topics;
+
+        // Validate questions
+        const issues = questionBank.filter(q =>
+          !q.answer || !q.options.includes(q.answer)
+        );
+
+        const resultsDiv = document.getElementById('validationResults');
+        if (issues.length > 0) {
+          resultsDiv.innerHTML = `<strong>⚠️ Questions with undefined or mismatched answers:</strong><ul>` +
+            issues.map(q => `<li><em>${q.question}</em></li>`).join('') +
+            `</ul>`;
+        } else {
+          resultsDiv.innerHTML = `<strong>✅ All questions have valid answers.</strong>`;
+        }
+
       } catch (err) {
         console.error("❌ Error extracting topics:", err);
         document.body.innerHTML += `<p style="color:red;">Failed to extract topics. Check your GitHub URL or questionBank format.</p>`;
