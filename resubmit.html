@@ -2,169 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Resubmit Quiz Results</title>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
-      authDomain: "jlvcpa-quizzes.firebaseapp.com",
-      projectId: "jlvcpa-quizzes",
-      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
-      messagingSenderId: "629158256557",
-      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
-    };
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
-
+  <title>Resubmit Quiz</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      padding: 20px;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    #schoolLogo {
-      max-height: 100px;
-      margin-bottom: 10px;
-    }
-    .info-block {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    .result-card {
-      background: #eef6fc;
-      margin: 10px 0;
-      padding: 15px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-      border-left: 5px solid #007acc;
-    }
-    .result-card:hover {
-      background: #d0e9ff;
-    }
-    .submitted {
-      background: #d4edda !important;
-      border-left-color: #28a745 !important;
-      cursor: default;
-    }
-    .submitted:hover {
-      background: #d4edda !important;
-    }
-    .result-card h3 {
-      margin: 0;
-      color: #007acc;
-    }
-    .result-card p {
-      margin: 5px 0;
-    }
-    #statusMessage {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 20px;
-      color: #007acc;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    select, button { margin: 10px 0; }
+    .attempt { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
+  <h2>Resubmit Quiz</h2>
 
-  <div class="header">
-    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
-    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
-    <span style="color:#000;">SY 2025–2026</span><br>
-    <span style="color:#000;">2nd Semester</span><br>
-    <span style="color:#000;">FABM 1</span>
-  </div>
+  <label for="quizSelect">Select Quiz(es):</label><br>
+  <select id="quizSelect" multiple size="5"></select><br>
+  <button onclick="loadAttempts()">Load Attempts</button>
 
-  <div class="info-block">
-    <h2>📄 Select Quiz Result to Resubmit</h2>
-    <p>Tap or click a result below to send it to <strong>Mr. Villarta</strong>.</p>
-    <div id="resultList"></div>
-    <div id="statusMessage"></div>
-  </div>
+  <div id="attemptsContainer"></div>
 
   <script>
-    const resultList = document.getElementById('resultList');
-    const statusMessage = document.getElementById('statusMessage');
-    let submittedCount = 0;
+    const firebaseConfig = {
+      // 🔐 Your Firebase config here
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const resultKeys = Object.keys(localStorage).filter(k => k.startsWith('result-'));
+    const studentId = "student123"; // Replace with dynamic ID
 
-    if (resultKeys.length === 0) {
-      resultList.innerHTML = "<p>❌ No quiz results found on this device.</p>";
-    } else {
-      resultKeys.forEach(key => {
-        try {
-          const data = JSON.parse(localStorage.getItem(key));
-          const studentId = key.replace('result-', '');
-
-          const card = document.createElement('div');
-          card.className = 'result-card';
-          card.innerHTML = `
-            <h3>${data.quizTitle}</h3>
-            <p><strong>Name:</strong> ${data.lastName}, ${data.firstName}</p>
-            <p><strong>Score:</strong> ${data.score} / ${Object.keys(data.responses).length}</p>
-            <p><strong>Grade:</strong> ${data.grade}</p>
-            <p><strong>CN NO:</strong> ${data.cnNo}</p>
-          `;
-
-          card.onclick = () => {
-            if (card.classList.contains('submitted')) return;
-
-            const confirmSubmit = confirm(`Do you want to submit the result for ${data.firstName} ${data.lastName}?`);
-
-            statusMessage.innerHTML = `
-              <p>⏳ This page will close in 5 seconds.</p>
-            `;
-
-            setTimeout(() => {
-              window.close();
-            }, 5000);
-
-            if (!confirmSubmit) return;
-
-            db.collection("results").doc(studentId).set(data)
-              .then(() => {
-                submittedCount++;
-                card.classList.add('submitted');
-                card.innerHTML += `<p style="color:#28a745;"><strong>✅ Submitted to Firebase</strong></p>`;
-                statusMessage.innerHTML = `
-                  <p>✅ ${submittedCount} result${submittedCount > 1 ? 's' : ''} submitted successfully.</p>
-                  <p>⏳ This page will close in 5 seconds.</p>
-                `;
-              })
-              .catch((error) => {
-                console.error("❌ Error submitting result:", error);
-                statusMessage.innerHTML = `
-                  <p>❌ Submission failed. Please try again.</p>
-                  <p>⏳ This page will close in 5 seconds.</p>
-                `;
-              });
-          };
-
-          resultList.appendChild(card);
-        } catch (e) {
-          console.warn("Invalid result format:", key);
-        }
+    async function populateQuizSelect() {
+      const quizSelect = document.getElementById("quizSelect");
+      const quizzesSnapshot = await db.collection("quizzes").get();
+      quizzesSnapshot.forEach(doc => {
+        const option = document.createElement("option");
+        option.value = doc.id;
+        option.textContent = doc.data().title;
+        quizSelect.appendChild(option);
       });
     }
-  </script>
 
+    async function loadAttempts() {
+      const selectedQuizzes = Array.from(document.getElementById("quizSelect").selectedOptions).map(opt => opt.value);
+      const container = document.getElementById("attemptsContainer");
+      container.innerHTML = "";
+
+      for (const quizId of selectedQuizzes) {
+        const attemptsRef = db.collection("results").doc(quizId).collection(studentId);
+        const snapshot = await attemptsRef.orderBy("timestamp", "desc").get();
+
+        if (snapshot.empty) {
+          container.innerHTML += `<p>No attempts found for quiz: ${quizId}</p>`;
+          continue;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.className = "attempt";
+          div.innerHTML = `
+            <strong>${data.quizTitle}</strong><br>
+            Score: ${data.score}<br>
+            Grade: ${data.grade}<br>
+            Submitted: ${new Date(data.timestamp).toLocaleString()}<br>
+            <button onclick="viewAttempt('${quizId}', '${studentId}', '${data.attemptId}')">View</button>
+          `;
+          container.appendChild(div);
+        });
+      }
+    }
+
+    function viewAttempt(quizId, studentId, attemptId) {
+      // 🔍 Implement view logic or redirect
+      alert(`Viewing attempt ${attemptId} for quiz ${quizId}`);
+    }
+
+    populateQuizSelect();
+  </script>
 </body>
 </html>
