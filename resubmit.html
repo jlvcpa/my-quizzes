@@ -126,15 +126,33 @@
           card.onclick = () => {
             if (card.classList.contains('submitted')) return;
 
+            const confirmSubmit = confirm(`Do you want to submit the result for ${data.firstName} ${data.lastName}?`);
+
+            statusMessage.innerHTML = `
+              <p>⏳ This page will close in 5 seconds.</p>
+            `;
+
+            setTimeout(() => {
+              window.close();
+            }, 5000);
+
+            if (!confirmSubmit) return;
+
             db.collection("results").doc(studentId).set(data)
               .then(() => {
                 card.classList.add('submitted');
                 card.innerHTML += `<p style="color:#28a745;"><strong>✅ Submitted to Firebase</strong></p>`;
-                statusMessage.textContent = `✅ Result for ${data.firstName} ${data.lastName} submitted.`;
+                statusMessage.innerHTML = `
+                  <p>✅ Result for ${data.firstName} ${data.lastName} submitted.</p>
+                  <p>⏳ This page will close in 5 seconds.</p>
+                `;
               })
               .catch((error) => {
                 console.error("❌ Error submitting result:", error);
-                statusMessage.textContent = "❌ Submission failed. Please try again.";
+                statusMessage.innerHTML = `
+                  <p>❌ Submission failed. Please try again.</p>
+                  <p>⏳ This page will close in 5 seconds.</p>
+                `;
               });
           };
 
