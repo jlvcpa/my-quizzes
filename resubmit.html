@@ -4,11 +4,10 @@
   <meta charset="UTF-8">
   <title>Resubmit Quiz Results</title>
 
-  <!-- Firebase Modular SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
       authDomain: "jlvcpa-quizzes.firebaseapp.com",
@@ -18,12 +17,8 @@
       appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    window.db = db;
-    window.doc = doc;
-    window.setDoc = setDoc;
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
   </script>
 
   <style>
@@ -104,15 +99,10 @@
     <div id="statusMessage"></div>
   </div>
 
-  <script type="module">
+  <script>
     const resultList = document.getElementById('resultList');
     const statusMessage = document.getElementById('statusMessage');
     let submittedCount = 0;
-
-    if (!navigator.onLine) {
-      statusMessage.innerHTML = "<p>❌ You are currently offline. Please reconnect to submit results.</p>";
-      return;
-    }
 
     const resultKeys = Object.keys(localStorage).filter(k => k.startsWith('result-'));
 
@@ -134,30 +124,38 @@
             <p><strong>CN NO:</strong> ${data.cnNo}</p>
           `;
 
-          card.onclick = async () => {
+          card.onclick = () => {
             if (card.classList.contains('submitted')) return;
 
             const confirmSubmit = confirm(`Do you want to submit the result for ${data.firstName} ${data.lastName}?`);
+
+            statusMessage.innerHTML = `
+              <p>⏳ This page will close in 5 seconds.</p>
+            `;
+
+            setTimeout(() => {
+              window.close();
+            }, 5000);
+
             if (!confirmSubmit) return;
 
-            const resultRef = window.doc(window.db, "results", studentId);
-
-            try {
-              await window.setDoc(resultRef, data);
-              submittedCount++;
-              card.classList.add('submitted');
-              card.innerHTML += `<p style="color:#28a745;"><strong>✅ Submitted to Firebase</strong></p>`;
-              statusMessage.innerHTML = `
-                <p>✅ ${submittedCount} result${submittedCount > 1 ? 's' : ''} submitted successfully.</p>
-                <p>⏳ This page will close in 5 seconds.</p>
-              `;
-              setTimeout(() => window.close(), 5000);
-            } catch (error) {
-              console.error("❌ Error submitting result:", error);
-              statusMessage.innerHTML = `
-                <p>❌ Submission failed. Please check your connection and try again.</p>
-              `;
-            }
+            db.collection("results").doc(studentId).set(data)
+              .then(() => {
+                submittedCount++;
+                card.classList.add('submitted');
+                card.innerHTML += `<p style="color:#28a745;"><strong>✅ Submitted to Firebase</strong></p>`;
+                statusMessage.innerHTML = `
+                  <p>✅ ${submittedCount} result${submittedCount > 1 ? 's' : ''} submitted successfully.</p>
+                  <p>⏳ This page will close in 5 seconds.</p>
+                `;
+              })
+              .catch((error) => {
+                console.error("❌ Error submitting result:", error);
+                statusMessage.innerHTML = `
+                  <p>❌ Submission failed. Please try again.</p>
+                  <p>⏳ This page will close in 5 seconds.</p>
+                `;
+              });
           };
 
           resultList.appendChild(card);
