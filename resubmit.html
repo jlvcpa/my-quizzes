@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resubmit Quiz Results</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+      authDomain: "jlvcpa-quizzes.firebaseapp.com",
+      projectId: "jlvcpa-quizzes",
+      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+      messagingSenderId: "629158256557",
+      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #schoolLogo {
+      max-height: 100px;
+      margin-bottom: 10px;
+    }
+    .info-block {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #eef6fc;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    .btn-group {
+      text-align: center;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #submitBtn {
+      background-color: #28a745;
+      color: white;
+    }
+    #cancelBtn {
+      background-color: #d9534f;
+      color: white;
+    }
+    #submitBtn:hover {
+      background-color: #218838;
+    }
+    #cancelBtn:hover {
+      background-color: #c9302c;
+    }
+    #statusMessage {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 20px;
+      color: #007acc;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+    <span style="color:#000;">SY 2025–2026</span><br>
+    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">FABM 1</span>
+  </div>
+
+  <div class="info-block">
+    <h2>📄 Resubmit Quiz Results</h2>
+    <p>The following quiz results were found on your device and will be sent to <strong>Mr. Villarta</strong>:</p>
+    <ul id="resultList"></ul>
+
+    <div class="btn-group">
+      <button id="submitBtn" onclick="submitAllResults()">✅ OK – Submit</button>
+      <button id="cancelBtn" onclick="cancelSubmission()">❌ Cancel</button>
+    </div>
+
+    <div id="statusMessage"></div>
+  </div>
+
+  <script>
+    const resultList = document.getElementById('resultList');
+    const statusMessage = document.getElementById('statusMessage');
+    const foundResults = [];
+
+    // Scan localStorage for result-* keys
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('result-')) {
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          foundResults.push({ key, data });
+        } catch (e) {
+          console.warn("Invalid result format:", key);
+        }
+      }
+    });
+
+    // Display found results
+    if (foundResults.length === 0) {
+      resultList.innerHTML = "<li>❌ No quiz results found on this device.</li>";
+      document.getElementById('submitBtn').disabled = true;
+    } else {
+      foundResults.forEach(({ data }) => {
+        const item = document.createElement('li');
+        item.textContent = `${data.lastName}, ${data.firstName} — ${data.quizTitle} — Score: ${data.score}/${data.responses ? Object.keys(data.responses).length : '?'} — Grade: ${data.grade}`;
+        resultList.appendChild(item);
+      });
+    }
+
+    function submitAllResults() {
+      let submitted = 0;
+      foundResults.forEach(({ key, data }) => {
+        const studentId = key.replace('result-', '');
+        db.collection("results").doc(studentId).set(data)
+          .then(() => {
+            submitted++;
+            if (submitted === foundResults.length) {
+              statusMessage.textContent = "✅ All results successfully submitted to Firebase.";
+            }
+          })
+          .catch((error) => {
+            console.error("❌ Error submitting result:", error);
+            statusMessage.textContent = "❌ Some results failed to submit. Please try again.";
+          });
+      });
+    }
+
+    function cancelSubmission() {
+      statusMessage.textContent = "🚫 Submission cancelled. No data was sent.";
+    }
+  </script>
+
+</body>
+</html>
