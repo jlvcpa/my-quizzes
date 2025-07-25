@@ -3715,6 +3715,13 @@ function submitQuiz() {
   };
 
   localStorage.setItem(`result-${studentId}`, JSON.stringify(resultData));
+  db.collection("results").doc(studentId).set(resultData)
+  .then(() => {
+    console.log("✅ Result saved to Firestore for", studentId);
+  })
+  .catch((error) => {
+    console.error("❌ Error saving result to Firestore:", error);
+  });
 }
   
   // ← This closing brace is the end of submitQuiz()
