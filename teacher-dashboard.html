@@ -2,237 +2,192 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Teacher Dashboard</title>
+  <title>Teacher Dashboard - Quiz Results</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f4f4f4;
       padding: 20px;
     }
-    h2 {
+    h1 {
       text-align: center;
       color: #2c3e50;
+    }
+    .section-group {
+      margin-bottom: 40px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #007acc;
+      margin-bottom: 10px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      background: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
     }
     th, td {
+      padding: 8px;
       border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
+      text-align: left;
     }
     th {
       background-color: #007acc;
       color: white;
     }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    button {
-      padding: 6px 12px;
+    .print-btn {
+      padding: 5px 10px;
       background-color: #28a745;
       color: white;
       border: none;
-      border-radius: 4px;
       cursor: pointer;
+      border-radius: 4px;
     }
-    button:hover {
+    .print-btn:hover {
       background-color: #218838;
+    }
+    iframe {
+      display: none;
     }
   </style>
 </head>
 <body>
+  <h1>Teacher Dashboard</h1>
+  <div id="resultsContainer"></div>
 
-  <h2>📋 Student Quiz Results</h2>
-  <table id="resultsTable">
-    <thead>
-      <tr>
-        <th>CN NO</th>
-        <th>Name</th>
-        <th>Score</th>
-        <th>Grade</th>
-        <th>Submitted</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <iframe id="printFrame"></iframe>
 
   <script>
-      const allowedUser = "jlvcpa";
-  const allowedPass = "14344230321";
+    const resultsContainer = document.getElementById('resultsContainer');
+    const groupedResults = {};
 
-  const stored = sessionStorage.getItem("authenticated");
-
-  if (!stored) {
-    const username = prompt("Enter username:");
-    const password = prompt("Enter password:");
-
-    if (username !== allowedUser || password !== allowedPass) {
-      alert("⛔ Access denied.");
-      document.body.innerHTML = "<h2 style='text-align:center;'>Unauthorized Access</h2>";
-      throw new Error("Unauthorized");
-    } else {
-      sessionStorage.setItem("authenticated", "true");
+    // Load and group results
+    for (let key in localStorage) {
+      if (key.startsWith('result-')) {
+        const data = JSON.parse(localStorage.getItem(key));
+        const section = data.section || 'Unspecified';
+        if (!groupedResults[section]) groupedResults[section] = [];
+        groupedResults[section].push(data);
+      }
     }
-  }
 
-    function loadResults() {
-      const tbody = document.querySelector('#resultsTable tbody');
-      tbody.innerHTML = '';
+    // Render grouped results
+    for (let section in groupedResults) {
+      const group = groupedResults[section];
+      const sectionDiv = document.createElement('div');
+      sectionDiv.className = 'section-group';
+      sectionDiv.innerHTML = `<div class="section-title">Section: ${section}</div>`;
 
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('result-')) {
-          const data = JSON.parse(localStorage.getItem(key));
-          const row = document.createElement('tr');
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <tr>
+          <th>CN No</th>
+          <th>Name</th>
+          <th>Quiz Title</th>
+          <th>Score</th>
+          <th>Grade</th>
+          <th>Print</th>
+        </tr>
+      `;
 
-          row.innerHTML = `
-            <td>${data.cnNo}</td>
-            <td>${data.lastName}, ${data.firstName}</td>
-            <td>${data.score}</td>
-            <td>${data.grade}</td>
-            <td>${new Date(data.timestamp).toLocaleString()}</td>
-            <td><button onclick="viewReport('${key}')">🖨️ View</button></td>
-          `;
-
-          tbody.appendChild(row);
-        }
+      group.forEach(data => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${data.cnNo}</td>
+          <td>${data.lastName}, ${data.firstName}</td>
+          <td>${data.quizTitle}</td>
+          <td>${data.score} / ${data.questions.length}</td>
+          <td>${data.grade}</td>
+          <td><button class="print-btn" onclick='printResult(${JSON.stringify(data)})'>🖨️ Print</button></td>
+        `;
+        table.appendChild(row);
       });
+
+      sectionDiv.appendChild(table);
+      resultsContainer.appendChild(sectionDiv);
     }
 
-    function viewReport(key) {
-      const data = JSON.parse(localStorage.getItem(key));
-      const resultWindow = window.open('', '_blank');
-
+    // Print result using student format
+    function printResult(data) {
       const letterLabels = ['A', 'B', 'C', 'D'];
-      const questions = data.questions || []; // fallback if not stored
-      const responses = data.responses || {};
-      const rubric = data.rubric || '';
+      const answeredOrder = Object.keys(data.responses).map(i => parseInt(i));
 
-      resultWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="en">
+      const questionsHTML = answeredOrder.map(i => {
+        const q = data.questions[i];
+        const userAnswer = data.responses[i];
+        const isCorrect = userAnswer === q.answer;
+        const optionsHTML = q.options.map((opt, idx) => {
+          const label = letterLabels[idx] || String.fromCharCode(65 + idx);
+          return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
+        }).join('');
+        const feedback = isCorrect
+          ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
+          : `<div class="incorrect">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`;
+        return `
+          <div class="question-block">
+            <h3>${i + 1}. ${q.question}</h3>
+            ${optionsHTML}
+            ${feedback}
+            <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
+          </div>
+        `;
+      }).join('');
+
+      const html = `
+        <html>
         <head>
-          <meta charset="UTF-8">
-          <title>${data.quizTitle} - Report</title>
+          <title>${data.quizTitle} - Result</title>
           <style>
-            body {
-              font-family: 'Segoe UI', sans-serif;
-              padding: 20px;
-              background: #fff;
-            }
-            h2 {
-              text-align: center;
-              color: #2c3e50;
-            }
-            .info {
-              margin-bottom: 20px;
-              font-weight: bold;
-            }
-            .question-block {
-              background: #f9f9f9;
-              padding: 15px;
-              margin-bottom: 15px;
-              border-left: 5px solid #007acc;
-              border-radius: 6px;
-            }
-            .question-block h3 {
-              margin-top: 0;
-              color: #34495e;
-            }
-            .answer {
-              margin-top: 10px;
-              font-weight: bold;
-            }
-            .correct {
-              color: green;
-            }
-            .incorrect {
-              color: red;
-            }
-            .explanation {
-              margin-top: 10px;
-              font-style: italic;
-              color: #555;
-            }
-            .print-btn {
-              text-align: center;
-              margin-top: 20px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 10px;
-            }
-            th, td {
-              border: 1px solid #ccc;
-              padding: 8px;
-            }
-            thead th {
-              text-align: center;
-              background-color: #007acc;
-              color: white;
-            }
-            tbody td {
-              text-align: left;
-              vertical-align: top;
-              white-space: pre-wrap;
-              line-height: 1.4;
-            }
+            body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #fff; }
+            .header { text-align: center; margin-bottom: 20px; }
+            #schoolLogo { max-height: 100px; margin-bottom: 10px; }
+            .quiz-title { font-size: 24px; font-weight: bold; color: #2c3e50; }
+            .grade-block { text-align: right; font-weight: bold; font-size: 20px; color: #007acc; }
+            .score { text-align: right; font-size: 16px; font-weight: bold; color: #28a745; margin-bottom: 10px; }
+            .student-info { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+            .question-block { background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #007acc; }
+            .question-block h3 { margin-top: 0; color: #34495e; }
+            .correct { color: #28a745; }
+            .incorrect { color: #d9534f; }
+            .explanation { margin-top: 10px; font-style: italic; }
+            textarea { width: 100%; margin-top: 10px; }
           </style>
         </head>
         <body>
-          <h2>${data.quizTitle}</h2>
-          <div class="info">
-            CN NO: ${data.cnNo}<br>
-            Name: ${data.lastName}, ${data.firstName}<br>
-            Score: ${data.score}<br>
-            Grade: ${data.grade}<br>
-            Submitted: ${new Date(data.timestamp).toLocaleString()}
+          <div class="header">
+            <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+            <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+            <span style="color:#000;">SY 2025–2026</span><br>
+            <span style="color:#000;">2nd Semester</span><br>
+            <span style="color:#000;">FABM 1</span>
+            <div class="quiz-title">${data.quizTitle}</div>
+            <div class="grade-block">Grade: ${data.grade}</div>
+            <div class="score">Score: ${data.score} / ${data.questions.length} = ${data.percentage}%</div>
           </div>
 
-          ${rubric}
-
-          ${questions.length > 0 ? questions.map((q, i) => {
-            const userAnswer = responses[i];
-            const isCorrect = userAnswer === q.answer;
-            const correctLetter = letterLabels[q.options.indexOf(q.answer)];
-            const userLetter = letterLabels[q.options.indexOf(userAnswer)];
-
-            const optionsHTML = q.options.map((opt, idx) => {
-              return `<div style="margin-left:20px;">${letterLabels[idx]}. ${opt}</div>`;
-            }).join('');
-
-            const feedback = isCorrect
-              ? `<div class="answer correct">Answered: ${userLetter} ✔</div>`
-              : `<div class="answer incorrect">Answered: ${userLetter} ❌<br>Correct Answer: ${correctLetter}</div>`;
-
-            return `
-              <div class="question-block">
-                <h3>${i + 1}. ${q.question}</h3>
-                ${optionsHTML}
-                ${feedback}
-                <div class="explanation">Explanation: ${q.explanation || 'No explanation provided.'}</div>
-              </div>
-            `;
-          }).join('') : '<p>No question data available.</p>'}
-
-          <div class="print-btn">
-            <button onclick="window.print()">🖨️ Print This Report</button>
+          <div class="student-info">
+            <div>CN NO: ${data.cnNo} — Name: ${data.lastName}, ${data.firstName}</div>
+            <div>Section: ${data.section}</div>
           </div>
+
+          <p><strong>Test Type:</strong> ${data.type || 'Quiz'}</p>
+          <p><strong>Instructions:</strong></p>
+          <textarea readonly rows="4">${data.instructions || ''}</textarea>
+          ${data.rubric || ''}
+
+          ${questionsHTML}
         </body>
         </html>
-      `);
+      `;
 
-      resultWindow.document.close();
+      const frame = document.getElementById('printFrame');
+      frame.contentDocument.open();
+      frame.contentDocument.write(html);
+      frame.contentDocument.close();
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
     }
-
-    window.onload = loadResults;
   </script>
-
 </body>
 </html>
