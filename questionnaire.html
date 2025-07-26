@@ -193,7 +193,7 @@
   ];
 
   window.addEventListener("DOMContentLoaded", () => {
-  //quizData = JSON.parse(localStorage.getItem("quizData")); // or however you're passing it
+    quizData = JSON.parse(localStorage.getItem("quizData")); // or however you're passing it
 
     console.log("🔍 quizData received:", quizData);
     console.log("📚 Available topics in questionBank:", [...new Set(questionBank.map(q => q.topic))]);
@@ -394,7 +394,13 @@ resultWindow.document.close();
         return;
       }
 
-      ({ cnNo, lastName, firstName, quizData } = studentData);
+      //({ cnNo, lastName, firstName, quizData } = studentData);
+
+      if (!Array.isArray(quizData?.topics)) {
+  console.error("❌ quizData.topics is missing or not an array:", quizData?.topics);
+  alert("Quiz data is corrupted or incomplete. Please restart the quiz.");
+  return;
+}
 
       document.getElementById('quizHeader').innerHTML = `
         <div class="quiz-title">${quizData.title}</div>
