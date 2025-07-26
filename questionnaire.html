@@ -193,7 +193,7 @@
   ];
 
   window.addEventListener("DOMContentLoaded", () => {
-    quizData = JSON.parse(localStorage.getItem("quizData")); // or however you're passing it
+  //quizData = JSON.parse(localStorage.getItem("quizData")); // or however you're passing it
 
     console.log("🔍 quizData received:", quizData);
     console.log("📚 Available topics in questionBank:", [...new Set(questionBank.map(q => q.topic))]);
