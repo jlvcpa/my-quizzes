@@ -100,7 +100,22 @@
     let inactivityTimer;
 
     function loadQuestions() {
-      const questionBank = [/* your full question set */];
+      const questionBank = [ {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "Why was accounting important in ancient Egypt and Babylon?",
+  options: [
+    "To build pyramids",
+    "To manage agricultural production and state wealth",
+    "To trade with Rome",
+    "To perform religious rituals"
+  ],
+  answer: "To manage agricultural production and state wealth",
+  explanation: "✅ Accounting in ancient Egypt and Babylon was used to manage agricultural output and state resources, making it essential for economic control."
+}
+                            
+    
+];
 
       selectedQuestions = questionBank
         .filter(q => quizData.topics.includes(q.topic))
