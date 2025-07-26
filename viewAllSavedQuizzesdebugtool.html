@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View All Saved Quizes</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .quiz-block { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    .invalid { background-color: #ffe6e6; }
+    .valid { background-color: #e6ffe6; }
+    button { margin-bottom: 20px; padding: 8px 12px; font-size: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Quiz Debugger</h1>
+  <button onclick="clearQuizzes()">🧹 Clear All Quiz Data</button>
+  <div id="output"></div>
+
+  <script>
+    const output = document.getElementById('output');
+
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('questionnaire-')) {
+        const raw = localStorage.getItem(key);
+        let studentData;
+        let status = 'valid';
+        let message = '';
+        try {
+          studentData = JSON.parse(raw);
+          const topics = studentData?.quizData?.topics;
+          if (!Array.isArray(topics)) {
+            status = 'invalid';
+            message = '❌ Missing or malformed topics';
+          }
+        } catch (e) {
+          status = 'invalid';
+          message = '❌ JSON parse error';
+        }
+
+        const block = document.createElement('div');
+        block.className = `quiz-block ${status}`;
+        block.innerHTML = `
+          <strong>Key:</strong> ${key}<br>
+          <strong>Status:</strong> ${status === 'valid' ? '✅ Valid' : message}<br>
+          <strong>Topics:</strong> ${studentData?.quizData?.topics?.join(', ') || 'N/A'}
+        `;
+        output.appendChild(block);
+      }
+    });
+
+    if (output.children.length === 0) {
+      output.innerHTML = '<p>No quiz data found in localStorage.</p>';
+    }
+
+    function clearQuizzes() {
+      if (confirm("Are you sure you want to delete all quiz data?")) {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('questionnaire-')) {
+            localStorage.removeItem(key);
+          }
+        });
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
