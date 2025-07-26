@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <title>Questionnaire</title>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
-  <script>
+  <!-- Modular Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
       authDomain: "jlvcpa-quizzes.firebaseapp.com",
@@ -16,194 +17,23 @@
       messagingSenderId: "629158256557",
       appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
     };
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
 
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      padding: 20px;
-    }
-    h1, h2 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    #schoolLogo {
-      max-height: 100px;
-      margin-bottom: 10px;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .info-block, .quiz-box {
-      max-width: 800px;
-      margin: 0 auto 20px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .quiz-title {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      color: #2c3e50;
-    }
-    .student-info {
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-      margin-bottom: 15px;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .grade-block p {
-      margin: 10px 0;
-    }
-    textarea[readonly] {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      resize: none;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: #f5f5f5;
-    }
-    .score {
-      text-align: right;
-      font-size: 16px;
-      font-weight: bold;
-      color: #28a745;
-      margin-bottom: 10px;
-    }
-    .topic-label {
-      font-size: 14px;
-      color: #888;
-      margin-bottom: 10px;
-      font-style: italic;
-    }
-    .rubric-block h3 {
-      margin-bottom: 10px;
-      color: #007acc;
-    }
-    .rubric-table table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    .rubric-table th, .rubric-table td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-      vertical-align: top;
-      font-size: 14px;
-    }
-    .rubric-table thead {
-      background-color: #eef6fc;
-      font-weight: bold;
-    }
-    .question-block h3 {
-      margin-top: 0;
-      color: #34495e;
-    }
-    .option {
-      margin: 5px 0;
-    }
-    #navigation {
-      text-align: center;
-      margin-top: 20px;
-    }
-    button {
-      padding: 14px 24px;
-      font-size: 18px;
-      margin: 8px;
-      background-color: #007acc;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    #submitBtn {
-      background-color: #28a745;
-    }
-    #submitBtn:hover {
-      background-color: #218838;
-    }
-    #timer, #warningMessage, #viewedCounter, #result {
-      text-align: center;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    #result {
-      color: #28a745;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
-    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
-    <span style="color:#000;">SY 2025–2026</span><br>
-    <span style="color:#000;">2nd Semester</span><br>
-    <span style="color:#000;">FABM 1</span>
-  </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  <div class="info-block" id="quizHeader"></div>
-
-  <!-- ✅ Submit button moved to top-left above question box -->
-  <div style="max-width:800px; margin:0 auto; text-align:left;">
-    <button id="submitBtn" onclick="submitQuiz()">✅ Submit Quiz</button>
-  </div>
-
-  <!-- ✅ Idle warning above timer -->
-  <div id="warningMessage"></div>
-  <div id="timer"></div>
-
-  <div class="quiz-box" id="quizContainer"></div>
-
-  <div id="navigation">
-    <button onclick="prevQuestion()">⬅ Previous</button>
-    <button onclick="nextQuestion()">Next ➡</button>
-  </div>
-
-  <div id="viewedCounter"></div>
-  <div id="result"></div>
-
-  <script>
-    (() => {
+    window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       const studentId = params.get('student');
       const studentData = JSON.parse(localStorage.getItem(`questionnaire-${studentId}`));
 
-      if (!studentData) {
-        document.body.innerHTML = "<h2 style='text-align:center;'>⛔ Quiz not found or expired.</h2>";
+      if (!studentData || !studentData.quizData) {
+        document.getElementById('quizHeader').innerHTML = "<p>⚠️ Quiz data missing. Please restart.</p>";
         return;
       }
 
-      const { cnNo, lastName, firstName, password, quizData } = studentData;
+      const { cnNo, lastName, firstName, quizData } = studentData;
 
-      const questionBank = [
-        // ADD QUESTIONS HERE
-      ];
-
-      const selectedQuestions = questionBank
-        .filter(q => quizData.topics.includes(q.topic))
-        .sort(() => 0.5 - Math.random())
-        .slice(0, quizData.num);
-
-      let currentIndex = 0;
-      let viewedIndexes = new Set();
-      let responses = {};
-      let timerInterval;
-      const endTime = quizData.endTime;
-
+      // ✅ Populate quiz header
       document.getElementById('quizHeader').innerHTML = `
         <div class="quiz-title">${quizData.title}</div>
         <div class="student-info">
@@ -221,6 +51,18 @@
         </div>
       `;
 
+      // ✅ Quiz logic
+      const questionBank = [/* your questions here */];
+      const selectedQuestions = questionBank
+        .filter(q => quizData.topics.includes(q.topic))
+        .sort(() => 0.5 - Math.random())
+        .slice(0, quizData.num);
+
+      let currentIndex = 0;
+      let viewedIndexes = new Set();
+      let responses = {};
+      let timerInterval;
+      const endTime = quizData.endTime;
       const activityLog = [];
       let inactivityTimer;
       let warningTimer;
@@ -229,17 +71,14 @@
       function logActivity(message) {
         const timestamp = new Date().toLocaleString();
         activityLog.push({ time: timestamp, message });
-        localStorage.setItem('activityLog', JSON.stringify(activityLog));
+        localStorage.setItem(`activityLog-${studentId}`, JSON.stringify(activityLog));
       }
 
       function resetInactivityTimer() {
         clearTimeout(inactivityTimer);
         clearInterval(warningTimer);
         warningCountdown = 60;
-
-        inactivityTimer = setTimeout(() => {
-          showInactivityWarning();
-        }, 2 * 60 * 1000);
+        inactivityTimer = setTimeout(showInactivityWarning, 2 * 60 * 1000);
       }
 
       function showInactivityWarning() {
@@ -251,7 +90,7 @@
           warningCountdown -= 15;
           if (warningCountdown <= 0) {
             clearInterval(warningTimer);
-                        logActivity("⏱️ Quiz refreshed due to inactivity");
+            logActivity("⏱️ Quiz refreshed due to inactivity");
             location.reload();
           } else {
             document.getElementById('warningMessage').textContent =
@@ -346,142 +185,326 @@
 
       function updateWarning() {
         const unanswered = [...viewedIndexes].filter(i => !responses[i]);
-        if (unanswered.length > 0) {
-          document.getElementById('warningMessage').textContent =
-            `⚠️ Unanswered question(s): ${unanswered.map(i => i + 1).join(', ')}`;
-        } else {
-          document.getElementById('warningMessage').textContent = '';
+        document.getElementById('warningMessage').textContent = unanswered.length
+          ? `⚠️ Unanswered question(s): ${unanswered.map(i => i + 1).join(', ')}`
+          : '';
+      }
+
+function submitQuiz() {
+  if (document.getElementById('navigation').style.display === 'none') return;
+  clearInterval(timerInterval);
+
+  let score = 0;
+  const answeredOrder = Object.keys(responses).map(i => parseInt(i));
+  answeredOrder.forEach(i => {
+    if (responses[i] === selectedQuestions[i].answer) score++;
+  });
+
+  const percentage = Math.round((score / selectedQuestions.length) * 100);
+  let grade = '';
+  if (percentage >= 95) grade = 'A';
+  else if (percentage >= 85) grade = 'P';
+  else if (percentage >= 75) grade = 'D';
+  else grade = 'IR';
+
+  const resultData = {
+    cnNo,
+    lastName,
+    firstName,
+    score,
+    percentage,
+    grade,
+    responses,
+    quizTitle: quizData.title,
+    timestamp: Date.now()
+  };
+
+  localStorage.setItem(`result-${studentId}`, JSON.stringify(resultData));
+  setDoc(doc(db, "results", studentId), resultData)
+    .then(() => console.log("✅ Result saved to Firestore for", studentId))
+    .catch(error => console.error("❌ Error saving result to Firestore:", error));
+
+  const resultHTML = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>${quizData.title} - Completed Quiz</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: #fff;
+          padding: 20px;
         }
-      }
+        .header {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        #schoolLogo {
+          max-height: 100px;
+          margin-bottom: 10px;
+        }
+        .quiz-title {
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          color: #2c3e50;
+        }
+        .student-info {
+          display: flex;
+          justify-content: space-between;
+          font-weight: bold;
+          margin-bottom: 10px;
+        }
+        .grade-block {
+          text-align: right;
+          font-weight: bold;
+          font-size: 20px;
+          color: #007acc;
+        }
+        .score {
+          text-align: right;
+          font-size: 16px;
+          font-weight: bold;
+          color: #28a745;
+          margin-bottom: 10px;
+        }
+        .question-block {
+          background: #f9f9f9;
+          padding: 15px;
+          margin-bottom: 15px;
+          border-radius: 8px;
+          border-left: 5px solid #007acc;
+        }
+        .question-block h3 {
+          margin-top: 0;
+          color: #34495e;
+        }
+        .correct {
+          color: #28a745;
+        }
+        .incorrect {
+          color: #d9534f;
+        }
+        .explanation {
+          margin-top: 10px;
+          font-style: italic;
+        }
+        textarea {
+          width: 100%;
+          margin-top: 10px;
+        }
+        .print-btn {
+          text-align: center;
+          margin-top: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+        <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+        <span style="color:#000;">SY 2025–2026</span><br>
+        <span style="color:#000;">2nd Semester</span><br>
+        <span style="color:#000;">FABM 1</span>
+        <div class="quiz-title">${quizData.title}</div>
+        <div class="grade-block">Grade: ${grade}</div>
+        <div class="score">Score: ${score} / ${selectedQuestions.length} = ${percentage}%</div>
+      </div>
 
-      function submitQuiz() {
-        if (document.getElementById('navigation').style.display === 'none') return;
-        clearInterval(timerInterval);
+      <div class="student-info">
+        <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
+        <div>Section: ${quizData.section}</div>
+      </div>
 
-        let score = 0;
-        const answeredOrder = Object.keys(responses).map(i => parseInt(i));
-        answeredOrder.forEach(i => {
-          if (responses[i] === selectedQuestions[i].answer) score++;
-        });
+      <p><strong>Test Type:</strong> ${quizData.type}</p>
+      <p><strong>Instructions:</strong></p>
+      <textarea readonly rows="4">${quizData.instructions}</textarea>
+      ${quizData.rubric}
 
-        const percentage = Math.round((score / selectedQuestions.length) * 100);
-        let grade = '';
-        if (percentage >= 95) grade = 'A';
-        else if (percentage >= 85) grade = 'P';
-        else if (percentage >= 75) grade = 'D';
-        else grade = 'IR';
-
-        const resultData = {
-          cnNo,
-          lastName,
-          firstName,
-          score,
-          percentage,
-          grade,
-          responses,
-          quizTitle: quizData.title,
-          timestamp: Date.now()
-        };
-
-        localStorage.setItem(`result-${studentId}`, JSON.stringify(resultData));
-        db.collection("results").doc(studentId).set(resultData)
-          .then(() => {
-            console.log("✅ Result saved to Firestore for", studentId);
-          })
-          .catch((error) => {
-            console.error("❌ Error saving result to Firestore:", error);
-          });
-
-        const resultHTML = `
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <title>${quizData.title} - Completed Quiz</title>
-            <style>
-              body { font-family: 'Segoe UI', sans-serif; background: #fff; padding: 20px; }
-              .header { text-align: center; margin-bottom: 20px; }
-              #schoolLogo { max-height: 100px; margin-bottom: 10px; }
-              .quiz-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
-              .student-info { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
-              .grade-block { text-align: right; font-weight: bold; font-size: 20px; color: #007acc; }
-              .score { text-align: right; font-size: 16px; font-weight: bold; color: #28a745; margin-bottom: 10px; }
-              .question-block { background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #007acc; }
-              .question-block h3 { margin-top: 0; color: #34495e; }
-              .correct { color: #28a745; }
-              .incorrect { color: #d9534f; }
-              .explanation { margin-top: 10px; font-style: italic; }
-              textarea { width: 100%; margin-top: 10px; }
-              .print-btn { text-align: center; margin-top: 20px; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
-              <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
-              <span style="color:#000;">SY 2025–2026</span><br>
-              <span style="color:#000;">2nd Semester</span><br>
-              <span style="color:#000;">FABM 1</span>
-              <div class="quiz-title">${quizData.title}</div>
-              <div class="grade-block">Grade: ${grade}</div>
-              <div class="score">Score: ${score} / ${selectedQuestions.length} = ${percentage}%</div>
-            </div>
-            <div class="student-info">
-              <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
-              <div>Section: ${quizData.section}</div>
-            </div>
-            <p><strong>Test Type:</strong> ${quizData.type}</p>
-            <p><strong>Instructions:</strong></p>
-            <textarea readonly rows="4">${quizData.instructions}</textarea>
-            ${quizData.rubric}
-            ${answeredOrder.map(i => {
-              const q = selectedQuestions[i];
-              const userAnswer = responses[i];
-              const isCorrect = userAnswer === q.answer;
-              const letterLabels = ['A', 'B', 'C', 'D'];
-              const optionsHTML = q.options.map((opt, idx) => {
-                const label = letterLabels[idx] || String.fromCharCode(65 + idx);
-                return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
-              }).join('');
-              const feedback = isCorrect
-                ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
-                : `<div class="incorrect">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`;
-              return `
-                <div class="question-block">
-                  <h3>${i + 1}. ${q.question}</h3>
-                  ${optionsHTML}
-                  ${feedback}
-                  <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
-                </div>
-              `;
-            }).join('')}
-            <div class="print-btn">
-              <button onclick="window.print()">🖨️ Print This Page</button>
-            </div>
-          </body>
-          </html>
+      ${answeredOrder.map(i => {
+        const q = selectedQuestions[i];
+        const userAnswer = responses[i];
+        const isCorrect = userAnswer === q.answer;
+        const letterLabels = ['A', 'B', 'C', 'D'];
+        const optionsHTML = q.options.map((opt, idx) => {
+          const label = letterLabels[idx] || String.fromCharCode(65 + idx);
+          return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
+        }).join('');
+        const feedback = isCorrect
+          ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
+          : `<div class="incorrect">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`;
+        return `
+          <div class="question-block">
+            <h3>${i + 1}. ${q.question}</h3>
+            ${optionsHTML}
+            ${feedback}
+            <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
+          </div>
         `;
-        document.open();
-        document.write(resultHTML);
-        document.close();
-      }
+      }).join('')}
 
-      window.onload = () => {
-        startTimer();
-        showQuestion(currentIndex);
-        document.getElementById('navigation').style.display = 'block';
-        document.getElementById('nextBtn').onclick = nextQuestion;
-        document.getElementById('prevBtn').onclick = prevQuestion;
-        document.getElementById('submitBtn').onclick = submitQuiz;
-        document.getElementById('quizTitle').textContent = quizData.title;
-        document.getElementById('studentInfo').textContent =
-          `👤 ${lastName}, ${firstName} — CN NO: ${cnNo}`;
-        document.getElementById('sectionInfo').textContent =
-          `📘 Section: ${quizData.section}`;
-        document.getElementById('instructions').textContent = quizData.instructions;
-        document.getElementById('rubric').innerHTML = quizData.rubric;
-      };
-    </script>
-  </body>
+      <div class="print-btn">
+        <button onclick="window.print()">🖨️ Print This Page</button>
+      </div>
+    </body>
+    </html>
+  `;
+
+  document.open();
+  document.write(resultHTML);
+  document.close();
+}
+
+      // ✅ Initialize quiz
+      startTimer();
+      showQuestion(currentIndex);
+      document.getElementById('navigation').style.display = 'block';
+      document.getElementById('submitBtn').onclick = submitQuiz;
+    });
+  </script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    #schoolLogo {
+      max-height: 100px;
+      margin-bottom: 10px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .info-block, .quiz-box {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .quiz-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    .student-info {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      margin-bottom: 15px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .grade-block p {
+      margin: 10px 0;
+    }
+    textarea[readonly] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      resize: none;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f5f5f5;
+    }
+    .rubric-block h3 {
+      margin-bottom: 10px;
+      color: #007acc;
+    }
+    .rubric-table table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .rubric-table th, .rubric-table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    .rubric-table thead {
+      background-color: #eef6fc;
+      font-weight: bold;
+    }
+    .topic-label {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    .option {
+      margin: 5px 0;
+      display: block;
+    }
+    #navigation {
+      text-align: center;
+      margin-top: 20px;
+    }
+    button {
+      padding: 14px 24px;
+      font-size: 18px;
+      margin: 8px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    #submitBtn {
+      background-color: #28a745;
+    }
+    #submitBtn:hover {
+      background-color: #218838;
+    }
+    #timer, #warningMessage, #viewedCounter, #result {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #result {
+      color: #28a745;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+    <span style="color:#000;">SY 2025–2026</span><br>
+    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">FABM 1</span>
+  </div>
+
+  <div class="info-block" id="quizHeader"></div>
+
+  <div style="max-width:800px; margin:0 auto; text-align:left;">
+    <button id="submitBtn">✅ Submit Quiz</button>
+  </div>
+
+  <div id="warningMessage"></div>
+  <div id="timer"></div>
+
+  <div class="quiz-box" id="quizContainer"></div>
+
+  <div id="navigation" style="display:none;">
+    <button onclick="prevQuestion()">⬅ Previous</button>
+    <button onclick="nextQuestion()">Next ➡</button>
+  </div>
+
+  <div id="viewedCounter"></div>
+  <div id="result"></div>
+</body>
 </html>
-                        
