@@ -168,12 +168,26 @@
       window.studentData = studentData;
       window.quizData = studentData.quizData;
 
+      
+
     } catch (e) {
       console.error("❌ Failed to parse studentData:", e);
       alert("Error loading quiz data.");
     }
   }
 
+      function initializeQuiz() {
+    if (!Array.isArray(window.quizData?.topics)) {
+      console.error("❌ quizData.topics is missing or not an array:", window.quizData?.topics);
+      alert("Quiz data is incomplete. Please regenerate the quiz.");
+      return;
+    }
+
+    console.log("🔍 quizData received:", window.quizData);
+    console.log("📚 Available topics in questionBank:", Object.keys(questionBank));
+
+    // Proceed with rendering or filtering questions
+  }
       
   let studentId, cnNo, lastName, firstName, quizData;
   let selectedQuestions = [];
