@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Quiz</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .quiz-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .student-info, .grade-block, .rubric-block {
+      margin-bottom: 15px;
+    }
+    .question-block {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border-left: 5px solid #007acc;
+    }
+    #navigation button {
+      margin-right: 10px;
+    }
+    #timer {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #warningMessage {
+      color: #d9534f;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="quizHeader"></div>
+  <div id="timer"></div>
+  <div id="warningMessage"></div>
+  <div id="quizContainer"></div>
+
+  <div id="navigation" style="display:none;">
+    <button onclick="prevQuestion()">Previous</button>
+    <button onclick="nextQuestion()">Next</button>
+    <button id="submitBtn">Submit</button>
+  </div>
+
+  <!-- 🔥 Firebase Initialization -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+      authDomain: "jlvcpa-quizzes.firebaseapp.com",
+      projectId: "jlvcpa-quizzes",
+      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+      messagingSenderId: "629158256557",
+      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.doc = doc;
+    window.getDoc = getDoc;
+    window.setDoc = setDoc;
+  </script>
+
+  <!-- 🧠 Quiz Logic -->
+  <script>
+    let studentId, cnNo, lastName, firstName, quizData;
+    let selectedQuestions = [], responses = {}, answeredOrder = [];
+    let currentQuestionIndex = 0, inactivityTimer;
+
+    const questionBank = [
+      {
+        topic: "History of Accounting",
+        question: "What is the accounting equation?",
+        options: [
+          "Assets = Liabilities + Equity",
+          "Assets = Revenue - Expenses",
+          "Liabilities = Assets + Equity",
+          "Equity = Assets - Liabilities"
+        ],
+        answer: "Assets = Liabilities + Equity",
+        explanation: "This is the fundamental equation of accounting."
+      },
+      {
+        topic: "History of Accounting",
+        question: "Which financial statement shows a company's profitability?",
+        options: [
+          "Balance Sheet",
+          "Income Statement",
+          "Cash Flow Statement",
+          "Statement of Retained Earnings"
+        ],
+        answer: "Income Statement",
+        explanation: "The income statement shows revenues and expenses over a period."
+      },
+      {
+        topic: "History of Accounting",
+        question: "What does ROI stand for?",
+        options: [
+          "Return on Investment",
+          "Rate of Interest",
+          "Revenue Over Income",
+          "Ratio of Income"
+        ],
+        answer: "Return on Investment",
+        explanation: "ROI measures the gain or loss generated on an investment."
+      }
+    ];
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      studentId = new URLSearchParams(window.location.search).get('student');
+      const studentData = JSON.parse(localStorage.getItem(`questionnaire-${studentId}`));
+      if (!studentData || !studentData.quizId) {
+        document.getElementById('quizHeader').innerHTML = "<p>⚠️ Quiz data missing. Please restart.</p>";
+        return;
+      }
+
+      ({ cnNo, lastName, firstName } = studentData);
+
+      try {
+        const docSnap = await window.getDoc(window.doc(window.db, "quizzes", studentData.quizId));
+        if (!docSnap.exists()) {
+          alert("Quiz not found.");
+          return;
+        }
+
+        quizData = docSnap.data();
+        window.quizData = quizData;
+
+        if (!Array.isArray(quizData?.topics)) {
+          alert("Quiz data is corrupted or incomplete.");
+          return;
+        }
+
+        renderHeader();
+        loadQuestions();
+        showQuestion(0);
+        startTimer();
+        document.getElementById('navigation').style.display = 'block';
+        document.getElementById('submitBtn').onclick = submitQuiz;
+
+        ['keydown', 'click', 'touchstart', 'mousemove'].forEach(event =>
+          document.addEventListener(event, () => {
+            logActivity(`🟢 ${event} detected`);
+            resetInactivityTimer();
+          })
+        );
+
+        resetInactivityTimer();
+      } catch (error) {
+        console.error("❌ Error loading quiz:", error);
+        alert("Failed to load quiz.");
+      }
+    });
+
+    function renderHeader() {
+      document.getElementById('quizHeader').innerHTML = `
+        <div class="quiz-title">${quizData.title}</div>
+        <div class="student-info">
+          <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
+          <div>Grade Level and Section: ${quizData.section}</div>
+        </div>
+        <div class="grade-block">
+          <p><strong>Test Type:</strong> ${quizData.type}</p>
+          <p><strong>Instructions:</strong></p>
+          <textarea readonly rows="4">${quizData.instructions}</textarea>
+        </div>
+        <div class="rubric-block">
+          <h3>Rubric</h3>
+          <div class="rubric-table">${quizData.rubric}</div>
+        </div>
+      `;
+    }
+
+    function loadQuestions() {
+      selectedQuestions = questionBank
+        .filter(q => quizData.topics.includes(q.topic))
+        .sort(() => 0.5 - Math.random())
+        .slice(0, quizData.num);
+    }
+
+    function showQuestion(index) {
+      const q = selectedQuestions[index];
+      document.getElementById('quizContainer').innerHTML = `
+        <div class="question-block">
+          <h3>${index + 1}. ${q.question}</h3>
+          ${q.options.map((opt, i) => {
+            const label = String.fromCharCode(65 + i);
+            return `
+              <div>
+                <label>
+                  <input type="radio" name="question${index}" value="${opt}"
+                    ${responses[index] === opt ? 'checked' : ''}
+                    onchange="recordAnswer(${index}, '${opt}')">
+                  ${label}. ${opt}
+                </label>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function recordAnswer(index, answer) {
+      responses[index] = answer;
+      if (!answeredOrder.includes(index)) answeredOrder.push(index);
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIndex < selectedQuestions.length - 1) {
+        currentQuestionIndex++;
+        showQuestion(currentQuestionIndex);
+      }
+    }
+
+    function prevQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        showQuestion(currentQuestionIndex);
+      }
+    }
+
+    function startTimer() {
+      let seconds = 0;
+      setInterval(() => {
+        seconds++;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        document.getElementById('timer').textContent = `⏱️ Time Elapsed: ${mins}m ${secs}s`;
+      }, 1000);
+    }
+
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        document.getElementById('warningMessage').textContent = "⚠️ You've been inactive for a while. Please continue.";
+      }, 300000);
+    }
+
+    function logActivity(msg) {
+      console.log(msg);
+    }
+
+    function submitQuiz() {
+      let score = 0;
+      selectedQuestions.forEach((q, i) => {
+        if (responses[i] === q.answer) score++;
+      });
+
+      const percentage = Math.round((score / selectedQuestions.length) * 100);
+      const grade = percentage >= 90 ? "A" :
+                    percentage >= 80 ? "B" :
+                    percentage >= 70 ? "C" :
+                    percentage >= 60 ? "D" : "F";
+
+            const resultData = {
+        studentId,
+        cnNo,
+        lastName,
+        firstName,
+        quizId: quizData.id || `quiz-${quizData.timestamp || Date.now()}`,
+        quizTitle: quizData.title,
+        section: quizData.section,
+        type: quizData.type,
+        score,
+        percentage,
+        grade,
+        timestamp: Date.now(),
+        responses
+      };
+
+      const resultRef = window.doc(window.db, "results", studentId);
+      window.setDoc(resultRef, resultData)
+        .then(() => {
+          alert(`✅ Quiz submitted!\nScore: ${score}/${selectedQuestions.length}\nGrade: ${grade}`);
+          console.log("✅ Result saved to Firestore");
+        })
+        .catch(error => {
+          console.error("❌ Error saving result:", error);
+          alert("There was an error saving your result. Please try again.");
+        });
+    }
+  </script>
+
+</body>
+</html>
