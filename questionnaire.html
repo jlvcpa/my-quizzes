@@ -139,12 +139,84 @@
       // ➕ Add more questions as needed
     ];
 
-    function loadQuestions() {
-      selectedQuestions = questionBank
-        .filter(q => quizData.topics.includes(q.topic))
-        .sort(() => 0.5 - Math.random())
-        .slice(0, quizData.num);
+// DIAGNOSTIC PATCH FROM HERE
+    <script>
+  let studentId, cnNo, lastName, firstName, quizData;
+  let selectedQuestions = [];
+  let currentQuestionIndex = 0;
+  let responses = {};
+  let answeredOrder = [];
+  let inactivityTimer;
+
+  const questionBank = [
+    {
+      topic: "History of Accounting",
+      question: "What is the accounting equation?",
+      options: [
+        "Assets = Liabilities + Equity",
+        "Assets = Revenue - Expenses",
+        "Liabilities = Assets + Equity",
+        "Equity = Assets - Liabilities"
+      ],
+      answer: "Assets = Liabilities + Equity",
+      explanation: "This is the fundamental equation of accounting."
+    },
+    {
+      topic: "History of Accounting",
+      question: "Which financial statement shows a company's profitability?",
+      options: [
+        "Balance Sheet",
+        "Income Statement",
+        "Cash Flow Statement",
+        "Statement of Retained Earnings"
+      ],
+      answer: "Income Statement",
+      explanation: "The income statement shows revenues and expenses over a period."
+    },
+    {
+      topic: "History of Accounting",
+      question: "What does ROI stand for?",
+      options: [
+        "Return on Investment",
+        "Rate of Interest",
+        "Revenue Over Income",
+        "Ratio of Income"
+      ],
+      answer: "Return on Investment",
+      explanation: "ROI measures the gain or loss generated on an investment."
     }
+  ];
+
+  // ✅ Insert this block right here
+  window.addEventListener("DOMContentLoaded", () => {
+    quizData = JSON.parse(localStorage.getItem("quizData")); // or however you're passing it
+
+    console.log("🔍 quizData received:", quizData);
+    console.log("📚 Available topics in questionBank:", [...new Set(questionBank.map(q => q.topic))]);
+
+    if (!quizData || !quizData.topics || !Array.isArray(quizData.topics)) {
+      console.error("❌ quizData.topics is missing or not an array:", quizData?.topics);
+      document.getElementById('quizContainer').innerHTML = "<p>⚠️ Quiz data is incomplete or corrupted.</p>";
+      return;
+    }
+
+    loadQuestions();
+    console.log("✅ selectedQuestions:", selectedQuestions);
+
+    if (selectedQuestions.length === 0) {
+      document.getElementById('quizContainer').innerHTML = "<p>⚠️ No questions matched the selected topics.</p>";
+      return;
+    }
+
+    showQuestion(0);
+  });
+
+  function loadQuestions() {
+    selectedQuestions = questionBank
+      .filter(q => quizData.topics.includes(q.topic))
+      .sort(() => 0.5 - Math.random())
+      .slice(0, quizData.num);
+  }
 
     function showQuestion(index) {
       const q = selectedQuestions[index];
