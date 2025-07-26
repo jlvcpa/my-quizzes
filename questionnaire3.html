@@ -145,36 +145,6 @@
   <div id="result"></div>
 
     <script>
-  function loadQuizData() {
-    const params = new URLSearchParams(window.location.search);
-    const studentId = params.get('student');
-    const rawData = localStorage.getItem(`questionnaire-${studentId}`);
-    console.log("📦 Raw studentData:", rawData);
-
-    let studentData;
-    try {
-      studentData = JSON.parse(rawData);
-      console.log("✅ Parsed studentData:", studentData);
-      console.log("🧠 quizData:", studentData.quizData);
-      console.log("📚 topics:", studentData.quizData?.topics);
-
-      if (!Array.isArray(studentData?.quizData?.topics)) {
-        console.error("❌ quizData.topics is missing or not an array:", studentData?.quizData?.topics);
-        alert("Quiz data is incomplete. Please regenerate the quiz.");
-        return;
-      }
-
-      // ✅ Assign to global scope
-      window.studentData = studentData;
-      window.quizData = studentData.quizData;
-
-      
-
-    } catch (e) {
-      console.error("❌ Failed to parse studentData:", e);
-      alert("Error loading quiz data.");
-    }
-  }
 
       function initializeQuiz() {
     if (!Array.isArray(window.quizData?.topics)) {
