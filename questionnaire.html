@@ -144,54 +144,6 @@
   <div id="viewedCounter"></div>
   <div id="result"></div>
 
-    <script>
-    let studentId, cnNo, lastName, firstName, quizData;
-    let selectedQuestions = [];
-    let currentQuestionIndex = 0;
-    let responses = {};
-    let answeredOrder = [];
-    let inactivityTimer;
-
-    const questionBank = [
-      {
-        topic: "History of Accounting",
-        question: "What is the accounting equation?",
-        options: [
-          "Assets = Liabilities + Equity",
-          "Assets = Revenue - Expenses",
-          "Liabilities = Assets + Equity",
-          "Equity = Assets - Liabilities"
-        ],
-        answer: "Assets = Liabilities + Equity",
-        explanation: "This is the fundamental equation of accounting."
-      },
-      {
-        topic: "History of Accounting",
-        question: "Which financial statement shows a company's profitability?",
-        options: [
-          "Balance Sheet",
-          "Income Statement",
-          "Cash Flow Statement",
-          "Statement of Retained Earnings"
-        ],
-        answer: "Income Statement",
-        explanation: "The income statement shows revenues and expenses over a period."
-      },
-      {
-        topic: "History of Accounting",
-        question: "What does ROI stand for?",
-        options: [
-          "Return on Investment",
-          "Rate of Interest",
-          "Revenue Over Income",
-          "Ratio of Income"
-        ],
-        answer: "Return on Investment",
-        explanation: "ROI measures the gain or loss generated on an investment."
-      }
-      // ➕ Add more questions as needed
-    ];
-
 // DIAGNOSTIC PATCH FROM HERE
     <script>
   let studentId, cnNo, lastName, firstName, quizData;
@@ -238,6 +190,7 @@
       answer: "Return on Investment",
       explanation: "ROI measures the gain or loss generated on an investment."
     }
+       // ➕ Add more questions as needed
   ];
 
   // ✅ Insert this block right here
