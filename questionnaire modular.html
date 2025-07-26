@@ -1,9 +1,9 @@
-// 📦 Batch 1: HTML Head and Initial Setup
+<!-- 📦 Batch 1: HTML Head and Initial Setup
 // - Student info and quiz metadata
 // - Dynamic question rendering
 // - Navigation and timer
 // - Submission logic with result display
-// - Styling and accessibility enhancements
+// - Styling and accessibility enhancements -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -117,8 +117,13 @@
     let inactivityTimer;
 
     function loadQuestions() {
-      selectedQuestions = quizData.questions;
-      showQuestion(currentQuestionIndex);
+const questionBank = [/* your full question set */];
+
+const selectedQuestions = questionBank
+  .filter(q => quizData.topics.includes(q.topic))
+  .sort(() => 0.5 - Math.random())
+  .slice(0, quizData.num);
+
     }
 
     function showQuestion(index) {
