@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FABM 1 Quiz</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #schoolLogo {
+      max-height: 100px;
+      margin-bottom: 10px;
+    }
+    .quiz-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    .student-info {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .grade-block {
+      text-align: right;
+      font-weight: bold;
+      font-size: 20px;
+      color: #007acc;
+    }
+    .score {
+      text-align: right;
+      font-size: 16px;
+      font-weight: bold;
+      color: #28a745;
+      margin-bottom: 10px;
+    }
+    .question-block {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border-left: 5px solid #007acc;
+    }
+    .question-block h3 {
+      margin-top: 0;
+      color: #34495e;
+    }
+    .correct { color: #28a745; }
+    .incorrect { color: #d9534f; }
+    .explanation {
+      margin-top: 10px;
+      font-style: italic;
+    }
+    textarea {
+      width: 100%;
+      margin-top: 10px;
+    }
+    .print-btn {
+      text-align: center;
+      margin-top: 20px;
+    }
+    #quizContainer {
+      margin-top: 20px;
+    }
+    #navigation {
+      margin-top: 20px;
+      text-align: center;
+    }
+    #navigation button {
+      margin: 0 10px;
+    }
+    #timer {
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
+    #warningMessage {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+
+  <script>
+    let studentId, cnNo, lastName, firstName, quizData;
+    let selectedQuestions = [];
+    let currentQuestionIndex = 0;
+    let responses = {};
+    let answeredOrder = [];
+    let inactivityTimer;
+
+    function loadQuestions() {
+      const questionBank = [/* your full question set */];
+
+      selectedQuestions = questionBank
+        .filter(q => quizData.topics.includes(q.topic))
+        .sort(() => 0.5 - Math.random())
+        .slice(0, quizData.num);
+    }
+
+    function showQuestion(index) {
+      const q = selectedQuestions[index];
+      const container = document.getElementById('quizContainer');
+      container.innerHTML = `
+        <div class="question-block">
+          <h3>${index + 1}. ${q.question}</h3>
+          ${q.options.map((opt, i) => {
+            const label = String.fromCharCode(65 + i);
+            return `
+              <div>
+                <label>
+                  <input type="radio" name="question${index}" value="${opt}"
+                    ${responses[index] === opt ? 'checked' : ''}
+                    onchange="recordAnswer(${index}, '${opt}')">
+                  ${label}. ${opt}
+                </label>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function recordAnswer(index, answer) {
+      responses[index] = answer;
+      if (!answeredOrder.includes(index)) {
+        answeredOrder.push(index);
+      }
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIndex < selectedQuestions.length - 1) {
+        currentQuestionIndex++;
+        showQuestion(currentQuestionIndex);
+      }
+    }
+
+    function prevQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        showQuestion(currentQuestionIndex);
+      }
+    }
+
+    function startTimer() {
+      let seconds = 0;
+      setInterval(() => {
+        seconds++;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        document.getElementById('timer').textContent = `⏱️ Time Elapsed: ${mins}m ${secs}s`;
+      }, 1000);
+    }
+
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        document.getElementById('warningMessage').textContent = "⚠️ You've been inactive for a while. Please continue.";
+      }, 300000); // 5 minutes
+    }
+
+    function logActivity(msg) {
+      console.log(msg);
+    }
+
+    function submitQuiz() {
+      let score = 0;
+      selectedQuestions.forEach((q, i) => {
+        if (responses[i] === q.answer) score++;
+      });
+
+      const percentage = Math.round((score / selectedQuestions.length) * 100);
+      let grade;
+      if (percentage >= 90) grade = "A";
+      else if (percentage >= 80) grade = "B";
+      else if (percentage >= 70) grade = "C";
+      else if (percentage >= 60) grade = "D";
+      else grade = "F";
+
+      const resultHTML = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>${quizData.title} - Completed Quiz</title>
+          <style>
+            body { font-family: 'Segoe UI', sans-serif; background: #fff; padding: 20px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            #schoolLogo { max-height: 100px; margin-bottom: 10px; }
+            .quiz-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
+            .student-info { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+            .grade-block { text-align: right; font-weight: bold; font-size: 20px; color: #007acc; }
+            .score { text-align: right; font-size: 16px; font-weight: bold; color: #28a745; margin-bottom: 10px; }
+            .question-block { background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #007acc; }
+            .question-block h3 { margin-top: 0; color: #34495e; }
+            .correct { color: #28a745; }
+            .incorrect { color: #d9534f; }
+            .explanation { margin-top: 10px; font-style: italic; }
+            textarea { width: 100%; margin-top: 10px; }
+            .print-btn { text-align: center; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+            <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+            <span style="color:#000;">SY 2025–2026</span><br>
+            <span style="color:#000;">2nd Semester</span><br>
+            <span style="color:#000;">FABM 1</span>
+            <div class="quiz-title">${quizData.title}</div>
+            <div class="grade-block">Grade: ${grade}</div>
+            <div class="score">Score: ${score} / ${selectedQuestions.length} = ${percentage}%</div>
+          </div>
+
+          <div class="student-info">
+            <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
+            <div>Section: ${quizData.section}</div>
+          </div>
+
+          <p><strong>Test Type:</strong> ${quizData.type}</p>
+          <p><strong>Instructions:</strong></p>
+          <textarea readonly rows="4">${quizData.instructions}</textarea>
+          ${quizData.rubric}
+
+          ${answeredOrder.map(i => {
+            const q = selectedQuestions[i];
+            const userAnswer = responses[i];
+            const isCorrect = userAnswer === q.answer;
+            const letterLabels = ['A', 'B', 'C', 'D'];
+            const optionsHTML = q.options.map((opt, idx) => {
+              const label = letterLabels[idx] || String.fromCharCode(
+                              const label = letterLabels[idx] || String.fromCharCode(65 + idx);
+              return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
+            }).join('');
+            const feedback = isCorrect
+              ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
+              : `<div class="incorrect">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`;
+            return `
+              <div class="question-block">
+                <h3>${i + 1}. ${q.question}</h3>
+                ${optionsHTML}
+                ${feedback}
+                <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
+              </div>
+            `;
+          }).join('')}
+
+          <div class="print-btn">
+            <button onclick="window.print()">🖨️ Print This Page</button>
+          </div>
+        </body>
+        </html>
+      `;
+
+      document.open();
+      document.write(resultHTML);
+      document.close();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      studentId = params.get('student');
+      const studentData = JSON.parse(localStorage.getItem(`questionnaire-${studentId}`));
+
+      if (!studentData || !studentData.quizData) {
+        document.getElementById('quizHeader').innerHTML = "<p>⚠️ Quiz data missing. Please restart.</p>";
+        return;
+      }
+
+      ({ cnNo, lastName, firstName, quizData } = studentData);
+
+      document.getElementById('quizHeader').innerHTML = `
+        <div class="quiz-title">${quizData.title}</div>
+        <div class="student-info">
+          <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
+          <div>Grade Level and Section: ${quizData.section}</div>
+        </div>
+        <div class="grade-block">
+          <p><strong>Test Type:</strong> ${quizData.type}</p>
+          <p><strong>Instructions:</strong></p>
+          <textarea readonly rows="4">${quizData.instructions}</textarea>
+        </div>
+        <div class="rubric-block">
+          <h3>Rubric</h3>
+          <div class="rubric-table">${quizData.rubric}</div>
+        </div>
+      `;
+
+      loadQuestions();
+      showQuestion(0); // ✅ Show first question
+      startTimer();
+      document.getElementById('navigation').style.display = 'block';
+      document.getElementById('submitBtn').onclick = submitQuiz;
+
+      ['keydown', 'click', 'touchstart', 'mousemove'].forEach(event => {
+        document.addEventListener(event, () => {
+          logActivity(`🟢 ${event} detected`);
+          resetInactivityTimer();
+        });
+      });
+
+      resetInactivityTimer();
+    });
+  </script>
+</head>
+<body>
+  <div class="header">
+    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+    <span style="color:#000;">SY 2025–2026</span><br>
+    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">FABM 1</span>
+  </div>
+
+  <div class="info-block" id="quizHeader"></div>
+
+  <div style="max-width:800px; margin:0 auto; text-align:left;">
+    <button id="submitBtn">✅ Submit Quiz</button>
+  </div>
+
+  <div id="warningMessage"></div>
+  <div id="timer"></div>
+
+  <div class="quiz-box" id="quizContainer"></div>
+
+  <div id="navigation" style="display:none;">
+    <button onclick="prevQuestion()">⬅ Previous</button>
+    <button onclick="nextQuestion()">Next ➡</button>
+  </div>
+
+  <div id="viewedCounter"></div>
+  <div id="result"></div>
+</body>
+</html>
