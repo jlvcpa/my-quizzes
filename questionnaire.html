@@ -145,26 +145,37 @@
   <div id="result"></div>
 
     <script>
-  // Construct the student ID (make sure this matches how you saved it)
-  const studentId = '50-VILLARTA-Joselito'; // Adjust if dynamic
+  function loadQuizData() {
+    const studentId = '50-VILLARTA-Joselito'; // Adjust if dynamic
+    const rawData = localStorage.getItem(`questionnaire-${studentId}`);
+    console.log("📦 Raw studentData:", rawData);
 
-  // Retrieve raw data from localStorage
-  const rawData = localStorage.getItem(`questionnaire-${studentId}`);
-  console.log("📦 Raw studentData:", rawData);
+    let studentData;
+    try {
+      studentData = JSON.parse(rawData);
+      console.log("✅ Parsed studentData:", studentData);
+      console.log("🧠 quizData:", studentData.quizData);
+      console.log("📚 topics:", studentData.quizData?.topics);
 
-  // Parse and validate
-  let studentData;
-  try {
-    studentData = JSON.parse(rawData);
-    console.log("✅ Parsed studentData:", studentData);
-    console.log("🧠 quizData:", studentData.quizData);
-    console.log("📚 topics:", studentData.quizData?.topics);
+      if (!Array.isArray(studentData?.quizData?.topics)) {
+        console.error("❌ quizData.topics is missing or not an array:", studentData?.quizData?.topics);
+        alert("Quiz data is incomplete. Please regenerate the quiz.");
+        return; // ✅ Now it's inside a function
+      }
 
-    // Defensive check before using topics
-    if (!Array.isArray(studentData?.quizData?.topics)) {
-      console.error("❌ quizData.topics is missing or not an array:", studentData?.quizData?.topics);
-      alert("Quiz data is incomplete. Please regenerate the quiz.");
-      return;
+      // ✅ Safe to proceed with quiz logic
+      // Example:
+      // renderTopics(studentData.quizData.topics);
+
+    } catch (e) {
+      console.error("❌ Failed to parse studentData:", e);
+      alert("Error loading quiz data.");
+    }
+  }
+
+  // Call the function to run the logic
+  loadQuizData();
+
     }
 
     // ✅ Safe to proceed with quiz logic
