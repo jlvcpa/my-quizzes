@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fix Quiz Topics</title>
+  <script type="module">
+    // 🔁 Paste the normalizeTopics script here
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+  authDomain: "jlvcpa-quizzes.firebaseapp.com",
+  projectId: "jlvcpa-quizzes",
+  storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+  messagingSenderId: "629158256557",
+  appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function normalizeTopics() {
+  const quizzesRef = collection(db, "quizzes");
+  const snapshot = await getDocs(quizzesRef);
+
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data();
+    const quizId = docSnap.id;
+
+    let updatedTopics = null;
+
+    if (!Array.isArray(data.topics)) {
+      if (typeof data.topics === "string") {
+        updatedTopics = [data.topics];
+      } else {
+        updatedTopics = [];
+      }
+
+      console.log(`🔧 Fixing topics for quiz "${quizId}":`, updatedTopics);
+
+      await updateDoc(doc(db, "quizzes", quizId), {
+        topics: updatedTopics
+      });
+
+      console.log(`✅ Updated quiz "${quizId}"`);
+    } else {
+      console.log(`✅ Quiz "${quizId}" already has valid topics`);
+    }
+  }
+
+  console.log("🎉 All quizzes checked and updated if needed.");
+}
+
+normalizeTopics().catch(console.error);
+  </script>
+</head>
+<body>
+  <h2>🛠️ Fixing quiz topics...</h2>
+</body>
+</html>
