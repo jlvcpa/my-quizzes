@@ -379,9 +379,10 @@
     </html>
   `;
 
-  document.open();
-  document.write(resultHTML);
-  document.close();
+const resultWindow = window.open('', '_blank');
+resultWindow.document.open();
+resultWindow.document.write(resultHTML);
+resultWindow.document.close();
 }
 // END of submitQuiz() function
 
