@@ -35,7 +35,7 @@ function populateQuizDetails(data) {
     ? new Date(data.endTime).toLocaleString()
     : 'Not set';
 
-  document.getElementById('timeLimitDisplay').textContent = `Deadline: ${endTimeText}`;
+  document.getElementById('endTimeDisplay').textContent = `Deadline: ${endTimeText}`;
 
   document.getElementById('topicsDisplay').textContent = data.topics.join(', ');
   document.getElementById('instructionsDisplay').value = data.instructions;
@@ -180,7 +180,7 @@ if (Date.now() > quizData.endTime) {
     <h2 id="quizTitleDisplay">Quiz Title</h2>
     <p><strong>Grade Level and Section:</strong> <span id="gradeSectionDisplay"></span></p>
     <p><strong>Test Type:</strong> <span id="testTypeDisplay"></span></p>
-    <p><strong>Time Limit:</strong> <span id="timeLimitDisplay"></span> minutes</p>
+    <p><strong>End Time:</strong> <span id="endTimeDisplay"></span></p>
     <p><strong>Topics:</strong> <span id="topicsDisplay"></span></p>
     <label><strong>Instructions:</strong></label>
     <textarea id="instructionsDisplay" readonly rows="5"></textarea>
