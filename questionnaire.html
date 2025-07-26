@@ -1,71 +1,299 @@
+// 📦 Batch 1: HTML Head and Initial Setup
+// - Student info and quiz metadata
+// - Dynamic question rendering
+// - Navigation and timer
+// - Submission logic with result display
+// - Styling and accessibility enhancements
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Questionnaire</title>
+  <title>FABM 1 Quiz</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #schoolLogo {
+      max-height: 100px;
+      margin-bottom: 10px;
+    }
+    .quiz-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    .student-info {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .grade-block {
+      text-align: right;
+      font-weight: bold;
+      font-size: 20px;
+      color: #007acc;
+    }
+    .score {
+      text-align: right;
+      font-size: 16px;
+      font-weight: bold;
+      color: #28a745;
+      margin-bottom: 10px;
+    }
+    .question-block {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border-left: 5px solid #007acc;
+    }
+    .question-block h3 {
+      margin-top: 0;
+      color: #34495e;
+    }
+    .correct {
+      color: #28a745;
+    }
+    .incorrect {
+      color: #d9534f;
+    }
+    .explanation {
+      margin-top: 10px;
+      font-style: italic;
+    }
+    textarea {
+      width: 100%;
+      margin-top: 10px;
+    }
+    .print-btn {
+      text-align: center;
+      margin-top: 20px;
+    }
+    #quizContainer {
+      margin-top: 20px;
+    }
+    #navigation {
+      margin-top: 20px;
+      text-align: center;
+    }
+    #navigation button {
+      margin: 0 10px;
+    }
+    #timer {
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
+    #warningMessage {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
 
-  <!-- Modular Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+<!-- 📦 Batch 2: JavaScript Logic
+     - Loading questions
+     - Navigating between them
+     - Tracking responses
+     - Handling inactivity and submission -->
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
-      authDomain: "jlvcpa-quizzes.firebaseapp.com",
-      projectId: "jlvcpa-quizzes",
-      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
-      messagingSenderId: "629158256557",
-      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
-    };
+    <script>
+    let studentId, cnNo, lastName, firstName, quizData;
+    let selectedQuestions = [];
+    let currentQuestionIndex = 0;
+    let responses = {};
+    let answeredOrder = [];
+    let inactivityTimer;
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-      let questionBank = [];
-  let selectedQuestions = [];
-
-  async function loadQuestions() {
-    const snapshot = await getDocs(collection(db, "questionBank"));
-    questionBank = snapshot.docs.map(doc => doc.data());
-
-    // Filter questions for the current quiz
-    selectedQuestions = questionBank.filter(q => q.quizId === quizData.id);
-
-    // Now render the quiz
-    renderQuiz();
-  }
-
-  function renderQuiz() {
-    const container = document.getElementById('quizContainer');
-    if (!selectedQuestions || selectedQuestions.length === 0) {
-      container.innerHTML = `<p style="color:red;">⚠️ Unable to load quiz questions. Please check your Firebase setup.</p>`;
-      return;
+    function loadQuestions() {
+      selectedQuestions = quizData.questions;
+      showQuestion(currentQuestionIndex);
     }
 
-    container.innerHTML = selectedQuestions.map((q, index) => {
-      const letterLabels = ['A', 'B', 'C', 'D'];
-      const optionsHTML = q.options.map((opt, i) => `
-        <label>
-          <input type="radio" name="q${index}" value="${opt}" onchange="recordAnswer(${index}, '${opt}')">
-          ${letterLabels[i]}. ${opt}
-        </label><br>
-      `).join('');
-      return `
+    function showQuestion(index) {
+      const q = selectedQuestions[index];
+      const container = document.getElementById('quizContainer');
+      container.innerHTML = `
         <div class="question-block">
           <h3>${index + 1}. ${q.question}</h3>
-          ${optionsHTML}
+          ${q.options.map((opt, i) => {
+            const label = String.fromCharCode(65 + i);
+            return `
+              <div>
+                <label>
+                  <input type="radio" name="question${index}" value="${opt}"
+                    ${responses[index] === opt ? 'checked' : ''}
+                    onchange="recordAnswer(${index}, '${opt}')">
+                  ${label}. ${opt}
+                </label>
+              </div>
+            `;
+          }).join('')}
         </div>
       `;
-    }).join('');
-  }
+    }
 
-  window.onload = () => {
-    loadQuestions();
-  };
+    function recordAnswer(index, answer) {
+      responses[index] = answer;
+      if (!answeredOrder.includes(index)) {
+        answeredOrder.push(index);
+      }
+    }
 
+    function nextQuestion() {
+      if (currentQuestionIndex < selectedQuestions.length - 1) {
+        currentQuestionIndex++;
+        showQuestion(currentQuestionIndex);
+      }
+    }
+
+    function prevQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        showQuestion(currentQuestionIndex);
+      }
+    }
+
+    function startTimer() {
+      let seconds = 0;
+      setInterval(() => {
+        seconds++;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        document.getElementById('timer').textContent = `⏱️ Time Elapsed: ${mins}m ${secs}s`;
+      }, 1000);
+    }
+
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        document.getElementById('warningMessage').textContent = "⚠️ You've been inactive for a while. Please continue.";
+      }, 300000); // 5 minutes
+    }
+
+    function logActivity(msg) {
+      console.log(msg);
+    }
+
+// 📦 Batch 3: Submit Quiz and Render Results
+
+          function submitQuiz() {
+      let score = 0;
+      selectedQuestions.forEach((q, i) => {
+        if (responses[i] === q.answer) score++;
+      });
+
+      const percentage = Math.round((score / selectedQuestions.length) * 100);
+      let grade;
+      if (percentage >= 90) grade = "A";
+      else if (percentage >= 80) grade = "B";
+      else if (percentage >= 70) grade = "C";
+      else if (percentage >= 60) grade = "D";
+      else grade = "F";
+
+      const resultHTML = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>${quizData.title} - Completed Quiz</title>
+          <style>
+            body { font-family: 'Segoe UI', sans-serif; background: #fff; padding: 20px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            #schoolLogo { max-height: 100px; margin-bottom: 10px; }
+            .quiz-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
+            .student-info { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+            .grade-block { text-align: right; font-weight: bold; font-size: 20px; color: #007acc; }
+            .score { text-align: right; font-size: 16px; font-weight: bold; color: #28a745; margin-bottom: 10px; }
+            .question-block { background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #007acc; }
+            .question-block h3 { margin-top: 0; color: #34495e; }
+            .correct { color: #28a745; }
+            .incorrect { color: #d9534f; }
+            .explanation { margin-top: 10px; font-style: italic; }
+            textarea { width: 100%; margin-top: 10px; }
+            .print-btn { text-align: center; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+            <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+            <span style="color:#000;">SY 2025–2026</span><br>
+            <span style="color:#000;">2nd Semester</span><br>
+            <span style="color:#000;">FABM 1</span>
+            <div class="quiz-title">${quizData.title}</div>
+            <div class="grade-block">Grade: ${grade}</div>
+            <div class="score">Score: ${score} / ${selectedQuestions.length} = ${percentage}%</div>
+          </div>
+
+          <div class="student-info">
+            <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
+            <div>Section: ${quizData.section}</div>
+          </div>
+
+          <p><strong>Test Type:</strong> ${quizData.type}</p>
+          <p><strong>Instructions:</strong></p>
+          <textarea readonly rows="4">${quizData.instructions}</textarea>
+          ${quizData.rubric}
+
+<!-- Batch 4: Question Feedback and Print Option -->
+<!-- - Question-by-question feedback -->
+<!-- - Correct/incorrect indicators -->
+<!-- - Explanations -->
+<!-- - Print button -->
+
+            ${answeredOrder.map(i => {
+            const q = selectedQuestions[i];
+            const userAnswer = responses[i];
+            const isCorrect = userAnswer === q.answer;
+            const letterLabels = ['A', 'B', 'C', 'D'];
+            const optionsHTML = q.options.map((opt, idx) => {
+              const label = letterLabels[idx] || String.fromCharCode(65 + idx);
+              return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
+            }).join('');
+            const feedback = isCorrect
+              ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
+              : `<div class="incorrect">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`;
+            return `
+              <div class="question-block">
+                <h3>${i + 1}. ${q.question}</h3>
+                ${optionsHTML}
+                ${feedback}
+                <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
+              </div>
+            `;
+          }).join('')}
+
+          <div class="print-btn">
+            <button onclick="window.print()">🖨️ Print This Page</button>
+          </div>
+        </body>
+        </html>
+      `;
+
+      document.open();
+      document.write(resultHTML);
+      document.close();
+    }
+      
+// Batch 5: Initialization and Final HTML Bod
+      //- DOMContentLoaded logic
+      //- Event listeners for activity tracking
+      //- Final HTML body structure
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
-      const studentId = params.get('student');
+      studentId = params.get('student');
       const studentData = JSON.parse(localStorage.getItem(`questionnaire-${studentId}`));
 
       if (!studentData || !studentData.quizData) {
@@ -73,9 +301,8 @@
         return;
       }
 
-      const { cnNo, lastName, firstName, quizData } = studentData;
+      ({ cnNo, lastName, firstName, quizData } = studentData);
 
-      // ✅ Populate quiz header
       document.getElementById('quizHeader').innerHTML = `
         <div class="quiz-title">${quizData.title}</div>
         <div class="student-info">
@@ -93,53 +320,10 @@
         </div>
       `;
 
-      // ✅ Quiz logic
-      const questionBank = [/* your questions here */];
-      const selectedQuestions = questionBank
-        .filter(q => quizData.topics.includes(q.topic))
-        .sort(() => 0.5 - Math.random())
-        .slice(0, quizData.num);
-
-      let currentIndex = 0;
-      let viewedIndexes = new Set();
-      let responses = {};
-      let timerInterval;
-      const endTime = quizData.endTime;
-      const activityLog = [];
-      let inactivityTimer;
-      let warningTimer;
-      let warningCountdown = 60;
-
-      function logActivity(message) {
-        const timestamp = new Date().toLocaleString();
-        activityLog.push({ time: timestamp, message });
-        localStorage.setItem(`activityLog-${studentId}`, JSON.stringify(activityLog));
-      }
-
-      function resetInactivityTimer() {
-        clearTimeout(inactivityTimer);
-        clearInterval(warningTimer);
-        warningCountdown = 60;
-        inactivityTimer = setTimeout(showInactivityWarning, 2 * 60 * 1000);
-      }
-
-      function showInactivityWarning() {
-        logActivity("⚠️ Inactivity warning triggered");
-        document.getElementById('warningMessage').textContent =
-          `⚠️ You’ve been inactive. Quiz will refresh in ${warningCountdown} seconds.`;
-
-        warningTimer = setInterval(() => {
-          warningCountdown -= 15;
-          if (warningCountdown <= 0) {
-            clearInterval(warningTimer);
-            logActivity("⏱️ Quiz refreshed due to inactivity");
-            location.reload();
-          } else {
-            document.getElementById('warningMessage').textContent =
-              `⚠️ You’ve been inactive. Quiz will refresh in ${warningCountdown} seconds.`;
-          }
-        }, 15 * 1000);
-      }
+      loadQuestions();
+      startTimer();
+      document.getElementById('navigation').style.display = 'block';
+      document.getElementById('submitBtn').onclick = submitQuiz;
 
       ['keydown', 'click', 'touchstart', 'mousemove'].forEach(event => {
         document.addEventListener(event, () => {
@@ -149,377 +333,8 @@
       });
 
       resetInactivityTimer();
-
-      function startTimer() {
-        timerInterval = setInterval(() => {
-          const now = Date.now();
-          const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-          if (remaining <= 0) {
-            clearInterval(timerInterval);
-            submitQuiz();
-          } else {
-            const min = Math.floor(remaining / 60);
-            const sec = remaining % 60;
-            document.getElementById('timer').textContent =
-              `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
-          }
-        }, 1000);
-      }
-
-      function showQuestion(index) {
-        const container = document.getElementById('quizContainer');
-        const q = selectedQuestions[index];
-        container.innerHTML = '';
-
-        const topicLabel = document.createElement('div');
-        topicLabel.className = 'topic-label';
-        topicLabel.textContent = `Topic: ${q.topic}`;
-        container.appendChild(topicLabel);
-
-        const questionTitle = document.createElement('h3');
-        questionTitle.textContent = `Q${index + 1}: ${q.question}`;
-        container.appendChild(questionTitle);
-
-        q.options.forEach(opt => {
-          const label = document.createElement('label');
-          label.className = 'option';
-          const input = document.createElement('input');
-          input.type = 'radio';
-          input.name = `question${index}`;
-          input.value = opt;
-          input.checked = responses[index] === opt;
-          input.onchange = () => {
-            responses[index] = opt;
-            updateWarning();
-          };
-          label.appendChild(input);
-          label.appendChild(document.createTextNode(` ${opt}`));
-          container.appendChild(label);
-        });
-
-        viewedIndexes.add(index);
-        updateViewedCounter();
-        updateWarning();
-      }
-
-      function nextQuestion() {
-        if (!responses[currentIndex]) {
-          document.getElementById('warningMessage').textContent =
-            `⚠️ Question ${currentIndex + 1} has not been answered.`;
-        }
-        if (currentIndex < selectedQuestions.length - 1) {
-          currentIndex++;
-          showQuestion(currentIndex);
-        }
-      }
-
-      function prevQuestion() {
-        if (currentIndex > 0) {
-          currentIndex--;
-          showQuestion(currentIndex);
-        }
-      }
-
-      function updateViewedCounter() {
-        document.getElementById('viewedCounter').textContent =
-          `${viewedIndexes.size} of ${selectedQuestions.length} questions viewed`;
-      }
-
-      function updateWarning() {
-        const unanswered = [...viewedIndexes].filter(i => !responses[i]);
-        document.getElementById('warningMessage').textContent = unanswered.length
-          ? `⚠️ Unanswered question(s): ${unanswered.map(i => i + 1).join(', ')}`
-          : '';
-      }
-
-function submitQuiz() {
-  if (document.getElementById('navigation').style.display === 'none') return;
-  clearInterval(timerInterval);
-
-  let score = 0;
-  const answeredOrder = Object.keys(responses).map(i => parseInt(i));
-  answeredOrder.forEach(i => {
-    if (responses[i] === selectedQuestions[i].answer) score++;
-  });
-
-  const percentage = Math.round((score / selectedQuestions.length) * 100);
-  let grade = '';
-  if (percentage >= 95) grade = 'A';
-  else if (percentage >= 85) grade = 'P';
-  else if (percentage >= 75) grade = 'D';
-  else grade = 'IR';
-
-  const resultData = {
-    cnNo,
-    lastName,
-    firstName,
-    score,
-    percentage,
-    grade,
-    responses,
-    quizTitle: quizData.title,
-    timestamp: Date.now()
-  };
-
-  localStorage.setItem(`result-${studentId}`, JSON.stringify(resultData));
-  setDoc(doc(db, "results", studentId), resultData)
-    .then(() => console.log("✅ Result saved to Firestore for", studentId))
-    .catch(error => console.error("❌ Error saving result to Firestore:", error));
-
-  const resultHTML = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>${quizData.title} - Completed Quiz</title>
-      <style>
-        body {
-          font-family: 'Segoe UI', sans-serif;
-          background: #fff;
-          padding: 20px;
-        }
-        .header {
-          text-align: center;
-          margin-bottom: 20px;
-        }
-        #schoolLogo {
-          max-height: 100px;
-          margin-bottom: 10px;
-        }
-        .quiz-title {
-          font-size: 24px;
-          font-weight: bold;
-          margin-bottom: 10px;
-          color: #2c3e50;
-        }
-        .student-info {
-          display: flex;
-          justify-content: space-between;
-          font-weight: bold;
-          margin-bottom: 10px;
-        }
-        .grade-block {
-          text-align: right;
-          font-weight: bold;
-          font-size: 20px;
-          color: #007acc;
-        }
-        .score {
-          text-align: right;
-          font-size: 16px;
-          font-weight: bold;
-          color: #28a745;
-          margin-bottom: 10px;
-        }
-        .question-block {
-          background: #f9f9f9;
-          padding: 15px;
-          margin-bottom: 15px;
-          border-radius: 8px;
-          border-left: 5px solid #007acc;
-        }
-        .question-block h3 {
-          margin-top: 0;
-          color: #34495e;
-        }
-        .correct {
-          color: #28a745;
-        }
-        .incorrect {
-          color: #d9534f;
-        }
-        .explanation {
-          margin-top: 10px;
-          font-style: italic;
-        }
-        textarea {
-          width: 100%;
-          margin-top: 10px;
-        }
-        .print-btn {
-          text-align: center;
-          margin-top: 20px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
-        <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
-        <span style="color:#000;">SY 2025–2026</span><br>
-        <span style="color:#000;">2nd Semester</span><br>
-        <span style="color:#000;">FABM 1</span>
-        <div class="quiz-title">${quizData.title}</div>
-        <div class="grade-block">Grade: ${grade}</div>
-        <div class="score">Score: ${score} / ${selectedQuestions.length} = ${percentage}%</div>
-      </div>
-
-      <div class="student-info">
-        <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
-        <div>Section: ${quizData.section}</div>
-      </div>
-
-      <p><strong>Test Type:</strong> ${quizData.type}</p>
-      <p><strong>Instructions:</strong></p>
-      <textarea readonly rows="4">${quizData.instructions}</textarea>
-      ${quizData.rubric}
-
-      ${answeredOrder.map(i => {
-        const q = selectedQuestions[i];
-        const userAnswer = responses[i];
-        const isCorrect = userAnswer === q.answer;
-        const letterLabels = ['A', 'B', 'C', 'D'];
-        const optionsHTML = q.options.map((opt, idx) => {
-          const label = letterLabels[idx] || String.fromCharCode(65 + idx);
-          return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
-        }).join('');
-        const feedback = isCorrect
-          ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
-          : `<div class="incorrect">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`;
-        return `
-          <div class="question-block">
-            <h3>${i + 1}. ${q.question}</h3>
-            ${optionsHTML}
-            ${feedback}
-            <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
-          </div>
-        `;
-      }).join('')}
-
-      <div class="print-btn">
-        <button onclick="window.print()">🖨️ Print This Page</button>
-      </div>
-    </body>
-    </html>
-  `;
-
-  document.open();
-  document.write(resultHTML);
-  document.close();
-}
-
-      // ✅ Initialize quiz
-      startTimer();
-      showQuestion(currentIndex);
-      document.getElementById('navigation').style.display = 'block';
-      document.getElementById('submitBtn').onclick = submitQuiz;
     });
   </script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      padding: 20px;
-    }
-    h1, h2 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    #schoolLogo {
-      max-height: 100px;
-      margin-bottom: 10px;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .info-block, .quiz-box {
-      max-width: 800px;
-      margin: 0 auto 20px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .quiz-title {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      color: #2c3e50;
-    }
-    .student-info {
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-      margin-bottom: 15px;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .grade-block p {
-      margin: 10px 0;
-    }
-    textarea[readonly] {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      resize: none;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: #f5f5f5;
-    }
-    .rubric-block h3 {
-      margin-bottom: 10px;
-      color: #007acc;
-    }
-    .rubric-table table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    .rubric-table th, .rubric-table td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-      vertical-align: top;
-      font-size: 14px;
-    }
-    .rubric-table thead {
-      background-color: #eef6fc;
-      font-weight: bold;
-    }
-    .topic-label {
-      font-size: 14px;
-      color: #888;
-      margin-bottom: 10px;
-      font-style: italic;
-    }
-    .option {
-      margin: 5px 0;
-      display: block;
-    }
-    #navigation {
-      text-align: center;
-      margin-top: 20px;
-    }
-    button {
-      padding: 14px 24px;
-      font-size: 18px;
-      margin: 8px;
-      background-color: #007acc;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    #submitBtn {
-      background-color: #28a745;
-    }
-    #submitBtn:hover {
-      background-color: #218838;
-    }
-    #timer, #warningMessage, #viewedCounter, #result {
-      text-align: center;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    #result {
-      color: #28a745;
-    }
-  </style>
 </head>
 <body>
   <div class="header">
