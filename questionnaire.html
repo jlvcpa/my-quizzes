@@ -21,6 +21,48 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+      let questionBank = [];
+  let selectedQuestions = [];
+
+  async function loadQuestions() {
+    const snapshot = await getDocs(collection(db, "questionBank"));
+    questionBank = snapshot.docs.map(doc => doc.data());
+
+    // Filter questions for the current quiz
+    selectedQuestions = questionBank.filter(q => q.quizId === quizData.id);
+
+    // Now render the quiz
+    renderQuiz();
+  }
+
+  function renderQuiz() {
+    const container = document.getElementById('quizContainer');
+    if (!selectedQuestions || selectedQuestions.length === 0) {
+      container.innerHTML = `<p style="color:red;">⚠️ Unable to load quiz questions. Please check your Firebase setup.</p>`;
+      return;
+    }
+
+    container.innerHTML = selectedQuestions.map((q, index) => {
+      const letterLabels = ['A', 'B', 'C', 'D'];
+      const optionsHTML = q.options.map((opt, i) => `
+        <label>
+          <input type="radio" name="q${index}" value="${opt}" onchange="recordAnswer(${index}, '${opt}')">
+          ${letterLabels[i]}. ${opt}
+        </label><br>
+      `).join('');
+      return `
+        <div class="question-block">
+          <h3>${index + 1}. ${q.question}</h3>
+          ${optionsHTML}
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.onload = () => {
+    loadQuestions();
+  };
+
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       const studentId = params.get('student');
