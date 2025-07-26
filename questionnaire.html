@@ -146,7 +146,8 @@
 
     <script>
   function loadQuizData() {
-    const studentId = '50-VILLARTA-Joselito'; // Adjust if dynamic
+    const params = new URLSearchParams(window.location.search);
+    const studentId = params.get('student');
     const rawData = localStorage.getItem(`questionnaire-${studentId}`);
     console.log("📦 Raw studentData:", rawData);
 
@@ -160,12 +161,12 @@
       if (!Array.isArray(studentData?.quizData?.topics)) {
         console.error("❌ quizData.topics is missing or not an array:", studentData?.quizData?.topics);
         alert("Quiz data is incomplete. Please regenerate the quiz.");
-        return; // ✅ Inside function
+        return;
       }
 
-      // ✅ Safe to proceed with quiz logic
-      // Example:
-      // renderTopics(studentData.quizData.topics);
+      // ✅ Assign to global scope
+      window.studentData = studentData;
+      window.quizData = studentData.quizData;
 
     } catch (e) {
       console.error("❌ Failed to parse studentData:", e);
@@ -173,8 +174,6 @@
     }
   }
 
-  // Call the function to run the logic
-  loadQuizData();
       
   let studentId, cnNo, lastName, firstName, quizData;
   let selectedQuestions = [];
