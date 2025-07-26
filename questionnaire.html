@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>FABM 1 Quiz</title>
 
-    <!-- ✅ START OF Firebase SDK -->
+  <!-- ✅ START OF Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
@@ -26,7 +25,9 @@
     window.setDoc = setDoc;
     window.doc = doc;
   </script>
-  <!-- ✅ END OF Firebase SDK -->
+<!-- ✅ END of Firebase SDK -->
+
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -307,7 +308,7 @@
       console.log(msg);
     }
 
-// SUBMITQUIZ function starts here    
+// START OF submitQUIZ function    
     function submitQuiz() {
   let score = 0;
   selectedQuestions.forEach((q, i) => {
@@ -401,7 +402,8 @@
   document.write(resultHTML);
   document.close();
 }
-//SUBMITQUIZ function ended here
+// END of submitQuiz() function
+
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       studentId = params.get('student');
