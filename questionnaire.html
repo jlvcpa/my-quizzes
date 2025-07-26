@@ -115,8 +115,36 @@
       margin-top: 10px;
     }
   </style>
+</head>
+<body>
+  <div class="header">
+    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+    <span style="color:#000;">SY 2025–2026</span><br>
+    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">FABM 1</span>
+  </div>
 
-  <script>
+  <div class="info-block" id="quizHeader"></div>
+
+  <div style="max-width:800px; margin:0 auto; text-align:left;">
+    <button id="submitBtn">✅ Submit Quiz</button>
+  </div>
+
+  <div id="warningMessage"></div>
+  <div id="timer"></div>
+
+  <div class="quiz-box" id="quizContainer"></div>
+
+  <div id="navigation" style="display:none;">
+    <button onclick="prevQuestion()">⬅ Previous</button>
+    <button onclick="nextQuestion()">Next ➡</button>
+  </div>
+
+  <div id="viewedCounter"></div>
+  <div id="result"></div>
+
+    <script>
     let studentId, cnNo, lastName, firstName, quizData;
     let selectedQuestions = [];
     let currentQuestionIndex = 0;
@@ -449,33 +477,5 @@
       resetInactivityTimer();
     });
   </script>
-</head>
-<body>
-  <div class="header">
-    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
-    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
-    <span style="color:#000;">SY 2025–2026</span><br>
-    <span style="color:#000;">2nd Semester</span><br>
-    <span style="color:#000;">FABM 1</span>
-  </div>
-
-  <div class="info-block" id="quizHeader"></div>
-
-  <div style="max-width:800px; margin:0 auto; text-align:left;">
-    <button id="submitBtn">✅ Submit Quiz</button>
-  </div>
-
-  <div id="warningMessage"></div>
-  <div id="timer"></div>
-
-  <div class="quiz-box" id="quizContainer"></div>
-
-  <div id="navigation" style="display:none;">
-    <button onclick="prevQuestion()">⬅ Previous</button>
-    <button onclick="nextQuestion()">Next ➡</button>
-  </div>
-
-  <div id="viewedCounter"></div>
-  <div id="result"></div>
 </body>
 </html>
