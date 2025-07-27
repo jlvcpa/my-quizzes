@@ -144,17 +144,19 @@ if (instructionsInput) instructionsInput.value = data.instructions || '';
       window.filterQuizzes = filterQuizzes;
       window.loadQuizzes = loadQuizzes; // ← Add this line
 
-    } catch (error) {
-      console.error("❌ Firebase initialization failed:", error);
-    }
-  })();
-
-  // ✅ DOMContentLoaded listeners OUTSIDE the async IIFE
+        // ✅ DOMContentLoaded listeners OUTSIDE the async IIFE
 window.addEventListener('DOMContentLoaded', () => {
   loadQuizzes();
   const quizId = window.editingQuizId;
   if (quizId) loadQuiz(quizId);
   });
+
+    } catch (error) {
+      console.error("❌ Firebase initialization failed:", error);
+    }
+  })();
+
+
 </script>
 
  
