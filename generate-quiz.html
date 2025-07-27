@@ -83,32 +83,32 @@
         document.body.innerHTML = "<h2 style='text-align:center;'>⚠️ Failed to load quiz.</h2>";
       });
 
-    window.generateQuestionnaire = function () {
-      const idNumber = document.getElementById('idNumber').value.trim();
-      const cnNo = document.getElementById('cnNo').value.trim();
-      const lastName = document.getElementById('lastName').value.trim();
-      const firstName = document.getElementById('firstName').value.trim();
-      const password = document.getElementById('password').value.trim();
+window.generateQuestionnaire = function () {
+  const idNumber = document.getElementById('idNumber').value.trim();
+  const cnNo = document.getElementById('cnNo').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const firstName = document.getElementById('firstName').value.trim();
+  const password = document.getElementById('password').value.trim();
 
-      if (!idNumber || !cnNo || !lastName || !firstName || !password) {
-        alert("Please fill in all login fields.");
-        return;
-      }
+  if (!idNumber || !cnNo || !lastName || !firstName || !password) {
+    alert("Please fill in all login fields.");
+    return;
+  }
 
-      const studentId = `${idNumber}-${cnNo}-${lastName}-${firstName}`;
-      const studentData = {
-        quizId,
-        idNumber,
-        cnNo,
-        lastName,
-        firstName,
-        password,
-        quizData
-      };
+  const studentId = `${idNumber}-${cnNo}-${lastName}-${firstName}`;
+  const studentData = {
+    quizId,
+    idNumber,
+    cnNo,
+    lastName,
+    firstName,
+    password,
+    quizData
+  };
 
-      localStorage.setItem(`questionnaire-${studentId}`, JSON.stringify(studentData));
-      window.location.href = `questionnaire.html?student=${encodeURIComponent(studentId)}`;
-    };
+  localStorage.setItem(`questionnaire-${studentId}`, JSON.stringify(studentData));
+  window.location.href = `questionnaire.html?student=${encodeURIComponent(studentId)}`;
+};
 
 window.lookupStudent = function () {
   const idInput = document.getElementById('idNumber').value.trim();
