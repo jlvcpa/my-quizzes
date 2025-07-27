@@ -73,12 +73,19 @@
       console.log("📋 Quiz data:", data);
 
       // ✅ Populate form fields
-      document.getElementById('quizTitle').value = data.title || '';
-      document.getElementById('gradeSection').value = data.section || '';
-      document.getElementById('testType').value = data.type || '';
-      document.getElementById('numQuestions').value = data.num || '';
-      document.getElementById('instructions').value = data.instructions || '';
+      const titleInput = document.getElementById('quizTitle');
+if (titleInput) titleInput.value = data.title || '';
+      const sectionInput = document.getElementById('gradeSection');
+if (sectionInput) sectionInput.value = data.section || '';
 
+const typeInput = document.getElementById('testType');
+if (typeInput) typeInput.value = data.type || '';
+
+const numInput = document.getElementById('numQuestions');
+if (numInput) numInput.value = data.num || '';
+
+const instructionsInput = document.getElementById('instructions');
+if (instructionsInput) instructionsInput.value = data.instructions || '';
       // ✅ Topics (multi-select)
       const topicSelector = document.getElementById('topicSelector');
       Array.from(topicSelector.options).forEach(opt => {
