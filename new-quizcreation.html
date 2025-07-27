@@ -428,56 +428,7 @@ async function generateQuiz() {
   }
 }
 
-//  import { getDocs, collection } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
-async function loadQuizzes() {
-  const quizList = document.getElementById('quizList');
-  quizList.innerHTML = '';
-  const querySnapshot = await getDocs(collection(window.db, "quizzes"));
-  const selectedSection = document.getElementById('sectionFilter').value;
-
-  querySnapshot.forEach(doc => {
-    const data = doc.data();
-    if (!selectedSection || data.section === selectedSection) {
-      const item = document.createElement('div');
-      item.className = 'quiz-item';
-      item.innerHTML = `
-        <strong>${data.title}</strong> (${data.section})
-        <button onclick="loadQuiz('${doc.id}')">✏️ Edit</button>
-      `;
-      quizList.appendChild(item);
-    }
-  });
-}
-
-function filterQuizzes() {
-  loadQuizzes();
-}
-
-//    import { getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-
-async function loadQuiz(id) {
-  const quizRef = window.doc(window.db, "quizzes", id);
-  const docSnap = await getDoc(quizRef);
-
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    document.getElementById('quizTitle').value = data.title;
-    document.getElementById('gradeSection').value = data.section;
-    document.getElementById('testType').value = data.type;
-    document.getElementById('numQuestions').value = data.num;
-    document.getElementById('instructions').value = data.instructions;
-    document.getElementById('endTime').value = new Date(data.endTime).toISOString().slice(0,16);
-
-    // Optional: restore rubric table
-    document.getElementById('rubricTable').outerHTML = data.rubric;
-
-    // Store current quiz ID for link generation
-    window.currentQuizId = id;
-  } else {
-    alert("Quiz not found.");
-  }
-}
 
     // ✅ Expose functions to global scope
     window.generateQuiz = generateQuiz;
