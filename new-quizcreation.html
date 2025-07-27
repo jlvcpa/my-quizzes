@@ -59,6 +59,30 @@
         loadQuizzes();
       }
 
+      function loadQuiz(quizId) {
+  console.log("🛠️ Load quiz with ID:", quizId);
+
+  // Example: Fetch quiz data and populate form fields
+  getDoc(doc(db, "quizzes", quizId)).then(docSnap => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log("📋 Quiz data:", data);
+
+      // Example: populate form fields
+      document.getElementById('quizTitle').value = data.title || '';
+      document.getElementById('quizSection').value = data.section || '';
+      // Add more fields as needed
+    } else {
+      console.warn("⚠️ No such quiz found!");
+    }
+  }).catch(error => {
+    console.error("❌ Failed to load quiz:", error);
+  });
+}
+
+// ✅ Expose globally
+window.loadQuiz = loadQuiz;
+      
       // ✅ Expose filterQuizzes globally for <select onchange>
       window.filterQuizzes = filterQuizzes;
 
