@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resubmit Quiz</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; display: flex; gap: 20px; }
+    select, button { margin: 10px 0; padding: 5px; }
+    #leftPanel { flex: 1; }
+    #rightPanel {
+      flex: 1;
+      max-height: 80vh;
+      overflow-y: auto;
+      border-left: 2px solid #ccc;
+      padding-left: 20px;
+    }
+    .attempt {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .attempt-info { flex: 1; }
+    .status-text {
+      font-style: italic;
+      color: #555;
+      margin-left: 20px;
+      max-width: 250px;
+      text-align: right;
+    }
+    .disabled { opacity: 0.6; pointer-events: none; }
+    .question-block {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .correct { color: #28a745; }
+    .incorrect { color: #d9534f; }
+    .explanation { font-style: italic; margin-top: 5px; color: #555; }
+  </style>
+</head>
+<body>
+  <div id="leftPanel">
+    <h2>Resubmit Quiz</h2>
+
+    <label for="quizFilter">Filter by Quiz Title:</label><br>
+    <select id="quizFilter">
+      <option value="">-- All Quizzes --</option>
+    </select><br>
+
+    <div id="attemptsContainer"></div>
+  </div>
+
+  <div id="rightPanel">
+    <h3>📄 Test Paper Preview</h3>
+    <div id="previewContainer">Select a result to view answers.</div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+      authDomain: "jlvcpa-quizzes.firebaseapp.com",
+      projectId: "jlvcpa-quizzes",
+      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+      messagingSenderId: "629158256557",
+      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function detectStudentIdFromLocalStorage() {
+      const key = Object.keys(localStorage).find(k => k.startsWith("result-"));
+      if (!key) return null;
+      const parts = key.split("-");
+      return parts.length >= 3 ? parts[1] : null;
+    }
+
+    let studentId = detectStudentIdFromLocalStorage();
+    if (!studentId) {
+      studentId = prompt("Enter your Student ID:");
+    }
+
+    async function loadLocalResults() {
+      const container = document.getElementById("attemptsContainer");
+      const filter = document.getElementById("quizFilter").value;
+      container.innerHTML = "";
+
+      const localKeys = Object.keys(localStorage).filter(key =>
+        key.startsWith(`result-${studentId}-`)
+      );
+
+      if (localKeys.length === 0) {
+        container.innerHTML = "<p>No local results found.</p>";
+        return;
+      }
+
+      const resultDoc = await db.collection("results").doc(studentId).get();
+      const submittedResults = resultDoc.exists ? resultDoc.data() : {};
+
+      const quizTitles = new Set();
+
+      for (const key of localKeys) {
+        const localResult = JSON.parse(localStorage.getItem(key));
+        const quizId = localResult.quizId;
+        const quizTitle = localResult.quizTitle;
+        quizTitles.add(quizTitle);
+
+        if (filter && quizTitle !== filter) continue;
+
+        const alreadySubmitted = submittedResults[quizId] !== undefined;
+
+        const div = document.createElement("div");
+        div.className = "attempt";
+
+        const info = document.createElement("div");
+        info.className = "attempt-info";
+        info.innerHTML = `
+          <strong>${quizTitle}</strong><br>
+          Score: ${localResult.score}<br>
+          Grade: ${localResult.grade}<br>
+          Completed: ${new Date(localResult.timestamp).toLocaleString()}<br>
+          <button onclick="viewAnswers('${key}')">View Answers</button>
+          ${alreadySubmitted
+            ? `<button class="disabled">Already Submitted</button>`
+            : `<button onclick="confirmSubmit('${key}')">Submit This Result</button>`}
+        `;
+
+        const status = document.createElement("div");
+        status.className = "status-text";
+        status.textContent = alreadySubmitted
+          ? "This result has already been submitted. You may safely close this site."
+          : "Not submitted yet. You may choose this result to submit.";
+
+        div.appendChild(info);
+        div.appendChild(status);
+        container.appendChild(div);
+      }
+
+      populateFilterDropdown([...quizTitles]);
+    }
+
+    function populateFilterDropdown(titles) {
+      const filterSelect = document.getElementById("quizFilter");
+      const current = filterSelect.value;
+      filterSelect.innerHTML = `<option value="">-- All Quizzes --</option>`;
+      titles.sort().forEach(title => {
+        const option = document.createElement("option");
+        option.value = title;
+        option.textContent = title;
+        filterSelect.appendChild(option);
+      });
+      filterSelect.value = current;
+    }
+
+    async function confirmSubmit(key) {
+      const resultData = JSON.parse(localStorage.getItem(key));
+      const confirm = window.confirm(`Submit result for "${resultData.quizTitle}" with score ${resultData.score}?`);
+      if (!confirm) return;
+
+      try {
+        const resultRef = db.collection("results").doc(studentId);
+        await resultRef.set({ [resultData.quizId]: resultData }, { merge: true });
+        alert("✅ Result submitted successfully!");
+        loadLocalResults();
+      } catch (error) {
+        console.error("❌ Submission error:", error);
+        alert("Failed to submit result.");
+      }
+    }
+
+    function viewAnswers(key) {
+      const resultData = JSON.parse(localStorage.getItem(key));
+      const container = document.getElementById("previewContainer");
+      container.innerHTML = "";
+
+      if (!resultData.questions || !Array.isArray(resultData.questions)) {
+        container.innerHTML = "<p>No question data available in this result.</p>";
+        return;
+      }
+
+      resultData.questions.forEach((q, i) => {
+        const userAnswer = resultData.responses[i];
+        const isCorrect = userAnswer === q.answer;
+        const label = ['A', 'B', 'C', 'D'];
+        const correctLabel = label[q.options.indexOf(q.answer)];
+        const userLabel = label[q.options.indexOf(userAnswer)];
+
+        const block = document.createElement("div");
+        block.className = "question-block";
+        block.innerHTML = `
+          <strong>Q${i + 1}:</strong> ${q.question}<br>
+          ${q.options.map((opt, idx) => `<div>${label[idx]}. ${opt}</div>`).join('')}
+          <div class="${isCorrect ? 'correct' : 'incorrect'}">
+            Answered: ${userLabel || '—'} ${isCorrect ? '✔️' : `❌ (Correct: ${correctLabel})`}
+          </div>
+          ${q.explanation ? `<div class="explanation">Explanation: ${q.explanation}</div>` : ''}
+        `;
+        container.appendChild(block);
+      });
+    }
+
+    document.getElementById("quizFilter").addEventListener("change", loadLocalResults);
+    window.addEventListener("DOMContentLoaded", loadLocalResults);
+  </script>
+</body>
+</html>
