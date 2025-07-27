@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Students to Firebase</title>
+</head>
+<body>
+  <h2>📤 Upload Students CSV</h2>
+  <input type="file" id="csvFile" accept=".csv" />
+  <button onclick="uploadCSV()">Upload</button>
+  <pre id="output"></pre>
+
+  <!-- Firebase Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+      authDomain: "jlvcpa-quizzes.firebaseapp.com",
+      projectId: "jlvcpa-quizzes",
+      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+      messagingSenderId: "629158256557",
+      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.uploadCSV = async function () {
+      const fileInput = document.getElementById("csvFile");
+      const output = document.getElementById("output");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        output.textContent = "⚠️ Please select a CSV file.";
+        return;
+      }
+
+      const text = await file.text();
+      const rows = text.trim().split("\n");
+      const headers = rows[0].split("\t");
+
+      let uploadedCount = 0;
+      for (let i = 1; i < rows.length; i++) {
+        const values = rows[i].split("\t");
+        const student = {};
+        headers.forEach((header, index) => {
+          student[header.trim()] = values[index]?.trim() || "";
+        });
+
+        const IDnumber = student["Idnumber"];
+        const Section = student["SECTION"];
+
+        if (!IDnumber || !Section || Section.trim() === "") {
+          console.warn("⚠️ Skipping incomplete row:", student);
+          continue;
+        }
+
+        try {
+          await setDoc(doc(db, "students", IDnumber), {
+            CN: student["CN"],
+            LastName: student["LastName"],
+            FirstName: student["FirstName"],
+            Email: student["Email"],
+            Section: Section
+          });
+          uploadedCount++;
+        } catch (error) {
+          console.error(`❌ Error uploading ${IDnumber}:`, error);
+        }
+      }
+
+      output.textContent = `✅ Uploaded ${uploadedCount} students successfully.`;
+    };
+  </script>
+</body>
+</html>
