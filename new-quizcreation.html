@@ -107,9 +107,6 @@
     });
 }
 
-// ✅ Expose globally
-window.loadQuiz = loadQuiz;
-
       function saveEditedQuiz() {
   const quizId = window.editingQuizId;
   if (!quizId) return alert("No quiz selected for editing.");
@@ -134,8 +131,7 @@ window.loadQuiz = loadQuiz;
       console.error("❌ Failed to update quiz:", error);
     });
 }
-
-      // ✅ Expose globally
+    // ✅ Expose globally (keep this block together)
       window.loadQuiz = loadQuiz;
       window.saveEditedQuiz = saveEditedQuiz;
       window.filterQuizzes = filterQuizzes;
