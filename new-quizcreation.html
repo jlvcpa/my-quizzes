@@ -60,28 +60,82 @@
       }
 
       function loadQuiz(quizId) {
-  console.log("🛠️ Load quiz with ID:", quizId);
+  console.log("🛠️ Loading quiz:", quizId);
 
-  // Example: Fetch quiz data and populate form fields
-  getDoc(doc(db, "quizzes", quizId)).then(docSnap => {
-    if (docSnap.exists()) {
+  getDoc(doc(db, "quizzes", quizId))
+    .then(docSnap => {
+      if (!docSnap.exists()) {
+        console.warn("⚠️ Quiz not found:", quizId);
+        return;
+      }
+
       const data = docSnap.data();
       console.log("📋 Quiz data:", data);
 
-      // Example: populate form fields
+      // ✅ Populate form fields
       document.getElementById('quizTitle').value = data.title || '';
-      document.getElementById('quizSection').value = data.section || '';
-      // Add more fields as needed
-    } else {
-      console.warn("⚠️ No such quiz found!");
-    }
-  }).catch(error => {
-    console.error("❌ Failed to load quiz:", error);
-  });
+      document.getElementById('gradeSection').value = data.section || '';
+      document.getElementById('testType').value = data.type || '';
+      document.getElementById('numQuestions').value = data.num || '';
+      document.getElementById('instructions').value = data.instructions || '';
+
+      // ✅ Topics (multi-select)
+      const topicSelector = document.getElementById('topicSelector');
+      Array.from(topicSelector.options).forEach(opt => {
+        opt.selected = data.topics?.includes(opt.value) || false;
+      });
+
+      // ✅ Rubric (HTML injection)
+      const rubricContainer = document.getElementById('rubricTable');
+      if (rubricContainer && data.rubricHTML) {
+        rubricContainer.outerHTML = data.rubricHTML;
+      }
+
+      // ✅ End time
+      if (data.endTime) {
+        const endTimeInput = document.getElementById('endTime');
+        const dateStr = new Date(data.endTime).toISOString().slice(0, 16); // Format for datetime-local
+        endTimeInput.value = dateStr;
+      }
+
+      // ✅ Optionally store quizId for later update
+      window.editingQuizId = quizId;
+
+    })
+    .catch(error => {
+      console.error("❌ Error loading quiz:", error);
+    });
 }
 
 // ✅ Expose globally
 window.loadQuiz = loadQuiz;
+
+      function saveEditedQuiz() {
+  const quizId = window.editingQuizId;
+  if (!quizId) return alert("No quiz selected for editing.");
+
+  const updatedData = {
+    title: document.getElementById('quizTitle').value.trim(),
+    section: document.getElementById('gradeSection').value,
+    type: document.getElementById('testType').value.trim(),
+    topics: Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value),
+    num: parseInt(document.getElementById('numQuestions').value),
+    instructions: document.getElementById('instructions').value.trim(),
+    rubricHTML: document.getElementById('rubricTable').outerHTML,
+    endTime: new Date(document.getElementById('endTime').value).getTime(),
+    timestamp: Date.now()
+  };
+
+  setDoc(doc(db, "quizzes", quizId), updatedData)
+    .then(() => {
+      alert("✅ Quiz updated successfully!");
+    })
+    .catch(error => {
+      console.error("❌ Failed to update quiz:", error);
+    });
+}
+
+window.saveEditedQuiz = saveEditedQuiz;
       
       // ✅ Expose filterQuizzes globally for <select onchange>
       window.filterQuizzes = filterQuizzes;
@@ -332,6 +386,7 @@ window.loadQuiz = loadQuiz;
     <button type="button" onclick="addRubricRow()">➕ Add Row</button>
 
     <button onclick="generateQuiz()">🎯 Generate Quiz</button>
+    <button onclick="saveEditedQuiz()">💾 Save Changes</button>
     <button onclick="generateLink()">🔗 Generate Link</button>
     <button onclick="window.open('https://jlvcpa.github.io/my-quizzes/topicextractor.html', '_blank')">
       🔍 Open Topic Extractor
