@@ -4,30 +4,7 @@
   <meta charset="UTF-8">
   <title>New Quiz Creation</title>
 
-  <!-- Firebase Modular SDK -->
-<script type="module">
-  (async () => {
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
-    const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
-      authDomain: "jlvcpa-quizzes.firebaseapp.com",
-      projectId: "jlvcpa-quizzes",
-      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
-      messagingSenderId: "629158256557",
-      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    window.db = db;
-    window.setDoc = setDoc;
-    window.doc = doc;
-  })();
-</script>
-
+ 
 <style>
   body {
     font-family: 'Segoe UI', sans-serif;
@@ -172,6 +149,30 @@
 </style>
 </head>
 <body>
+   <!-- Firebase Modular SDK -->
+<script type="module">
+  (async () => {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
+    const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+      authDomain: "jlvcpa-quizzes.firebaseapp.com",
+      projectId: "jlvcpa-quizzes",
+      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+      messagingSenderId: "629158256557",
+      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.setDoc = setDoc;
+    window.doc = doc;
+  })();
+</script>
+
 
   <script>
     const allowedUser = "jlvcpa";
