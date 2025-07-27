@@ -108,21 +108,34 @@
       window.location.href = `questionnaire.html?student=${encodeURIComponent(studentId)}`;
     };
 
-    window.lookupStudent = function () {
-      const idInput = document.getElementById('idNumber').value.trim();
-      const student = studentsData.find(s => s.Idnumber === idInput);
+window.lookupStudent = function () {
+  const idInput = document.getElementById('idNumber').value.trim();
+  const errorDisplay = document.getElementById('idError');
 
-      if (!student) {
-        alert("❌ Student ID not found in this section.");
-        return;
-      }
+  const student = studentsData.find(s => s.Idnumber === idInput);
 
-      document.getElementById('cnNo').value = student.CN || '';
-      document.getElementById('lastName').value = student.LastName || '';
-      document.getElementById('firstName').value = student.FirstName || '';
-      document.getElementById('emailDisplay').value = student.Email || '';
-      document.getElementById('sectionDisplay').value = student.Section || '';
-    };
+  if (!student) {
+    errorDisplay.textContent = "❌ Student ID not found in this section.";
+    clearStudentFields();
+    return;
+  }
+
+  errorDisplay.textContent = ""; // Clear error if found
+
+  document.getElementById('cnNo').value = student.CN || '';
+  document.getElementById('lastName').value = student.LastName || '';
+  document.getElementById('firstName').value = student.FirstName || '';
+  document.getElementById('emailDisplay').value = student.Email || '';
+  document.getElementById('sectionDisplay').value = student.Section || '';
+};
+
+function clearStudentFields() {
+  document.getElementById('cnNo').value = '';
+  document.getElementById('lastName').value = '';
+  document.getElementById('firstName').value = '';
+  document.getElementById('emailDisplay').value = '';
+  document.getElementById('sectionDisplay').value = '';
+}
   </script>
 
   <style>
