@@ -157,63 +157,7 @@
   <title>Quiz Creation</title>
 </head>
 <body>
-  <!-- Your quiz form and other content -->
-
-  <!-- Firebase init with error handling -->
-  <script type="module">
-    (async () => {
-      try {
-        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
-        const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
-
-        const firebaseConfig = {
-          apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
-          authDomain: "jlvcpa-quizzes.firebaseapp.com",
-          projectId: "jlvcpa-quizzes",
-          storageBucket: "jlvcpa-quizzes.firebasestorage.app",
-          messagingSenderId: "629158256557",
-          appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        window.db = db;
-        window.setDoc = setDoc;
-        window.doc = doc;
-
-        console.log("✅ Firebase initialized:", window.db);
-      } catch (error) {
-        console.error("❌ Firebase initialization failed:", error);
-      }
-    })();
-  </script>
-  
-</body>
-</html>
-
-
-  <script>
-    const allowedUser = "jlvcpa";
-    const allowedPass = "14344230321";
-
-    const stored = sessionStorage.getItem("authenticated");
-
-    if (!stored) {
-      const username = prompt("Enter username:");
-      const password = prompt("Enter password:");
-
-      if (username !== allowedUser || password !== allowedPass) {
-        alert("⛔ Access denied.");
-        document.body.innerHTML = "<h2 style='text-align:center;'>Unauthorized Access</h2>";
-        throw new Error("Unauthorized");
-      } else {
-        sessionStorage.setItem("authenticated", "true");
-      }
-    }
-  </script>
-
-<div class="header">
+  <div class="header">
   <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
   <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
   <span style="color:#000;">SY 2025–2026</span><br>
@@ -318,6 +262,63 @@
     <div id="generatedQuizzes"></div>
   </div>
 </div>
+  <!-- Your quiz form and other content -->
+</body>
+</html>
+  <!-- Firebase init with error handling -->
+  <script type="module">
+    (async () => {
+      try {
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
+        const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+          authDomain: "jlvcpa-quizzes.firebaseapp.com",
+          projectId: "jlvcpa-quizzes",
+          storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+          messagingSenderId: "629158256557",
+          appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.setDoc = setDoc;
+        window.doc = doc;
+
+        console.log("✅ Firebase initialized:", window.db);
+      } catch (error) {
+        console.error("❌ Firebase initialization failed:", error);
+      }
+    })();
+  </script>
+  
+
+
+
+  <script>
+    const allowedUser = "jlvcpa";
+    const allowedPass = "14344230321";
+
+    const stored = sessionStorage.getItem("authenticated");
+
+    if (!stored) {
+      const username = prompt("Enter username:");
+      const password = prompt("Enter password:");
+
+      if (username !== allowedUser || password !== allowedPass) {
+        alert("⛔ Access denied.");
+        document.body.innerHTML = "<h2 style='text-align:center;'>Unauthorized Access</h2>";
+        throw new Error("Unauthorized");
+      } else {
+        sessionStorage.setItem("authenticated", "true");
+      }
+    }
+  </script>
+
+
 
   <script>
     function addRubricRow() {
