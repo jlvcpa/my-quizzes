@@ -150,32 +150,47 @@
 </head>
 <body>
    <!-- Firebase Modular SDK -->
-<script type="module">
-  (async () => {
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
-    const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz Creation</title>
+</head>
+<body>
+  <!-- Your quiz form and other content -->
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
-      authDomain: "jlvcpa-quizzes.firebaseapp.com",
-      projectId: "jlvcpa-quizzes",
-      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
-      messagingSenderId: "629158256557",
-      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
-    };
+  <!-- Firebase init with error handling -->
+  <script type="module">
+    (async () => {
+      try {
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
+        const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        const firebaseConfig = {
+          apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+          authDomain: "jlvcpa-quizzes.firebaseapp.com",
+          projectId: "jlvcpa-quizzes",
+          storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+          messagingSenderId: "629158256557",
+          appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+        };
 
-    window.db = db;
-    window.setDoc = setDoc;
-    window.doc = doc;
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        // ✅ Safe place to log
-    console.log("Firebase initialized:", window.db);
+        window.db = db;
+        window.setDoc = setDoc;
+        window.doc = doc;
 
-  })();
-</script>
+        console.log("✅ Firebase initialized:", window.db);
+      } catch (error) {
+        console.error("❌ Firebase initialization failed:", error);
+      }
+    })();
+  </script>
+  
+</body>
+</html>
 
 
   <script>
