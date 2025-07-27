@@ -110,6 +110,12 @@
       border-radius: 5px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    select {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  margin-top: 5px;
+}
     .expired {
       color: #d9534f;
     }
@@ -149,7 +155,13 @@
     <h2>Create New Quiz</h2>
 
     <label for="quizTitle">Quiz Title</label>
-    <input type="text" id="quizTitle" placeholder="e.g. MIDTERM EXAM">
+<select id="quizTitle">
+  <option value="">Select Quiz Title</option>
+  <option value="FORMATIVE EXAM">FORMATIVE EXAM</option>
+  <option value="SUMMATIVE EXAM">SUMMATIVE EXAM</option>
+  <option value="MIDTERM EXAM">MIDTERM EXAM</option>
+  <option value="FINAL EXAM">FINAL EXAM</option>
+</select>
 
     <label for="gradeSection">Grade Level and Section</label>
 <select id="gradeSection">
@@ -160,7 +172,19 @@
 </select>
     
     <label for="testType">Test Type</label>
-    <input type="text" id="testType" placeholder="e.g. MULTIPLE CHOICE">
+<select id="testType">
+  <option value="">Select Test Type</option>
+  <option value="Multiple Choice">Multiple Choice</option>
+  <option value="True/False">True/False</option>
+  <option value="Short Answer">Short Answer</option>
+  <option value="Essay">Essay</option>
+  <option value="Fill-in-the-Blank">Fill-in-the-Blank</option>
+  <option value="Problem Solving">Problem Solving</option>
+  <option value="Journalizing">Journalizing</option>
+  <option value="Preparing Worksheet">Preparing Worksheet</option>
+  <option value="Preparing Financial Statements">Preparing Financial Statements</option>
+</select>
+
 
 <label for="endTime">Set Quiz End Time:</label>
 <input type="datetime-local" id="endTime" required>
@@ -267,6 +291,11 @@ async function generateQuiz() {
   const endTimeStr = document.getElementById('endTime').value;
   const endTime = new Date(endTimeStr).getTime();
   const timestamp = Date.now();
+
+  if (!title || !type) {
+  alert("Please select both a quiz title and test type.");
+  return;
+}
 
   if (!section || isNaN(endTime) || endTime <= timestamp) {
     alert("Please select a valid section and future end time.");
