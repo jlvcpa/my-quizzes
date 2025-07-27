@@ -9,6 +9,7 @@
     try {
       const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
       const { getFirestore, doc, setDoc, getDoc, getDocs, collection } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
+      const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
 
       const firebaseConfig = {
         apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
@@ -113,6 +114,23 @@ if (instructionsInput) instructionsInput.value = data.instructions || '';
       console.error("❌ Error loading quiz:", error);
     });
 }
+      function deleteQuiz() {
+  const quizId = window.editingQuizId;
+  if (!quizId) return alert("⚠️ No quiz selected for deletion.");
+
+  const confirmDelete = confirm("Are you sure you want to delete this quiz?");
+  if (!confirmDelete) return;
+
+  deleteDoc(doc(db, "quizzes", quizId))
+    .then(() => {
+      alert("🗑️ Quiz deleted successfully!");
+      window.editingQuizId = null;
+      loadQuizzes(); // Refresh the list
+    })
+    .catch(error => {
+      console.error("❌ Failed to delete quiz:", error);
+    });
+}
 
       function saveEditedQuiz() {
   const quizId = window.editingQuizId;
@@ -140,6 +158,7 @@ if (instructionsInput) instructionsInput.value = data.instructions || '';
 }
     // ✅ Expose globally (keep this block together)
       window.loadQuiz = loadQuiz;
+      window.deleteQuiz = deleteQuiz;
       window.saveEditedQuiz = saveEditedQuiz;
       window.filterQuizzes = filterQuizzes;
       window.loadQuizzes = loadQuizzes; // ← Add this line
@@ -155,8 +174,6 @@ window.addEventListener('DOMContentLoaded', () => {
       console.error("❌ Firebase initialization failed:", error);
     }
   })();
-
-
 </script>
 
  
@@ -325,7 +342,10 @@ window.addEventListener('DOMContentLoaded', () => {
   <!-- 🎯 Quiz Creation Panel -->
   <div class="form-section quiz-creation-panel">
     <h2>Create New Quiz</h2>
-
+    
+    <button onclick="saveEditedQuiz()">💾 Save Changes</button>
+    <button onclick="deleteQuiz()">🗑️ Delete</button>
+    
     <label for="quizTitle">Quiz Title</label>
     <select id="quizTitle">
       <option value="">Select Quiz Title</option>
@@ -395,9 +415,7 @@ window.addEventListener('DOMContentLoaded', () => {
       </tbody>
     </table>
     <button type="button" onclick="addRubricRow()">➕ Add Row</button>
-
     <button onclick="generateQuiz()">🎯 Generate Quiz</button>
-    <button onclick="saveEditedQuiz()">💾 Save Changes</button>
     <button onclick="generateLink()">🔗 Generate Link</button>
     <button onclick="window.open('https://jlvcpa.github.io/my-quizzes/topicextractor.html', '_blank')">
       🔍 Open Topic Extractor
