@@ -7,7 +7,7 @@
   <!-- Firebase Modular SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
@@ -21,13 +21,15 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Expose Firestore globally
     window.db = db;
     window.setDoc = setDoc;
     window.doc = doc;
+    window.getDocs = getDocs;
+    window.collection = collection;
   </script>
 
   <style>
+    /* [Your existing styles remain unchanged] */
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f9f9f9;
@@ -72,16 +74,6 @@
     #rubricTable th, #rubricTable td {
       border: 1px solid #ccc;
       padding: 8px;
-    }
-    #rubricTable thead th {
-      text-align: center;
-      vertical-align: middle;
-    }
-    #rubricTable tbody td {
-      text-align: left;
-      vertical-align: top;
-      white-space: pre-wrap;
-      line-height: 1.4;
     }
     button {
       margin-top: 20px;
@@ -157,15 +149,15 @@
     <label for="testType">Test Type</label>
     <input type="text" id="testType" placeholder="e.g. MULTIPLE CHOICE">
 
-<label for="endTime">Set Quiz End Time:</label>
-<input type="datetime-local" id="endTime" required>
+    <label for="endTime">Set Quiz End Time:</label>
+    <input type="datetime-local" id="endTime" required>
 
     <label for="topicSelector">Select Topics</label>
-<select id="topicSelector" multiple>
-  <option value="Accounting Concepts and Principles">Accounting Concepts and Principles</option>
-  <option value="Branches of Accounting">Branches of Accounting</option>
-  <option value="History of Accounting">History of Accounting</option>
-</select>
+    <select id="topicSelector" multiple>
+      <option value="Accounting Concepts and Principles">Accounting Concepts and Principles</option>
+      <option value="Branches of Accounting">Branches of Accounting</option>
+      <option value="History of Accounting">History of Accounting</option>
+    </select>
 
     <label for="numQuestions">Number of Questions</label>
     <input type="number" id="numQuestions" min="1" max="80" value="10">
@@ -199,9 +191,8 @@
     <button onclick="saveQuizData()">💾 Save Quiz Setup</button>
     <button onclick="generateQuiz()">🎯 Generate Quiz Link</button>
     <button onclick="window.open('https://jlvcpa.github.io/my-quizzes/topicextractor.html', '_blank')">
-  🔍 Open Topic Extractor
-</button>
-
+      🔍 Open Topic Extractor
+    </button>
   </div>
 
   <div class="quiz-list">
@@ -210,6 +201,8 @@
   </div>
 
   <script>
+    let savedQuizId = null;
+
     function addRubricRow() {
       const table = document.getElementById('rubricTable').getElementsByTagName('tbody')[0];
       const newRow = table.insertRow();
@@ -228,97 +221,116 @@
       });
     }
 
-    let savedQuizId = null;
+    async function saveQuizData() {
+      const title = document.getElementById('quizTitle').value.trim();
+      const section = document.getElementById('gradeSection').value.trim();
+      const type = document.getElementById('testType').value.trim();
+      const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
+      const num = parseInt(document.getElementById('numQuestions').value);
+      const instructions = document.getElementById('instructions').value.trim();
+      const rubricHTML = document.getElementById('rubricTable').outerHTML;
+      const timestamp = Date.now();
+      const endTimeStr = document.getElementById('endTime').value;
+      const endTime = new Date(endTimeStr).getTime();
 
-async function saveQuizData() {
-  const title = document.getElementById('quizTitle').value.trim();
-  const section = document.getElementById('gradeSection').value.trim();
-  const type = document.getElementById('testType').value.trim();
-  const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
-  const num = parseInt(document.getElementById('numQuestions').value);
-  const instructions = document.getElementById('instructions').value.trim();
-  const rubricHTML = document.getElementById('rubricTable').outerHTML;
-  const timestamp = Date.now();
-  const endTimeStr = document.getElementById('endTime').value;
-  const endTime = new Date(endTimeStr).getTime();
+      if (isNaN(endTime) || endTime <= timestamp) {
+        alert("Please select a valid future end time.");
+        return;
+     [43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/not-found0001/Course-Registration/tree/e4f5bdf756e4c4fca3588e7077d97c0f17b66e8d/details.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/matheustgf10/NotaFiscal/tree/d4eb4246581dea32c80e77061ac7ed38e70fab4b/tesla%2Findex.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/robertgunze/eams/tree/fe1a327aed4daa40d9333a76b3ac5bac7e4079b0/protected%2Fviews%2FeamsFramework%2Fview.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Akhtar-Zaman/Nsu-Portal/tree/06834ce0526aaea8ce98ee9712462ad3c1a3bf31/students%20form.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/syahandrianeda/elamaso2021/tree/c447dd8117f92f87e2150ccca4a48814df29f610/staff%2Fstaff.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "5")
+    }
 
-  if (isNaN(endTime) || endTime <= timestamp) {
-    alert("Please select a valid future end time.");
-    return;
-  }
+      const quizData = {
+        title,
+        section,
+        type,
+        topics,
+        numQuestions: num,
+        instructions,
+        rubricHTML,
+        createdAt: timestamp,
+        endTime
+      };
 
-  const quizData = {
-    title,
-    section,
-    type,
-    topics,
-    num,
-    instructions,
-    rubric: rubricHTML,
-    timestamp,
-    endTime
-  };
+      try {
+        const id = `quiz-${timestamp}`;
+        await setDoc(doc(window.db, "quizzes", id), quizData);
+        savedQuizId = id;
+        alert("✅ Quiz setup saved successfully!");
+        loadSavedQuizzes(); // Refresh list
+      } catch (error) {
+        console.error("Error saving quiz:", error);
+        alert("❌ Failed to save quiz.");
+      }
+    }
 
-  const id = `quiz-${timestamp}`;
-  const quizRef = window.doc(window.db, "quizzes", id);
+    function generateQuiz() {
+      if (!savedQuizId) {
+        alert("⚠️ Please save the quiz setup first.");
+        return;
+      }
 
-  try {
-    await window.setDoc(quizRef, quizData);
-    savedQuizId = id;
-    alert("✅ Quiz setup saved successfully!");
-  } catch (error) {
-    console.error("❌ Error saving quiz:", error);
-    alert("Failed to save quiz to Firebase.");
-  }
-}
-    
-let savedQuizId = null;
+      const link = `https://jlvcpa.github.io/my-quizzes/quiz.html?id=${savedQuizId}`;
+      const container = document.getElementById("generatedQuizzes");
 
-async function saveQuizData() {
-  const title = document.getElementById('quizTitle').value.trim();
-  const section = document.getElementById('gradeSection').value.trim();
-  const type = document.getElementById('testType').value.trim();
-  const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
-  const num = parseInt(document.getElementById('numQuestions').value);
-  const instructions = document.getElementById('instructions').value.trim();
-  const rubricHTML = document.getElementById('rubricTable').outerHTML;
-  const timestamp = Date.now();
-  const endTimeStr = document.getElementById('endTime').value;
-  const endTime = new Date(endTimeStr).getTime();
+      const quizItem = document.createElement("div");
+      quizItem.className = "quiz-item";
 
-  if (isNaN(endTime) || endTime <= timestamp) {
-    alert("Please select a valid future end time.");
-    return;
-  }
+      const linkElem = document.createElement("a");
+      linkElem.href = link;
+      linkElem.textContent = link;
+      linkElem.target = "_blank";
 
-  const quizData = {
-    title,
-    section,
-    type,
-    topics,
-    num,
-    instructions,
-    rubric: rubricHTML,
-    timestamp,
-    endTime
-  };
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "📋 Copy";
+      copyBtn.onclick = () => copyLink(link);
 
-  const id = `quiz-${timestamp}`;
-  const quizRef = window.doc(window.db, "quizzes", id);
+      quizItem.appendChild(linkElem);
+      quizItem.appendChild(copyBtn);
+      container.prepend(quizItem);
 
-  try {
-    await window.setDoc(quizRef, quizData);
-    savedQuizId = id;
-    alert("✅ Quiz setup saved successfully!");
-  } catch (error) {
-    console.error("❌ Error saving quiz:", error);
-    alert("Failed to save quiz to Firebase.");
-  }
-}
+      savedQuizId = null; // Reset after generation
+    }
 
-    // ✅ Expose functions to global scope
-    window.generateQuiz = generateQuiz;
-    window.addRubricRow = addRubricRow;
+    async function loadSavedQuizzes() {
+      const container = document.getElementById("generatedQuizzes");
+      container.innerHTML = "";
+
+      try {
+        const snapshot = await getDocs(collection(window.db, "quizzes"));
+        const now = Date.now();
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const link = `https://jlvcpa.github.io/my-quizzes/quiz.html?id=${doc.id}`;
+
+          const quizItem = document.createElement("div");
+          quizItem.className = "quiz-item";
+
+          const linkElem = document.createElement("a");
+          linkElem.href = link;
+          linkElem.textContent = `${data.title} (${data.section})`;
+          linkElem.target = "_blank";
+
+          const status = document.createElement("span");
+          status.textContent = now > data.endTime ? "⛔ Expired" : "✅ Active";
+          status.className = now > data.endTime ? "expired" : "";
+
+          const copyBtn = document.createElement("button");
+          copyBtn.textContent = "📋 Copy";
+          copyBtn.onclick = () => copyLink(link);
+
+          quizItem.appendChild(linkElem);
+          quizItem.appendChild(status);
+          quizItem.appendChild(copyBtn);
+          container.appendChild(quizItem);
+        });
+      } catch (error) {
+        console.error("Error loading quizzes:", error);
+        container.innerHTML = "<p>❌ Failed to load quizzes.</p>";
+      }
+    }
+
+    window.onload = loadSavedQuizzes;
   </script>
 
 </body>
