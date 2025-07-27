@@ -223,6 +223,7 @@
       studentId = new URLSearchParams(window.location.search).get('student');
       const studentData = JSON.parse(localStorage.getItem(`questionnaire-${studentId}`));
       if (!studentData || !studentData.quizId) {
+        
         document.getElementById('quizHeader').innerHTML = "<p>⚠️ Quiz data missing. Please restart.</p>";
         return;
       }
@@ -244,7 +245,35 @@
           return;
         }
 
-        renderHeader();
+        function renderHeader() {
+  const headerEl = document.getElementById('quizHeader');
+  if (!headerEl || !quizData) {
+    console.warn("⏳ Header element or quiz data not ready.");
+    return;
+  }
+
+  const idNumber = document.getElementById('idNumber')?.value.trim() || '';
+  const cnNo = document.getElementById('cnNo')?.value.trim() || '';
+  const lastName = document.getElementById('lastName')?.value.trim() || '';
+  const firstName = document.getElementById('firstName')?.value.trim() || '';
+
+  headerEl.innerHTML = `
+    <div class="quiz-title">${quizData.title}</div>
+    <div class="student-info">
+      <div>ID NO: ${idNumber} — CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
+      <div>Grade Level and Section: ${quizData.section}</div>
+    </div>
+    <div class="grade-block">
+      <p><strong>Test Type:</strong> ${quizData.type}</p>
+      <p><strong>Instructions:</strong></p>
+      <textarea readonly rows="4">${quizData.instructions}</textarea>
+    </div>
+    <div class="rubric-block">
+      <h3>Rubric</h3>
+      <div class="rubric-table">${quizData.rubric}</div>
+    </div>
+  `;
+}
         loadQuestions();
         showQuestion(0);
         startTimer();
