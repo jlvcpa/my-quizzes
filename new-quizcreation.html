@@ -5,9 +5,10 @@
   <title>New Quiz Creation</title>
 
   <!-- Firebase Modular SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+<script type="module">
+  (async () => {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
+    const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
 
     const firebaseConfig = {
       apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
@@ -21,11 +22,11 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Expose Firestore globally
     window.db = db;
     window.setDoc = setDoc;
     window.doc = doc;
-  </script>
+  })();
+</script>
 
 <style>
   body {
