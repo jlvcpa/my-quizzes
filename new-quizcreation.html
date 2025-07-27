@@ -135,19 +135,25 @@ window.loadQuiz = loadQuiz;
     });
 }
 
-window.saveEditedQuiz = saveEditedQuiz;
-      
-      // ✅ Expose filterQuizzes globally for <select onchange>
+      // ✅ Expose globally
+      window.loadQuiz = loadQuiz;
+      window.saveEditedQuiz = saveEditedQuiz;
       window.filterQuizzes = filterQuizzes;
-
-      // ✅ Load quizzes on page load
-      window.addEventListener('DOMContentLoaded', loadQuizzes);
 
     } catch (error) {
       console.error("❌ Firebase initialization failed:", error);
     }
   })();
+
+  // ✅ DOMContentLoaded listeners OUTSIDE the async IIFE
+  window.addEventListener('DOMContentLoaded', loadQuizzes);
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const quizId = window.editingQuizId;
+    if (quizId) loadQuiz(quizId);
+  });
 </script>
+
  
 <style>
   body {
