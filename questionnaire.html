@@ -260,10 +260,10 @@
       });
 
       const percentage = Math.round((score / selectedQuestions.length) * 100);
-      const grade = percentage >= 90 ? "A" :
-                    percentage >= 80 ? "B" :
-                    percentage >= 70 ? "C" :
-                    percentage >= 60 ? "D" : "F";
+      const grade = percentage >= 95 ? "A" :
+                    percentage >= 85 ? "P" :
+                    percentage >= 75 ? "D" :
+                    percentage > 75 ? "IR" : "F";
 
             const resultData = {
         studentId,
