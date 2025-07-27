@@ -3,7 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <title>New Quiz Creation</title>
+ <!-- Firebase Modular SDK and Quiz Logic -->
+<script type="module">
+  (async () => {
+    try {
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
+      const { getFirestore, doc, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
 
+      const firebaseConfig = {
+        apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+        authDomain: "jlvcpa-quizzes.firebaseapp.com",
+        projectId: "jlvcpa-quizzes",
+        storageBucket: "jlvcpa-quizzes.appspot.com",
+        messagingSenderId: "629158256557",
+        appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // ✅ Expose Firestore functions globally
+      window.db = db;
+      window.setDoc = setDoc;
+      window.doc = doc;
+      window.getDoc = getDoc;
+
+      console.log("✅ Firebase initialized:", window.db);
+    } catch (error) {
+      console.error("❌ Firebase initialization failed:", error);
+    }
+  })();
+</script>
  
 <style>
   body {
@@ -264,41 +294,13 @@
 </div>
   <!-- Your quiz form and other content -->
 
-  <!-- Firebase init with error handling -->
-  <script type="module">
-    (async () => {
-      try {
-        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
-        const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
-          authDomain: "jlvcpa-quizzes.firebaseapp.com",
-          projectId: "jlvcpa-quizzes",
-          storageBucket: "jlvcpa-quizzes.firebasestorage.app",
-          messagingSenderId: "629158256557",
-          appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        window.db = db;
-        window.setDoc = setDoc;
-        window.doc = doc;
-
-        console.log("✅ Firebase initialized:", window.db);
-      } catch (error) {
-        console.error("❌ Firebase initialization failed:", error);
-      }
-    })();
-  </script>
   
 
 
 
-  <script>
-    const allowedUser = "jlvcpa";
+ <!-- <script>
+   const allowedUser = "jlvcpa";
     const allowedPass = "14344230321";
 
     const stored = sessionStorage.getItem("authenticated");
@@ -315,7 +317,7 @@
         sessionStorage.setItem("authenticated", "true");
       }
     }
-  </script>
+  </script> -->
 
 
 
