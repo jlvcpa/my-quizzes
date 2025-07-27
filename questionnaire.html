@@ -277,7 +277,7 @@ function submitQuiz() {
     hour12: true
   });
 
-  const resultId = `result-${studentId}-${timestamp}`;
+  const resultId = `result-${studentId}-${quizData.section}-${quizData.title}-${timestamp}`;
   const resultRef = window.doc(window.db, "results", resultId);
 
   const resultData = {
