@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Resubmit Quiz</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     select, button { margin: 10px 0; padding: 5px; }
@@ -34,7 +33,17 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const studentId = "50-VILLARTA-Joselito"; // Replace dynamically if needed
+    function detectStudentIdFromLocalStorage() {
+      const key = Object.keys(localStorage).find(k => k.startsWith("result-"));
+      if (!key) return null;
+      const parts = key.split("-");
+      return parts.length >= 3 ? parts[1] : null;
+    }
+
+    let studentId = detectStudentIdFromLocalStorage();
+    if (!studentId) {
+      studentId = prompt("Enter your Student ID:");
+    }
 
     async function loadLocalResults() {
       const container = document.getElementById("attemptsContainer");
@@ -44,6 +53,11 @@
       const localKeys = Object.keys(localStorage).filter(key =>
         key.startsWith(`result-${studentId}-`)
       );
+
+      if (localKeys.length === 0) {
+        container.innerHTML = "<p>No local results found.</p>";
+        return;
+      }
 
       const resultDoc = await db.collection("results").doc(studentId).get();
       const submittedResults = resultDoc.exists ? resultDoc.data() : {};
