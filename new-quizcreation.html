@@ -142,11 +142,11 @@
   })();
 
   // ✅ DOMContentLoaded listeners OUTSIDE the async IIFE
-  window.addEventListener('DOMContentLoaded', loadQuizzes);
+window.addEventListener('DOMContentLoaded', () => {
+  loadQuizzes();
+  const quizId = window.editingQuizId;
+  if (quizId) loadQuiz(quizId);
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const quizId = window.editingQuizId;
-    if (quizId) loadQuiz(quizId);
   });
 </script>
 
