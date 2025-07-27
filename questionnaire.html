@@ -253,45 +253,61 @@
       console.log(msg);
     }
 
-    function submitQuiz() {
-      let score = 0;
-      selectedQuestions.forEach((q, i) => {
-        if (responses[i] === q.answer) score++;
-      });
+function submitQuiz() {
+  let score = 0;
+  selectedQuestions.forEach((q, i) => {
+    if (responses[i] === q.answer) score++;
+  });
 
-      const percentage = Math.round((score / selectedQuestions.length) * 100);
-      const grade = percentage >= 95 ? "A" :
-                    percentage >= 85 ? "P" :
-                    percentage >= 75 ? "D" :
-                    percentage > 75 ? "IR" : "F";
+  const percentage = Math.round((score / selectedQuestions.length) * 100);
+  const grade = percentage >= 95 ? "A" :
+                percentage >= 85 ? "P" :
+                percentage >= 75 ? "D" :
+                percentage > 75 ? "IR" : "F";
 
-            const resultData = {
-        studentId,
-        cnNo,
-        lastName,
-        firstName,
-        quizId: quizData.id || `quiz-${quizData.timestamp || Date.now()}`,
-        quizTitle: quizData.title,
-        section: quizData.section,
-        type: quizData.type,
-        score,
-        percentage,
-        grade,
-        timestamp: Date.now(),
-        responses
-      };
+  const timestamp = Date.now();
+  const readableTime = new Date(timestamp).toLocaleString('en-US', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
 
-      const resultRef = window.doc(window.db, "results", studentId);
-      window.setDoc(resultRef, resultData)
-        .then(() => {
-          alert(`✅ Quiz submitted!\nScore: ${score}/${selectedQuestions.length}\nGrade: ${grade}`);
-          console.log("✅ Result saved to Firestore");
-        })
-        .catch(error => {
-          console.error("❌ Error saving result:", error);
-          alert("There was an error saving your result. Please try again.");
-        });
-    }
+  const resultId = `result-${studentId}-${timestamp}`;
+  const resultRef = window.doc(window.db, "results", resultId);
+
+  const resultData = {
+    studentId,
+    cnNo,
+    lastName,
+    firstName,
+    quizId: quizData.id || `quiz-${quizData.timestamp || timestamp}`,
+    quizTitle: quizData.title,
+    section: quizData.section,
+    type: quizData.type,
+    score,
+    percentage,
+    grade,
+    timestamp,
+    submittedAt: readableTime, // ✅ Human-readable time
+    responses,
+    questions: selectedQuestions // ✅ Include full question context
+  };
+
+  window.setDoc(resultRef, resultData)
+    .then(() => {
+      alert(`✅ Quiz submitted!\nScore: ${score}/${selectedQuestions.length}\nGrade: ${grade}\nSubmitted at: ${readableTime}`);
+      console.log("✅ Result saved to Firestore");
+    })
+    .catch(error => {
+      console.error("❌ Error saving result:", error);
+      alert("There was an error saving your result. Please try again.");
+    });
+}
   </script>
 
 </body>
