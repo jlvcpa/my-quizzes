@@ -170,6 +170,10 @@
     window.db = db;
     window.setDoc = setDoc;
     window.doc = doc;
+
+        // ✅ Safe place to log
+    console.log("Firebase initialized:", window.db);
+
   })();
 </script>
 
