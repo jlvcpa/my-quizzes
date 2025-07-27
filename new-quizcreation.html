@@ -8,7 +8,7 @@
   (async () => {
     try {
       const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js");
-      const { getFirestore, doc, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
+      const { getFirestore, doc, setDoc, getDoc, getDocs, collection } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
 
       const firebaseConfig = {
         apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
@@ -22,14 +22,13 @@
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
 
-      // ✅ Add these here:
-    const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
-
       // ✅ Expose Firestore functions globally
       window.db = db;
       window.setDoc = setDoc;
       window.doc = doc;
       window.getDoc = getDoc;
+      window.getDocs = getDocs;
+      window.collection = collection;
 
       console.log("✅ Firebase initialized:", window.db);
     } catch (error) {
