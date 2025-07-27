@@ -4,11 +4,26 @@
   <meta charset="UTF-8">
   <title>Resubmit Quiz</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     select, button { margin: 10px 0; padding: 5px; }
-    .attempt { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    .attempt {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .attempt-info { flex: 1; }
+    .status-text {
+      font-style: italic;
+      color: #555;
+      margin-left: 20px;
+      max-width: 250px;
+      text-align: right;
+    }
     .disabled { opacity: 0.6; pointer-events: none; }
   </style>
 </head>
@@ -77,7 +92,10 @@
 
         const div = document.createElement("div");
         div.className = "attempt";
-        div.innerHTML = `
+
+        const info = document.createElement("div");
+        info.className = "attempt-info";
+        info.innerHTML = `
           <strong>${quizTitle}</strong><br>
           Score: ${localResult.score}<br>
           Grade: ${localResult.grade}<br>
@@ -86,6 +104,15 @@
             ? `<button class="disabled">Already Submitted</button>`
             : `<button onclick="confirmSubmit('${key}')">Submit This Result</button>`}
         `;
+
+        const status = document.createElement("div");
+        status.className = "status-text";
+        status.textContent = alreadySubmitted
+          ? "This result has already been submitted. You may safely close this site."
+          : "Not submitted yet. You may choose this result to submit.";
+
+        div.appendChild(info);
+        div.appendChild(status);
         container.appendChild(div);
       }
 
