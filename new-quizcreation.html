@@ -139,10 +139,10 @@ if (instructionsInput) instructionsInput.value = data.instructions || '';
     });
 }
     // ✅ Expose globally (keep this block together)
-      window.loadQuizzes = loadQuizzes; // ← Add this line
       window.loadQuiz = loadQuiz;
       window.saveEditedQuiz = saveEditedQuiz;
       window.filterQuizzes = filterQuizzes;
+      window.loadQuizzes = loadQuizzes; // ← Add this line
 
     } catch (error) {
       console.error("❌ Firebase initialization failed:", error);
