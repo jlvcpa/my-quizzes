@@ -31,6 +31,40 @@
       window.collection = collection;
 
       console.log("✅ Firebase initialized:", window.db);
+
+      // ✅ Load quizzes and filter logic
+      async function loadQuizzes() {
+        const quizList = document.getElementById('generatedQuizzes');
+        quizList.innerHTML = ''; // Clear previous list
+
+        const selectedSection = document.getElementById('sectionFilter').value;
+        const querySnapshot = await getDocs(collection(db, "quizzes"));
+
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+
+          if (!selectedSection || data.section === selectedSection) {
+            const item = document.createElement('div');
+            item.className = 'quiz-item';
+            item.innerHTML = `
+              <strong>${data.title}</strong> (${data.section})
+              <button onclick="loadQuiz('${doc.id}')">✏️ Edit</button>
+            `;
+            quizList.appendChild(item);
+          }
+        });
+      }
+
+      function filterQuizzes() {
+        loadQuizzes();
+      }
+
+      // ✅ Expose filterQuizzes globally for <select onchange>
+      window.filterQuizzes = filterQuizzes;
+
+      // ✅ Load quizzes on page load
+      window.addEventListener('DOMContentLoaded', loadQuizzes);
+
     } catch (error) {
       console.error("❌ Firebase initialization failed:", error);
     }
