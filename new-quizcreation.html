@@ -249,9 +249,6 @@ function saveEditedQuiz() {
     });
 }
       
-// 🔽 Utility functions (if any)
-
-// 🔽 Insert here
 function autoFillInstructions() {
   const duration = parseInt(document.getElementById('durationMinutes').value);
   const type = document.getElementById('testType').value.trim();
@@ -374,19 +371,7 @@ window.addEventListener('DOMContentLoaded', () => {
 .quiz-expiry-wrapper input[type="number"] {
   width: 150px;
 }
-
-/* 📱 Responsive layout for mobile */
-@media (max-width: 600px) {
-  .quiz-expiry-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .quiz-expiry-wrapper input[type="number"] {
-    width: 100%;
-    max-width: 300px;
-  }
-
+  
   input, select, textarea {
     width: 100%;
     padding: 8px;
@@ -465,6 +450,19 @@ window.addEventListener('DOMContentLoaded', () => {
     flex-direction: column;
     gap: 1rem;
   }
+
+/* 📱 Responsive layout for mobile */
+@media (max-width: 600px) {
+  .quiz-expiry-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quiz-expiry-wrapper input[type="number"] {
+    width: 100%;
+    max-width: 300px;
+  }
+
 
   @media (min-width: 768px) {
     .main-content {
