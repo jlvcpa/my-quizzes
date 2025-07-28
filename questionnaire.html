@@ -139,16 +139,22 @@
   </div>
 
   <div class="info-block" id="quizHeader"></div>
+<!-- Timer and Submit Button Wrapper -->
+<div class="timer-submit-wrapper">
   <div id="timer"></div>
-  <div id="warningMessage"></div>
-  <div class="quiz-box" id="quizContainer"></div>
-  <div id="navigation">
-    <button onclick="prevQuestion()">⬅ Previous</button>
-    <button onclick="nextQuestion()">Next ➡</button>
-    <button id="submitBtn" onclick="submitQuiz()">✅ Submit Quiz</button>
-  </div>
-  <div id="viewedCounter"></div>
-  <div id="result"></div>
+  <button id="submitBtn" onclick="submitQuiz()">✅ Submit Quiz</button>
+</div>
+
+<div id="warningMessage"></div>
+<div class="quiz-box" id="quizContainer"></div>
+
+<div id="navigation">
+  <button onclick="prevQuestion()">⬅ Previous</button>
+  <button onclick="nextQuestion()">Next ➡</button>
+</div>
+
+<div id="viewedCounter"></div>
+<div id="result"></div>
   </div>
 
   <!-- 🔥 Firebase Initialization -->
