@@ -219,28 +219,40 @@
   </div>
 
   <!-- 🔥 Firebase Initialization -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+<script type="module">
+  // ✅ Import all required Firebase modules
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    collection,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
-      authDomain: "jlvcpa-quizzes.firebaseapp.com",
-      projectId: "jlvcpa-quizzes",
-      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
-      messagingSenderId: "629158256557",
-      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
-    };
+  // ✅ Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+    authDomain: "jlvcpa-quizzes.firebaseapp.com",
+    projectId: "jlvcpa-quizzes",
+    storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+    messagingSenderId: "629158256557",
+    appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  // ✅ Initialize Firebase and Firestore
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    window.db = db;
-    window.doc = doc;
-    window.getDoc = getDoc;
-    window.setDoc = setDoc;
-  </script>
+  // ✅ Expose Firestore utilities to global scope for use in non-module scripts
+  window.db = db;
+  window.doc = doc;
+  window.getDoc = getDoc;
+  window.setDoc = setDoc;
+  window.collection = collection;
+  window.getDocs = getDocs;
+</script>
 
   <!-- 🧠 Quiz Logic -->
   <script>
