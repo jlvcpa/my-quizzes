@@ -362,8 +362,8 @@ startTimer();
 
 async function loadQuestions() {
   try {
-    const questionBankRef = collection(window.db, "questionbank");
-    const snapshot = await getDocs(questionBankRef);
+    const questionBankRef = window.collection(window.db, "questionbank");
+    const snapshot = await window.getDocs(questionBankRef);
     const allQuestions = [];
 
     snapshot.forEach(doc => {
