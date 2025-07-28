@@ -222,6 +222,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
@@ -246,8 +247,6 @@
     let studentId, cnNo, lastName, firstName, quizData;
     let selectedQuestions = [], responses = {}, answeredOrder = [];
     let currentQuestionIndex = 0, inactivityTimer;
-
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 async function fetchQuestionsFromFirestore() {
   const questionBankRef = collection(db, "questionbank");
