@@ -308,10 +308,11 @@ async function fetchQuestionsFromFirestore() {
           return;
         }
 
-        renderHeader();
-        loadQuestions();
-        showQuestion(0);
-        startTimer();
+renderHeader();
+await loadQuestions(); // ✅ Now waits for Firestore fetch
+showQuestion(0);
+startTimer();
+
         document.getElementById('navigation').style.display = 'block';
         document.getElementById('submitBtn').onclick = submitQuiz;
 
@@ -348,34 +349,38 @@ async function fetchQuestionsFromFirestore() {
       `;
     }
 
-    function loadQuestions() {
-      selectedQuestions = questionBank
-        .filter(q => quizData.topics.includes(q.topic))
-        .sort(() => 0.5 - Math.random())
-        .slice(0, quizData.num);
-    }
+    function import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
-    function showQuestion(index) {
-      const q = selectedQuestions[index];
-      document.getElementById('quizContainer').innerHTML = `
-        <div class="question-block">
-          <h3>${index + 1}. ${q.question}</h3>
-          ${q.options.map((opt, i) => {
-            const label = String.fromCharCode(65 + i);
-            return `
-              <div>
-                <label>
-                  <input type="radio" name="question${index}" value="${opt}"
-                    ${responses[index] === opt ? 'checked' : ''}
-                    onchange="recordAnswer(${index}, '${opt}')">
-                  ${label}. ${opt}
-                </label>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
+async function loadQuestions() {
+  try {
+    const questionBankRef = collection(window.db, "questionbank");
+    const snapshot = await getDocs(questionBankRef);
+    const allQuestions = [];
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      allQuestions.push({
+        competency: data.competency,
+        topic: data.topic,
+        question: data.question,
+        options: data.options,
+        answer: data.answer,
+        explanation: data.explanation,
+        questionID: data.questionID || doc.id
+      });
+    });
+
+    selectedQuestions = allQuestions
+      .filter(q => quizData.topics.includes(q.topic))
+      .sort(() => 0.5 - Math.random())
+      .slice(0, quizData.num);
+
+    showQuestion(0); // Ensure first question is rendered after loading
+  } catch (error) {
+    console.error("❌ Failed to load questions from Firestore:", error);
+    document.getElementById('quizContainer').innerHTML = `<p style="color:red;">❌ Error loading questions. Please try again later.</p>`;
+  }
+}
 
     function recordAnswer(index, answer) {
       responses[index] = answer;
