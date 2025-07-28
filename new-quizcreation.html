@@ -88,7 +88,7 @@ async function generateQuiz() {
     alert("Please select a valid section and future end time.");
     return;
   }
-
+  autoFillInstructions(); // 👈 Automatically populate instructions
   const quizData = {
     title,
     section,
@@ -167,8 +167,14 @@ function loadQuiz(quizId) {
       const numInput = document.getElementById('numQuestions');
       if (numInput) numInput.value = data.num || '';
 
-      const instructionsInput = document.getElementById('instructions');
-      if (instructionsInput) instructionsInput.value = data.instructions || '';
+const instructionsInput = document.getElementById('instructions');
+if (instructionsInput) {
+  if (data.instructions?.trim()) {
+    instructionsInput.value = data.instructions;
+  } else {
+    autoFillInstructions(); // ✅ Only generate if none exists
+  }
+}
 
       const topicSelector = document.getElementById('topicSelector');
       Array.from(topicSelector.options).forEach(opt => {
@@ -191,7 +197,7 @@ function loadQuiz(quizId) {
       if (durationInput && !isNaN(data.durationMinutes)) {
         durationInput.value = data.durationMinutes;
       }
-
+      autoFillInstructions(); // 👈 Automatically populate instructions
       window.activeQuizId = quizId;
     })
     .catch(error => {
@@ -242,7 +248,46 @@ function saveEditedQuiz() {
       console.error("❌ Failed to update quiz:", error);
     });
 }
+      
+// 🔽 Utility functions (if any)
 
+// 🔽 Insert here
+function autoFillInstructions() {
+  const duration = parseInt(document.getElementById('durationMinutes').value);
+  const type = document.getElementById('testType').value.trim();
+  const instructionsInput = document.getElementById('instructions');
+
+  if (!instructionsInput || isNaN(duration) || !type) return;
+
+  instructionsInput.value = `📝 Summative Quiz Instructions
+⏰ Duration and Timing
+- You have ${duration} minutes to complete the quiz.
+- The timer starts as soon as you begin.
+- If you do not submit your answers before time runs out, the system will automatically submit your quiz.
+
+📋 Quiz Format
+- The quiz consists of ${type} questions.
+- Each question has only one correct answer.
+- Read each question carefully before selecting your answer.
+
+🚨 Auto-Submission Policy
+- Once the ${duration} timer expires, your quiz will be automatically submitted.
+- You cannot make changes after submission.
+- Make sure to review your answers before the timer ends.
+
+🖨️ Print Your Results
+- After submission, your test result will be displayed.
+- You are required to print a copy of your result for your records.
+- Use the “Print” button provided on the results page.
+- If printing is not available immediately, save the result as a PDF and print it later.
+
+✅ Reminders
+- Ensure your device is fully charged or plugged in.
+- Use a stable internet connection to avoid disruptions.
+- Do not refresh or close the browser during the quiz.
+- If you encounter technical issues, notify your instructor immediately.`;
+}
+      
     // ✅ Expose globally (keep this block together)
 window.generateQuiz = generateQuiz;
 window.addRubricRow = addRubricRow;
