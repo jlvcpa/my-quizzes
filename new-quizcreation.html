@@ -464,32 +464,45 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  @media (min-width: 768px) {
-    .main-content {
-      flex-direction: row;
-      align-items: flex-start;
-    }
-
-    .quiz-creation-panel {
-      flex: 2;
-    }
-
-    .sidebar-panel {
-      flex: 1;
-      margin-left: 1rem;
-      border-left: 1px solid #ccc;
-      padding-left: 1rem;
-    }
+/* 📱 Mobile styles */
+@media (max-width: 600px) {
+  .quiz-expiry-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  @media (max-width: 767px) {
-    .sidebar-panel {
-      margin-top: 1rem;
-      border-top: 1px solid #ccc;
-      padding-top: 1rem;
-    }
+  .quiz-expiry-wrapper input[type="number"] {
+    width: 100%;
+    max-width: 300px;
   }
-</style>
+}
+
+/* 🖥️ Desktop and tablet layout */
+@media (min-width: 768px) {
+  .main-content {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .quiz-creation-panel {
+    flex: 2;
+  }
+
+  .sidebar-panel {
+    flex: 1;
+    margin-left: 1rem;
+    border-left: 1px solid #ccc;
+    padding-left: 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebar-panel {
+    margin-top: 1rem;
+    border-top: 1px solid #ccc;
+    padding-top: 1rem;
+  }
+}
 </head>
 <body>
   <div class="header">
