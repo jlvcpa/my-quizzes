@@ -312,7 +312,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   })();
 </script>
-
  
 <style>
   body {
@@ -495,14 +494,6 @@ window.addEventListener('DOMContentLoaded', () => {
 </style>
 </head>
 <body>
-   <!-- Firebase Modular SDK -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Quiz Creation</title>
-</head>
-<body>
   <div class="header">
   <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
   <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
@@ -525,8 +516,8 @@ window.addEventListener('DOMContentLoaded', () => {
     <select id="quizTitle">
       <option value="">Select Quiz Title</option>
       <option value="FORMATIVE EXAM">FORMATIVE EXAM</option>
-      <option value="MT SUMMATIVE EXAM 01">SUMMATIVE EXAM</option>
-      <option value="MT SUMMATIVE EXAM 02">SUMMATIVE EXAM</option>
+      <option value="MT SUMMATIVE EXAM 01">MT SUMMATIVE EXAM 01</option>
+      <option value="MT SUMMATIVE EXAM 02">MT SUMMATIVE EXAM 02</option>
       <option value="MIDTERM EXAM">MIDTERM EXAM</option>
       <option value="FINAL EXAM">FINAL EXAM</option>
     </select>
@@ -614,104 +605,5 @@ window.addEventListener('DOMContentLoaded', () => {
     <div id="generatedQuizzes"></div>
   </div>
 </div>
-  <!-- Your quiz form and other content -->
- <!-- <script>
-   const allowedUser = "jlvcpa";
-    const allowedPass = "14344230321";
-    const stored = sessionStorage.getItem("authenticated");
-    if (!stored) {
-      const username = prompt("Enter username:");
-      const password = prompt("Enter password:");
-
-      if (username !== allowedUser || password !== allowedPass) {
-        alert("⛔ Access denied.");
-        document.body.innerHTML = "<h2 style='text-align:center;'>Unauthorized Access</h2>";
-        throw new Error("Unauthorized");
-      } else {
-        sessionStorage.setItem("authenticated", "true");
-      }
-    }
-  </script> -->
-
-
-<!--
-  <script>
-    function addRubricRow() {
-      const table = document.getElementById('rubricTable').getElementsByTagName('tbody')[0];
-      const newRow = table.insertRow();
-      for (let i = 0; i < 5; i++) {
-        const cell = newRow.insertCell();
-        cell.contentEditable = "true";
-      }
-    }
-
-    function generateLink() {
-  if (!window.currentQuizId) {
-    alert("Please select a quiz to generate a link.");
-    return;
-  }
-
-  const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
-  const quizLink = `${basePath}/generate-quiz.html?id=${encodeURIComponent(window.currentQuizId)}`;
-  navigator.clipboard.writeText(quizLink).then(() => {
-    alert("✅ Link copied to clipboard:\n" + quizLink);
-  });
-}
-    
-    function copyLink(link) {
-      navigator.clipboard.writeText(link).then(() => {
-        alert("✅ Link copied to clipboard!");
-      }).catch(err => {
-        alert("❌ Failed to copy link.");
-        console.error(err);
-      });
-    }
-
-async function generateQuiz() {
-  const title = document.getElementById('quizTitle').value.trim();
-  const section = document.getElementById('gradeSection').value;
-  const type = document.getElementById('testType').value.trim();
-  const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
-  const num = parseInt(document.getElementById('numQuestions').value);
-  const instructions = document.getElementById('instructions').value.trim();
-  const rubricHTML = document.getElementById('rubricTable').outerHTML;
-  const endTimeStr = document.getElementById('endTime').value;
-  const endTime = new Date(endTimeStr).getTime();
-  const timestamp = Date.now();
-
-  if (!title || !type) {
-  alert("Please select both a quiz title and test type.");
-  return;
-}
-
-  if (!section || isNaN(endTime) || endTime <= timestamp) {
-    alert("Please select a valid section and future end time.");
-    return;
-  }
-
-  const quizData = {
-    title, section, type, topics, num, instructions, rubric: rubricHTML, timestamp, endTime
-  };
-
-  const id = `quiz-${timestamp}`;
-  const quizRef = window.doc(window.db, "quizzes", id);
-
-  try {
-    await window.setDoc(quizRef, quizData);
-    alert("✅ Quiz saved to Firebase.");
-    loadQuizzes(); // Refresh list
-  } catch (error) {
-    console.error("❌ Error saving quiz:", error);
-    alert("Failed to save quiz.");
-  }
-}
-
-
-
-    // ✅ Expose functions to global scope
-    window.generateQuiz = generateQuiz;
-    window.addRubricRow = addRubricRow;
-  </script> -->
-
 </body>
 </html>
