@@ -3765,6 +3765,10 @@ function submitQuiz() {
     </html>
   `;
 
+  document.open();
+  document.write(resultHTML);
+  document.close();
+  
   const resultId = `result-${studentId}-${quizData.section}-${quizData.title}-${timestamp}`;
   const resultRef = window.doc(window.db, "results", resultId);
 
