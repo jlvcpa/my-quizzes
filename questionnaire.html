@@ -3626,7 +3626,7 @@ function submitQuiz() {
   else if (percentage >= 75) grade = 'D';
   else grade = 'IR';
 
-    const timestamp = Date.now();
+  const timestamp = Date.now();
   const readableTime = new Date(timestamp).toLocaleString('en-US', {
     timeZone: 'Asia/Manila',
     year: 'numeric',
@@ -3636,6 +3636,7 @@ function submitQuiz() {
     minute: '2-digit',
     second: '2-digit',
     hour12: true
+  });
       
   const resultHTML = `
     <!DOCTYPE html>
