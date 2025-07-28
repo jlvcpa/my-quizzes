@@ -2,226 +2,3528 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>FABM 1 Quiz</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    #schoolLogo {
-      max-height: 100px;
-      margin-bottom: 10px;
-    }
-    .quiz-title {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #2c3e50;
-    }
-    .student-info {
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .grade-block {
-      text-align: right;
-      font-weight: bold;
-      font-size: 20px;
-      color: #007acc;
-    }
-    .score {
-      text-align: right;
-      font-size: 16px;
-      font-weight: bold;
-      color: #28a745;
-      margin-bottom: 10px;
-    }
-    .question-block {
-      background: #fff;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      border-left: 5px solid #007acc;
-    }
-    .question-block h3 {
-      margin-top: 0;
-      color: #34495e;
-    }
-    .correct { color: #28a745; }
-    .incorrect { color: #d9534f; }
-    .explanation {
-      margin-top: 10px;
-      font-style: italic;
-    }
-    textarea {
-      width: 100%;
-      margin-top: 10px;
-    }
-    .print-btn {
-      text-align: center;
-      margin-top: 20px;
-    }
-    #quizContainer {
-      margin-top: 20px;
-    }
-    #navigation {
-      margin-top: 20px;
-      text-align: center;
-    }
-    #navigation button {
-      margin: 0 10px;
-    }
-    #timer {
-      font-weight: bold;
-      margin-top: 10px;
-      text-align: center;
-    }
-    #warningMessage {
-      color: red;
-      font-weight: bold;
-      text-align: center;
-      margin-top: 10px;
-    }
-  </style>
+  <title>Dynamic Quiz</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f9f9f9;
+    padding: 20px;
+  }
 
+  h1, h2 {
+    text-align: center;
+    color: #2c3e50;
+  }
+
+  #schoolLogo {
+    max-height: 100px;
+    margin-bottom: 10px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .info-block, .quiz-box {
+    max-width: 800px;
+    margin: 0 auto 20px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .quiz-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #2c3e50;
+  }
+
+  .student-info {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 15px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .grade-block p {
+    margin: 10px 0;
+  }
+
+  textarea[readonly] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    resize: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f5f5f5;
+  }
+
+  .score {
+    text-align: right;
+    font-size: 16px;
+    font-weight: bold;
+    color: #28a745;
+    margin-bottom: 10px;
+  }
+
+  .topic-label {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+
+  .rubric-block h3 {
+    margin-bottom: 10px;
+    color: #007acc;
+  }
+
+  .rubric-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .rubric-table th, .rubric-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+    vertical-align: top;
+    font-size: 14px;
+  }
+
+  .rubric-table thead {
+    background-color: #eef6fc;
+    font-weight: bold;
+  }
+
+  .question-block h3 {
+    margin-top: 0;
+    color: #34495e;
+  }
+
+  .option {
+    margin: 5px 0;
+  }
+
+  #navigation {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 5px;
+    background-color: #007acc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #005fa3;
+  }
+
+  /* ✅ Submit button override */
+  #submitBtn {
+    background-color: #28a745;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+  }
+
+  #submitBtn:hover {
+    background-color: #218838;
+  }
+
+  /* ✅ Timer styling */
+  #timer {
+    font-weight: bold;
+    font-size: 18px;
+    text-align: center;
+    color: #2c3e50;
+  }
+
+  /* ✅ Timer and Submit Button Wrapper */
+  .timer-submit-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* ✅ Responsive layout for mobile */
+  @media (max-width: 600px) {
+    .timer-submit-wrapper {
+      flex-direction: column-reverse;
+      align-items: center;
+    }
+
+    #submitBtn {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+
+  #warningMessage, #viewedCounter, #result {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  #result {
+    color: #28a745;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+    <span style="color:#000;">SY 2025–2026</span><br>
+    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">FABM 1</span>
+  </div>
+
+  <div class="info-block" id="quizHeader"></div>
+<!-- Timer and Submit Button Wrapper -->
+<div class="timer-submit-wrapper">
+  <div id="timer"></div>
+  <button id="submitBtn" onclick="submitQuiz()">✅ Submit Quiz</button>
+</div>
+
+<div id="warningMessage"></div>
+<div class="quiz-box" id="quizContainer"></div>
+
+<div id="navigation">
+  <button onclick="prevQuestion()">⬅ Previous</button>
+  <button onclick="nextQuestion()">Next ➡</button>
+</div>
+
+<div id="viewedCounter"></div>
+<div id="result"></div>
+  </div>
+
+  <!-- 🔥 Firebase Initialization -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+      authDomain: "jlvcpa-quizzes.firebaseapp.com",
+      projectId: "jlvcpa-quizzes",
+      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+      messagingSenderId: "629158256557",
+      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.doc = doc;
+    window.getDoc = getDoc;
+    window.setDoc = setDoc;
+  </script>
+
+  <!-- 🧠 Quiz Logic -->
   <script>
     let studentId, cnNo, lastName, firstName, quizData;
-    let selectedQuestions = [];
-    let currentQuestionIndex = 0;
-    let responses = {};
-    let answeredOrder = [];
-    let inactivityTimer;
+    let selectedQuestions = [], responses = {}, answeredOrder = [];
+    let currentQuestionIndex = 0, inactivityTimer;
 
     const questionBank = [
-      {
-        topic: "History of Accounting",
-        question: "What is the accounting equation?",
-        options: [
-          "Assets = Liabilities + Equity",
-          "Assets = Revenue - Expenses",
-          "Liabilities = Assets + Equity",
-          "Equity = Assets - Liabilities"
-        ],
-        answer: "Assets = Liabilities + Equity",
-        explanation: "This is the fundamental equation of accounting."
-      },
-      {
-        topic: "History of Accounting",
-        question: "Which financial statement shows a company's profitability?",
-        options: [
-          "Balance Sheet",
-          "Income Statement",
-          "Cash Flow Statement",
-          "Statement of Retained Earnings"
-        ],
-        answer: "Income Statement",
-        explanation: "The income statement shows revenues and expenses over a period."
-      },
-      {
-        topic: "History of Accounting",
-        question: "What does ROI stand for?",
-        options: [
-          "Return on Investment",
-          "Rate of Interest",
-          "Revenue Over Income",
-          "Ratio of Income"
-        ],
-        answer: "Return on Investment",
-        explanation: "ROI measures the gain or loss generated on an investment."
-      }
-      // ➕ Add more questions as needed
+     {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "Why was accounting important in ancient Egypt and Babylon?",
+  options: [
+    "To build pyramids",
+    "To manage agricultural production and state wealth",
+    "To trade with Rome",
+    "To perform religious rituals"
+  ],
+  answer: "To manage agricultural production and state wealth",
+  explanation: "✅ Accounting in ancient Egypt and Babylon was used to manage agricultural output and state resources, making it essential for economic control."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What does the term 'ad rationes' suggest about Roman accounting?",
+  options: [
+    "It was a form of taxation",
+    "It involved storytelling",
+    "It referred to financial documentation",
+    "It was a religious practice"
+  ],
+  answer: "It referred to financial documentation",
+  explanation: "✅ 'Ad rationes' was the Roman term for documenting revenues and expenditures, showing their early use of financial records."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "How did temple economies contribute to accounting practices?",
+  options: [
+    "They ignored recordkeeping",
+    "They used accounting for rituals",
+    "They maintained meticulous records",
+    "They traded with Babylon"
+  ],
+  answer: "They maintained meticulous records",
+  explanation: "✅ Temple economies kept detailed records to manage offerings, resources, and operations, laying foundations for accounting systems."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What role did accounting play in the Roman Empire?",
+  options: [
+    "It was used for entertainment",
+    "It documented public revenues and expenditures",
+    "It helped build roads",
+    "It was used in warfare"
+  ],
+  answer: "It documented public revenues and expenditures",
+  explanation: "✅ The Romans used accounting to track government income and spending, demonstrating its role in public administration."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What does the evolution of accounting from temple economies to empires indicate?",
+  options: [
+    "Accounting became less important",
+    "It shifted from agriculture to warfare",
+    "It expanded in scope and complexity",
+    "It was replaced by trade"
+  ],
+  answer: "It expanded in scope and complexity",
+  explanation: "✅ Accounting evolved from managing temple resources to overseeing state finances, showing its growing importance and sophistication."
+},
+    {
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which ancient civilizations practiced early accounting?",
+  options: [
+    "Greece and Rome",
+    "Egypt and Babylon",
+    "China and India",
+    "Persia and Greece"
+  ],
+  answer: "Egypt and Babylon",
+  explanation: "✅ Egypt and Babylon were among the earliest civilizations to use accounting for managing agricultural and temple resources."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What was the Roman term for financial documentation?",
+  options: [
+    "Ad rationes",
+    "De numeris",
+    "Tabulae",
+    "Scriptura"
+  ],
+  answer: "Ad rationes",
+  explanation: "✅ 'Ad rationes' was the Latin term used by Romans to refer to their financial records and accounting practices."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What did ancient accounting help manage?",
+  options: [
+    "Military campaigns",
+    "Agricultural production and state wealth",
+    "Religious ceremonies",
+    "Trade routes"
+  ],
+  answer: "Agricultural production and state wealth",
+  explanation: "✅ Early accounting systems were designed to manage agricultural yields and the wealth of the state."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which empire documented public revenues and expenditures?",
+  options: [
+    "Babylonian",
+    "Egyptian",
+    "Roman",
+    "Greek"
+  ],
+  answer: "Roman",
+  explanation: "✅ The Roman Empire used accounting to record public income and spending, a precursor to modern financial statements."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What kind of economies used meticulous recordkeeping?",
+  options: [
+    "Temple economies",
+    "Trade economies",
+    "Nomadic economies",
+    "Industrial economies"
+  ],
+  answer: "Temple economies",
+  explanation: "✅ Temple economies required detailed records to manage offerings, resources, and operations, forming the basis of accounting."
+},
+    {
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How did accounting practices reflect the priorities of ancient civilizations?",
+  options: [
+    "They focused on entertainment",
+    "They emphasized religious rituals",
+    "They prioritized resource management and governance",
+    "They ignored documentation"
+  ],
+  answer: "They prioritized resource management and governance",
+  explanation: "✅ Ancient accounting systems were designed to manage resources and support governance, reflecting societal priorities."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What does the use of 'ad rationes' in Rome suggest about their administrative sophistication?",
+  options: [
+    "They had no formal systems",
+    "They relied on oral traditions",
+    "They had structured financial records",
+    "They used accounting for trade only"
+  ],
+  answer: "They had structured financial records",
+  explanation: "✅ The Roman use of 'ad rationes' shows their advanced administrative systems and reliance on written financial documentation."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "Why might temple economies have required meticulous recordkeeping?",
+  options: [
+    "To track donations",
+    "To manage complex agricultural and religious operations",
+    "To entertain priests",
+    "To communicate with other temples"
+  ],
+  answer: "To manage complex agricultural and religious operations",
+  explanation: "✅ Temples managed both spiritual and economic activities, requiring detailed records to ensure accountability and efficiency."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How does the evolution of accounting from Egypt to Rome illustrate its expanding role?",
+  options: [
+    "It became less relevant",
+    "It shifted from agriculture to public finance",
+    "It was used only in temples",
+    "It focused on warfare"
+  ],
+  answer: "It shifted from agriculture to public finance",
+  explanation: "✅ Accounting evolved from managing agricultural resources to overseeing public finances, showing its broader societal role."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What can we infer about the importance of accounting in ancient governance?",
+  options: [
+    "It was ceremonial",
+    "It was central to managing resources and public funds",
+    "It was used for entertainment",
+    "It was rarely practiced"
+  ],
+  answer: "It was central to managing resources and public funds",
+  explanation: "✅ Accounting was a key tool in ancient governance, enabling leaders to track and control economic activities."
+},
+    {
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Who is known as the 'Father of Accounting'?",
+  options: [
+    "Leonardo da Vinci",
+    "Luca Pacioli",
+    "Galileo Galilei",
+    "Michelangelo"
+  ],
+  answer: "Luca Pacioli",
+  explanation: "✅ Luca Pacioli is honored as the 'Father of Accounting' for documenting the double-entry system in 1494."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What major work did Luca Pacioli publish in 1494?",
+  options: [
+    "Principia Mathematica",
+    "Summa de Arithmetica",
+    "Codex Atlanticus",
+    "Liber Abaci"
+  ],
+  answer: "Summa de Arithmetica",
+  explanation: "✅ Pacioli published 'Summa de Arithmetica' in 1494, which introduced the double-entry bookkeeping system to a wider audience."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What century saw the introduction of the double-entry system?",
+  options: [
+    "13th century",
+    "14th century",
+    "15th century",
+    "16th century"
+  ],
+  answer: "15th century",
+  explanation: "✅ The double-entry system was introduced in the 15th century through Luca Pacioli’s work."
+},
+    {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What is the core principle of the double-entry system?",
+  options: [
+    "Every transaction is recorded once",
+    "Transactions are only recorded at year-end",
+    "Every transaction affects at least two accounts",
+    "Only cash transactions are recorded"
+  ],
+  answer: "Every transaction affects at least two accounts",
+  explanation: "✅ The double-entry system ensures that each transaction impacts at least two accounts—debit and credit—providing balance and accuracy."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "Why was the double-entry system considered a breakthrough?",
+  options: [
+    "It simplified tax collection",
+    "It allowed businesses to hide losses",
+    "It prevented fraud and error while improving financial visibility",
+    "It eliminated the need for accountants"
+  ],
+  answer: "It prevented fraud and error while improving financial visibility",
+  explanation: "✅ The double-entry system helped prevent fraud and errors, giving businesses clearer insight into their finances."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What was Luca Pacioli’s contribution to accounting?",
+  options: [
+    "He invented accounting",
+    "He created tax laws",
+    "He documented and popularized double-entry bookkeeping",
+    "He designed accounting software"
+  ],
+  answer: "He documented and popularized double-entry bookkeeping",
+  explanation: "✅ Pacioli didn’t invent double-entry bookkeeping, but his documentation made it foundational to modern accounting."
+},
+    {
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How did Pacioli’s work influence modern accounting?",
+  options: [
+    "It introduced digital accounting",
+    "It laid the foundation for systematic financial recording",
+    "It replaced manual bookkeeping",
+    "It focused only on personal finance"
+  ],
+  answer: "It laid the foundation for systematic financial recording",
+  explanation: "✅ Pacioli’s documentation of double-entry bookkeeping established a structured approach that underpins modern accounting systems."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "Why is Luca Pacioli celebrated despite not inventing double-entry bookkeeping?",
+  options: [
+    "He was the first to use it in banking",
+    "He applied it to agriculture",
+    "He formally documented and spread its use",
+    "He created a new version of it"
+  ],
+  answer: "He formally documented and spread its use",
+  explanation: "✅ Pacioli is honored because his work made double-entry bookkeeping widely known and adopted, shaping the future of accounting."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What impact did the double-entry system have on business operations?",
+  options: [
+    "It made accounting optional",
+    "It reduced the need for financial reports",
+    "It improved accuracy and accountability",
+    "It focused only on inventory tracking"
+  ],
+  answer: "It improved accuracy and accountability",
+  explanation: "✅ The double-entry system enhanced financial accuracy and accountability, helping businesses manage resources more effectively."
+},
+    {
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "During which period did accounting scale up to meet industrial needs?",
+  options: [
+    "Renaissance",
+    "Middle Ages",
+    "Industrial Revolution",
+    "Digital Age"
+  ],
+  answer: "Industrial Revolution",
+  explanation: "✅ The Industrial Revolution marked a turning point where accounting expanded to support complex business operations."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What type of accounting emerged during the Industrial Revolution?",
+  options: [
+    "Digital accounting",
+    "Cost accounting",
+    "Temple accounting",
+    "Personal finance accounting"
+  ],
+  answer: "Cost accounting",
+  explanation: "✅ Cost accounting developed during the Industrial Revolution to help businesses manage production expenses."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Why did companies begin hiring specialized accountants during the Industrial Revolution?",
+  options: [
+    "To reduce taxes",
+    "To manage complex operations",
+    "To replace manual labor",
+    "To handle customer service"
+  ],
+  answer: "To manage complex operations",
+  explanation: "✅ As businesses grew more complex, companies needed specialized accountants to handle financial systems and operations."
+},
+    {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "How did the Industrial Revolution influence the evolution of accounting?",
+  options: [
+    "It made accounting obsolete",
+    "It led to simpler financial systems",
+    "It created demand for more robust financial systems",
+    "It shifted accounting to religious institutions"
+  ],
+  answer: "It created demand for more robust financial systems",
+  explanation: "✅ The expansion of commerce during the Industrial Revolution required stronger financial systems to support business growth."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What was the purpose of developing auditing standards during the Industrial Revolution?",
+  options: [
+    "To entertain investors",
+    "To reduce paperwork",
+    "To support industrial growth and investor confidence",
+    "To simplify tax filing"
+  ],
+  answer: "To support industrial growth and investor confidence",
+  explanation: "✅ Auditing standards were introduced to ensure transparency and build trust among investors during rapid industrial expansion."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What role did corporate accounting play during the Industrial Revolution?",
+  options: [
+    "It tracked religious donations",
+    "It managed household budgets",
+    "It supported large-scale business operations",
+    "It replaced cost accounting"
+  ],
+  answer: "It supported large-scale business operations",
+  explanation: "✅ Corporate accounting helped manage the financial complexity of growing industrial enterprises."
+},
+    {
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "Why was the emergence of specialized accountants significant during the Industrial Revolution?",
+  options: [
+    "It reduced the need for bookkeeping",
+    "It allowed companies to expand globally",
+    "It enabled businesses to handle complex financial operations",
+    "It eliminated the need for financial reports"
+  ],
+  answer: "It enabled businesses to handle complex financial operations",
+  explanation: "✅ Specialized accountants were essential for managing the intricate financial systems required by industrial-scale businesses."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How did accounting practices contribute to investor confidence during the Industrial Revolution?",
+  options: [
+    "By hiding financial losses",
+    "By introducing cost-cutting measures",
+    "By establishing transparent standards like auditing",
+    "By reducing financial reporting"
+  ],
+  answer: "By establishing transparent standards like auditing",
+  explanation: "✅ Auditing standards provided transparency and reliability, which were crucial for gaining investor trust in industrial enterprises."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What does the rise of corporate and cost accounting during the Industrial Revolution reveal about business needs?",
+  options: [
+    "Businesses preferred informal systems",
+    "They needed detailed financial tracking and control",
+    "They focused only on marketing",
+    "They avoided financial documentation"
+  ],
+  answer: "They needed detailed financial tracking and control",
+  explanation: "✅ The development of corporate and cost accounting shows that businesses required precise financial oversight to manage growth and complexity."
+},
+    {
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which U.S. organization helped shape accounting standards in the 20th century?",
+  options: [
+    "SEC",
+    "IRS",
+    "AICPA",
+    "FBI"
+  ],
+  answer: "AICPA",
+  explanation: "✅ The American Institute of Certified Public Accountants (AICPA) played a key role in developing U.S. accounting standards."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What does GAAP stand for?",
+  options: [
+    "Global Accounting and Audit Principles",
+    "Generally Accepted Accounting Principles",
+    "Government Approved Accounting Practices",
+    "General Audit and Assurance Policies"
+  ],
+  answer: "Generally Accepted Accounting Principles",
+  explanation: "✅ GAAP stands for Generally Accepted Accounting Principles, which guide financial reporting in the U.S."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which organization develops international accounting standards?",
+  options: [
+    "AICPA",
+    "IASB",
+    "SEC",
+    "FASB"
+  ],
+  answer: "IASB",
+  explanation: "✅ The International Accounting Standards Board (IASB) creates global standards like IFRS for consistent financial reporting."
+},
+    {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What is the purpose of GAAP and IFRS?",
+  options: [
+    "To simplify tax filing",
+    "To ensure consistent and reliable financial reporting",
+    "To reduce accounting jobs",
+    "To promote national accounting differences"
+  ],
+  answer: "To ensure consistent and reliable financial reporting",
+  explanation: "✅ GAAP and IFRS provide standardized principles that help ensure financial statements are accurate and comparable across entities."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "How did accounting evolve in the 20th century?",
+  options: [
+    "It became less regulated",
+    "It shifted to informal practices",
+    "It adopted global frameworks and standards",
+    "It focused only on local businesses"
+  ],
+  answer: "It adopted global frameworks and standards",
+  explanation: "✅ The 20th century saw the rise of national and international bodies that established global accounting standards."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "Why are IFRS important for global businesses?",
+  options: [
+    "They reduce the need for audits",
+    "They allow companies to avoid taxes",
+    "They ensure financial statements are comparable across countries",
+    "They eliminate the need for accountants"
+  ],
+  answer: "They ensure financial statements are comparable across countries",
+  explanation: "✅ IFRS helps businesses present financial information in a way that is consistent and understandable across borders."
+},
+    {
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How do global accounting standards like IFRS benefit international investors?",
+  options: [
+    "They simplify marketing strategies",
+    "They reduce the need for financial reports",
+    "They provide transparency and comparability",
+    "They allow companies to hide losses"
+  ],
+  answer: "They provide transparency and comparability",
+  explanation: "✅ IFRS ensures that financial statements are clear and consistent, helping investors make informed decisions across markets."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What does the emergence of organizations like IASB and AICPA suggest about accounting trends in the 20th century?",
+  options: [
+    "Accounting became decentralized",
+    "There was a push for standardization and global consistency",
+    "Accounting focused only on small businesses",
+    "Financial reporting became optional"
+  ],
+  answer: "There was a push for standardization and global consistency",
+  explanation: "✅ The rise of accounting bodies reflects a global effort to unify financial reporting practices for clarity and trust."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "Why might businesses prefer using IFRS over local standards?",
+  options: [
+    "To avoid audits",
+    "To appeal to international investors",
+    "To reduce financial transparency",
+    "To simplify payroll"
+  ],
+  answer: "To appeal to international investors",
+  explanation: "✅ IFRS helps businesses present financials in a globally recognized format, attracting investors from different countries."
+},
+    {
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What law established the Board of Accountancy in the Philippines?",
+  options: [
+    "Presidential Decree No. 692",
+    "Act No. 3105",
+    "Republic Act No. 9298",
+    "Executive Order No. 200"
+  ],
+  answer: "Act No. 3105",
+  explanation: "✅ Act No. 3105 created the Board of Accountancy in 1923, laying the groundwork for regulation and licensing."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "When was PICPA founded?",
+  options: [
+    "1923",
+    "1929",
+    "1973",
+    "1998"
+  ],
+  answer: "1929",
+  explanation: "✅ The Philippine Institute of Certified Public Accountants (PICPA) was founded in 1929 to promote ethics and unity."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which decree reorganized the accounting profession in 1973?",
+  options: [
+    "Act No. 3105",
+    "Presidential Decree No. 692",
+    "Republic Act No. 9298",
+    "Executive Order No. 200"
+  ],
+  answer: "Presidential Decree No. 692",
+  explanation: "✅ Presidential Decree No. 692 reorganized the accounting profession, strengthening the role of CPAs."
+},
+    {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What was the purpose of establishing the Board of Accountancy?",
+  options: [
+    "To collect taxes",
+    "To regulate and license accountants",
+    "To promote business loans",
+    "To manage government budgets"
+  ],
+  answer: "To regulate and license accountants",
+  explanation: "✅ The Board of Accountancy was created to regulate and license certified public accountants in the Philippines."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "How did PICPA support the accounting profession?",
+  options: [
+    "By offering tax services",
+    "By promoting ethics and education",
+    "By managing audits",
+    "By creating financial software"
+  ],
+  answer: "By promoting ethics and education",
+  explanation: "✅ PICPA promoted ethical standards, continuing education, and professional unity among Filipino accountants."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What was the impact of PD No. 692 on Philippine accounting?",
+  options: [
+    "It removed CPA exams",
+    "It aligned standards internationally",
+    "It privatized accounting firms",
+    "It banned foreign auditors"
+  ],
+  answer: "It aligned standards internationally",
+  explanation: "✅ PD No. 692 aligned Philippine accounting standards more closely with international practices."
+},
+    {
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "Why was the creation of PICPA significant for Filipino accountants?",
+  options: [
+    "It reduced CPA requirements",
+    "It unified and uplifted the profession",
+    "It focused on tax collection",
+    "It replaced the Board of Accountancy"
+  ],
+  answer: "It unified and uplifted the profession",
+  explanation: "✅ PICPA helped unify Filipino accountants and elevate the profession through ethics and education."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How did PD No. 692 strengthen the role of CPAs?",
+  options: [
+    "By removing licensing",
+    "By increasing audit fees",
+    "By formalizing standards and roles",
+    "By limiting CPA practice"
+  ],
+  answer: "By formalizing standards and roles",
+  explanation: "✅ PD No. 692 reorganized the profession and formalized the role of CPAs in national and global contexts."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What do these milestones reveal about the evolution of accounting in the Philippines?",
+  options: [
+    "It became less regulated",
+    "It focused only on taxes",
+    "It grew in professionalism and global relevance",
+    "It was limited to government use"
+  ],
+  answer: "It grew in professionalism and global relevance",
+  explanation: "✅ These milestones show how Philippine accounting evolved to support national development and global integration."
+},
+    {
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "When was the Accounting Standards Council (ASC) established?",
+  options: [
+    "1973",
+    "1981",
+    "1995",
+    "2001"
+  ],
+  answer: "1981",
+  explanation: "✅ The ASC was established in November 1981 by PICPA to improve financial reporting standards in the Philippines."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which organization founded the ASC?",
+  options: [
+    "BOA",
+    "SEC",
+    "PICPA",
+    "IASB"
+  ],
+  answer: "PICPA",
+  explanation: "✅ PICPA founded the ASC to develop and promote generally accepted accounting principles in the Philippines."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What reporting framework did ASC help develop?",
+  options: [
+    "GAAP",
+    "IFRS",
+    "PFRS",
+    "BIR Code"
+  ],
+  answer: "PFRS",
+  explanation: "✅ ASC laid the foundation for the Philippine Financial Reporting Standards (PFRS), which guide financial reporting today."
+},
+    {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What was ASC’s primary mission?",
+  options: [
+    "To regulate taxes",
+    "To train auditors",
+    "To develop Philippine GAAP",
+    "To manage CPA exams"
+  ],
+  answer: "To develop Philippine GAAP",
+  explanation: "✅ ASC’s mission was to develop and promote generally accepted accounting principles in the Philippines."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "How did ASC influence Philippine accounting standards?",
+  options: [
+    "By removing audit rules",
+    "By aligning with IAS and IFRS",
+    "By focusing on tax laws",
+    "By banning foreign standards"
+  ],
+  answer: "By aligning with IAS and IFRS",
+  explanation: "✅ ASC helped transition Philippine standards from U.S. GAAP to IAS and IFRS, improving global compatibility."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "Why was the shift to IFRS important for Filipino businesses?",
+  options: [
+    "It reduced reporting costs",
+    "It simplified payroll",
+    "It improved global transparency",
+    "It removed audit requirements"
+  ],
+  answer: "It improved global transparency",
+  explanation: "✅ Aligning with IFRS allowed Filipino businesses to present financial data more transparently to international stakeholders."
+},
+    {
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What does ASC’s transition from U.S. GAAP to IFRS suggest about its goals?",
+  options: [
+    "To localize standards",
+    "To simplify accounting",
+    "To enhance global relevance",
+    "To reduce CPA training"
+  ],
+  answer: "To enhance global relevance",
+  explanation: "✅ ASC’s shift to IFRS shows its commitment to making Philippine financial reporting globally credible and consistent."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How did ASC’s work impact the credibility of Philippine financial reporting?",
+  options: [
+    "It made reports optional",
+    "It improved transparency and trust",
+    "It removed audit requirements",
+    "It focused only on local firms"
+  ],
+  answer: "It improved transparency and trust",
+  explanation: "✅ ASC’s standards helped Filipino businesses communicate financial information more transparently and credibly."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "Why is PFRS considered a key outcome of ASC’s efforts?",
+  options: [
+    "It replaced tax codes",
+    "It simplified accounting exams",
+    "It became the core of PH reporting",
+    "It eliminated audit rules"
+  ],
+  answer: "It became the core of PH reporting",
+  explanation: "✅ PFRS, developed through ASC’s initiatives, remains the backbone of financial reporting in the Philippines today."
+},
+    {
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which software is commonly used in modern accounting?",
+  options: [
+    "Photoshop",
+    "QuickBooks",
+    "Zoom",
+    "Slack"
+  ],
+  answer: "QuickBooks",
+  explanation: "✅ QuickBooks is one of the widely used accounting software tools that revolutionized bookkeeping and financial management."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "What type of accounting emerged to address environmental concerns?",
+  options: [
+    "Forensic accounting",
+    "Sustainability accounting",
+    "Crypto accounting",
+    "Managerial accounting"
+  ],
+  answer: "Sustainability accounting",
+  explanation: "✅ Sustainability accounting focuses on tracking environmental and social impacts alongside financial performance."
+},
+{
+  competency: "Remember",
+  topic: "History of Accounting",
+  question: "Which technology has transformed accounting in the digital era?",
+  options: [
+    "Typewriters",
+    "Fax machines",
+    "Cloud systems",
+    "Whiteboards"
+  ],
+  answer: "Cloud systems",
+  explanation: "✅ Cloud-based systems have revolutionized accounting by enabling real-time access, collaboration, and data security."
+}, 
+    {
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "How has the role of accountants changed in the digital era?",
+  options: [
+    "They only do manual bookkeeping",
+    "They focus on filing taxes",
+    "They act as strategists and advisors",
+    "They work only in banks"
+  ],
+  answer: "They act as strategists and advisors",
+  explanation: "✅ Accountants today play strategic roles, offering insights and guidance beyond traditional number-crunching."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "What is forensic accounting used for?",
+  options: [
+    "Environmental audits",
+    "Cryptocurrency tracking",
+    "Investigating financial fraud",
+    "Preparing tax returns"
+  ],
+  answer: "Investigating financial fraud",
+  explanation: "✅ Forensic accounting is used to investigate financial discrepancies and support legal cases involving fraud."
+},
+{
+  competency: "Understand",
+  topic: "History of Accounting",
+  question: "Why is crypto accounting becoming more relevant?",
+  options: [
+    "Because of declining cash use",
+    "Due to growth in digital assets",
+    "To replace traditional accounting",
+    "To simplify payroll"
+  ],
+  answer: "Due to growth in digital assets",
+  explanation: "✅ Crypto accounting is emerging to manage and report on digital currencies and blockchain-based transactions."
+},
+    {
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "What does the rise of AI tools suggest about the future of accounting?",
+  options: [
+    "Manual work will increase",
+    "AI will replace ethics",
+    "Automation will enhance decision-making",
+    "Accountants will only do data entry"
+  ],
+  answer: "Automation will enhance decision-making",
+  explanation: "✅ AI tools help automate routine tasks and provide insights, allowing accountants to focus on strategic decision-making."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "Why are emerging fields like sustainability and crypto accounting important?",
+  options: [
+    "They reduce audit costs",
+    "They address new economic and social challenges",
+    "They simplify traditional accounting",
+    "They focus only on profit"
+  ],
+  answer: "They address new economic and social challenges",
+  explanation: "✅ These fields respond to evolving demands in transparency, ethics, and digital finance in the 21st century."
+},
+{
+  competency: "Analyze",
+  topic: "History of Accounting",
+  question: "How has digital transformation impacted the accountant’s role?",
+  options: [
+    "It made accounting obsolete",
+    "It limited their responsibilities",
+    "It expanded their influence and responsibilities",
+    "It removed the need for ethics"
+  ],
+  answer: "It expanded their influence and responsibilities",
+  explanation: "✅ Digital tools have empowered accountants to take on broader roles in strategy, analysis, and governance."
+},
+    {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What concept treats the business as separate from its owner?",
+  options: [
+    "Going Concern",
+    "Business Entity",
+    "Accrual Basis",
+    "Matching Principle"
+  ],
+  answer: "Business Entity",
+  explanation: "✅ The Business Entity Concept assumes the business is distinct from its owner, ensuring separate financial records."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Why must personal transactions be excluded from business records?",
+  options: [
+    "To reduce taxes",
+    "To simplify audits",
+    "To ensure clarity and accuracy",
+    "To avoid legal issues"
+  ],
+  answer: "To ensure clarity and accuracy",
+  explanation: "✅ Excluding personal transactions ensures accurate tracking of business income and expenses."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Business Entity Concept help track accurately?",
+  options: [
+    "Owner’s salary",
+    "Business income and expenses",
+    "Personal savings",
+    "Loan interest"
+  ],
+  answer: "Business income and expenses",
+  explanation: "✅ The concept ensures accurate tracking of business income and expenses by separating them from personal finances."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Business Entity Concept affect financial reporting?",
+  options: [
+    "It combines personal and business data",
+    "It simplifies tax filing",
+    "It ensures independent business records",
+    "It removes the need for audits"
+  ],
+  answer: "It ensures independent business records",
+  explanation: "✅ The concept ensures that business financial reports reflect only business activities, not personal ones."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is separating business and personal transactions important?",
+  options: [
+    "To increase profits",
+    "To avoid double entry",
+    "To prevent misrepresentation",
+    "To reduce paperwork"
+  ],
+  answer: "To prevent misrepresentation",
+  explanation: "✅ Mixing personal and business transactions can misrepresent the financial health of the business."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Business Entity Concept promote in accounting?",
+  options: [
+    "Tax evasion",
+    "Transparency and accountability",
+    "Profit maximization",
+    "Cost reduction"
+  ],
+  answer: "Transparency and accountability",
+  explanation: "✅ The concept promotes transparency and accountability by keeping business records distinct from personal ones."
+},
+    {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen if personal and business transactions are mixed?",
+  options: [
+    "Higher profits",
+    "Clearer reports",
+    "Misleading financial statements",
+    "Faster audits"
+  ],
+  answer: "Misleading financial statements",
+  explanation: "✅ Mixing transactions can distort financial data, leading to inaccurate reporting and poor decision-making."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Business Entity Concept support decision-making?",
+  options: [
+    "By hiding expenses",
+    "By tracking only personal finances",
+    "By providing accurate business data",
+    "By reducing reporting requirements"
+  ],
+  answer: "By providing accurate business data",
+  explanation: "✅ Accurate separation of business transactions helps stakeholders make informed financial decisions."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Business Entity Concept essential for accountability?",
+  options: [
+    "It reduces audit scope",
+    "It ensures owners are not liable",
+    "It clarifies financial responsibility",
+    "It avoids tax payments"
+  ],
+  answer: "It clarifies financial responsibility",
+  explanation: "✅ The concept clarifies which transactions belong to the business, ensuring accountability in financial reporting."
+},
+    {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What principle assumes a business will continue operating indefinitely?",
+  options: [
+    "Accrual Basis",
+    "Going Concern",
+    "Business Entity",
+    "Matching Principle"
+  ],
+  answer: "Going Concern",
+  explanation: "✅ The Going Concern Principle assumes the business will not be liquidated and will operate into the foreseeable future."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Going Concern Principle affect in financial reporting?",
+  options: [
+    "Tax rates",
+    "Asset valuation and depreciation",
+    "Owner’s equity",
+    "Revenue recognition"
+  ],
+  answer: "Asset valuation and depreciation",
+  explanation: "✅ It affects how assets are valued and how depreciation is calculated, assuming long-term use."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Why are financial statements prepared under the Going Concern Principle?",
+  options: [
+    "To reflect liquidation value",
+    "To show short-term profits",
+    "To assume ongoing operations",
+    "To reduce liabilities"
+  ],
+  answer: "To assume ongoing operations",
+  explanation: "✅ Financial statements assume the business will continue operating unless proven otherwise."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Going Concern Principle support long-term planning?",
+  options: [
+    "By assuming closure",
+    "By ignoring future expenses",
+    "By assuming continuity",
+    "By focusing on short-term gains"
+  ],
+  answer: "By assuming continuity",
+  explanation: "✅ The principle allows businesses to plan for the future without preparing for immediate shutdown."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Going Concern Principle imply about asset usage?",
+  options: [
+    "Assets will be sold soon",
+    "Assets are used over time",
+    "Assets are not recorded",
+    "Assets are ignored"
+  ],
+  answer: "Assets are used over time",
+  explanation: "✅ Assets are expected to be used in operations over multiple periods, not liquidated immediately."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Going Concern Principle important for stakeholders?",
+  options: [
+    "It shows liquidation plans",
+    "It confirms short-term profits",
+    "It provides stability and confidence",
+    "It reduces financial reporting"
+  ],
+  answer: "It provides stability and confidence",
+  explanation: "✅ Stakeholders rely on the assumption of continuity for investment and strategic decisions."
+},
+  {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen if a business is no longer a going concern?",
+  options: [
+    "Assets are depreciated normally",
+    "Financial statements remain unchanged",
+    "Assets may be valued at liquidation prices",
+    "Depreciation continues as usual"
+  ],
+  answer: "Assets may be valued at liquidation prices",
+  explanation: "✅ If a business is not a going concern, assets may be valued based on what they could sell for, not long-term use."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Going Concern Principle affect depreciation methods?",
+  options: [
+    "It eliminates depreciation",
+    "It speeds up depreciation",
+    "It uses long-term depreciation schedules",
+    "It ignores asset value"
+  ],
+  answer: "It uses long-term depreciation schedules",
+  explanation: "✅ Depreciation is calculated assuming the asset will be used over its useful life, not sold off quickly."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What evidence might challenge the Going Concern assumption?",
+  options: [
+    "High revenue",
+    "Strong market position",
+    "Pending liquidation or bankruptcy",
+    "Stable cash flow"
+  ],
+  answer: "Pending liquidation or bankruptcy",
+  explanation: "✅ Signs like bankruptcy or liquidation plans contradict the Going Concern assumption."
+},
+    {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What assumption requires financial transactions to be recorded in a common currency?",
+  options: [
+    "Going Concern",
+    "Monetary Unit",
+    "Matching Principle",
+    "Business Entity"
+  ],
+  answer: "Monetary Unit",
+  explanation: "✅ The Monetary Unit Assumption ensures all transactions are recorded using a stable currency like pesos or dollars."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is a common monetary unit used in accounting?",
+  options: [
+    "To reduce taxes",
+    "To simplify audits",
+    "To ensure consistency",
+    "To avoid inflation"
+  ],
+  answer: "To ensure consistency",
+  explanation: "✅ Using a single currency ensures uniformity and comparability across financial records."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Monetary Unit Assumption ignore for simplicity?",
+  options: [
+    "Currency exchange rates",
+    "Inflation",
+    "Depreciation",
+    "Revenue timing"
+  ],
+  answer: "Inflation",
+  explanation: "✅ Inflation is ignored to maintain simplicity and stability in financial reporting."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Monetary Unit Assumption help in financial reporting?",
+  options: [
+    "By using multiple currencies",
+    "By adjusting for inflation",
+    "By enabling comparison and aggregation",
+    "By excluding foreign transactions"
+  ],
+  answer: "By enabling comparison and aggregation",
+  explanation: "✅ A common currency allows financial data to be easily compared and aggregated across periods."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is currency stability assumed in the Monetary Unit Assumption?",
+  options: [
+    "To reflect market changes",
+    "To simplify accounting",
+    "To track inflation",
+    "To adjust asset values"
+  ],
+  answer: "To simplify accounting",
+  explanation: "✅ Assuming currency stability avoids complex inflation adjustments and keeps records straightforward."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What would happen without the Monetary Unit Assumption?",
+  options: [
+    "Financial records would be easier to read",
+    "Transactions would be more accurate",
+    "Records would be hard to interpret",
+    "Inflation would be eliminated"
+  ],
+  answer: "Records would be hard to interpret",
+  explanation: "✅ Without a common currency, financial records would be inconsistent and unreliable."
+},
+    {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What is a limitation of the Monetary Unit Assumption?",
+  options: [
+    "It includes inflation",
+    "It uses multiple currencies",
+    "It ignores inflation effects",
+    "It tracks currency fluctuations"
+  ],
+  answer: "It ignores inflation effects",
+  explanation: "✅ Ignoring inflation can distort long-term financial comparisons, especially in unstable economies."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How might inflation affect the usefulness of financial statements under this assumption?",
+  options: [
+    "It improves accuracy",
+    "It has no effect",
+    "It may distort values",
+    "It simplifies reporting"
+  ],
+  answer: "It may distort values",
+  explanation: "✅ Inflation can reduce the reliability of historical cost figures, making comparisons less meaningful."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Monetary Unit Assumption still widely used despite ignoring inflation?",
+  options: [
+    "It reflects real-time market values",
+    "It simplifies and standardizes reporting",
+    "It adjusts for currency changes",
+    "It eliminates financial risks"
+  ],
+  answer: "It simplifies and standardizes reporting",
+  explanation: "✅ The assumption is practical for maintaining consistent and comparable records, even if it sacrifices precision."
+},
+    {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What assumption divides business activities into artificial time frames?",
+  options: [
+    "Going Concern",
+    "Time Period",
+    "Matching Principle",
+    "Monetary Unit"
+  ],
+  answer: "Time Period",
+  explanation: "✅ The Time Period Assumption allows financial activities to be reported over months, quarters, or years."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Why are artificial time periods used in accounting?",
+  options: [
+    "To reduce taxes",
+    "To simplify audits",
+    "To enable periodic reporting",
+    "To avoid inflation"
+  ],
+  answer: "To enable periodic reporting",
+  explanation: "✅ Artificial time frames like months or quarters allow for regular financial analysis and reporting."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Time Period Assumption support?",
+  options: [
+    "Long-term asset valuation",
+    "Trend analysis",
+    "Currency conversion",
+    "Owner’s equity tracking"
+  ],
+  answer: "Trend analysis",
+  explanation: "✅ Dividing time into periods helps evaluate performance trends and financial health over time."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Time Period Assumption help stakeholders?",
+  options: [
+    "By hiding losses",
+    "By delaying reports",
+    "By enabling timely decisions",
+    "By combining all data"
+  ],
+  answer: "By enabling timely decisions",
+  explanation: "✅ Regular reporting allows stakeholders to assess current performance and make informed decisions."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is dividing financial data into time periods useful?",
+  options: [
+    "It reduces reporting requirements",
+    "It improves tax calculations",
+    "It enhances transparency and analysis",
+    "It eliminates the need for audits"
+  ],
+  answer: "It enhances transparency and analysis",
+  explanation: "✅ Time-based reporting improves clarity and helps analyze financial performance over specific intervals."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What kind of time frames does the Time Period Assumption use?",
+  options: [
+    "Only annual periods",
+    "Only daily reports",
+    "Artificial periods like months or quarters",
+    "Real-time updates"
+  ],
+  answer: "Artificial periods like months or quarters",
+  explanation: "✅ It uses artificial time frames like months, quarters, or years to organize financial reporting."
+},
+    {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen without the Time Period Assumption?",
+  options: [
+    "Reports would be more frequent",
+    "Financial data would be harder to compare",
+    "Stakeholders would get more accurate data",
+    "Trends would be easier to spot"
+  ],
+  answer: "Financial data would be harder to compare",
+  explanation: "✅ Without time-based divisions, comparing performance across periods would be difficult and less meaningful."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Time Period Assumption improve financial transparency?",
+  options: [
+    "By hiding long-term liabilities",
+    "By showing performance over time",
+    "By excluding short-term data",
+    "By combining all transactions"
+  ],
+  answer: "By showing performance over time",
+  explanation: "✅ It reveals how the business performs in specific periods, making financial health easier to assess."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Time Period Assumption critical for trend evaluation?",
+  options: [
+    "It ignores seasonal changes",
+    "It tracks performance over intervals",
+    "It focuses only on annual data",
+    "It eliminates the need for comparisons"
+  ],
+  answer: "It tracks performance over intervals",
+  explanation: "✅ Breaking data into periods allows for identifying patterns and trends in business performance."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What principle records assets at their original purchase price?",
+  options: [
+    "Matching Principle",
+    "Cost Principle",
+    "Going Concern",
+    "Accrual Basis"
+  ],
+  answer: "Cost Principle",
+  explanation: "✅ The Cost Principle requires assets to be recorded at their original cost, not current market value."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Cost Principle ignore in asset valuation?",
+  options: [
+    "Depreciation",
+    "Market value changes",
+    "Original purchase price",
+    "Currency fluctuations"
+  ],
+  answer: "Market value changes",
+  explanation: "✅ Even if an asset appreciates, the Cost Principle keeps the original cost as the reference point."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the original cost used in financial records?",
+  options: [
+    "To reflect current value",
+    "To simplify depreciation",
+    "To ensure consistency and objectivity",
+    "To increase asset value"
+  ],
+  answer: "To ensure consistency and objectivity",
+  explanation: "✅ Using original cost avoids subjective estimates and maintains reliable records."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Cost Principle affect financial reporting?",
+  options: [
+    "It updates asset values regularly",
+    "It reflects market trends",
+    "It maintains stable and objective records",
+    "It adjusts for inflation"
+  ],
+  answer: "It maintains stable and objective records",
+  explanation: "✅ The principle ensures financial statements are based on verifiable historical costs."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Cost Principle considered objective?",
+  options: [
+    "It uses estimated values",
+    "It relies on market forecasts",
+    "It records actual purchase prices",
+    "It adjusts for appreciation"
+  ],
+  answer: "It records actual purchase prices",
+  explanation: "✅ Recording assets at purchase price avoids speculation and keeps records factual."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What is a benefit of using the Cost Principle?",
+  options: [
+    "It reflects asset appreciation",
+    "It simplifies tax reporting",
+    "It avoids subjective valuations",
+    "It increases asset value"
+  ],
+  answer: "It avoids subjective valuations",
+  explanation: "✅ The principle limits personal judgment in valuing assets, promoting consistency."
+},
+    {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What is a limitation of the Cost Principle?",
+  options: [
+    "It reflects true market value",
+    "It may understate asset worth",
+    "It increases asset volatility",
+    "It requires frequent updates"
+  ],
+  answer: "It may understate asset worth",
+  explanation: "✅ Assets that appreciate over time may be undervalued in records due to reliance on original cost."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How might the Cost Principle affect decision-making?",
+  options: [
+    "It provides real-time asset values",
+    "It may mislead stakeholders about current value",
+    "It improves forecasting accuracy",
+    "It reflects inflation-adjusted data"
+  ],
+  answer: "It may mislead stakeholders about current value",
+  explanation: "✅ Stakeholders may not see the true value of assets if only historical cost is reported."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why might a company prefer market value over cost in some cases?",
+  options: [
+    "To reduce taxes",
+    "To inflate profits",
+    "To reflect current asset worth",
+    "To simplify accounting"
+  ],
+  answer: "To reflect current asset worth",
+  explanation: "✅ Market value shows the real-time value of assets, which may be more relevant for investors."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Matching Principle affect performance evaluation?",
+  options: [
+    "It delays expense reporting",
+    "It connects costs to revenue",
+    "It ignores timing differences",
+    "It focuses only on cash flow"
+  ],
+  answer: "It connects costs to revenue",
+  explanation: "✅ By linking expenses to the revenues they support, the principle enables fair performance assessment."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Matching Principle important for efficiency analysis?",
+  options: [
+    "It tracks asset usage",
+    "It shows revenue trends",
+    "It aligns costs with output",
+    "It avoids subjective estimates"
+  ],
+  answer: "It aligns costs with output",
+  explanation: "✅ Matching costs with revenue helps evaluate how efficiently resources are used to generate income."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Matching Principle support in financial statements?",
+  options: [
+    "Fair evaluation of operations",
+    "Inflated asset values",
+    "Short-term reporting",
+    "Simplified depreciation"
+  ],
+  answer: "Fair evaluation of operations",
+  explanation: "✅ It supports fair evaluation of business operations by accurately linking expenses to revenue."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Matching Principle affect performance evaluation?",
+  options: [
+    "It delays expense reporting",
+    "It connects costs to revenue",
+    "It ignores timing differences",
+    "It focuses only on cash flow"
+  ],
+  answer: "It connects costs to revenue",
+  explanation: "✅ By linking expenses to the revenues they support, the principle enables fair performance assessment."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Matching Principle important for efficiency analysis?",
+  options: [
+    "It tracks asset usage",
+    "It shows revenue trends",
+    "It aligns costs with output",
+    "It avoids subjective estimates"
+  ],
+  answer: "It aligns costs with output",
+  explanation: "✅ Matching costs with revenue helps evaluate how efficiently resources are used to generate income."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Matching Principle support in financial statements?",
+  options: [
+    "Fair evaluation of operations",
+    "Inflated asset values",
+    "Short-term reporting",
+    "Simplified depreciation"
+  ],
+  answer: "Fair evaluation of operations",
+  explanation: "✅ It supports fair evaluation of business operations by accurately linking expenses to revenue."
+},
+    {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen if expenses are not matched with revenues?",
+  options: [
+    "Income appears more accurate",
+    "Financial statements become misleading",
+    "Cash flow improves",
+    "Assets are better valued"
+  ],
+  answer: "Financial statements become misleading",
+  explanation: "✅ Without matching, income may be overstated or understated, leading to distorted financial results."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Matching Principle contribute to transparency?",
+  options: [
+    "By hiding losses",
+    "By delaying expense recognition",
+    "By showing true profitability",
+    "By excluding indirect costs"
+  ],
+  answer: "By showing true profitability",
+  explanation: "✅ It ensures that reported income reflects the actual costs incurred to earn it, improving transparency."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Matching Principle essential for accrual accounting?",
+  options: [
+    "It tracks cash flow",
+    "It avoids revenue recognition",
+    "It aligns expenses with earned revenue",
+    "It simplifies tax filing"
+  ],
+  answer: "It aligns expenses with earned revenue",
+  explanation: "✅ Accrual accounting relies on matching expenses to the period when revenue is earned for accurate reporting."
+},
+    {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "When should revenue be recognized according to the accrual principle?",
+  options: [
+    "When cash is received",
+    "When expenses are paid",
+    "When it is earned",
+    "When invoices are printed"
+  ],
+  answer: "When it is earned",
+  explanation: "✅ The Revenue Recognition Principle states that revenue should be recorded when earned, not when cash is received."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What accounting method does the Revenue Recognition Principle align with?",
+  options: [
+    "Cash basis",
+    "Accrual basis",
+    "Modified cash basis",
+    "Tax basis"
+  ],
+  answer: "Accrual basis",
+  explanation: "✅ This principle aligns with accrual accounting, which records revenue when earned regardless of cash flow."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is revenue not recorded when cash is received?",
+  options: [
+    "To reduce taxes",
+    "To match expenses",
+    "To reflect actual performance",
+    "To simplify reporting"
+  ],
+  answer: "To reflect actual performance",
+  explanation: "✅ Recording revenue when earned gives a more accurate view of financial performance."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Revenue Recognition Principle improve financial reporting?",
+  options: [
+    "By delaying revenue",
+    "By matching revenue to the correct period",
+    "By excluding unpaid invoices",
+    "By focusing on cash flow"
+  ],
+  answer: "By matching revenue to the correct period",
+  explanation: "✅ It ensures revenue is reported in the period it was earned, improving accuracy and relevance."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is it important to recognize revenue when earned?",
+  options: [
+    "To increase reported income",
+    "To match it with related expenses",
+    "To avoid recording liabilities",
+    "To reduce audit scope"
+  ],
+  answer: "To match it with related expenses",
+  explanation: "✅ Recognizing revenue when earned helps match it with the expenses incurred to generate it."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the accrual principle prevent in financial statements?",
+  options: [
+    "Overstating or understating revenue",
+    "Recording too many expenses",
+    "Delaying asset valuation",
+    "Ignoring depreciation"
+  ],
+  answer: "Overstating or understating revenue",
+  explanation: "✅ It prevents revenue from being recorded in the wrong period, avoiding misleading financial results."
+},
+    {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen if revenue is recorded only when cash is received?",
+  options: [
+    "Reports become more accurate",
+    "Revenue may be misstated",
+    "Expenses are better tracked",
+    "Assets are more valuable"
+  ],
+  answer: "Revenue may be misstated",
+  explanation: "✅ Recording revenue only when cash is received can distort financial performance and timing."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the accrual principle support transparency?",
+  options: [
+    "By excluding unpaid revenue",
+    "By matching revenue to cash flow",
+    "By showing earned income clearly",
+    "By hiding losses"
+  ],
+  answer: "By showing earned income clearly",
+  explanation: "✅ It ensures that reported revenue reflects actual business activity, not just cash transactions."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the Revenue Recognition Principle essential in accrual accounting?",
+  options: [
+    "It tracks cash flow",
+    "It delays revenue reporting",
+    "It aligns income with performance",
+    "It simplifies tax filing"
+  ],
+  answer: "It aligns income with performance",
+  explanation: "✅ Accrual accounting depends on recognizing revenue when earned to reflect true financial performance."
+},
+    {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Which principle records expenses in the same period as related revenues?",
+  options: [
+    "Accrual basis",
+    "Matching principle",
+    "Cost method",
+    "Revenue timing"
+  ],
+  answer: "Matching principle",
+  explanation: "✅ The Matching Principle ensures expenses are recorded in the same period as the revenues they helped generate."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Why are expenses matched with revenues?",
+  options: [
+    "To reduce taxes",
+    "To simplify reporting",
+    "To show profit clearly",
+    "To track cash flow"
+  ],
+  answer: "To show profit clearly",
+  explanation: "✅ Matching expenses with revenues gives a clearer picture of a company’s profitability."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Matching Principle improve?",
+  options: [
+    "Asset value",
+    "Income accuracy",
+    "Cash flow timing",
+    "Depreciation"
+  ],
+  answer: "Income accuracy",
+  explanation: "✅ It improves the accuracy of income measurement by aligning costs with the revenues they generate."
+},
+  {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the Matching Principle affect performance evaluation?",
+  options: [
+    "Delays expense reporting",
+    "Connects cost to revenue",
+    "Ignores timing",
+    "Focuses on cash"
+  ],
+  answer: "Connects cost to revenue",
+  explanation: "✅ By linking expenses to the revenues they support, the principle enables fair performance assessment."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is matching important for efficiency analysis?",
+  options: [
+    "Tracks assets",
+    "Shows revenue trends",
+    "Aligns cost with output",
+    "Avoids estimates"
+  ],
+  answer: "Aligns cost with output",
+  explanation: "✅ Matching costs with revenue helps evaluate how efficiently resources are used to generate income."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the Matching Principle support?",
+  options: [
+    "Fair operations check",
+    "Inflated assets",
+    "Short-term focus",
+    "Simple depreciation"
+  ],
+  answer: "Fair operations check",
+  explanation: "✅ It supports fair evaluation of business operations by accurately linking expenses to revenue."
+},
+  {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What happens if expenses aren't matched with revenues?",
+  options: [
+    "More accurate income",
+    "Misleading reports",
+    "Better cash tracking",
+    "Higher asset value"
+  ],
+  answer: "Misleading reports",
+  explanation: "✅ Without matching, income may be overstated or understated, leading to distorted financial results."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does matching support transparency?",
+  options: [
+    "Hides losses",
+    "Matches cash flow",
+    "Shows earned income",
+    "Excludes indirect cost"
+  ],
+  answer: "Shows earned income",
+  explanation: "✅ It ensures that reported income reflects actual business activity, not just cash transactions."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is matching essential in accrual accounting?",
+  options: [
+    "Tracks cash",
+    "Delays revenue",
+    "Aligns cost with revenue",
+    "Simplifies tax"
+  ],
+  answer: "Aligns cost with revenue",
+  explanation: "✅ Accrual accounting depends on matching expenses to the period when revenue is earned for accurate reporting."
+},
+  {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "When should revenue be recognized under the accrual accounting?",
+  options: [
+    "When cash is received",
+    "When earned",
+    "When billed",
+    "When deposited"
+  ],
+  answer: "When earned",
+  explanation: "✅ Revenue is recognized when it is earned, not necessarily when cash is received, for accurate performance reporting."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Which accounting method aligns with the accrual principle?",
+  options: [
+    "Cash basis",
+    "Accrual basis",
+    "Hybrid method",
+    "Tax basis"
+  ],
+  answer: "Accrual basis",
+  explanation: "✅ The Revenue Recognition Principle aligns with accrual accounting, which records revenue when earned."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the accrual principle help avoid?",
+  options: [
+    "Overstating or understating revenue",
+    "Delays in billing",
+    "Extra tax reporting",
+    "Unpaid invoices"
+  ],
+  answer: "Overstating or understating revenue",
+  explanation: "✅ It prevents revenue from being recorded in the wrong period, avoiding misleading financial results."
+},
+  {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is revenue recognized when earned?",
+  options: [
+    "To match expenses",
+    "To reduce taxes",
+    "To simplify audits",
+    "To track cash flow"
+  ],
+  answer: "To match expenses",
+  explanation: "✅ Recognizing revenue when earned helps match it with the expenses incurred to generate it."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the accrual principle improve financial reporting?",
+  options: [
+    "By delaying income",
+    "By matching revenue to correct period",
+    "By excluding unpaid revenue",
+    "By focusing on deposits"
+  ],
+  answer: "By matching revenue to correct period",
+  explanation: "✅ It ensures revenue is reported in the period it was earned, improving accuracy and relevance."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does this accrual principle support in financial statements?",
+  options: [
+    "Short-term gains",
+    "Earned income clarity",
+    "Cash flow timing",
+    "Asset valuation"
+  ],
+  answer: "Earned income clarity",
+  explanation: "✅ It helps present a clearer picture of income by showing what was actually earned during the period."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen if revenue is recorded only when cash is received?",
+  options: [
+    "More accurate reports",
+    "Misleading performance",
+    "Better expense tracking",
+    "Higher asset value"
+  ],
+  answer: "Misleading performance",
+  explanation: "✅ Recording revenue only when cash is received can distort financial performance and timing."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does the accrual principle support transparency?",
+  options: [
+    "By hiding losses",
+    "By matching cash flow",
+    "By showing earned revenue",
+    "By excluding indirect costs"
+  ],
+  answer: "By showing earned revenue",
+  explanation: "✅ It ensures that reported revenue reflects actual business activity, not just cash transactions."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is the accrual principle essential in accrual accounting?",
+  options: [
+    "It tracks cash",
+    "It delays revenue",
+    "It aligns income with performance",
+    "It simplifies tax filing"
+  ],
+  answer: "It aligns income with performance",
+  explanation: "✅ Accrual accounting depends on recognizing revenue when earned to reflect true financial performance."
+},
+  {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "Under the accrual principle, when are transactions recorded?",
+  options: [
+    "When cash changes hands",
+    "When they occur",
+    "When approved",
+    "When deposited"
+  ],
+  answer: "When they occur",
+  explanation: "✅ Transactions are recorded when they happen, not when cash is received or paid."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does accrual accounting include?",
+  options: [
+    "Receivables and payables",
+    "Cash and deposits",
+    "Inventory and assets",
+    "Revenue and expenses only"
+  ],
+  answer: "Receivables and payables",
+  explanation: "✅ These items reflect actual performance and obligations under accrual accounting."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What kind of picture does the accrual principle provide?",
+  options: [
+    "Simplified view",
+    "Complete picture",
+    "Cash-only view",
+    "Short-term view"
+  ],
+  answer: "Complete picture",
+  explanation: "✅ It captures all financial activities, not just cash transactions."
+},
+  {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is timely recognition important in accrual accounting?",
+  options: [
+    "To reduce taxes",
+    "To simplify audits",
+    "To reflect actual performance",
+    "To delay expenses"
+  ],
+  answer: "To reflect actual performance",
+  explanation: "✅ Timely recognition ensures that financial reports match business activity."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does accrual accounting help stakeholders?",
+  options: [
+    "By tracking deposits",
+    "By showing obligations and assets",
+    "By excluding liabilities",
+    "By focusing on cash flow"
+  ],
+  answer: "By showing obligations and assets",
+  explanation: "✅ It helps assess both current and future financial responsibilities."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does accrual accounting reflect?",
+  options: [
+    "Cash flow timing",
+    "Actual performance",
+    "Tax savings",
+    "Asset depreciation"
+  ],
+  answer: "Actual performance",
+  explanation: "✅ It shows the true financial condition of the business."
+},
+  {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What is a risk of using cash basis instead of accrual accounting?",
+  options: [
+    "Incomplete financial reports",
+    "Higher revenue",
+    "Lower expenses",
+    "Faster transactions"
+  ],
+  answer: "Incomplete financial reports",
+  explanation: "✅ Cash basis may miss key obligations and earnings, leading to misleading results."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does accrual accounting affect financial visibility?",
+  options: [
+    "It delays recognition",
+    "It excludes future items",
+    "It includes current and future items",
+    "It focuses on cash only"
+  ],
+  answer: "It includes current and future items",
+  explanation: "✅ Accrual accounting captures both present and upcoming obligations and resources."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is accrual accounting preferred for performance analysis?",
+  options: [
+    "It reflects actual events",
+    "It tracks deposits",
+    "It reduces paperwork",
+    "It avoids receivables"
+  ],
+  answer: "It reflects actual events",
+  explanation: "✅ It shows what truly happened in the business, not just cash movements."
+},
+  {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the conservatism principle advise?",
+  options: [
+    "Aggressive reporting",
+    "Cautious reporting",
+    "Optimistic forecasting",
+    "Rapid recognition"
+  ],
+  answer: "Cautious reporting",
+  explanation: "✅ It encourages conservative estimates to avoid overstating assets or income."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "When are losses recognized under the conservatism principle?",
+  options: [
+    "When realized",
+    "When paid",
+    "When foreseeable",
+    "When reported"
+  ],
+  answer: "When foreseeable",
+  explanation: "✅ Losses are recorded as soon as they are expected, even if not yet realized."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "When are gains recorded under the conservatism principle?",
+  options: [
+    "When foreseeable",
+    "When estimated",
+    "When realized",
+    "When projected"
+  ],
+  answer: "When realized",
+  explanation: "✅ Gains are only recorded when they are certain and realized."
+},
+  {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why does the conservatism principle discourage overstatement of assets?",
+  options: [
+    "To reduce taxes",
+    "To protect stakeholders",
+    "To increase revenue",
+    "To simplify audits"
+  ],
+  answer: "To protect stakeholders",
+  explanation: "✅ It ensures financial reports are realistic and not misleading."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "How does conservatism affect financial projections?",
+  options: [
+    "Promotes optimistic projections",
+    "Promotes realistic projections",
+    "Promotes aggressive growth",
+    "Promotes early recognition"
+  ],
+  answer: "Promotes realistic projections",
+  explanation: "✅ It avoids inflated expectations by focusing on what is certain."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What kind of reporting does conservatism principle encourage?",
+  options: [
+    "Balanced reporting",
+    "Cautious reporting",
+    "Optimistic reporting",
+    "Flexible reporting"
+  ],
+  answer: "Cautious reporting",
+  explanation: "✅ It favors conservative estimates to prevent misleading financial results."
+},
+  {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen if gains are recorded before realization?",
+  options: [
+    "Accurate reporting",
+    "Inflated expectations",
+    "Lower liabilities",
+    "Improved cash flow"
+  ],
+  answer: "Inflated expectations",
+  explanation: "✅ Premature gain recognition can mislead stakeholders about financial health."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does early loss recognition benefit stakeholders?",
+  options: [
+    "It boosts confidence",
+    "It hides risks",
+    "It reveals potential issues",
+    "It increases revenue"
+  ],
+  answer: "It reveals potential issues",
+  explanation: "✅ Recognizing losses early helps stakeholders prepare for challenges."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is conservatism important in uncertain conditions?",
+  options: [
+    "It maximizes profit",
+    "It ensures realistic reporting",
+    "It speeds up transactions",
+    "It reduces paperwork"
+  ],
+  answer: "It ensures realistic reporting",
+  explanation: "✅ In uncertain times, conservative estimates help maintain credibility and trust."
+},
+  {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen if gains are recorded before realization?",
+  options: [
+    "Accurate reporting",
+    "Inflated expectations",
+    "Lower liabilities",
+    "Improved cash flow"
+  ],
+  answer: "Inflated expectations",
+  explanation: "✅ Premature gain recognition can mislead stakeholders about financial health."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does early loss recognition benefit stakeholders?",
+  options: [
+    "It boosts confidence",
+    "It hides risks",
+    "It reveals potential issues",
+    "It increases revenue"
+  ],
+  answer: "It reveals potential issues",
+  explanation: "✅ Recognizing losses early helps stakeholders prepare for challenges."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is conservatism important in uncertain conditions?",
+  options: [
+    "It maximizes profit",
+    "It ensures realistic reporting",
+    "It speeds up transactions",
+    "It reduces paperwork"
+  ],
+  answer: "It ensures realistic reporting",
+  explanation: "✅ In uncertain times, conservative estimates help maintain credibility and trust."
+},
+    {
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does the consistency principle require?",
+  options: [
+    "Frequent changes",
+    "Consistent method use",
+    "Flexible reporting",
+    "Random adjustments"
+  ],
+  answer: "Consistent method use",
+  explanation: "✅ Once a method is chosen, it should be applied consistently across periods for reliable reporting."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What must be done if a company changes its accounting method?",
+  options: [
+    "Ignore the change",
+    "Disclose and justify",
+    "Apply it quietly",
+    "Delay reporting"
+  ],
+  answer: "Disclose and justify",
+  explanation: "✅ Any change in method must be explained and disclosed to maintain transparency."
+},
+{
+  competency: "Remember",
+  topic: "Accounting Concepts and Principles",
+  question: "What does consistency help with?",
+  options: [
+    "Tax filing",
+    "Trend analysis",
+    "Asset valuation",
+    "Cash flow"
+  ],
+  answer: "Trend analysis",
+  explanation: "✅ Using the same method allows for accurate comparisons and trend evaluation over time."
+},
+    {
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is consistency important in financial reporting?",
+  options: [
+    "It simplifies audits",
+    "It builds trust",
+    "It increases profits",
+    "It reduces expenses"
+  ],
+  answer: "It builds trust",
+  explanation: "✅ Consistent reporting helps stakeholders rely on the accuracy and comparability of financial data."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does inconsistent method use cause?",
+  options: [
+    "Improved accuracy",
+    "Misleading fluctuations",
+    "Higher revenue",
+    "Faster reporting"
+  ],
+  answer: "Misleading fluctuations",
+  explanation: "✅ Changing methods without disclosure can distort financial results and confuse stakeholders."
+},
+{
+  competency: "Understand",
+  topic: "Accounting Concepts and Principles",
+  question: "What does consistency support in financial analysis?",
+  options: [
+    "Short-term gains",
+    "Reliable comparisons",
+    "Flexible projections",
+    "Rapid growth"
+  ],
+  answer: "Reliable comparisons",
+  explanation: "✅ It allows analysts to compare performance across periods without distortion."
+},
+    {
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "What could happen if a company changes methods without disclosure?",
+  options: [
+    "Improved clarity",
+    "Misleading data",
+    "Higher trust",
+    "Better performance"
+  ],
+  answer: "Misleading data",
+  explanation: "✅ Undisclosed changes can distort financial trends and mislead users of the reports."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "How does consistency affect stakeholder confidence?",
+  options: [
+    "It reduces trust",
+    "It builds confidence",
+    "It delays decisions",
+    "It hides losses"
+  ],
+  answer: "It builds confidence",
+  explanation: "✅ Consistent reporting reassures stakeholders that financial data is dependable."
+},
+{
+  competency: "Analyze",
+  topic: "Accounting Concepts and Principles",
+  question: "Why is consistency valuable for long-term analysis?",
+  options: [
+    "It avoids comparisons",
+    "It simplifies taxes",
+    "It supports trend tracking",
+    "It reduces liabilities"
+  ],
+  answer: "It supports trend tracking",
+  explanation: "✅ Using the same method over time helps identify patterns and evaluate performance accurately."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What is the primary focus of financial accounting?",
+  options: [
+    "Internal control",
+    "Preparing financial statements",
+    "Tax planning",
+    "Inventory tracking"
+  ],
+  answer: "Preparing financial statements",
+  explanation: "✅ Financial accounting centers on creating reports that reflect performance and position."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why are financial statements important to external users?",
+  options: [
+    "To monitor employee performance",
+    "To assess profitability and viability",
+    "To manage internal operations",
+    "To plan marketing strategies"
+  ],
+  answer: "To assess profitability and viability",
+  explanation: "✅ External users rely on financial statements to evaluate the health of a business."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What could happen if financial statements lack transparency?",
+  options: [
+    "Increased stakeholder trust",
+    "Misleading assessments",
+    "Improved performance",
+    "Faster audits"
+  ],
+  answer: "Misleading assessments",
+  explanation: "✅ Lack of transparency can distort the true financial position and mislead users."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Who are the primary users of financial accounting reports?",
+  options: [
+    "Managers",
+    "External users",
+    "Employees",
+    "IT staff"
+  ],
+  answer: "External users",
+  explanation: "✅ Financial accounting serves investors, creditors, and regulators."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Which principle ensures consistency in financial accounting?",
+  options: [
+    "Lean principle",
+    "GAAP or IFRS",
+    "ISO standards",
+    "Six Sigma"
+  ],
+  answer: "GAAP or IFRS",
+  explanation: "✅ These frameworks guide standardized and transparent reporting."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "How does financial accounting support investment decisions?",
+  options: [
+    "By tracking employee data",
+    "By providing performance reports",
+    "By listing competitors",
+    "By managing inventory"
+  ],
+  answer: "By providing performance reports",
+  explanation: "✅ Investors use these reports to evaluate profitability and risk."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Which document shows a company’s financial position?",
+  options: [
+    "Income statement",
+    "Balance sheet",
+    "Cash flow forecast",
+    "Sales report"
+  ],
+  answer: "Balance sheet",
+  explanation: "✅ The balance sheet reflects assets, liabilities, and equity at a specific point in time."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "What is the role of documenting transactions in financial accounting?",
+  options: [
+    "To track employee hours",
+    "To ensure accurate reporting",
+    "To manage customer feedback",
+    "To reduce marketing costs"
+  ],
+  answer: "To ensure accurate reporting",
+  explanation: "✅ Recording transactions is essential for reliable financial statements."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "Why is consistency important in financial accounting?",
+  options: [
+    "It simplifies tax filing",
+    "It builds trust and enables comparisons",
+    "It reduces expenses",
+    "It speeds up audits"
+  ],
+  answer: "It builds trust and enables comparisons",
+  explanation: "✅ Consistent methods allow stakeholders to compare performance over time."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What is the main purpose of management accounting?",
+  options: [
+    "External reporting",
+    "Tax filing",
+    "Internal decision-making",
+    "Auditing"
+  ],
+  answer: "Internal decision-making",
+  explanation: "✅ Management accounting supports managers in making informed operational and strategic choices."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why is timeliness important in management accounting?",
+  options: [
+    "To meet tax deadlines",
+    "To satisfy investors",
+    "To support quick decisions",
+    "To comply with regulations"
+  ],
+  answer: "To support quick decisions",
+  explanation: "✅ Timely data helps managers respond rapidly to changing conditions and opportunities."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What could happen if management accounting lacks relevance?",
+  options: [
+    "Improved decisions",
+    "Delayed actions",
+    "Better compliance",
+    "Higher profits"
+  ],
+  answer: "Delayed actions",
+  explanation: "✅ Irrelevant data can slow down decision-making and reduce operational effectiveness."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Which activity is commonly part of management accounting?",
+  options: [
+    "Auditing",
+    "Budgeting",
+    "Tax filing",
+    "External reporting"
+  ],
+  answer: "Budgeting",
+  explanation: "✅ Budgeting helps managers plan and allocate resources effectively."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "How does management accounting differ from financial accounting?",
+  options: [
+    "It uses IFRS",
+    "It targets external users",
+    "It emphasizes flexibility",
+    "It reports quarterly"
+  ],
+  answer: "It emphasizes flexibility",
+  explanation: "✅ Management accounting adapts to internal needs and is not bound by external standards."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "Why is flexibility a strength in management accounting?",
+  options: [
+    "It ensures legal compliance",
+    "It allows tailored insights",
+    "It improves external reporting",
+    "It reduces audit time"
+  ],
+  answer: "It allows tailored insights",
+  explanation: "✅ Flexibility lets managers customize reports to fit specific goals and challenges."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Does management accounting follow strict external standards?",
+  options: [
+    "Yes, strictly",
+    "No, it's flexible",
+    "Only for public companies",
+    "Only during audits"
+  ],
+  answer: "No, it's flexible",
+  explanation: "✅ Management accounting is designed for internal use and adapts to organizational needs."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "What kind of information does management accounting prioritize?",
+  options: [
+    "Historical data",
+    "Legal compliance",
+    "Actionable insights",
+    "Public disclosures"
+  ],
+  answer: "Actionable insights",
+  explanation: "✅ The focus is on relevant, useful data that drives strategy and operations."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "How does management accounting support strategic planning?",
+  options: [
+    "By tracking stock prices",
+    "By analyzing performance",
+    "By filing taxes",
+    "By publishing reports"
+  ],
+  answer: "By analyzing performance",
+  explanation: "✅ Performance analysis helps managers evaluate strategies and adjust plans accordingly."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What does government accounting primarily manage?",
+  options: [
+    "Private investments",
+    "Public funds",
+    "Corporate profits",
+    "Employee benefits"
+  ],
+  answer: "Public funds",
+  explanation: "✅ Government accounting focuses on the financial administration of public money."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why is transparency important in government accounting?",
+  options: [
+    "To attract investors",
+    "To reduce taxes",
+    "To build public trust",
+    "To increase revenue"
+  ],
+  answer: "To build public trust",
+  explanation: "✅ Transparent reporting helps citizens trust how their tax money is being used."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What could happen if government accounting lacks accountability?",
+  options: [
+    "Improved budgeting",
+    "Public distrust",
+    "Higher efficiency",
+    "Increased funding"
+  ],
+  answer: "Public distrust",
+  explanation: "✅ Without accountability, citizens may lose confidence in public institutions."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Which standards guide government accounting?",
+  options: [
+    "GAAP",
+    "IFRS",
+    "GASB",
+    "ISO"
+  ],
+  answer: "GASB",
+  explanation: "✅ The Governmental Accounting Standards Board sets the rules for public sector accounting."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "What is a key focus of government accounting?",
+  options: [
+    "Profit maximization",
+    "Asset privatization",
+    "Stewardship of assets",
+    "Market competition"
+  ],
+  answer: "Stewardship of assets",
+  explanation: "✅ It ensures responsible management of public resources and infrastructure."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "How does government accounting support legal compliance?",
+  options: [
+    "By tracking employee performance",
+    "By following GASB standards",
+    "By increasing tax rates",
+    "By reducing expenditures"
+  ],
+  answer: "By following GASB standards",
+  explanation: "✅ Adhering to GASB ensures that financial practices meet legal and budgetary requirements."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What does government accounting track?",
+  options: [
+    "Corporate dividends",
+    "Public revenues and expenditures",
+    "Private equity",
+    "Shareholder returns"
+  ],
+  answer: "Public revenues and expenditures",
+  explanation: "✅ It monitors how public money is collected and spent."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why is compliance important in government accounting?",
+  options: [
+    "To reduce costs",
+    "To meet legal and budgetary rules",
+    "To increase profits",
+    "To attract donors"
+  ],
+  answer: "To meet legal and budgetary rules",
+  explanation: "✅ Compliance ensures that public entities operate within approved guidelines."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What impact does government accounting have on public institutions?",
+  options: [
+    "It reduces transparency",
+    "It builds trust and accountability",
+    "It increases competition",
+    "It simplifies hiring"
+  ],
+  answer: "It builds trust and accountability",
+  explanation: "✅ Accurate reporting helps maintain integrity and confidence in government operations."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What is the main purpose of auditing?",
+  options: [
+    "To increase profits",
+    "To verify financial records",
+    "To prepare tax returns",
+    "To manage inventory"
+  ],
+  answer: "To verify financial records",
+  explanation: "✅ Auditing ensures that financial statements are accurate and comply with standards."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why is independent examination important in auditing?",
+  options: [
+    "To reduce costs",
+    "To ensure objectivity",
+    "To speed up reporting",
+    "To attract investors"
+  ],
+  answer: "To ensure objectivity",
+  explanation: "✅ Independence allows auditors to assess records without bias or influence."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What could happen if auditing is not performed properly?",
+  options: [
+    "Improved transparency",
+    "Increased fraud risk",
+    "Better compliance",
+    "Faster reporting"
+  ],
+  answer: "Increased fraud risk",
+  explanation: "✅ Weak auditing can fail to detect fraud or errors, compromising financial integrity."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What do auditors assess during an audit?",
+  options: [
+    "Marketing plans",
+    "Internal controls",
+    "Sales targets",
+    "Customer feedback"
+  ],
+  answer: "Internal controls",
+  explanation: "✅ Auditors evaluate systems that safeguard assets and ensure accurate reporting."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "What is the role of external auditing?",
+  options: [
+    "To improve internal operations",
+    "To provide assurance to outsiders",
+    "To manage employee performance",
+    "To reduce tax liabilities"
+  ],
+  answer: "To provide assurance to outsiders",
+  explanation: "✅ External audits confirm the reliability of financial statements for stakeholders."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "How does auditing contribute to financial reporting?",
+  options: [
+    "It reduces reporting time",
+    "It ensures integrity and reliability",
+    "It increases profitability",
+    "It simplifies budgeting"
+  ],
+  answer: "It ensures integrity and reliability",
+  explanation: "✅ Auditing validates the accuracy and fairness of financial information."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Which type of auditing focuses on operational efficiency?",
+  options: [
+    "External auditing",
+    "Internal auditing",
+    "Forensic auditing",
+    "Tax auditing"
+  ],
+  answer: "Internal auditing",
+  explanation: "✅ Internal audits help improve processes and control systems within the organization."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why is fraud detection a key part of auditing?",
+  options: [
+    "To increase revenue",
+    "To protect assets",
+    "To reduce marketing costs",
+    "To improve customer service"
+  ],
+  answer: "To protect assets",
+  explanation: "✅ Detecting fraud helps safeguard resources and maintain financial integrity."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What impact does auditing have on stakeholder confidence?",
+  options: [
+    "It reduces trust",
+    "It builds assurance",
+    "It delays decisions",
+    "It hides losses"
+  ],
+  answer: "It builds assurance",
+  explanation: "✅ Reliable audits reassure stakeholders that financial data is trustworthy."
+},
+    {
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why is staying updated on legislation important in tax accounting?",
+  options: [
+    "To reduce marketing costs",
+    "To comply with current laws",
+    "To improve customer service",
+    "To increase revenue"
+  ],
+  answer: "To comply with current laws",
+  explanation: "✅ Tax laws change frequently, and compliance depends on current legal knowledge."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "What is the role of strategic planning in tax accounting?",
+  options: [
+    "To avoid audits",
+    "To minimize tax burdens ethically",
+    "To increase profits illegally",
+    "To delay payments"
+  ],
+  answer: "To minimize tax burdens ethically",
+  explanation: "✅ Strategic planning helps reduce liabilities while staying within legal boundaries."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why is timely filing important in tax accounting?",
+  options: [
+    "To avoid penalties",
+    "To increase deductions",
+    "To improve branding",
+    "To reduce liabilities"
+  ],
+  answer: "To avoid penalties",
+  explanation: "✅ Late filings can result in fines and legal consequences."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "How does tax accounting support compliance?",
+  options: [
+    "By preparing marketing plans",
+    "By analyzing customer feedback",
+    "By following tax regulations",
+    "By managing inventory"
+  ],
+  answer: "By following tax regulations",
+  explanation: "✅ Compliance is achieved by adhering to laws set by authorities like the BIR."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "What does optimizing tax positions involve?",
+  options: [
+    "Increasing liabilities",
+    "Maximizing legal deductions",
+    "Avoiding all taxes",
+    "Delaying filings"
+  ],
+  answer: "Maximizing legal deductions",
+  explanation: "✅ It involves using lawful strategies to reduce taxable income."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What does tax accounting primarily focus on?",
+  options: [
+    "Customer service",
+    "Tax returns and compliance",
+    "Inventory tracking",
+    "Sales forecasting"
+  ],
+  answer: "Tax returns and compliance",
+  explanation: "✅ Tax accounting deals with preparing returns and ensuring legal compliance."
+},
+{
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Which authority governs tax accounting in the Philippines?",
+  options: [
+    "SEC",
+    "BIR",
+    "DOH",
+    "DTI"
+  ],
+  answer: "BIR",
+  explanation: "✅ The Bureau of Internal Revenue enforces tax laws and regulations."
+},
+{
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What do practitioners compute in tax accounting?",
+  options: [
+    "Sales targets",
+    "Tax liabilities",
+    "Employee bonuses",
+    "Customer ratings"
+  ],
+  answer: "Tax liabilities",
+  explanation: "✅ Practitioners calculate how much tax is owed based on current laws."
+},
+{
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What must tax accountants stay updated on?",
+  options: [
+    "Fashion trends",
+    "Legislation and rulings",
+    "Social media policies",
+    "Product reviews"
+  ],
+  answer: "Legislation and rulings",
+  explanation: "✅ Tax laws and rulings change often and affect compliance strategies."
+},
+{
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What is one goal of tax accounting?",
+  options: [
+    "To increase liabilities",
+    "To minimize tax burdens ethically",
+    "To delay reporting",
+    "To avoid financial statements"
+  ],
+  answer: "To minimize tax burdens ethically",
+  explanation: "✅ Tax accounting balances legal obligations with strategic planning."
+},
+   {
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What could happen if tax filings are delayed?",
+  options: [
+    "Improved compliance",
+    "Penalties and legal issues",
+    "Lower liabilities",
+    "Higher deductions"
+  ],
+  answer: "Penalties and legal issues",
+  explanation: "✅ Late filings can result in fines and damage to reputation."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "How does strategic tax planning affect business finances?",
+  options: [
+    "It increases liabilities",
+    "It reduces tax burdens legally",
+    "It avoids all taxes",
+    "It delays compliance"
+  ],
+  answer: "It reduces tax burdens legally",
+  explanation: "✅ Planning helps businesses retain more earnings while staying compliant."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What risk arises from ignoring tax law updates?",
+  options: [
+    "Improved accuracy",
+    "Non-compliance",
+    "Faster reporting",
+    "Higher profits"
+  ],
+  answer: "Non-compliance",
+  explanation: "✅ Outdated practices can lead to violations and penalties."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "How does tax accounting contribute to ethical business practices?",
+  options: [
+    "By avoiding taxes",
+    "By complying with laws",
+    "By hiding expenses",
+    "By delaying filings"
+  ],
+  answer: "By complying with laws",
+  explanation: "✅ Ethical tax accounting ensures businesses meet obligations responsibly."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What impact does accurate tax computation have?",
+  options: [
+    "It increases audit risk",
+    "It ensures proper liability reporting",
+    "It reduces transparency",
+    "It delays filings"
+  ],
+  answer: "It ensures proper liability reporting",
+  explanation: "✅ Accurate calculations help avoid errors and maintain compliance."
+},
+    {
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why do managers use cost accounting data?",
+  options: [
+    "To design marketing campaigns",
+    "To price products and control expenses",
+    "To hire employees",
+    "To manage customer feedback"
+  ],
+  answer: "To price products and control expenses",
+  explanation: "✅ Cost data helps managers make informed decisions about pricing and cost control."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "What does cost behavior analysis help with?",
+  options: [
+    "Understanding how costs change",
+    "Tracking customer satisfaction",
+    "Improving branding",
+    "Reducing taxes"
+  ],
+  answer: "Understanding how costs change",
+  explanation: "✅ It helps managers predict how costs respond to changes in activity levels."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "Why is cost accounting essential in manufacturing?",
+  options: [
+    "To increase advertising",
+    "To track production costs accurately",
+    "To manage employee benefits",
+    "To forecast market trends"
+  ],
+  answer: "To track production costs accurately",
+  explanation: "✅ Manufacturing relies on precise cost tracking to manage resources and pricing."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "How does activity-based costing differ from other methods?",
+  options: [
+    "It ignores overhead",
+    "It assigns costs based on activities",
+    "It uses only direct labor",
+    "It focuses on external reporting"
+  ],
+  answer: "It assigns costs based on activities",
+  explanation: "✅ Activity-based costing links expenses to specific tasks or processes."
+},
+{
+  competency: "Understand",
+  topic: "Branches of Accounting",
+  question: "What is the role of overhead in cost accounting?",
+  options: [
+    "To increase profits",
+    "To represent indirect costs",
+    "To track direct labor",
+    "To reduce liabilities"
+  ],
+  answer: "To represent indirect costs",
+  explanation: "✅ Overhead includes costs that support production but aren’t directly tied to a unit."
+},
+    {
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What does cost accounting determine?",
+  options: [
+    "Market share",
+    "Actual cost of production",
+    "Employee satisfaction",
+    "Sales targets"
+  ],
+  answer: "Actual cost of production",
+  explanation: "✅ It calculates the true cost of producing goods or delivering services."
+},
+{
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Which costs are tracked in cost accounting?",
+  options: [
+    "Only direct costs",
+    "Direct and indirect costs",
+    "Only overhead",
+    "Only labor"
+  ],
+  answer: "Direct and indirect costs",
+  explanation: "✅ It includes materials, labor, and overhead expenses."
+},
+{
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Which costing method assigns costs to specific jobs?",
+  options: [
+    "Process costing",
+    "Job order costing",
+    "Activity-based costing",
+    "Standard costing"
+  ],
+  answer: "Job order costing",
+  explanation: "✅ Job order costing is used when products are customized or produced in batches."
+},
+{
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "What is process costing used for?",
+  options: [
+    "Unique products",
+    "Mass production",
+    "Service pricing",
+    "Tax reporting"
+  ],
+  answer: "Mass production",
+  explanation: "✅ Process costing is ideal for continuous, uniform production processes."
+},
+{
+  competency: "Remember",
+  topic: "Branches of Accounting",
+  question: "Is cost accounting limited to manufacturing?",
+  options: [
+    "Yes, only manufacturing",
+    "No, it's useful across industries",
+    "Only for government use",
+    "Only for retail"
+  ],
+  answer: "No, it's useful across industries",
+  explanation: "✅ While essential in manufacturing, cost accounting benefits many sectors."
+},
+   {
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "How can cost accounting improve efficiency?",
+  options: [
+    "By increasing advertising",
+    "By identifying cost-saving opportunities",
+    "By delaying production",
+    "By reducing product quality"
+  ],
+  answer: "By identifying cost-saving opportunities",
+  explanation: "✅ It highlights areas where resources can be used more effectively."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What happens if overhead costs are not properly allocated?",
+  options: [
+    "Products are priced accurately",
+    "Cost data becomes misleading",
+    "Efficiency improves",
+    "Compliance increases"
+  ],
+  answer: "Cost data becomes misleading",
+  explanation: "✅ Misallocated overhead can distort product costs and affect decisions."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "Why is cost behavior analysis valuable for managers?",
+  options: [
+    "It helps predict cost changes",
+    "It improves customer loyalty",
+    "It reduces tax filings",
+    "It increases advertising reach"
+  ],
+  answer: "It helps predict cost changes",
+  explanation: "✅ Understanding cost behavior supports better budgeting and planning."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "How does activity-based costing enhance decision-making?",
+  options: [
+    "By ignoring indirect costs",
+    "By linking costs to activities",
+    "By simplifying tax returns",
+    "By reducing transparency"
+  ],
+  answer: "By linking costs to activities",
+  explanation: "✅ It provides more accurate insights into what drives expenses."
+},
+{
+  competency: "Analyze",
+  topic: "Branches of Accounting",
+  question: "What could be the result of inaccurate cost data?",
+  options: [
+    "Better pricing decisions",
+    "Misguided strategies",
+    "Improved efficiency",
+    "Lower production costs"
+  ],
+  answer: "Misguided strategies",
+  explanation: "✅ Faulty data can lead to poor decisions in pricing, budgeting, and operations."
+} 
     ];
 
-// DIAGNOSTIC PATCH FROM HERE
-    <script>
-  let studentId, cnNo, lastName, firstName, quizData;
-  let selectedQuestions = [];
-  let currentQuestionIndex = 0;
-  let responses = {};
-  let answeredOrder = [];
-  let inactivityTimer;
+    window.addEventListener('DOMContentLoaded', async () => {
+      studentId = new URLSearchParams(window.location.search).get('student');
+      const studentData = JSON.parse(localStorage.getItem(`questionnaire-${studentId}`));
+      if (!studentData || !studentData.quizId) {
+        
+        document.getElementById('quizHeader').innerHTML = "<p>⚠️ Quiz data missing. Please restart.</p>";
+        return;
+      }
 
-  const questionBank = [
-    {
-      topic: "History of Accounting",
-      question: "What is the accounting equation?",
-      options: [
-        "Assets = Liabilities + Equity",
-        "Assets = Revenue - Expenses",
-        "Liabilities = Assets + Equity",
-        "Equity = Assets - Liabilities"
-      ],
-      answer: "Assets = Liabilities + Equity",
-      explanation: "This is the fundamental equation of accounting."
-    },
-    {
-      topic: "History of Accounting",
-      question: "Which financial statement shows a company's profitability?",
-      options: [
-        "Balance Sheet",
-        "Income Statement",
-        "Cash Flow Statement",
-        "Statement of Retained Earnings"
-      ],
-      answer: "Income Statement",
-      explanation: "The income statement shows revenues and expenses over a period."
-    },
-    {
-      topic: "History of Accounting",
-      question: "What does ROI stand for?",
-      options: [
-        "Return on Investment",
-        "Rate of Interest",
-        "Revenue Over Income",
-        "Ratio of Income"
-      ],
-      answer: "Return on Investment",
-      explanation: "ROI measures the gain or loss generated on an investment."
-    }
-  ];
+      ({ cnNo, lastName, firstName } = studentData);
 
-  // ✅ Insert this block right here
-  window.addEventListener("DOMContentLoaded", () => {
-    quizData = JSON.parse(localStorage.getItem("quizData")); // or however you're passing it
+      try {
+        const docSnap = await window.getDoc(window.doc(window.db, "quizzes", studentData.quizId));
+        if (!docSnap.exists()) {
+          alert("Quiz not found.");
+          return;
+        }
 
-    console.log("🔍 quizData received:", quizData);
-    console.log("📚 Available topics in questionBank:", [...new Set(questionBank.map(q => q.topic))]);
+        quizData = docSnap.data();
+        window.quizData = quizData;
 
-    if (!quizData || !quizData.topics || !Array.isArray(quizData.topics)) {
-      console.error("❌ quizData.topics is missing or not an array:", quizData?.topics);
-      document.getElementById('quizContainer').innerHTML = "<p>⚠️ Quiz data is incomplete or corrupted.</p>";
-      return;
-    }
+        if (!Array.isArray(quizData?.topics)) {
+          alert("Quiz data is corrupted or incomplete.");
+          return;
+        }
 
-    loadQuestions();
-    console.log("✅ selectedQuestions:", selectedQuestions);
+        renderHeader();
+        loadQuestions();
+        showQuestion(0);
+        startTimer();
+        document.getElementById('navigation').style.display = 'block';
+        document.getElementById('submitBtn').onclick = submitQuiz;
 
-    if (selectedQuestions.length === 0) {
-      document.getElementById('quizContainer').innerHTML = "<p>⚠️ No questions matched the selected topics.</p>";
-      return;
+        ['keydown', 'click', 'touchstart', 'mousemove'].forEach(event =>
+          document.addEventListener(event, () => {
+            logActivity(`🟢 ${event} detected`);
+            resetInactivityTimer();
+          })
+        );
+
+        resetInactivityTimer();
+      } catch (error) {
+        console.error("❌ Error loading quiz:", error);
+        alert("Failed to load quiz.");
+      }
+    });
+
+    function renderHeader() {
+      document.getElementById('quizHeader').innerHTML = `
+        <div class="quiz-title">${quizData.title}</div>
+        <div class="student-info">
+          <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
+          <div>Grade Level and Section: ${quizData.section}</div>
+        </div>
+        <div class="grade-block">
+          <p><strong>Test Type:</strong> ${quizData.type}</p>
+          <p><strong>Instructions:</strong></p>
+          <textarea readonly rows="4">${quizData.instructions}</textarea>
+        </div>
+        <div class="rubric-block">
+          <h3>Rubric</h3>
+          <div class="rubric-table">${quizData.rubricHTML}</div>
+        </div>
+      `;
     }
 
-    showQuestion(0);
-  });
-
-  function loadQuestions() {
-    selectedQuestions = questionBank
-      .filter(q => quizData.topics.includes(q.topic))
-      .sort(() => 0.5 - Math.random())
-      .slice(0, quizData.num);
-  }
+    function loadQuestions() {
+      selectedQuestions = questionBank
+        .filter(q => quizData.topics.includes(q.topic))
+        .sort(() => 0.5 - Math.random())
+        .slice(0, quizData.num);
+    }
 
     function showQuestion(index) {
       const q = selectedQuestions[index];
-      const container = document.getElementById('quizContainer');
-      container.innerHTML = `
+      document.getElementById('quizContainer').innerHTML = `
         <div class="question-block">
           <h3>${index + 1}. ${q.question}</h3>
           ${q.options.map((opt, i) => {
@@ -243,9 +3545,7 @@
 
     function recordAnswer(index, answer) {
       responses[index] = answer;
-      if (!answeredOrder.includes(index)) {
-        answeredOrder.push(index);
-      }
+      if (!answeredOrder.includes(index)) answeredOrder.push(index);
     }
 
     function nextQuestion() {
@@ -262,16 +3562,40 @@
       }
     }
 
-    function startTimer() {
-      let seconds = 0;
-      setInterval(() => {
-        seconds++;
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        document.getElementById('timer').textContent = `⏱️ Time Elapsed: ${mins}m ${secs}s`;
-      }, 1000);
-    }
+    //function startTimer() {
+    //timerInterval = setInterval(() => {
+    //  const now = Date.now();
+    // const remaining = Math.max(0, Math.floor((quizData.endTime - now) / 1000));
 
+    //if (remaining <= 0) {
+    //    clearInterval(timerInterval);
+    //    submitQuiz();
+    //  } else {
+    //    const min = Math.floor(remaining / 60);
+    //    const sec = remaining % 60;
+     //   document.getElementById('timer').textContent =
+     //     `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
+     // }
+   // }, 1000);
+  //}
+function startTimer(durationMinutes = 60) {
+  const endTime = Date.now() + durationMinutes * 60 * 1000;
+
+  timerInterval = setInterval(() => {
+    const now = Date.now();
+    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      submitQuiz();
+    } else {
+      const min = Math.floor(remaining / 60);
+      const sec = remaining % 60;
+      document.getElementById('timer').textContent =
+        `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
+    }
+  }, 1000);
+}
     function resetInactivityTimer() {
       clearTimeout(inactivityTimer);
       inactivityTimer = setTimeout(() => {
@@ -283,144 +3607,199 @@
       console.log(msg);
     }
 
-    function submitQuiz() {
-      let score = 0;
-      selectedQuestions.forEach((q, i) => {
-        if (responses[i] === q.answer) score++;
-      });
+function submitQuiz() {
+  // 🛡️ Prevent multiple submissions
+  if (document.getElementById('navigation').style.display === 'none') return;
 
-      const percentage = Math.round((score / selectedQuestions.length) * 100);
-      let grade = percentage >= 90 ? "A" :
-                  percentage >= 80 ? "B" :
-                  percentage >= 70 ? "C" :
-                  percentage >= 60 ? "D" : "F";
+  clearInterval(timerInterval);
 
-      const resultHTML = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <title>${quizData.title} - Completed Quiz</title>
-          <style>
-            body { font-family: 'Segoe UI', sans-serif; background: #fff; padding: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .question-block { background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #007acc; }
-            .correct { color: #28a745; }
-            .incorrect { color: #d9534f; }
-            .explanation { margin-top: 10px; font-style: italic; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h2>${quizData.title}</h2>
-            <p>Grade: ${grade} | Score: ${score}/${selectedQuestions.length} (${percentage}%)</p>
-            <p>Student: ${lastName}, ${firstName} | CN NO: ${cnNo}</p>
-            <p>Section: ${quizData.section} | Type: ${quizData.type}</p>
-            <textarea readonly rows="4">${quizData.instructions}</textarea>
-          </div>
-          ${answeredOrder.map(i => {
-            const q = selectedQuestions[i];
-            const userAnswer = responses[i];
-            const isCorrect = userAnswer === q.answer;
-            const label = ['A', 'B', 'C', 'D'];
-            const optionsHTML = q.options.map((opt, idx) =>
-              `<div style="margin-left:20px;">${label[idx]}. ${opt}</div>`).join('');
-            const feedback = isCorrect
-              ? `<div class="correct">Answered: ${label[q.options.indexOf(userAnswer)]} ✔</div>`
-              : `<div class="incorrect">Answered: ${label[q.options.indexOf(userAnswer)]} ❌<br>Correct: ${label[q.options.indexOf(q.answer)]}</div>`;
-            return `
-              <div class="question-block">
-                <h3>${i + 1}. ${q.question}</h3>
-                ${optionsHTML}
-                ${feedback}
-                <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}              </div>
-            `;
-          }).join('')}
+  let score = 0;
+  const answeredOrder = Object.keys(responses).map(i => parseInt(i));
+  answeredOrder.forEach(i => {
+    if (responses[i] === selectedQuestions[i].answer) score++;
+  });
 
-          <div class="print-btn">
-            <button onclick="window.print()">🖨️ Print This Page</button>
-          </div>
-        </body>
-        </html>
-      `;
+  const percentage = Math.round((score / selectedQuestions.length) * 100);
+  let grade = '';
+  if (percentage >= 95) grade = 'A';
+  else if (percentage >= 85) grade = 'P';
+  else if (percentage >= 75) grade = 'D';
+  else grade = 'IR';
 
-      document.open();
-      document.write(resultHTML);
-      document.close();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const params = new URLSearchParams(window.location.search);
-      studentId = params.get('student');
-      const studentData = JSON.parse(localStorage.getItem(`questionnaire-${studentId}`));
-
-      if (!studentData || !studentData.quizData) {
-        document.getElementById('quizHeader').innerHTML = "<p>⚠️ Quiz data missing. Please restart.</p>";
-        return;
-      }
-
-      ({ cnNo, lastName, firstName, quizData } = studentData);
-
-      document.getElementById('quizHeader').innerHTML = `
+  const timestamp = Date.now();
+  const readableTime = new Date(timestamp).toLocaleString('en-US', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+      
+  const resultHTML = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>${quizData.title} - Completed Quiz</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: #fff;
+          padding: 20px;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        #schoolLogo {
+          max-height: 100px;
+          margin-bottom: 10px;
+        }
+        .quiz-title {
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          color: #2c3e50;
+        }
+        .student-info {
+          display: flex;
+          justify-content: space-between;
+          font-weight: bold;
+          margin-bottom: 10px;
+        }
+        .grade-block {
+          text-align: right;
+          font-weight: bold;
+          font-size: 20px;
+          color: #007acc;
+        }
+        .score {
+          text-align: right;
+          font-size: 16px;
+          font-weight: bold;
+          color: #28a745;
+          margin-bottom: 10px;
+        }
+        .question-block {
+          background: #f9f9f9;
+          padding: 15px;
+          margin-bottom: 15px;
+          border-radius: 8px;
+          border-left: 5px solid #007acc;
+        }
+        .question-block h3 {
+          margin-top: 0;
+          color: #34495e;
+        }
+        .correct {
+          color: #28a745;
+        }
+        .incorrect {
+          color: #d9534f;
+        }
+        .explanation {
+          margin-top: 10px;
+          font-style: italic;
+        }
+        textarea {
+          width: 100%;
+          margin-top: 10px;
+        }
+        .print-btn {
+          text-align: center;
+          margin-top: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
+        <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
+        <span style="color:#000;">SY 2025–2026</span><br>
+        <span style="color:#000;">2nd Semester</span><br>
+        <span style="color:#000;">FABM 1</span>
         <div class="quiz-title">${quizData.title}</div>
-        <div class="student-info">
-          <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
-          <div>Grade Level and Section: ${quizData.section}</div>
-        </div>
-        <div class="grade-block">
-          <p><strong>Test Type:</strong> ${quizData.type}</p>
-          <p><strong>Instructions:</strong></p>
-          <textarea readonly rows="4">${quizData.instructions}</textarea>
-        </div>
-        <div class="rubric-block">
-          <h3>Rubric</h3>
-          <div class="rubric-table">${quizData.rubric}</div>
-        </div>
-      `;
+        <div class="grade-block">Grade: ${grade}</div>
+        <div class="score">Score: ${score} / ${selectedQuestions.length} = ${percentage}%</div>
+      </div>
 
-      loadQuestions();
-      showQuestion(0);
-      startTimer();
-      document.getElementById('navigation').style.display = 'block';
-      document.getElementById('submitBtn').onclick = submitQuiz;
+      <div class="student-info">
+        <div>CN NO: ${cnNo} — Name: ${lastName}, ${firstName}</div>
+        <div>Section: ${quizData.section}</div>
+      </div>
 
-      ['keydown', 'click', 'touchstart', 'mousemove'].forEach(event => {
-        document.addEventListener(event, () => {
-          logActivity(`🟢 ${event} detected`);
-          resetInactivityTimer();
-        });
-      });
+      <p><strong>Test Type:</strong> ${quizData.type}</p>
+      <p><strong>Instructions:</strong></p>
+      <textarea readonly rows="4">${quizData.instructions}</textarea>
+      ${quizData.rubric}
 
-      resetInactivityTimer();
+      ${answeredOrder.map(i => {
+        const q = selectedQuestions[i];
+        const userAnswer = responses[i];
+        const isCorrect = userAnswer === q.answer;
+        const letterLabels = ['A', 'B', 'C', 'D'];
+        const optionsHTML = q.options.map((opt, idx) => {
+          const label = letterLabels[idx] || String.fromCharCode(65 + idx);
+          return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
+        }).join('');
+        const feedback = isCorrect
+          ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
+          : `<div class="incorrect">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`;
+        return `
+          <div class="question-block">
+            <h3>${i + 1}. ${q.question}</h3>
+            ${optionsHTML}
+            ${feedback}
+            <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
+          </div>
+        `;
+      }).join('')}
+
+      <div class="print-btn">
+        <button onclick="window.print()">🖨️ Print This Page</button>
+      </div>
+    </body>
+    </html>
+  `;
+
+  document.open();
+  document.write(resultHTML);
+  document.close();
+  
+  const resultId = `result-${studentId}-${quizData.section}-${quizData.title}-${timestamp}`;
+  const resultRef = window.doc(window.db, "results", resultId);
+
+  const resultData = {
+    studentId,
+    cnNo,
+    lastName,
+    firstName,
+    quizId: quizData.id || `quiz-${quizData.timestamp || timestamp}`,
+    quizTitle: quizData.title,
+    section: quizData.section,
+    type: quizData.type,
+    score,
+    percentage,
+    grade,
+    timestamp,
+    submittedAt: readableTime, // ✅ Human-readable time
+    responses,
+    questions: selectedQuestions // ✅ Include full question context
+  };
+
+  window.setDoc(resultRef, resultData)
+    .then(() => {
+      alert(`✅ Quiz submitted!\nScore: ${score}/${selectedQuestions.length}\nGrade: ${grade}\nSubmitted at: ${readableTime}`);
+      console.log("✅ Result saved to Firestore");
+    })
+    .catch(error => {
+      console.error("❌ Error saving result:", error);
+      alert("There was an error saving your result. Please try again.");
     });
-  </script>
-</head>
-<body>
-  <div class="header">
-    <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
-    <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
-    <span style="color:#000;">SY 2025–2026</span><br>
-    <span style="color:#000;">2nd Semester</span><br>
-    <span style="color:#000;">FABM 1</span>
-  </div>
-
-  <div class="info-block" id="quizHeader"></div>
-
-  <div style="max-width:800px; margin:0 auto; text-align:left;">
-    <button id="submitBtn">✅ Submit Quiz</button>
-  </div>
-
-  <div id="warningMessage"></div>
-  <div id="timer"></div>
-
-  <div class="quiz-box" id="quizContainer"></div>
-
-  <div id="navigation" style="display:none;">
-    <button onclick="prevQuestion()">⬅ Previous</button>
-    <button onclick="nextQuestion()">Next ➡</button>
-  </div>
-
-  <div id="viewedCounter"></div>
-  <div id="result"></div>
+}
+</script>
 </body>
 </html>
