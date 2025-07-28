@@ -336,7 +336,7 @@
     function startTimer() {
     timerInterval = setInterval(() => {
       const now = Date.now();
-      const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+      const remaining = Math.max(0, Math.floor((quizData.endTime - now) / 1000));
 
       if (remaining <= 0) {
         clearInterval(timerInterval);
