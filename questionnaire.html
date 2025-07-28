@@ -400,23 +400,40 @@
       }
     }
 
-    function startTimer() {
-    timerInterval = setInterval(() => {
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((quizData.endTime - now) / 1000));
+    //function startTimer() {
+    //timerInterval = setInterval(() => {
+    //  const now = Date.now();
+    // const remaining = Math.max(0, Math.floor((quizData.endTime - now) / 1000));
 
-      if (remaining <= 0) {
-        clearInterval(timerInterval);
-        submitQuiz();
-      } else {
-        const min = Math.floor(remaining / 60);
-        const sec = remaining % 60;
-        document.getElementById('timer').textContent =
-          `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
-      }
-    }, 1000);
-  }
+    //if (remaining <= 0) {
+    //    clearInterval(timerInterval);
+    //    submitQuiz();
+    //  } else {
+    //    const min = Math.floor(remaining / 60);
+    //    const sec = remaining % 60;
+     //   document.getElementById('timer').textContent =
+     //     `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
+     // }
+   // }, 1000);
+  //}
+function startTimer(durationMinutes = 60) {
+  const endTime = Date.now() + durationMinutes * 60 * 1000;
 
+  timerInterval = setInterval(() => {
+    const now = Date.now();
+    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      submitQuiz();
+    } else {
+      const min = Math.floor(remaining / 60);
+      const sec = remaining % 60;
+      document.getElementById('timer').textContent =
+        `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
+    }
+  }, 1000);
+}
     function resetInactivityTimer() {
       clearTimeout(inactivityTimer);
       inactivityTimer = setTimeout(() => {
