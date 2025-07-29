@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Quiz Portal</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
+    header {
+      background: #007acc;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    #loginForm, #quizContainer {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      background: #007acc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #quizList {
+      margin-top: 20px;
+    }
+    .quiz-item {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+    .quiz-item:hover {
+      background: #f0f8ff;
+    }
+    #resultPanel {
+      margin-top: 20px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📚 Student Quiz Portal</h1>
+  </header>
+
+  <div id="loginForm">
+    <h2>Login</h2>
+    <input type="text" id="idNumber" placeholder="ID Number" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="handleLogin()">Login</button>
+  </div>
+
+  <div id="quizContainer" style="display:none;">
+    <h2>Welcome, <span id="studentName"></span></h2>
+    <div id="quizList"></div>
+    <div id="resultPanel"></div>
+  </div>
+
+  <!-- Firebase Configuration -->
+
+  <script type="module">
+    (async () => { //- ✅ Defines and immediately invokes an asynchronous function to allow use of await inside the module.
+/*📦 Dynamically imports the Firebase App module (version 10.0.0) and - 🧩 Extracts the initializeApp function, which is used to initialize your Firebase project.*/
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"); 
+ 
+/*📦 Dynamically imports the Firestore module and 
+- 🧩 Destructures and extracts Firestore functions
+- 📦 Dynamically imports the Firestore module.
+- 🧩 Destructures and extracts Firestore functions such as:
+     - getFirestore: Initializes Firestore instance.
+     - doc: Creates a reference to a specific document.
+     - setDoc: Writes data to a document.
+     - getDoc: Reads a single document.
+     - getDocs: Reads multiple documents from a query.
+     - collection: References a Firestore collection.
+     - query: Builds a query with conditions.
+     - where: Adds filtering conditions to a query*/
+      const { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js");
+
+/*- 🔐 Contains your Firebase project configuration.
+- 📡 These credentials connect your app to the correct Firebase project.
+- ⚠️ Note: While apiKey is safe to expose in client-side code, always secure sensitive operations with Firestore rules.*/
+      const firebaseConfig = {
+        apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+        authDomain: "jlvcpa-quizzes.firebaseapp.com",
+        projectId: "jlvcpa-quizzes",
+        storageBucket: "jlvcpa-quizzes.appspot.com",
+        messagingSenderId: "629158256557",
+        appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+      };
+
+      const app = initializeApp(firebaseConfig); //🚀 Initializes the Firebase app using the provided configuration
+      const db = getFirestore(app); //🔗 Connects to Firestore using the initialized Firebase app
+
+/*- 🌐 Exposes Firestore functions globally via the window object.
+  - 🛠️ This allows other scripts (like your login logic) to access Firestore methods without re-importing them.*/
+      window.db = db;
+      window.doc = doc;
+      window.setDoc = setDoc;
+      window.getDoc = getDoc;
+      window.getDocs = getDocs;
+      window.collection = collection;
+      window.query = query;
+      window.where = where;
+
+/* - 🧍 Declares a variable to hold the currently logged-in student’s data.
+   - 📌 This can be updated later during login and used across your app */
+         let currentStudent = null;
+
+// LOAD STUDENTS QUIZ RESULTS STARTS HERE
+  async function loadStudentResults(studentDocId) {
+
+  // Step 1: Get student record using actual document ID
+    const studentRef = doc(db, "students", studentDocId); // Create a reference to the student document
+    const studentSnap = await getDoc(studentRef); // Fetch the student document from Firestore
+
+  // Step 1.1: If student record doesn't exist, show error and exit
+    if (!studentSnap.exists()) {
+      console.error("Student not found"); // Log error to console
+      alert("Student record could not be retrieved."); // Show alert to user
+      return; // Exit the function
+    }
+
+    const studentData = studentSnap.data(); // Extract student data from the document
+
+  // Step 2: Construct studentId string used in result document IDs
+    const studentId = `${studentData.Idnumber}-${studentData.CN}-${studentData.LastName}-${studentData.FirstName}`; 
+  // Combine fields to match the format embedded in results document IDs
+
+  // Step 3: Fetch all results and filter by document ID
+    const resultsRef = collection(db, "results"); // Reference the results collection
+    const querySnapshot = await getDocs(resultsRef); // Fetch all documents in the results collection
+
+    const quizList = document.getElementById("quizList"); // Get the container where quizzes will be displayed
+    quizList.innerHTML = "<h3>📋 Taken Quizzes</h3>"; // Set initial heading
+
+    let matchCount = 0; // Initialize counter for matched quizzes
+
+    querySnapshot.forEach(docSnap => {
+      const docId = docSnap.id; // Get the document ID of each result
+
+    // Step 3.1: Match either devresult- or result- prefix that contains the studentId
+      if (docId.includes(`-${studentId}-`)) {
+        const data = docSnap.data(); // Extract quiz result data
+
+        const div = document.createElement("div"); // Create a new div for each quiz
+        div.className = "quiz-item"; // Apply styling class
+        div.textContent = `${data.quizTitle} (${data.percentage}%)`; // Display quiz title and score
+        div.onclick = () => showResult(data); // Attach click handler to show detailed result
+        quizList.appendChild(div); // Add the quiz item to the list
+        matchCount++; // Increment matched quiz counter
+      }
+    });
+
+  // Step 4: If no matching results were found, show a message
+    if (matchCount === 0) {
+      quizList.innerHTML += "<p>No quizzes found for this student.</p>"; // Display fallback message
+  }
+} // LOAD STUDENTS QUIZ RESULTS FUNCTION ENDS HERE
+
+// LOGIN HANDLER LOGIC STARTS HERE
+// Define the login handler function, triggered when the login button is clicked
+      window.handleLogin = async () => {
+  // Select the login button element
+        const loginBtn = document.querySelector("#loginForm button");
+
+  // Disable the button and show loading text to prevent multiple submissions
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Logging in...";
+
+  // Get the student's entered ID number from the input field, trim whitespace, and convert to lowercase
+        const idNumber = document.getElementById("idNumber").value.trim().toLowerCase();
+  // Get the student's entered password from the input field and trim whitespace
+        const password = document.getElementById("password").value.trim();
+  // Reference the "students" collection in Firestore
+        const studentsRef = collection(db, "students");
+  // Create a query in to find a student document where the Idnumber matches the input
+        const q = query(studentsRef, where("Idnumber", "==", idNumber));
+  // Execute the query and get matching documents
+        const querySnapshot = await getDocs(q);
+
+  // If no matching student is found, show an alert and reset the login button
+        if (querySnapshot.empty) {
+          alert("Student not found.");
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login";
+          return;
+      }
+
+  // Get the first matching student document
+        const studentDoc = querySnapshot.docs[0];
+  // Extract the student data (fields like FirstName, LastName, Password, etc.)
+        const studentData = studentDoc.data();
+  // Get a reference to the student document (used for updating password later)
+        const studentDocRef = studentDoc.ref;
+
+  // If the student has no password set yet, prompt them to create one
+        if (!studentData.Password) {
+          const newPassword = prompt("Set your permanent password:");
+
+    // If a password was entered
+          if (newPassword) {
+      // Check if the password is at least 4 characters long
+            if (newPassword.length < 4) {
+              alert("Password must be at least 4 characters.");
+              loginBtn.disabled = false;
+              loginBtn.textContent = "Login";
+              return;
+          }
+
+      // Save the new password to the student document in Firestore
+            await setDoc(studentDocRef, { ...studentData, Password: newPassword });
+      // Notify the user and ask them to log in again
+            alert("Password set successfully. Please login again.");
+          } else {
+      // If password setup was cancelled
+            alert("Password setup cancelled.");
+          }
+
+    // Reset the login button and exit
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login";
+          return;
+        }
+
+  // If the entered password doesn't match the stored password, show an error
+        if (studentData.Password !== password) {
+          alert("Incorrect password.");
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login";
+          return;
+        }
+
+  // Save the authenticated student data to a global variable
+        currentStudent = studentData;
+  // Store the student data in localStorage for session persistence
+        localStorage.setItem("currentStudent", JSON.stringify(studentData));
+  // Hide the login form and show the quiz container
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("quizContainer").style.display = "block";
+  // Display the student's full name on the page
+        document.getElementById("studentName").textContent = `${studentData.FirstName} ${studentData.LastName}`;
+  // Load the student's quiz results using their document ID
+        loadStudentResults(studentDoc.id);
+
+  // Re-enable the login button and reset its text
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Login";
+      };
+
+// DISPLAY STUDENT QUIZ RESULT STARTS HERE
+      function showResult(data) {
+        const resultPanel = document.getElementById("resultPanel"); // Get the HTML element where the result will be shown
+
+        const letterLabels = ['A', 'B', 'C', 'D']; // Define labels for multiple-choice options (A to D)
+
+        const questionsHTML = data.questions.map((q, i) => { // Loop through each question in the quiz
+          const userAnswer = data.responses[i]; // Get the student's answer for the current question
+          const isCorrect = userAnswer === q.answer; // Check if the student's answer matches the correct answer
+
+          const optionsHTML = q.options.map((opt, idx) => { // Loop through each option for the current question
+            const label = letterLabels[idx] || String.fromCharCode(65 + idx); // Use predefined label or fallback to ASCII character
+            return `<div style="margin-left:20px;">${label}. ${opt}</div>`; // Return formatted option with label and indentation
+          }).join(''); // Combine all option HTML strings into one
+
+          const feedback = isCorrect // Determine feedback based on correctness
+            ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>` // If correct, show check mark
+            : `<div class="incorrect">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ❌<br>Correct Answer: ${letterLabels[q.options.indexOf(q.answer)]}</div>`; // If incorrect, show cross and correct answer
+
+          return ` // Return full HTML block for the current question
+            <div class="question-block"> <!-- Container for individual question -->
+              <h3>${i + 1}. ${q.question}</h3> <!-- Display question number and text -->
+              ${optionsHTML} <!-- Insert options HTML -->
+              ${feedback} <!-- Insert feedback HTML -->
+              <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div> <!-- Show explanation or fallback -->
+            </div>
+          `;
+        }).join(''); // Combine all question blocks into one HTML string
+
+        resultPanel.innerHTML = ` // Set the inner HTML of the result panel
+          <h3>${data.quizTitle}</h3> <!-- Display quiz title -->
+          <p><strong>Grade:</strong> ${data.grade}</p> <!-- Display grade -->
+          <p><strong>Score:</strong> ${data.score} / ${data.questions.length} = ${data.percentage}%</p> <!-- Display score and percentage -->
+          <p><strong>Section:</strong> ${data.section}</p> <!-- Display section info -->
+          <p><strong>Test Type:</strong> ${data.type}</p> <!-- Display test type -->
+          ${questionsHTML} <!-- Insert all generated question blocks -->
+          <div class="print-btn"> <!-- Container for print button -->
+            <button onclick="window.print()">🖨️ Print This Page</button> <!-- Button to trigger print dialog -->
+          </div>
+        `;
+      } // DISPLAY STUDENT QUIZ RESULT ENDS HERE
+    })();
+  </script>
+</body>
+</html>
