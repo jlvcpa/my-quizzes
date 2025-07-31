@@ -76,6 +76,7 @@ async function generateQuiz() {
   const title = document.getElementById('quizTitle').value.trim();
   const section = document.getElementById('gradeSection').value;
   const type = document.getElementById('testType').value.trim();
+  const duration = parseInt(document.getElementById('timeLimit').value);
   const topics = Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value);
   const num = parseInt(document.getElementById('numQuestions').value);
   const instructions = document.getElementById('instructions').value.trim();
@@ -97,10 +98,10 @@ async function generateQuiz() {
   }
 
   const quizData = {
-    title, section, type, topics, num, instructions, rubricHTML, timestamp, endTime
+    title, section, type, duration, topics, num, instructions, rubricHTML, timestamp, endTime
   };
 
-  const id = `quiz-${timestamp}`;
+  const id = `devquiz-${timestamp}`;
   const quizRef = doc(db, "quizzes", id);
 
   try {
@@ -162,6 +163,9 @@ async function loadQuizzes() {
           const typeInput = document.getElementById('testType');
           if (typeInput) typeInput.value = data.type || '';
 
+          const durationInput = document.getElementById('timeLimit');
+          if (durationInput) durationInput.value = data.duration || '';
+
           const numInput = document.getElementById('numQuestions');
           if (numInput) numInput.value = data.num || '';
 
@@ -221,6 +225,7 @@ async function loadQuizzes() {
     title: document.getElementById('quizTitle').value.trim(),
     section: document.getElementById('gradeSection').value,
     type: document.getElementById('testType').value.trim(),
+    duration: parseInt(document.getElementById('timeLimit').value),
     topics: Array.from(document.getElementById('topicSelector').selectedOptions).map(opt => opt.value),
     num: parseInt(document.getElementById('numQuestions').value),
     instructions: document.getElementById('instructions').value.trim(),
@@ -479,8 +484,11 @@ window.loadQuizzes = loadQuizzes;
       <option value="Preparing Financial Statements">Preparing Financial Statements</option>
     </select>
 
-    <label for="endTime">Set Quiz End Time:</label>
+    <label for="endTime">Set Quiz Expiration:</label>
     <input type="datetime-local" id="endTime" required>
+
+    <label for="timeLimit">Duration</label>
+    <input type="number" id="timeLimit" min="1" max="180" value="45">
 
     <label for="topicSelector">Select Topics</label>
     <select id="topicSelector" multiple>
