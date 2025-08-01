@@ -195,7 +195,7 @@
     <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
     <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
     <span style="color:#000;">SY 2025–2026</span><br>
-    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">1st Semester</span><br>
     <span style="color:#000;">FABM 1</span>
   </div>
 
@@ -481,7 +481,27 @@ function showQuestion(index) {
       }
     }
 
-function startTimer(durationMinutes = 60) {
+/* function startTimer(durationMinutes = 60) {
+  const endTime = Date.now() + durationMinutes * 60 * 1000;
+
+  timerInterval = setInterval(() => {
+    const now = Date.now();
+    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      submitQuiz();
+    } else {
+      const min = Math.floor(remaining / 60);
+      const sec = remaining % 60;
+      document.getElementById('timer').textContent =
+        `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
+    }
+  }, 1000);
+} */
+
+    function startTimer() {
+  const durationMinutes = parseInt(quizData.duration) || 60; // fallback to 60 if undefined
   const endTime = Date.now() + durationMinutes * 60 * 1000;
 
   timerInterval = setInterval(() => {
@@ -499,6 +519,7 @@ function startTimer(durationMinutes = 60) {
     }
   }, 1000);
 }
+
     function resetInactivityTimer() {
       clearTimeout(inactivityTimer);
       inactivityTimer = setTimeout(() => {
@@ -510,14 +531,13 @@ function startTimer(durationMinutes = 60) {
       console.log(msg);
     }
 
-      function submitQuiz() {
-  // This prevents Firebase from receiving an invalid payload and gives you a clear log when the issue occurs.
-        if (!studentId || typeof studentId !== 'string') {
-          alert("❌ Cannot submit quiz: student ID is missing.");
-          console.error("🚫 studentId is undefined or invalid:", studentId);
-          return;
-         }
-  // 🛡️ Prevent multiple submissions
+function submitQuiz() {
+  if (!studentId || typeof studentId !== 'string') {
+    alert("❌ Cannot submit quiz: student ID is missing.");
+    console.error("🚫 studentId is undefined or invalid:", studentId);
+    return;
+  }
+
   if (document.getElementById('navigation').style.display === 'none') return;
 
   clearInterval(timerInterval);
@@ -546,7 +566,7 @@ function startTimer(durationMinutes = 60) {
     second: '2-digit',
     hour12: true
   });
-      
+
   const resultHTML = `
     <!DOCTYPE html>
     <html lang="en">
@@ -558,6 +578,7 @@ function startTimer(durationMinutes = 60) {
           font-family: 'Segoe UI', sans-serif;
           background: #fff;
           padding: 20px;
+          counter-reset: page;
         }
         .header {
           text-align: center;
@@ -592,6 +613,38 @@ function startTimer(durationMinutes = 60) {
           color: #28a745;
           margin-bottom: 10px;
         }
+        p {
+          margin: 2px 0;
+        }
+        .instruction-block {
+          margin: 2px 0;
+          white-space: pre-wrap;
+          background-color: #f5f5f5;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          padding: 10px;
+          font-size: 16px;
+          font-family: inherit;
+        }
+        .rubric-block table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 4px 0;
+        }
+        .rubric-block th,
+        .rubric-block td {
+          border: 1px solid #ccc;
+          padding: 8px;
+          text-align: left;
+        }
+        .rubric-block th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        .rubric-block {
+          margin: 4px 0;
+          font-size: 16px;
+        }
         .question-block {
           background: #f9f9f9;
           padding: 15px;
@@ -621,6 +674,48 @@ function startTimer(durationMinutes = 60) {
           text-align: center;
           margin-top: 20px;
         }
+
+        /* Print-specific styles */
+        @media print {
+          @page {
+            margin: 20mm;
+            size: auto;
+
+            @bottom-center {
+              content: "4Cs: Christ-centeredness, Competence, Character, Compassion.";
+              font-size: 12px;
+              font-family: 'Arial', sans-serif;
+            }
+         
+            @bottom-right {
+              content: "Page " counter(page) " of " counter(pages);
+              font-size: 12px;
+              font-family: 'Arial', sans-serif;
+            }
+          }
+
+            /* Prevent orphaned blocks during printing */
+            .question-block,
+            .choice-block,
+            .correct,
+            .incorrect,
+            .explanation {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    display: table; /* Optional: helps some browsers treat it as atomic */
+    width: 100%;
+            }
+            
+          body {
+            padding-bottom: 0 !important;
+          }
+
+          .footer-box,
+          .print-btn {
+            display: none !important;
+          }
+        }
+
       </style>
     </head>
     <body>
@@ -628,7 +723,7 @@ function startTimer(durationMinutes = 60) {
         <img id="schoolLogo" src="shs-adc.png" alt="School Logo"><br>
         <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
         <span style="color:#000;">SY 2025–2026</span><br>
-        <span style="color:#000;">2nd Semester</span><br>
+        <span style="color:#000;">1st Semester</span><br>
         <span style="color:#000;">FABM 1</span>
         <div class="quiz-title">${quizData.title}</div>
         <div class="grade-block">Grade: ${grade}</div>
@@ -640,10 +735,12 @@ function startTimer(durationMinutes = 60) {
         <div>Section: ${quizData.section}</div>
       </div>
 
+      <p><strong>Topic(s):</strong> ${quizData.topics}</p>
       <p><strong>Test Type:</strong> ${quizData.type}</p>
       <p><strong>Instructions:</strong></p>
-      <textarea readonly rows="4">${quizData.instructions}</textarea>
-      ${quizData.rubric}
+      <div class="instruction-block">${quizData.instructions}</div>
+      <p><strong>Rubric:</strong> This table outlines how your answers will be evaluated.</p>
+      <div class="rubric-block">${quizData.rubricHTML}</div>
 
       ${answeredOrder.map(i => {
         const q = selectedQuestions[i];
@@ -652,7 +749,16 @@ function startTimer(durationMinutes = 60) {
         const letterLabels = ['A', 'B', 'C', 'D'];
         const optionsHTML = q.options.map((opt, idx) => {
           const label = letterLabels[idx] || String.fromCharCode(65 + idx);
-          return `<div style="margin-left:20px;">${label}. ${opt}</div>`;
+          /*return `<div style="margin-left:20px;">${label}. ${opt}</div>`;*/
+          /*return `
+  <div class="question-block">
+    <h3>${i + 1}. ${q.question}</h3>
+    ${optionsHTML}
+    ${feedback}
+    <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
+  </div>
+`;*/
+        return `<div class="choice-block">${label}. ${opt}</div>`;
         }).join('');
         const feedback = isCorrect
           ? `<div class="correct">Answered: ${letterLabels[q.options.indexOf(userAnswer)]} ✔</div>`
@@ -678,27 +784,26 @@ function startTimer(durationMinutes = 60) {
   document.write(resultHTML);
   document.close();
 
-  /*const resultId = `devresult-${studentId}-${sanitize(quizData.section)}-${sanitize(quizData.title)}-${timestamp}`;*/
   const resultId = `devresult-${studentId}-${quizData.section}-${quizData.title}-${timestamp}`;
   const resultRef = window.doc(window.db, "results", resultId);
 
-const resultData = {
-  studentId,
-  cnNo,
-  lastName,
-  firstName,
-  quizId: quizData.id || `quiz-${quizData.timestamp || timestamp}`,
-  quizTitle: quizData.title,
-  section: quizData.section,
-  type: quizData.type,
-  score,
-  percentage,
-  grade,
-  timestamp,
-  submittedAt: readableTime, // ✅ Human-readable time
-  responses,
-  questions: selectedQuestions // ✅ Include full question context
-};
+  const resultData = {
+    studentId,
+    cnNo,
+    lastName,
+    firstName,
+    quizId: quizData.id || `quiz-${quizData.timestamp || timestamp}`,
+    quizTitle: quizData.title,
+    section: quizData.section,
+    type: quizData.type,
+    score,
+    percentage,
+    grade,
+    timestamp,
+    submittedAt: readableTime,
+    responses,
+    questions: selectedQuestions
+  };
 
   window.setDoc(resultRef, resultData)
     .then(() => {
@@ -710,6 +815,7 @@ const resultData = {
       alert("There was an error saving your result. Please try again.");
     });
 }
+
 </script>
 <!--<script src="questionnaire.js?v=2"></script> -->
 </body>
