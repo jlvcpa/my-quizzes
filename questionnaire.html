@@ -371,13 +371,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       `;
     }
 
-    /*function loadQuestions() {
-      selectedQuestions = questionBank
-        .filter(q => quizData.topics.includes(q.topic))
-        .sort(() => 0.5 - Math.random())
-        .slice(0, quizData.num);
-    }*/
-
     async function loadQuestions() {
         try {
     // Reference to the 'questions' collection
@@ -412,28 +405,7 @@ window.addEventListener('DOMContentLoaded', async () => {
           document.getElementById('quizHeader').innerHTML = "<p>⚠️ Failed to load questions. Please try again.</p>";
         }
       }
-    /* function showQuestion(index) {
-      const q = selectedQuestions[index];
-      document.getElementById('quizContainer').innerHTML = `
-        <div class="question-block">
-          <h3>${index + 1}. ${q.question}</h3>
-          ${q.options.map((opt, i) => {
-            const label = String.fromCharCode(65 + i);
-            return `
-              <div>
-                <label>
-                  <input type="radio" name="question${index}" value="${opt}"
-                    ${responses[index] === opt ? 'checked' : ''}
-                    onchange="recordAnswer(${index}, '${opt}')">
-                  ${label}. ${opt}
-                </label>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    } */
-
+ 
 function showQuestion(index) {
   const q = selectedQuestions?.[index];
   if (!q || !q.question || !Array.isArray(q.options)) {
@@ -480,25 +452,6 @@ function showQuestion(index) {
         showQuestion(currentQuestionIndex);
       }
     }
-
-/* function startTimer(durationMinutes = 60) {
-  const endTime = Date.now() + durationMinutes * 60 * 1000;
-
-  timerInterval = setInterval(() => {
-    const now = Date.now();
-    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-
-    if (remaining <= 0) {
-      clearInterval(timerInterval);
-      submitQuiz();
-    } else {
-      const min = Math.floor(remaining / 60);
-      const sec = remaining % 60;
-      document.getElementById('timer').textContent =
-        `⏱️ Time Remaining: ${min}:${sec.toString().padStart(2, '0')}`;
-    }
-  }, 1000);
-} */
 
     function startTimer() {
   const durationMinutes = parseInt(quizData.duration) || 60; // fallback to 60 if undefined
@@ -741,7 +694,6 @@ function submitQuiz() {
       <div class="instruction-block">${quizData.instructions}</div>
       <p><strong>Rubric:</strong> This table outlines how your answers will be evaluated.</p>
       <div class="rubric-block">${quizData.rubricHTML}</div>
-
       ${answeredOrder.map(i => {
         const q = selectedQuestions[i];
         const userAnswer = responses[i];
@@ -749,15 +701,6 @@ function submitQuiz() {
         const letterLabels = ['A', 'B', 'C', 'D'];
         const optionsHTML = q.options.map((opt, idx) => {
           const label = letterLabels[idx] || String.fromCharCode(65 + idx);
-          /*return `<div style="margin-left:20px;">${label}. ${opt}</div>`;*/
-          /*return `
-  <div class="question-block">
-    <h3>${i + 1}. ${q.question}</h3>
-    ${optionsHTML}
-    ${feedback}
-    <div class="explanation"><em>Explanation:</em> ${q.explanation || 'No explanation provided.'}</div>
-  </div>
-`;*/
         return `<div class="choice-block">${label}. ${opt}</div>`;
         }).join('');
         const feedback = isCorrect
@@ -772,21 +715,17 @@ function submitQuiz() {
           </div>
         `;
       }).join('')}
-
       <div class="print-btn">
         <button onclick="window.print()">🖨️ Print This Page</button>
       </div>
     </body>
     </html>
   `;
-
   document.open();
   document.write(resultHTML);
   document.close();
-
-  const resultId = `devresult-${studentId}-${quizData.section}-${quizData.title}-${timestamp}`;
+  const resultId = `result-${studentId}-${quizData.section}-${quizData.title}-${timestamp}`;
   const resultRef = window.doc(window.db, "results", resultId);
-
   const resultData = {
     studentId,
     cnNo,
@@ -815,8 +754,6 @@ function submitQuiz() {
       alert("There was an error saving your result. Please try again.");
     });
 }
-
 </script>
-<!--<script src="questionnaire.js?v=2"></script> -->
 </body>
 </html>
