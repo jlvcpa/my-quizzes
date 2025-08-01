@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +36,8 @@
         ? new Date(data.endTime).toLocaleString()
         : 'Not set';
 
-      document.getElementById('endTimeDisplay').textContent = `Deadline: ${endTimeText}`;
+  /*  document.getElementById('endTimeDisplay').textContent = `Deadline: ${endTimeText}`; */
+      document.getElementById('endTimeDisplay').textContent = `This quiz will expire on ${endTimeText}`;
       document.getElementById('topicsDisplay').textContent = data.topics.join(', ');
       document.getElementById('instructionsDisplay').value = data.instructions;
       document.getElementById('rubricDisplay').innerHTML = data.rubricHTML;
@@ -196,7 +198,7 @@ function clearStudentFields() {
   <div class="header">
     <span style="color:#007acc; font-size:20px;">Senior High School Department</span><br>
     <span style="color:#000;">SY 2025–2026</span><br>
-    <span style="color:#000;">2nd Semester</span><br>
+    <span style="color:#000;">1st Semester</span><br>
     <span style="color:#000;">FABM 1</span>
   </div>
 
