@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📤 QuestionBank Uploader</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 30px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h2 {
+      color: #007acc;
+      text-align: center;
+    }
+    #reminder {
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    textarea, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+    textarea {
+      height: 250px;
+      font-family: monospace;
+    }
+    button {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    #log {
+      margin-top: 20px;
+      font-size: 14px;
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h2>Paste QuestionBank and Upload to Firestore</h2>
+
+<label for="questionType"><strong>Choose Question Type:</strong></label>
+<select id="questionType" onchange="toggleReminder()">
+  <option value="multiple">Multiple Choice</option>
+  <option value="constructed">Constructed Response</option>
+</select>
+
+<div id="reminder-multiple" class="reminder-block">
+  <h3>📘 Multiple Choice Format</h3>
+  <code>
+  {
+    collection: "questionbank",
+    questions: [
+      {
+        competency: "Understand",
+        topic: "History of Accounting",
+        question: "Why was accounting important in ancient Egypt and Babylon?",
+        options: [
+          "To build pyramids",
+          "To manage agricultural production and state wealth",
+          "To trade with Rome",
+          "To perform religious rituals"
+        ],
+        answer: "To manage agricultural production and state wealth",
+        explanation: "✅ Accounting in ancient Egypt and Babylon was used to manage agricultural output and state resources, making it essential for economic control."
+      }
+    ]
+  }
+  </code>
+</div>
+
+<div id="reminder-constructed" class="reminder-block" style="display:none;">
+  <h3>🧾 Constructed-Response Format</h3>
+  <code>
+  {
+    collection: "questionbank",
+    questions: [
+      {
+        questionID: "Q001",
+        subject: "FABM 1",
+        testType: "Constructed-Response",
+        topic: "Transaction Analysis",
+        competency: "Analyze",
+        question: "The proprietor invested P50,000 to the business.",
+        answer: {
+          type: "Source of Asset",
+          effects: [
+            {
+              element: "asset",
+              account: "cash",
+              amount: "P50,000"
+            },
+            {
+              element: "equity",
+              account: "Owner Capital",
+              amount: "P50,000"
+            }
+          ]
+        }
+      }
+    ]
+  }
+  </code>
+</div>
+
+  <textarea id="questionData" placeholder="Paste your formatted questionBank object here..."></textarea>
+  <button onclick="uploadQuestions()">Upload to Firebase</button>
+  <div id="log"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, getDocs, limit, query } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+      authDomain: "jlvcpa-quizzes.firebaseapp.com",
+      projectId: "jlvcpa-quizzes",
+      storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+      messagingSenderId: "629158256557",
+      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function log(message) {
+      const logDiv = document.getElementById("log");
+      logDiv.textContent += message + "\n";
+    }
+
+    function generateUniqueID() {
+      return Math.random().toString(36).substring(2, 10);
+    }
+
+    async function checkCollectionExists(collectionName) {
+      const q = query(collection(db, collectionName), limit(1));
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
+    }
+
+    async function uploadQuestions() {
+      const rawData = document.getElementById("questionData").value.trim();
+      if (!rawData) {
+        alert("Please paste your questionBank object.");
+        return;
+      }
+
+      let parsed;
+      try {
+        parsed = eval("(" + rawData + ")");
+        if (!parsed.collection || !Array.isArray(parsed.questions)) {
+          throw new Error("Missing 'collection' or 'questions' array.");
+        }
+      } catch (error) {
+        log(`❌ Error parsing input: ${error.message}`);
+        return;
+      }
+
+      const collectionName = parsed.collection;
+      const questions = parsed.questions;
+
+      const exists = await checkCollectionExists(collectionName);
+      log(exists
+        ? `ℹ️ Collection "${collectionName}" exists. Questions will be updated or added.`
+        : `🆕 Collection "${collectionName}" does not exist. It will be created.`);
+
+      let successCount = 0;
+      for (const question of questions) {
+        try {
+          const uniqueID = generateUniqueID();
+          const questionID = `question-${uniqueID}`;
+          await setDoc(doc(collection(db, collectionName), questionID), {
+            ...question,
+            questionID
+          });
+          successCount++;
+          log(`✅ Uploaded ${questionID}: ${question.question}`);
+        } catch (error) {
+          log(`❌ Error uploading question: ${question.question}\n${error}`);
+        }
+      }
+
+      log(`🎉 Upload complete. ${successCount} questions uploaded.`);
+    }
+
+    window.uploadQuestions = uploadQuestions;
+  </script>
+</body>
+</html>
