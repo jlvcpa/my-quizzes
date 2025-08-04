@@ -101,31 +101,32 @@
     <h3>🧾 Constructed-Response Format</h3>
     <code>
     {
-      collection: "questionbank",
-      questions: [
-        {
-          questionID: "Q001",
-          subject: "FABM 1",
-          testType: "Constructed-Response",
-          topic: "Transaction Analysis",
-          competency: "Analyze",
-          question: "The proprietor invested P50,000 to the business.",
-          answer: {
-            type: "Source of Asset",
-            effects: [
-              {
-                element: "asset",
-                account: "cash",
-                amount: "P50,000"
-              },
-              {
-                element: "equity",
-                account: "Owner Capital",
-                amount: "P50,000"
-              }
-            ]
+  "collection": "questionbank",
+  "questions": [
+    {
+      "questionID": "constructedResponse-a1b2c3d4",
+      "subject": "FABM 1",
+      "testType": "Constructed-Response",
+      "topic": "Transaction Analysis",
+      "competency": "Analyze",
+      "question": "The owner invested P100,000 cash into the business.",
+      "answer": {
+        "type": "Source of Assets",
+        "effects": [
+          {
+            "element": "Increase in asset",
+            "account": "Cash",
+            "amount": "P100,000"
+          },
+          {
+            "element": "Increase in equity",
+            "account": "Owner's Capital",
+            "amount": "P100,000"
           }
-        }
+        ]
+      }
+    },
+
       ]
     }
     </code>
