@@ -45,15 +45,14 @@
       background-color: #005fa3;
     }
     .reminder-block {
-  background-color: #fff3cd;
-  border: 1px solid #ffeeba;
-  padding: 15px;
-  border-radius: 5px;
-  margin-top: 10px;
-  font-size: 15px;
-  line-height: 1.5;
-}
-
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
     #log {
       margin-top: 20px;
       font-size: 14px;
@@ -68,69 +67,69 @@
 <body>
   <h2>Paste QuestionBank and Upload to Firestore</h2>
 
-<label for="questionType"><strong>Choose Question Type:</strong></label>
-<select id="questionType" onchange="toggleReminder()">
-  <option value="multiple">Multiple Choice</option>
-  <option value="constructed">Constructed Response</option>
-</select>
+  <label for="questionType"><strong>Choose Question Type:</strong></label>
+  <select id="questionType" onchange="toggleReminder()">
+    <option value="multiple">Multiple Choice</option>
+    <option value="constructed">Constructed Response</option>
+  </select>
 
-<div id="reminder-multiple" class="reminder-block">
-  <h3>📘 Multiple Choice Format</h3>
-  <code>
-  {
-    collection: "questionbank",
-    questions: [
-      {
-        competency: "Understand",
-        topic: "History of Accounting",
-        question: "Why was accounting important in ancient Egypt and Babylon?",
-        options: [
-          "To build pyramids",
-          "To manage agricultural production and state wealth",
-          "To trade with Rome",
-          "To perform religious rituals"
-        ],
-        answer: "To manage agricultural production and state wealth",
-        explanation: "✅ Accounting in ancient Egypt and Babylon was used to manage agricultural output and state resources, making it essential for economic control."
-      }
-    ]
-  }
-  </code>
-</div>
-
-<div id="reminder-constructed" class="reminder-block" style="display:none;">
-  <h3>🧾 Constructed-Response Format</h3>
-  <code>
-  {
-    collection: "questionbank",
-    questions: [
-      {
-        questionID: "Q001",
-        subject: "FABM 1",
-        testType: "Constructed-Response",
-        topic: "Transaction Analysis",
-        competency: "Analyze",
-        question: "The proprietor invested P50,000 to the business.",
-        answer: {
-          type: "Source of Asset",
-          effects: [
-            {
-              element: "asset",
-              account: "cash",
-              amount: "P50,000"
-            },
-            {
-              element: "equity",
-              account: "Owner Capital",
-              amount: "P50,000"
-            }
-          ]
+  <div id="reminder-multiple" class="reminder-block">
+    <h3>📘 Multiple Choice Format</h3>
+    <code>
+    {
+      collection: "questionbank",
+      questions: [
+        {
+          competency: "Understand",
+          topic: "History of Accounting",
+          question: "Why was accounting important in ancient Egypt and Babylon?",
+          options: [
+            "To build pyramids",
+            "To manage agricultural production and state wealth",
+            "To trade with Rome",
+            "To perform religious rituals"
+          ],
+          answer: "To manage agricultural production and state wealth",
+          explanation: "✅ Accounting in ancient Egypt and Babylon was used to manage agricultural output and state resources, making it essential for economic control."
         }
-      }
-    ]
-  }
-  </code>
-</div>
+      ]
+    }
+    </code>
+  </div>
+
+  <div id="reminder-constructed" class="reminder-block" style="display:none;">
+    <h3>🧾 Constructed-Response Format</h3>
+    <code>
+    {
+      collection: "questionbank",
+      questions: [
+        {
+          questionID: "Q001",
+          subject: "FABM 1",
+          testType: "Constructed-Response",
+          topic: "Transaction Analysis",
+          competency: "Analyze",
+          question: "The proprietor invested P50,000 to the business.",
+          answer: {
+            type: "Source of Asset",
+            effects: [
+              {
+                element: "asset",
+                account: "cash",
+                amount: "P50,000"
+              },
+              {
+                element: "equity",
+                account: "Owner Capital",
+                amount: "P50,000"
+              }
+            ]
+          }
+        }
+      ]
+    }
+    </code>
+  </div>
 
   <textarea id="questionData" placeholder="Paste your formatted questionBank object here..."></textarea>
   <button onclick="uploadQuestions()">Upload to Firebase</button>
@@ -162,11 +161,11 @@
     }
 
     function toggleReminder() {
-  const type = document.getElementById("questionType").value;
-  document.getElementById("reminder-multiple").style.display = type === "multiple" ? "block" : "none";
-  document.getElementById("reminder-constructed").style.display = type === "constructed" ? "block" : "none";
-}
-    
+      const type = document.getElementById("questionType").value;
+      document.getElementById("reminder-multiple").style.display = type === "multiple" ? "block" : "none";
+      document.getElementById("reminder-constructed").style.display = type === "constructed" ? "block" : "none";
+    }
+
     async function checkCollectionExists(collectionName) {
       const q = query(collection(db, collectionName), limit(1));
       const snapshot = await getDocs(q);
@@ -219,6 +218,7 @@
     }
 
     window.uploadQuestions = uploadQuestions;
+    window.toggleReminder = toggleReminder;
   </script>
 </body>
 </html>
