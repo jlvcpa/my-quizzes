@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📤 CSV Upload to Firebase</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h2 {
+      color: #007acc;
+      text-align: center;
+    }
+    input, button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    #log {
+      margin-top: 20px;
+      font-size: 14px;
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h2>Upload CSV to Firestore</h2>
+  <input type="file" id="csvFile" accept=".csv" />
+  <input type="text" id="collectionName" placeholder="Enter Firestore collection name" />
+  <button onclick="uploadCSV()">Upload CSV</button>
+  <div id="log"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+    authDomain: "jlvcpa-quizzes.firebaseapp.com",
+    projectId: "jlvcpa-quizzes",
+    storageBucket: "jlvcpa-quizzes.firebasestorage.app",
+    messagingSenderId: "629158256557",
+    appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  function parseCSV(text) {
+    const rows = [];
+    const lines = text.trim().split("\n");
+    const headers = lines[0].split(",").map(h => h.trim());
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const values = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+        if (char === '"' && line[j + 1] === '"') {
+          current += '"';
+          j++;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      values.push(current.trim());
+
+      if (values.length !== headers.length) {
+        log(`⚠️ Skipping malformed row ${i + 1}: ${line}`);
+        continue;
+      }
+
+      const obj = {};
+      headers.forEach((header, idx) => {
+        obj[header] = values[idx];
+      });
+      rows.push(obj);
+    }
+
+    return { headers, rows };
+  }
+
+  async function uploadCSV() {
+    const fileInput = document.getElementById("csvFile");
+    const collectionName = document.getElementById("collectionName").value.trim();
+    const file = fileInput.files[0];
+
+    if (!file || !collectionName) {
+      alert("Please select a CSV file and enter a collection name.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+      const csvText = e.target.result;
+      const { headers, rows } = parseCSV(csvText);
+
+      const idField = headers[0]; // First column is used as document ID
+      let successCount = 0;
+
+      for (const row of rows) {
+        const docId = row[idField];
+        if (!docId) {
+          log(`⚠️ Missing ID in row: ${JSON.stringify(row)}`);
+          continue;
+        }
+
+        try {
+          await setDoc(doc(db, collectionName, docId), row);
+          successCount++;
+          log(`✅ Uploaded [${docId}]: ${JSON.stringify(row)}`);
+        } catch (error) {
+          log(`❌ Error uploading [${docId}]: ${JSON.stringify(row)}\n${error}`);
+        }
+      }
+
+      log(`🎉 Upload complete. ${successCount} rows uploaded.`);
+    };
+    reader.readAsText(file);
+  }
+
+  function log(message) {
+    const logDiv = document.getElementById("log");
+    logDiv.textContent += message + "\n";
+  }
+
+  window.uploadCSV = uploadCSV;
+</script>
+</body>
+</html>
