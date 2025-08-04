@@ -41,25 +41,28 @@
           const students = results.data;
 
           for (const student of students) {
-            const { IDnumber, CN, LastName, FirstName, Email, Section } = student;
+            const { Idnumber, CN, LastName, FirstName, Email, Section, subject, schoolYear, term } = student;
 
-            if (!IDnumber || !Section) {
+            if (!Idnumber || !Section) {
               console.warn("⚠️ Skipping incomplete row:", student);
               continue;
             }
 
             try {
-              await db.collection("students").doc(IDnumber).set({
-                IDnumber,
+              await db.collection("students").doc(Idnumber).set({
+                Idnumber,
                 CN,
                 LastName,
                 FirstName,
                 Email,
-                Section
+                Section,
+                subject,
+                schoolYear,
+                term
               });
-              console.log(`✅ Uploaded: ${IDnumber}`);
+              console.log(`✅ Uploaded: ${Idnumber}`);
             } catch (error) {
-              console.error(`❌ Failed to upload ${IDnumber}:`, error);
+              console.error(`❌ Failed to upload ${Idnumber}:`, error);
             }
           }
 
