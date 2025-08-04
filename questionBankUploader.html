@@ -151,6 +151,12 @@
       return Math.random().toString(36).substring(2, 10);
     }
 
+    function toggleReminder() {
+  const type = document.getElementById("questionType").value;
+  document.getElementById("reminder-multiple").style.display = type === "multiple" ? "block" : "none";
+  document.getElementById("reminder-constructed").style.display = type === "constructed" ? "block" : "none";
+}
+    
     async function checkCollectionExists(collectionName) {
       const q = query(collection(db, collectionName), limit(1));
       const snapshot = await getDocs(q);
