@@ -501,10 +501,10 @@
       const studentType = document.getElementById("typeSelect").value;
       const rows = document.querySelectorAll(".effectRow");
 
-      let score = 0;
+      let Score = 0;
 
       if (correctAnswers.some(ans => ans.type === studentType)) {
-        score += 1;
+        Score += 1;
       }
 
       const rowScores = Array.from(rows).map(row => {
@@ -525,23 +525,23 @@
           maxRowScore = Math.max(maxRowScore, rowScore);
         });
 
-        return { isDebitCredit, score: maxRowScore };
+        return { isDebitCredit, Score: maxRowScore };
       });
 
       const allDebit = rowScores.every(r => r.isDebitCredit === "Debit");
       const allCredit = rowScores.every(r => r.isDebitCredit === "Credit");
 
       if (allDebit || allCredit) {
-        score += Math.max(...rowScores.map(r => r.score));
+        Score += Math.max(...rowScores.map(r => r.Score));
       } else {
-        score += rowScores.reduce((sum, r) => sum + r.score, 0);
+        Score += rowScores.reduce((sum, r) => sum + r.Score, 0);
       }
 
-      return score;
+      return Score;
     }
 
-    function getLetterGrade(score, totalItems) {
-      const percentage = (score / totalItems) * 100;
+    function getLetterGrade(Score, totalItems) {
+      const percentage = (Score / totalItems) * 100;
       if (percentage >= 95) return "A";
       if (percentage >= 85) return "P";
       if (percentage >= 75) return "D";
@@ -573,37 +573,44 @@ const studentLastName = currentStudent.LastName;
 const studentFirstName = currentStudent.firstName;
 
       const selectedAnswer = assembleStudentAnswer();
-      const score = calculateScore();
+      const Score = calculateScore();
       const totalItems = 1 + (Array.isArray(currentQuestion.answer) ? currentQuestion.answer.length * 4 : 4);
-      const letterGrade = getLetterGrade(score, totalItems);
+      const LetterGrade = getLetterGrade(Score, totalItems);
 
       const recordId = `${studentCN}-${studentId}-${studentLastName}-${studentFirstName}`;
       const resultsId = `${title}_${attendanceId}_results`;
 
       const studentAnswerRecord = {
-        questionID: currentQuestion.questionID,
-        question: currentQuestion.question,
-        competency: currentQuestion.competency,
-        topic: currentQuestion.topic,
-        explanation: currentQuestion.explanation,
-        testType: currentQuestion.testType,
-        answerkey: currentQuestion.answer,
-        studentAnswers: selectedAnswer,
-        score,
-        letterGrade,
-        ReadablesubmittedAt: new Date().toISOString()
+        //questionID: currentQuestion.questionID,
+        //question: currentQuestion.question,
+        //Competency: currentQuestion.competency,
+        //Topic: currentQuestion.topic,
+        //explanation: currentQuestion.explanation,
+        //TestType: currentQuestion.testType,
+        //questionAnswers: currentQuestion.answer,
+        //studentAnswers: selectedAnswer,
+        //Score,
+        //LetterGrade,
+        //timesubmittedAt: new Date().toISOString()
       };
 
-      const resultRef = doc(db, "activityResults", resultsId);
+      const resultRef = doc(db, "results", resultsId);
       try {
         await setDoc(resultRef, {
           ...activityResultsData,
-          students: {
+          zStudents: {
             [recordId]: {
               ...activityResultsData.students?.[recordId],
-              answers: {
-                ...(activityResultsData.students?.[recordId]?.answers || {}),
-                [currentQuestionIndex]: studentAnswerRecord
+              Score,
+              LetterGrade,
+              timesubmittedAt: new Date().toISOString(),
+              questionAndAnswers: {
+                question: currentQuestion.question,
+                questionAnswers: currentQuestion.answer,
+                studentAnswers: selectedAnswer
+                //...(activityResultsData.students?.[recordId]?.answers || {}),
+                //[currentQuestionIndex]: studentAnswerRecord
+               
               }
             }
           }
