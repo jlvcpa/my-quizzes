@@ -74,18 +74,18 @@
   </section>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    // 🔍 Load studentAnswersLog from sessionStorage
-    const log = sessionStorage.getItem("studentAnswersLog");
+document.addEventListener("DOMContentLoaded", () => {
+  const log = localStorage.getItem("studentAnswersLog");
 
-    if (!log) {
-      console.error("❌ studentAnswersLog not found in sessionStorage");
-      document.body.innerHTML = "<h2>❌ No studentAnswersLog found. Please submit your activity first.</h2>";
-      return;
-    }
+  if (!log) {
+    console.error("❌ studentAnswersLog not found in localStorage");
+    document.body.innerHTML = "<h2>❌ No studentAnswersLog found. Please submit your activity first.</h2>";
+    return;
+  }
 
-    const studentAnswersLog = JSON.parse(log);
-    console.log("📥 Loaded studentAnswersLog:", studentAnswersLog);
+  const studentAnswersLog = JSON.parse(log);
+  console.log("📥 Loaded studentAnswersLog:", studentAnswersLog);
+
 
     // 🧠 Populate fields
     document.getElementById("schoolyear").textContent = studentAnswersLog["01_schoolyear"];
