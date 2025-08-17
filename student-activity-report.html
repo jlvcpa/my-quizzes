@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
       qaBlock.innerHTML = `
         <h3>${key.toUpperCase()}: ${entry["01_question"]}</h3>
         <p><strong>Score:</strong> ${entry["02_scoreThisQuestion"]}</p>
-        <pre>${JSON.stringify(entry["04_studentAnswers"], null, 2)}</pre>
+        <pre>${JSON.stringify(entry["04_studentAnswers"], ["03_questionAnswerKey" ], null, 2)}</pre>
       `;
       qaContainer.appendChild(qaBlock);
     });
