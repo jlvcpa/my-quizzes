@@ -107,18 +107,25 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("rubricHTML").innerHTML = studentAnswersLog["10_rubric"];
 
     // 🧠 Render Q&A
-    const qaContainer = document.getElementById("questionsAndAnswers");
-    const qaLog = studentAnswersLog["16_questionsAndAnswers"];
-    Object.entries(qaLog).forEach(([key, entry]) => {
-      const qaBlock = document.createElement("div");
-      qaBlock.innerHTML = `
-        <h3>${key.toUpperCase()}: ${entry["01_question"]}</h3>
-        <p><strong>Score:</strong> ${entry["02_scoreThisQuestion"]}</p>
-        <pre>${JSON.stringify({
-  studentAnswers: entry["04_studentAnswers"],
-  answerKey: entry["03_questionAnswerKey"]
-}, null, 2)}</pre>
+const qaContainer = document.getElementById("questionsAndAnswers");
+const qaLog = studentAnswersLog["16_questionsAndAnswers"];
 
+Object.entries(qaLog).forEach(([key, entry]) => {
+  const qaBlock = document.createElement("div");
+
+  // Filter only the desired fields from studentAnswers
+  const filteredStudentAnswers = (({ a_studentAnswerType, b_studentAnswerEffects }) => ({
+    a_studentAnswerType,
+    b_studentAnswerEffects
+  }))(entry["04_studentAnswers"]);
+
+  qaBlock.innerHTML = `
+    <h3>${key.toUpperCase()}: ${entry["01_question"]}</h3>
+    <p><strong>Score:</strong> ${entry["02_scoreThisQuestion"]}</p>
+    <pre>${JSON.stringify({
+      studentAnswers: filteredStudentAnswers,
+      answerKey: entry["03_questionAnswerKey"]
+    }, null, 2)}</pre>
       `;
       qaContainer.appendChild(qaBlock);
     });
