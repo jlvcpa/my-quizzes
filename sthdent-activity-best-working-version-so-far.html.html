@@ -218,29 +218,37 @@
       await submitStudentAnswer();
     });
 
-    prevBtn.addEventListener("click", () => {
-      if (selectedQuestionIndex > 0) {
-        selectedQuestionIndex--;
-        displayQuestion(selectedQuestionIndex);
-      }
-    });
+function displayQuestion(index) {
+  const q = shuffledQuestions[index];
+  const questionKey = `q${index + 1}`;
+  const logEntry = studentAnswersLog[questionKey];
 
-    function displayQuestion(index) {
-      const q = shuffledQuestions[index];
-      questionText.textContent = q?.question || "❓ Question text missing.";
-      prevBtn.disabled = index === 0;
-      nextBtn.disabled = index === shuffledQuestions.length - 1;
-      typeSelect.value = "";
-      document.getElementById("effectsRowsContainer").innerHTML = "";
+  // 📝 Display question text
+  questionText.textContent = q?.question || "❓ Question text missing.";
 
-      const storedAnswer = q?.studentAnswer;
-      if (storedAnswer?.type) typeSelect.value = storedAnswer.type;
-      if (Array.isArray(storedAnswer?.effects)) {
-        storedAnswer.effects.forEach(effect => {
-          addEffectRow(effect.element, effect.account, effect.isDebitCredit, effect.amount);
-        });
-      }
-    }
+  // 🔄 Enable/disable navigation buttons
+  prevBtn.disabled = index === 0;
+  nextBtn.disabled = index === shuffledQuestions.length - 1;
+
+  // 🔄 Reset UI
+  typeSelect.value = "";
+  document.getElementById("effectsRowsContainer").innerHTML = "";
+
+  // 🧠 Restore student answer from log
+  const studentAnswer = logEntry?.["04_studentAnswers"];
+  const rawAnswer = studentAnswer?.["c_rawStudentInput"];
+if (rawAnswer?.type) {
+  typeSelect.value = rawAnswer.type;
+}
+
+const rawEffects = rawAnswer?.effects;
+if (Array.isArray(rawEffects)) {
+  rawEffects.forEach(effect => {
+    addEffectRow(effect.element, effect.account, effect.isDebitCredit, effect.amount);
+  });
+}
+}
+
 
 nextBtn.addEventListener("click", () => {
   if (selectedQuestionIndex < shuffledQuestions.length - 1) {
@@ -300,7 +308,7 @@ const questionScore = totalPossibleCorrect;
       "02_scoreThisQuestion": `${score} out of ${questionScore}`,
       "03_questionAnswerKey": {
         "a_answerKeyType": correctAnswer.type,
-        "b_answerkeyEffects": correctAnswer.effects
+        "b_answerKeyEffects": correctAnswer.effects
       },
       "04_studentAnswers": {
         "a_studentAnswerType": markedType,
@@ -316,23 +324,36 @@ const questionScore = totalPossibleCorrect;
   }
 });
 
-    prevBtn.addEventListener("click", () => {
-      if (selectedQuestionIndex > 0) {
-        selectedQuestionIndex--;
-        displayQuestion(selectedQuestionIndex);
-      }
-    });
+prevBtn.addEventListener("click", () => {
+  if (selectedQuestionIndex > 0) {
+    // 🧠 Save current answer before navigating
+    const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
+    const correctAnswer = selectedQuestion.correctAnswer;
+    const selectedAnswer = assembleStudentAnswer(); // { type, effects }
 
-    const saved = studentAnswersLog[`q${selectedQuestionIndex + 1}`];
-    if (saved?.["04_studentAnswers"]?.c_rawStudentInput) {
-      const { type, effects } = saved["04_studentAnswers"].c_rawStudentInput;
-      typeSelect.value = type || "";
-      if (Array.isArray(effects)) {
-        effects.forEach(e => addEffectRow(e.element, e.account, e.isDebitCredit, e.amount));
+    const questionKey = `q${selectedQuestionIndex + 1}`;
+    studentAnswersLog[questionKey] = {
+      "01_question": selectedQuestion.question,
+      "02_scoreThisQuestion": "Not scored yet", // Or leave blank
+      "03_questionAnswerKey": {
+        "a_answerKeyType": correctAnswer?.type || null,
+        "b_answerKeyEffects": correctAnswer?.effects || null
+      },
+      "04_studentAnswers": {
+        "a_studentAnswerType": selectedAnswer.type,
+        "b_studentAnswerEffects": [], // Not marked yet
+        "c_rawStudentInput": selectedAnswer
       }
-    }
+    };
+
+    // 🔙 Navigate to previous question
+    selectedQuestionIndex--;
+    displayQuestion(selectedQuestionIndex);
   }
 });
+
+
+
 
     async function validateStudent(id, password, sectionCode) {
       const attendanceRef = doc(db, "attendance", sectionCode);
@@ -885,7 +906,7 @@ const questionScore = totalPossibleCorrect;
       "02_scoreThisQuestion": `${score} out of ${questionScore}`,
       "03_questionAnswerKey": {
         "a_answerKeyType": correctAnswer.type,
-        "b_answerkeyEffects": correctAnswer.effects
+        "b_answerKeyEffects": correctAnswer.effects
       },
       "04_studentAnswers": {
         "a_studentAnswerType": markedType,
