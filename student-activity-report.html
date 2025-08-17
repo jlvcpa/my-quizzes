@@ -75,12 +75,13 @@
 
   <script>
     // 🔍 Load studentAnswersLog from localStorage or sessionStorage
-    const studentAnswersLog = JSON.parse(localStorage.getItem("studentAnswersLog") || sessionStorage.getItem("studentAnswersLog"));
+    const studentAnswersLog = JSON.parse(sessionStorage.getItem("studentAnswersLog"));
 
-    if (!studentAnswersLog) {
-      document.body.innerHTML = "<h2>❌ No studentAnswersLog found. Please submit your activity first.</h2>";
-      throw new Error("Missing studentAnswersLog");
-    }
+if (!studentAnswersLog) {
+  document.body.innerHTML = "<h2>❌ No studentAnswersLog found. Please submit your activity first.</h2>";
+  throw new Error("Missing studentAnswersLog");
+}
+
 
     // 🧠 Populate fields
     document.getElementById("schoolyear").textContent = studentAnswersLog["01_schoolyear"];
