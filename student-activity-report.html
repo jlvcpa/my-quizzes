@@ -73,15 +73,19 @@
     <div id="questionsAndAnswers"></div>
   </section>
 
-  <script>
-    // 🔍 Load studentAnswersLog from localStorage or sessionStorage
-    const studentAnswersLog = JSON.parse(sessionStorage.getItem("studentAnswersLog"));
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // 🔍 Load studentAnswersLog from sessionStorage
+    const log = sessionStorage.getItem("studentAnswersLog");
 
-if (!studentAnswersLog) {
-  document.body.innerHTML = "<h2>❌ No studentAnswersLog found. Please submit your activity first.</h2>";
-  throw new Error("Missing studentAnswersLog");
-}
+    if (!log) {
+      console.error("❌ studentAnswersLog not found in sessionStorage");
+      document.body.innerHTML = "<h2>❌ No studentAnswersLog found. Please submit your activity first.</h2>";
+      return;
+    }
 
+    const studentAnswersLog = JSON.parse(log);
+    console.log("📥 Loaded studentAnswersLog:", studentAnswersLog);
 
     // 🧠 Populate fields
     document.getElementById("schoolyear").textContent = studentAnswersLog["01_schoolyear"];
@@ -114,7 +118,8 @@ if (!studentAnswersLog) {
       `;
       qaContainer.appendChild(qaBlock);
     });
-  </script>
+  });
+</script>
 
 </body>
 </html>
