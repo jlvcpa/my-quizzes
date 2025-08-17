@@ -225,6 +225,23 @@
       }
     });
 
+    function displayQuestion(index) {
+      const q = shuffledQuestions[index];
+      questionText.textContent = q?.question || "❓ Question text missing.";
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === shuffledQuestions.length - 1;
+      typeSelect.value = "";
+      document.getElementById("effectsRowsContainer").innerHTML = "";
+
+      const storedAnswer = q?.studentAnswer;
+      if (storedAnswer?.type) typeSelect.value = storedAnswer.type;
+      if (Array.isArray(storedAnswer?.effects)) {
+        storedAnswer.effects.forEach(effect => {
+          addEffectRow(effect.element, effect.account, effect.isDebitCredit, effect.amount);
+        });
+      }
+    }
+
 nextBtn.addEventListener("click", () => {
   if (selectedQuestionIndex < shuffledQuestions.length - 1) {
     const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
@@ -247,12 +264,36 @@ nextBtn.addEventListener("click", () => {
       return;
     }
 
-    // Mark and score
-    const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
-    const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
-    const { score, totalPossibleCorrect: questionScore } = calculateScoreForQuestion(selectedQuestion);
+// ✅ Mark per-field feedback
+const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
+const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
 
-    // Save to log using q1, q2, ...
+// ✅ Count all fields with ✅ marks
+const effectChecks = markedEffects.reduce((sum, entry, index) => {
+  const values = Object.values(entry.effect);
+  const checks = values.filter(v => v.includes("✅")).length;
+  console.log(`Effect ${index} ✅ count: ${checks}`);
+  return sum + checks;
+}, 0);
+
+const typeCheck = markedType.includes("✅") ? 1 : 0;
+console.log(`Type ✅ count: ${typeCheck}`);
+
+const score = effectChecks + typeCheck;
+
+// 📦 Count all fields total (regardless of correctness)
+const effectFieldCount = markedEffects.reduce((sum, entry) => {
+  return sum + Object.keys(entry.effect).length;
+}, 0);
+
+const totalPossibleCorrect = effectFieldCount + 1; // +1 for markedType
+console.log(`Total possible correct fields: ${totalPossibleCorrect}`);
+
+// Optional: assign to questionScore if needed
+const questionScore = totalPossibleCorrect;
+
+  // 🧠 Store answer for current question
+  // Save to log using q1, q2, ...
     const questionKey = `q${selectedQuestionIndex + 1}`;
     studentAnswersLog[questionKey] = {
       "01_question": selectedQuestion.question,
@@ -275,32 +316,12 @@ nextBtn.addEventListener("click", () => {
   }
 });
 
-    function displayQuestion(index) {
-      const q = shuffledQuestions[index];
-      questionText.textContent = q?.question || "❓ Question text missing.";
-      prevBtn.disabled = index === 0;
-      nextBtn.disabled = index === shuffledQuestions.length - 1;
-      typeSelect.value = "";
-      document.getElementById("effectsRowsContainer").innerHTML = "";
-
-      const storedAnswer = q?.studentAnswer;
-      if (storedAnswer?.type) typeSelect.value = storedAnswer.type;
-      if (Array.isArray(storedAnswer?.effects)) {
-        storedAnswer.effects.forEach(effect => {
-          addEffectRow(effect.element, effect.account, effect.isDebitCredit, effect.amount);
-        });
+    prevBtn.addEventListener("click", () => {
+      if (selectedQuestionIndex > 0) {
+        selectedQuestionIndex--;
+        displayQuestion(selectedQuestionIndex);
       }
-    }
-
-function clearConstructedResponsePanel() {
-  typeSelect.value = "";
-  document.getElementById("answerInput").value = "";
-}
-
-prevBtn.addEventListener("click", () => {
-  if (selectedQuestionIndex > 0) {
-    selectedQuestionIndex--;
-    displayQuestion(selectedQuestionIndex);
+    });
 
     const saved = studentAnswersLog[`q${selectedQuestionIndex + 1}`];
     if (saved?.["04_studentAnswers"]?.c_rawStudentInput) {
@@ -711,7 +732,7 @@ function markStudentAnswers(studentEffects, correctEffects) {
         return {
           score: scoreMatch(student, correct),
           correctIndex: cIndex,
-          correct: correct
+          correct
         };
       });
 
@@ -751,6 +772,7 @@ function markStudentAnswers(studentEffects, correctEffects) {
           isDebitCredit: `${student.isDebitCredit}✅`
         };
       } else {
+        console.log(`🔁 Duplicate match for "${student.account}" — skipping`);
         mark = {
           account: `${student.account}❌ (Duplicate ${type})`,
           amount: `${student.amount}❌ (Duplicate ${type})`,
@@ -759,12 +781,23 @@ function markStudentAnswers(studentEffects, correctEffects) {
         };
       }
 
-      result.push(mark);
+      result.push({ effect: mark });
     });
   });
 
+  // ✅ Count all effect fields with at least one ✅ mark
+  const totalChecks = result.reduce((sum, entry, index) => {
+    const values = Object.values(entry.effect);
+    const checks = values.filter(v => v.includes("✅")).length;
+    console.log(`Effect ${index} ✅ count: ${checks}`);
+    return sum + checks;
+  }, 0);
+
+  console.log(`✅ Total checkmarks across all effects: ${totalChecks}`);
+
   return result;
 }
+
 function calculateTotalScore(questions) {
   let totalScore = 0;
   let totalPossibleCorrect = 0;
@@ -816,16 +849,33 @@ async function submitStudentAnswer() {
     ? { effects: selectedQuestion.answer }
     : selectedQuestion.answer;
 
-  // ✅ Score the question
-  const { score, totalPossibleCorrect: questionScore } = calculateScoreForQuestion(selectedQuestion);
+// ✅ Mark per-field feedback
+const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
+const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
 
-  // ✅ Score the entire quiz
-  const { totalScore, totalPossibleCorrect: overallScore } = calculateTotalScore(shuffledQuestions);
-  const letterGrade = getLetterGrade(totalScore, overallScore);
+// ✅ Count all fields with ✅ marks
+const effectChecks = markedEffects.reduce((sum, entry, index) => {
+  const values = Object.values(entry.effect);
+  const checks = values.filter(v => v.includes("✅")).length;
+  console.log(`Effect ${index} ✅ count: ${checks}`);
+  return sum + checks;
+}, 0);
 
-  // ✅ Mark per-field feedback
-  const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
-  const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
+const typeCheck = markedType.includes("✅") ? 1 : 0;
+console.log(`Type ✅ count: ${typeCheck}`);
+
+const score = effectChecks + typeCheck;
+
+// 📦 Count all fields total (regardless of correctness)
+const effectFieldCount = markedEffects.reduce((sum, entry) => {
+  return sum + Object.keys(entry.effect).length;
+}, 0);
+
+const totalPossibleCorrect = effectFieldCount + 1; // +1 for markedType
+console.log(`Total possible correct fields: ${totalPossibleCorrect}`);
+
+// Optional: assign to questionScore if needed
+const questionScore = totalPossibleCorrect;
 
   // 🧠 Store answer for current question
   // Save to log using q1, q2, ...
@@ -843,7 +893,6 @@ async function submitStudentAnswer() {
         "c_rawStudentInput": selectedAnswer
       }
     };
-
 
    // 🧾 Final student record
   const collectionId = `results_${title}_${attendanceId}`;
@@ -869,8 +918,8 @@ async function submitStudentAnswer() {
       minute: "2-digit",
       hour12: true
       }),
-    "13_totalScore": totalScore,
-    "13_letterGrade": letterGrade, 
+    //"13_totalScore": totalScore,
+    //"13_letterGrade": letterGrade, 
     "14_timesubmittedAt": new Date().toISOString(),
     "15_questionsAndAnswers": studentAnswersLog
     };
