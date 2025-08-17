@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Challenge UI</title>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 1em;
+    background: #f9f9f9;
+    max-width: 600px;
+    margin: auto;
+  }
+
+  #loginPanel, #activityPanel {
+    background: white;
+    padding: 1em;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 1em;
+  }
+
+  #questionPanel {
+    margin-top: 1em;
+    padding: 1em;
+    background: #fffbe6;
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  #questionText {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 1em 0;
+  }
+
+  #timerDisplay {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #d00;
+    margin-bottom: 0.5em;
+  }
+
+  #answerPanel {
+    margin-top: 1em;
+  }
+
+  #submitBtn {
+    display: block;
+    margin: 0 auto 1em auto;
+    padding: 0.8em 1.5em;
+    font-size: 1em;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  #submitBtn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  .effectsGroup {
+    margin-top: 0.5em;
+  }
+
+  .effectRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-left: 1em;
+    margin-top: 0.3em;
+  }
+
+  .fieldGroup {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
+  .fieldGroup label {
+    margin-bottom: 0.2em;
+    font-size: 0.9em;
+  }
+
+  .fieldGroup select,
+  .fieldGroup input {
+    padding: 0.3em;
+    font-size: 0.95em;
+  }
+
+  .groupLabel {
+    font-weight: bold;
+    margin-bottom: 0.2em;
+    display: block;
+    font-size: 1em;
+  }
+
+  @media (min-width: 600px) {
+    .effectRow {
+      flex-wrap: nowrap;
+      gap: 1em;
+    }
+
+    .fieldGroup {
+      min-width: 150px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- 🔐 Login Panel -->
+<div id="loginPanel">
+  <h2>Student Login</h2>
+  <form id="studentLoginForm">
+    <input type="text" id="Idnumber" placeholder="Your ID number" required /><br><br>
+    <input type="text" id="sectionCode" placeholder="Section code" required /><br><br>
+    <input type="password" id="passWord" placeholder="Your password" required /><br><br>
+    <button type="submit">Login</button>
+  </form>
+</div>
+
+<!-- 🎯 activity Panel -->
+<div id="activityPanel" style="display:none;">
+  <button id="submitBtn" disabled>Submit Answer</button>
+
+  <div id="questionPanel">
+    <div id="timerDisplay">Remaining Time: -- seconds</div>
+    <div id="questionText">Waiting for an active activity...</div>
+    <button id="prevBtn">⬅️ Prev</button>
+    <button id="nextBtn">Next ➡️</button>
+  </div>
+
+  <div id="answerPanel" style="display: flex; flex-direction: column; gap: 1em;">
+  <!-- 📝 Constructed Response Panel -->
+  <div id="constructedResponsePanel">
+    <textarea id="answerInput" rows="10" style="width:100%;" placeholder="Type your answer here..." disabled></textarea>
+  </div>
+
+  <!-- 🧩 Structured Effects Panel -->
+  <div id="effectsPanel">
+    <div>
+      <label for="typeSelect">Type:</label>
+      <select id="typeSelect" disabled></select>
+    </div>
+
+    <div id="effectsRowsContainer">
+      <!-- Dynamic rows will be added here -->
+    </div>
+
+    <button id="addEffectRowBtn" disabled>➕ Add Effect Row</button>
+  </div>
+</div>
+</div>
+
+<!-- 🔧 Script -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, collection, getDocs, setDoc
+  } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+    authDomain: "jlvcpa-quizzes.firebaseapp.com",
+    projectId: "jlvcpa-quizzes",
+    storageBucket: "jlvcpa-quizzes.appspot.com",
+    messagingSenderId: "629158256557",
+    appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    
+    // 🔀 Shuffle utility
+    const shuffleArray = array =>
+      array.map(item => ({ item, sortKey: Math.random() }))
+           .sort((a, b) => a.sortKey - b.sortKey)
+           .map(({ item }) => item);
+
+    // 🧭 DOM elements
+    const loginForm = document.getElementById("studentLoginForm");
+    const loginStatus = document.createElement("p");
+    loginForm.appendChild(loginStatus);
+
+    const questionText = document.getElementById("questionText");
+    const activityPanel = document.getElementById("activityPanel");
+    const loginPanel = document.getElementById("loginPanel");
+
+    const answerInput = document.getElementById("answerInput");
+    const typeSelect = document.getElementById("typeSelect");
+    const addEffectRowBtn = document.getElementById("addEffectRowBtn");
+    const submitBtn = document.getElementById("submitBtn");
+
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    let shuffledQuestions = [];
+    let currentStudent = null;
+    let selectedQuestionIndex = 0;
+    let studentAnswersLog = {}; // key: questionIndex, value: { question, answerKey, studentAnswers }
+    let activityResultsData = {};
+    let title = "";
+    let attendanceId = "";
+
+    typeSelect.addEventListener("change", updateConstructedResponse);
+    addEffectRowBtn.addEventListener("click", () => addEffectRow());
+
+    submitBtn.addEventListener("click", async () => {
+      await submitStudentAnswer();
+    });
+
+function displayQuestion(index) {
+  const q = shuffledQuestions[index];
+  const questionKey = `q${index + 1}`;
+  const logEntry = studentAnswersLog[questionKey];
+
+  // 📝 Display question text
+  questionText.textContent = q?.question || "❓ Question text missing.";
+
+  // 🔄 Enable/disable navigation buttons
+  prevBtn.disabled = index === 0;
+  nextBtn.disabled = index === shuffledQuestions.length - 1;
+
+  // 🔄 Reset UI
+  typeSelect.value = "";
+  document.getElementById("effectsRowsContainer").innerHTML = "";
+
+  // 🧠 Restore student answer from log
+  const studentAnswer = logEntry?.["04_studentAnswers"];
+  const rawAnswer = studentAnswer?.["c_rawStudentInput"];
+if (rawAnswer?.type) {
+  typeSelect.value = rawAnswer.type;
+}
+
+const rawEffects = rawAnswer?.effects;
+if (Array.isArray(rawEffects)) {
+  rawEffects.forEach(effect => {
+    addEffectRow(effect.element, effect.account, effect.isDebitCredit, effect.amount);
+  });
+}
+}
+
+
+nextBtn.addEventListener("click", () => {
+  if (selectedQuestionIndex < shuffledQuestions.length - 1) {
+    const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
+    const correctAnswer = selectedQuestion.correctAnswer;
+    const selectedAnswer = assembleStudentAnswer(); // { type, effects }
+
+    // Defensive guard
+    if (!correctAnswer || typeof correctAnswer !== "object" || !correctAnswer.effects) {
+      console.warn(`⚠️ Missing or invalid correctAnswer for question index ${selectedQuestionIndex}`);
+      studentAnswersLog[`q${selectedQuestionIndex + 1}`] = {
+        "01_question": selectedQuestion.question,
+        "02_scoreThisQuestion": "Error: Missing correct answer data",
+        "03_questionAnswerKey": null,
+        "04_studentAnswers": {
+          "c_rawStudentInput": selectedAnswer
+        }
+      };
+      selectedQuestionIndex++;
+      displayQuestion(selectedQuestionIndex);
+      return;
+    }
+
+// ✅ Mark per-field feedback
+const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
+const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
+
+// ✅ Count all fields with ✅ marks
+const effectChecks = markedEffects.reduce((sum, entry, index) => {
+  const values = Object.values(entry.effect);
+  const checks = values.filter(v => v.includes("✅")).length;
+  console.log(`Effect ${index} ✅ count: ${checks}`);
+  return sum + checks;
+}, 0);
+
+const typeCheck = markedType.includes("✅") ? 1 : 0;
+console.log(`Type ✅ count: ${typeCheck}`);
+
+const score = effectChecks + typeCheck;
+
+// 📦 Count all fields total (regardless of correctness)
+const effectFieldCount = markedEffects.reduce((sum, entry) => {
+  return sum + Object.keys(entry.effect).length;
+}, 0);
+
+const totalPossibleCorrect = effectFieldCount + 1; // +1 for markedType
+console.log(`Total possible correct fields: ${totalPossibleCorrect}`);
+
+// Optional: assign to questionScore if needed
+const questionScore = totalPossibleCorrect;
+
+  // 🧠 Store answer for current question
+  // Save to log using q1, q2, ...
+    const questionKey = `q${selectedQuestionIndex + 1}`;
+    studentAnswersLog[questionKey] = {
+      "01_question": selectedQuestion.question,
+      "02_scoreThisQuestion": `${score} out of ${questionScore}`,
+      "03_questionAnswerKey": {
+        "a_answerKeyType": correctAnswer.type,
+        "b_answerKeyEffects": correctAnswer.effects
+      },
+      "04_studentAnswers": {
+        "a_studentAnswerType": markedType,
+        "b_studentAnswerEffects": markedEffects,
+        "c_rawStudentInput": selectedAnswer
+      }
+    };
+
+    // Move to next question
+    selectedQuestionIndex++;
+    displayQuestion(selectedQuestionIndex);
+    updateConstructedResponse()
+  }
+});
+
+prevBtn.addEventListener("click", () => {
+  if (selectedQuestionIndex > 0) {
+    // 🧠 Save current answer before navigating
+    const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
+    const correctAnswer = selectedQuestion.correctAnswer;
+    const selectedAnswer = assembleStudentAnswer(); // { type, effects }
+
+    const questionKey = `q${selectedQuestionIndex + 1}`;
+    studentAnswersLog[questionKey] = {
+      "01_question": selectedQuestion.question,
+      "02_scoreThisQuestion": "Not scored yet", // Or leave blank
+      "03_questionAnswerKey": {
+        "a_answerKeyType": correctAnswer?.type || null,
+        "b_answerKeyEffects": correctAnswer?.effects || null
+      },
+      "04_studentAnswers": {
+        "a_studentAnswerType": selectedAnswer.type,
+        "b_studentAnswerEffects": [], // Not marked yet
+        "c_rawStudentInput": selectedAnswer
+      }
+    };
+
+    // 🔙 Navigate to previous question
+    selectedQuestionIndex--;
+    displayQuestion(selectedQuestionIndex);
+  }
+});
+
+
+
+
+    async function validateStudent(id, password, sectionCode) {
+      const attendanceRef = doc(db, "attendance", sectionCode);
+      const attendanceSnap = await getDoc(attendanceRef);
+      if (!attendanceSnap.exists()) throw new Error("Attendance record not found.");
+
+      const student = attendanceSnap.data().students.find(s =>
+        s.Idnumber === id && s.passWord === password
+      );
+
+      if (!student) throw new Error("Invalid credentials.");
+      if (student.status === "A") throw new Error("Marked absent.");
+
+      attendanceId = sectionCode;
+      return student;
+    }
+
+    async function findActiveActivity(sectionCode) {
+      const activitiesSnap = await getDocs(collection(db, "activities"));
+      const now = Date.now();
+      let matchedActivity = null;
+
+      activitiesSnap.forEach(doc => {
+        const activityId = doc.id;
+        const data = doc.data();
+        if (activityId.endsWith(`_${sectionCode}`)) {
+          const endTimeMillis = new Date(data.endTime).getTime();
+          if (endTimeMillis > now) {
+            matchedActivity = data;
+            title = data.title || "Untitled";
+            activityResultsData = data;
+          }
+        }
+      });
+
+      if (!matchedActivity) throw new Error("No active activity found.");
+      return matchedActivity;
+    }
+
+    function startActivity(questions) {
+      if (!questions || questions.length === 0) {
+        questionText.textContent = "❌ No questions found in this activity.";
+        return;
+      }
+
+const enrichedQuestions = questions.map((q, i) => {
+  const answersArray = Array.isArray(q.answer) ? q.answer : [q.answer];
+  const correctAnswer = answersArray.find(a => a?.type && Array.isArray(a.effects));
+
+  if (!correctAnswer) {
+    console.warn(`⚠️ Question ${i} missing valid correctAnswer`, q);
+  }
+
+  return {
+    ...q,
+    correctAnswer: correctAnswer || null // fallback to null for safety
+  };
+});
+
+shuffledQuestions = shuffleArray(enrichedQuestions);
+
+      selectedQuestionIndex = 0;
+      displayQuestion(selectedQuestionIndex);
+
+      loginPanel.style.display = "none";
+      activityPanel.style.display = "block";
+
+      answerInput.disabled = false;
+      typeSelect.disabled = false;
+      addEffectRowBtn.disabled = false;
+      submitBtn.disabled = false;
+
+      setupAutoSubmit(new Date(activityResultsData.endTime).getTime());
+    }
+
+    function extractAndRenderMetadata(questions) {
+      const types = new Set();
+      const elements = new Set();
+      const accounts = new Set();
+      const isDebitCredit = new Set();
+
+      questions.forEach(q => {
+        const answersArray = Array.isArray(q.answer) ? q.answer : [q.answer];
+        answersArray.forEach(a => {
+          if (a?.type) types.add(a.type);
+          if (a?.account) accounts.add(a.account);
+          if (a?.element) elements.add(a.element);
+          if (a?.isDebitCredit) isDebitCredit.add(a.isDebitCredit);
+          if (Array.isArray(a.effects)) {
+            a.effects.forEach(effect => {
+              if (effect?.element) elements.add(effect.element);
+              if (effect?.account) accounts.add(effect.account);
+              if (effect?.isDebitCredit) isDebitCredit.add(effect.isDebitCredit);
+            });
+          }
+        });
+      });
+
+      populateSelect("typeSelect", [...types].sort());
+      window.availableElements = [...elements].sort();
+      window.availableAccounts = [...accounts].sort();
+      window.availableisDebitCredit = [...isDebitCredit].sort();
+    }
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("Idnumber").value.trim();
+      const sectionCode = document.getElementById("sectionCode").value.trim();
+      const password = document.getElementById("passWord").value.trim();
+
+      loginStatus.textContent = "🔍 Validating...";
+      try {
+        currentStudent = await validateStudent(id, password, sectionCode);
+        loginStatus.textContent = "✅ Login successful. Checking for activity...";
+        const activity = await findActiveActivity(sectionCode);
+        const questions = activity.questions || [];
+        startActivity(questions);
+        extractAndRenderMetadata(questions);
+      } catch (err) {
+        console.error("🔥 Error:", err.message);
+        loginStatus.textContent = `🚫 ${err.message}`;
+      }
+    });
+
+    function populateSelect(selectId, options, selectedValue = "") {
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "Select from options";
+      defaultOption.disabled = true;
+      defaultOption.selected = selectedValue === "";
+      select.appendChild(defaultOption);
+
+      options.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt;
+        option.textContent = opt;
+        if (opt === selectedValue) option.selected = true;
+        select.appendChild(option);
+      });
+    }
+
+function addEffectRow(elementValue = "", accountValue = "", isDebitCreditValue = "", amountValue = "") {
+  const container = document.getElementById("effectsRowsContainer");
+  const row = document.createElement("div");
+  row.className = "effectRow";
+  row.style.display = "flex";
+  row.style.gap = "0.02em";
+  row.style.marginTop = "0.05em";
+  row.style.alignItems = "center";
+
+  row.innerHTML = `
+    <label>Effect:</label>
+    <select class="elementSelect">
+      <option value="" disabled ${elementValue === "" ? "selected" : ""}>Increase or Decrease</option>
+      ${window.availableElements.map(e => `<option value="${e}" ${e === elementValue ? "selected" : ""}>${e}</option>`).join("")}
+    </select>
+    <select class="accountSelect">
+      <option value="" disabled ${accountValue === "" ? "selected" : ""}>Which account?</option>
+      ${window.availableAccounts.map(a => `<option value="${a}" ${a === accountValue ? "selected" : ""}>${a}</option>`).join("")}
+    </select>
+    <select class="isDebitCreditSelect" style="width: 8em;">
+      <option value="" disabled ${isDebitCreditValue === "" ? "selected" : ""}>Debit or Credit</option>
+      ${window.availableisDebitCredit.map(dc => `<option value="${dc}" ${dc === isDebitCreditValue ? "selected" : ""}>${dc}</option>`).join("")}
+    </select>
+    <input
+      type="text"
+      class="amountInput"
+      placeholder="0.00"
+      value="${amountValue}"
+      style="width: 8em; min-width: 3em; padding: 0.02em 0.02em; font-size: 0.9em; text-align: right;"
+    />
+    <div class="effectRowMenu" style="position: relative;">
+      <button class="menuButton" style="margin-left: 0.5em;">⋮</button>
+      <ul class="menuDropdown" style="display: none; position: absolute; right: 0; background: white; border: 1px solid #ccc; list-style: none; padding: 0.2em; margin: 0; z-index: 10;">
+        <li class="deleteEffectRow" style="cursor: pointer; padding: 0.2em 0.5em;">🗑️ Delete</li>
+      </ul>
+    </div>
+  `;
+
+  // Add event listeners for dropdown toggle and delete
+  const menuButton = row.querySelector(".menuButton");
+  const dropdown = row.querySelector(".menuDropdown");
+  const deleteOption = row.querySelector(".deleteEffectRow");
+
+  menuButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+  });
+
+  deleteOption.addEventListener("click", () => {
+    container.removeChild(row);
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", () => {
+    dropdown.style.display = "none";
+  });
+
+  container.appendChild(row);
+
+      row.querySelector(".elementSelect").addEventListener("change", updateConstructedResponse);
+      row.querySelector(".accountSelect").addEventListener("change", updateConstructedResponse);
+      row.querySelector(".isDebitCreditSelect").addEventListener("change", updateConstructedResponse);
+      row.querySelector(".amountInput").addEventListener("blur", updateConstructedResponse);
+    }
+
+    function updateConstructedResponse() {
+      const formatted = formatStructuredAnswerForStudent();
+      document.getElementById("answerInput").value = formatted;
+    }
+
+    function formatStructuredAnswerForStudent() {
+      const type = document.getElementById("typeSelect").value;
+      const rows = document.querySelectorAll(".effectRow");
+
+      const effects = Array.from(rows).map(row => {
+        const element = row.querySelector(".elementSelect").value;
+        const account = row.querySelector(".accountSelect").value;
+        const isDebitCredit = row.querySelector(".isDebitCreditSelect").value;
+        const amount = row.querySelector(".amountInput").value;
+        return `Effect: ${element}, ${account}, ${isDebitCredit}, ${formatAmount(amount)}`;
+      });
+
+      const debits = [];
+      const credits = [];
+
+      rows.forEach(row => {
+        const account = row.querySelector(".accountSelect").value;
+        const isDebitCredit = row.querySelector(".isDebitCreditSelect").value;
+        const amount = formatAmount(row.querySelector(".amountInput").value);
+
+        if (isDebitCredit === "Debit") {
+          debits.push({ account, amount });
+        } else {
+          credits.push({ account, amount });
+        }
+      });
+
+      const debitLines = debits.map(entry => {
+        const drIndent = " ".repeat(5);
+        const spacing = " ".repeat(30);
+        return `${drIndent}${entry.account}${spacing}${entry.amount}`;
+      });
+
+      const longestDebitLine = debitLines.reduce((max, line) => line.length > max.length ? line : max, "");
+      const creditAmountColumn = longestDebitLine.length;
+
+      const creditLines = credits.map(entry => {
+        const crIndent = " ".repeat(10);
+        const spaceToAmount = " ".repeat(Math.max(0, creditAmountColumn - (crIndent.length + entry.account.length)));
+        return `${crIndent}${entry.account}${spaceToAmount}${entry.amount}`;
+      });
+
+      const memoIndent = " ".repeat(13);
+      const memoText = shuffledQuestions[selectedQuestionIndex]?.question || "Memo not available";
+      const memoLine = `${memoIndent}${memoText}`;
+
+      const journalBlock = [...debitLines, ...creditLines, memoLine].join("\n");
+
+      return `Type: ${type}\n${effects.join("\n")}\n\nJournal Entry:\n${journalBlock}`;
+    }
+
+function formatAmount(value) {
+  // Remove currency symbols and other non-numeric characters
+  const cleaned = value.replace(/[^\d.,-]/g, "");
+  const num = parseFloat(cleaned.replace(/,/g, ""));
+  if (isNaN(num)) return "0.00";
+  return num.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+
+
+    function assembleStudentAnswer() {
+      const type = document.getElementById("typeSelect").value;
+      const rows = document.querySelectorAll(".effectRow");
+
+      const effects = Array.from(rows).map(row => ({
+        element: row.querySelector(".elementSelect").value,
+        account: row.querySelector(".accountSelect").value,
+        isDebitCredit: row.querySelector(".isDebitCreditSelect").value,
+        amount: formatAmount(row.querySelector(".amountInput").value)
+      }));
+
+      return { type, effects };
+    }
+
+
+
+function calculateScoreForQuestion(question) {
+  // 🛡️ Defensive guard for malformed question or missing answer
+  if (!question || !question.answer) {
+    console.warn("⚠️ Invalid or missing 'answer' field in question:", question);
+    return { score: 0, totalPossibleCorrect: 0 };
+  }
+
+  const correctAnswers = Array.isArray(question.answer) ? question.answer : [question.answer];
+  const studentType = document.getElementById("typeSelect")?.value || "";
+  const rows = document.querySelectorAll(".effectRow");
+
+  let score = 0;
+  let totalPossibleCorrect = 1; // type match is one point
+
+  // ✅ Type match scoring
+  if (correctAnswers.some(ans => ans?.type === studentType)) {
+    score += 1;
+  }
+
+  // 🧠 Group correct answers by isDebitCredit
+  const correctGroups = {
+    Debit: correctAnswers.filter(ans => ans?.isDebitCredit === "Debit"),
+    Credit: correctAnswers.filter(ans => ans?.isDebitCredit === "Credit")
+  };
+
+  // 🧠 Group student rows by isDebitCredit
+  const studentGroups = {
+    Debit: [],
+    Credit: []
+  };
+
+  Array.from(rows).forEach(row => {
+    const element = row.querySelector(".elementSelect")?.value || "";
+    const account = row.querySelector(".accountSelect")?.value || "";
+    const isDebitCredit = row.querySelector(".isDebitCreditSelect")?.value || "";
+    const amount = row.querySelector(".amountInput")?.value || "";
+
+    if (isDebitCredit === "Debit" || isDebitCredit === "Credit") {
+      studentGroups[isDebitCredit].push({ element, account, isDebitCredit, amount });
+    }
+  });
+
+  // 🧮 Match logic per group
+  ["Debit", "Credit"].forEach(type => {
+    const studentRows = studentGroups[type];
+    const correctRows = correctGroups[type];
+    const usedCorrectIndexes = new Set();
+
+    const scoredRows = studentRows.map((student, sIndex) => {
+      const scores = correctRows.map((correct, cIndex) => ({
+        score: scoreMatch(student, correct),
+        correctIndex: cIndex
+      }));
+      const best = scores.sort((a, b) => b.score - a.score)[0];
+      return {
+        score: best?.score || 0,
+        correctIndex: best?.correctIndex,
+        studentIndex: sIndex
+      };
+    });
+
+    // Sort by score descending
+    scoredRows.sort((a, b) => b.score - a.score);
+
+    // Only best match per group counts
+    if (scoredRows.length > 0) {
+      const { score: bestScore, correctIndex } = scoredRows[0];
+      if (!usedCorrectIndexes.has(correctIndex)) {
+        score += bestScore;
+        usedCorrectIndexes.add(correctIndex);
+      }
+    }
+
+    totalPossibleCorrect += correctRows.length * 4;
+  });
+
+  return { score, totalPossibleCorrect };
+}
+
+
+function scoreMatch(student, correct) {
+  if (!correct) return 0;
+  let score = 0;
+  if (student.account === correct.account) score++;
+  if (student.element === correct.element) score++;
+  if (student.isDebitCredit === correct.isDebitCredit) score++;
+  if (formatAmount(student.amount) === formatAmount(correct.amount)) score++;
+  return score;
+}
+
+
+function markStudentAnswers(studentEffects, correctEffects) {
+  const result = [];
+  const types = [
+    "Increase in asset", "Increase in liability", "Increase in equity",
+    "Increase in income", "Increase in expense", "Decrease in asset",
+    "Decrease in liability", "Decrease in equity", "Decrease in income",
+    "Decrease in expense"
+  ];
+
+  types.forEach(type => {
+    const studentGroup = studentEffects.filter(e => e.element === type);
+    const correctGroup = correctEffects.filter(e => e.element === type);
+    const usedCorrectIndexes = new Set();
+
+    console.log(`🔍 Type "${type}" — ${studentGroup.length} student entries, ${correctGroup.length} correct entries`);
+
+    const scored = studentGroup.map((student, sIndex) => {
+      const scores = correctGroup.map((correct, cIndex) => {
+        if (!correct) return { score: 0, correctIndex: cIndex, correct: null };
+        return {
+          score: scoreMatch(student, correct),
+          correctIndex: cIndex,
+          correct
+        };
+      });
+
+      const best = scores.sort((a, b) => b.score - a.score)[0];
+      return {
+        student,
+        score: best?.score || 0,
+        correctIndex: best?.correctIndex,
+        correct: best?.correct,
+        studentIndex: sIndex
+      };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+
+    scored.forEach((entry, i) => {
+      const { student, correct, score, correctIndex } = entry;
+      const alreadyUsed = usedCorrectIndexes.has(correctIndex);
+
+      let mark = {};
+      const effectIndex = result.length;
+
+      if (!correct) {
+        console.warn(`⚠️ [${effectIndex}] No match for "${student.account}"`);
+        mark = {
+          account: `${student.account}❌ (No match)`,
+          amount: `${student.amount}❌ (No match)`,
+          element: `${student.element}❌ (No match)`,
+          isDebitCredit: `${student.isDebitCredit}❌ (No match)`
+        };
+      } else if (i === 0 && !alreadyUsed) {
+        usedCorrectIndexes.add(correctIndex);
+        mark = {
+          account: `${student.account}${student.account === correct.account ? '✅' : '❌'}`,
+          amount: `${student.amount}${formatAmount(student.amount) === formatAmount(correct.amount) ? '✅' : '❌'}`,
+          element: `${student.element}${student.element === correct.element ? '✅' : '❌'}`,
+          isDebitCredit: `${student.isDebitCredit}✅`
+        };
+        console.log(`✅ [${effectIndex}] Marked "${student.account}" as correct`);
+      } else {
+        console.log(`🔁 [${effectIndex}] Duplicate match for "${student.account}" — skipping`);
+        mark = {
+          account: `${student.account}❌ (Duplicate ${type})`,
+          amount: `${student.amount}❌ (Duplicate ${type})`,
+          element: `${student.element}❌ (Duplicate ${type})`,
+          isDebitCredit: `${student.isDebitCredit}❌ (Duplicate ${type})`
+        };
+      }
+
+      result.push({ effect: mark });
+    });
+  });
+
+  // ✅ Count all effect fields with at least one ✅ mark
+  const totalChecks = result.reduce((sum, entry, index) => {
+    const values = Object.values(entry.effect);
+    const checks = values.filter(v => v.includes("✅")).length;
+    console.log(`📊 Effect ${index}: ${checks} ✅`);
+    return sum + checks;
+  }, 0);
+
+  console.log(`📦 Total effects generated: ${result.length}`);
+  console.log(`✅ Total checkmarks across all effects: ${totalChecks}`);
+
+  // 🔍 Detect duplicate effects by stringifying
+  const effectStrings = result.map(r => JSON.stringify(r.effect));
+  const duplicateMap = new Map();
+
+  effectStrings.forEach((str, i) => {
+    if (duplicateMap.has(str)) {
+      console.warn(`⚠️ Effect ${i} is a duplicate of effect ${duplicateMap.get(str)}`);
+    } else {
+      duplicateMap.set(str, i);
+    }
+  });
+
+  return result;
+}
+
+function calculateTotalScore(questions) {
+  let totalScore = 0;
+  let totalPossibleCorrect = 0;
+
+  questions.forEach(question => {
+    const { score, totalPossibleCorrect: possible } = calculateScoreForQuestion(question);
+    totalScore += score;
+    totalPossibleCorrect += possible;
+  });
+
+  return { totalScore, totalPossibleCorrect };
+}
+
+    function getLetterGrade(score, totalItems) {
+      const percentage = (score / totalItems) * 100;
+      if (percentage >= 95) return "A";
+      if (percentage >= 85) return "P";
+      if (percentage >= 75) return "D";
+      return "IR";
+    }
+
+    function updateSubmitButtonState() {
+      const allAnswered = shuffledQuestions.every(q => q.studentAnswer);
+      submitBtn.disabled = !allAnswered;
+    }
+
+    function setupAutoSubmit(endTimeMillis) {
+      const now = Date.now();
+      const delay = endTimeMillis - now;
+      if (delay > 0) {
+        setTimeout(() => {
+          if (!submitBtn.disabled) {
+            submitBtn.click();
+          }
+        }, delay);
+      }
+    }
+
+async function submitStudentAnswer() {
+  const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
+  const { Idnumber, CN, LastName, firstName } = currentStudent;
+  const studentId = Idnumber;
+  const studentCN = CN;
+  const studentLastName = LastName;
+  const studentFirstName = firstName;
+
+  const selectedAnswer = assembleStudentAnswer(); // { type, effects: [...] }
+  const correctAnswer = Array.isArray(selectedQuestion.answer)
+    ? { effects: selectedQuestion.answer }
+    : selectedQuestion.answer;
+
+// ✅ Mark per-field feedback
+const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
+const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
+
+// ✅ Count all fields with ✅ marks
+const effectChecks = markedEffects.reduce((sum, entry, index) => {
+  const values = Object.values(entry.effect);
+  const checks = values.filter(v => v.includes("✅")).length;
+  console.log(`Effect ${index} ✅ count: ${checks}`);
+  return sum + checks;
+}, 0);
+
+const typeCheck = markedType.includes("✅") ? 1 : 0;
+console.log(`Type ✅ count: ${typeCheck}`);
+
+const score = effectChecks + typeCheck;
+
+// 📦 Count all fields total (regardless of correctness)
+const effectFieldCount = markedEffects.reduce((sum, entry) => {
+  return sum + Object.keys(entry.effect).length;
+}, 0);
+
+const totalPossibleCorrect = effectFieldCount + 1; // +1 for markedType
+console.log(`Total possible correct fields: ${totalPossibleCorrect}`);
+
+// Optional: assign to questionScore if needed
+const questionScore = totalPossibleCorrect;
+
+  // 🧠 Store the answer for the last question before submission
+  // Save to log using q1, q2, ...
+    const questionKey = `q${selectedQuestionIndex + 1}`;
+    studentAnswersLog[questionKey] = {
+      "01_question": selectedQuestion.question,
+      "02_scoreThisQuestion": `${score} out of ${questionScore}`,
+      "03_questionAnswerKey": {
+        "a_answerKeyType": correctAnswer.type,
+        "b_answerKeyEffects": correctAnswer.effects
+      },
+      "04_studentAnswers": {
+        "a_studentAnswerType": markedType,
+        "b_studentAnswerEffects": markedEffects,
+        "c_rawStudentInput": selectedAnswer
+      }
+    };
+
+// 🧮 Calculate total score and total items
+let totalScore = 0;
+let totalItems = 0;
+
+Object.values(studentAnswersLog).forEach(entry => {
+  const scoreText = entry["02_scoreThisQuestion"];
+  const match = scoreText?.match(/^(\d+)\s+out\s+of\s+(\d+)/);
+  if (match) {
+    const score = parseInt(match[1], 10);
+    const possible = parseInt(match[2], 10);
+    totalScore += score;
+    totalItems += possible;
+  }
+});
+
+console.log(`🧮 Final total score: ${totalScore} out of ${totalItems}`);
+
+// 🅰️ Determine letter grade
+let letterGrade = "IR"; // Default
+const percentage = (totalScore / totalItems) * 100;
+
+if (percentage >= 95) letterGrade = "A";
+else if (percentage >= 85) letterGrade = "P";
+else if (percentage >= 75) letterGrade = "D";
+
+console.log(`📊 Final percentage: ${percentage.toFixed(2)}% → Grade: ${letterGrade}`);
+
+// 🧠 Store final results in log
+studentAnswersLog["13_totalScore"] = totalScore;
+studentAnswersLog["14_letterGrade"] = letterGrade;
+
+
+   // 🧾 Final student record
+  const collectionId = `results_${title}_${attendanceId}`;
+  const documentId = `${studentCN}-${studentId}-${studentLastName}-${studentFirstName}`;
+  const documentData = {
+    "01_schoolyear": "SY 2025-2026",
+    "02_subject": "FABM 1",
+    "03_term": "1st Semester",
+    "04_title": activityResultsData.title,
+    "05_section": attendanceId,
+    "06_type": activityResultsData.type,
+    "07_topics": activityResultsData.topics,
+    "08_numOfQuestions": activityResultsData.num,
+    "09_instructions": activityResultsData.instructions,
+    "10_rubric": activityResultsData.rubricHTML,
+    "11_duration": activityResultsData.duration,
+    "12_endTime": new Date(activityResultsData.endTime).toLocaleString("en-PH", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+      }),
+    "13_totalScore": totalScore,
+    "14_letterGrade": letterGrade, 
+    "15_timesubmittedAt": new Date().toISOString(),
+    "16_questionsAndAnswers": studentAnswersLog
+    };
+const resultRef = doc(db, collectionId, documentId);
+
+try {
+  await setDoc(resultRef, documentData, { merge: true });
+
+  console.log("✅ Submitted to Firestore:", documentData);
+  updateSubmitButtonState();
+
+  // ✅ Save to localStorage for cross-page access
+  localStorage.setItem("studentAnswersLog", JSON.stringify(documentData));
+  console.log("📦 Saved to localStorage");
+
+  // ✅ Confirm and redirect
+  const waitForStorage = () => {
+    const log = localStorage.getItem("studentAnswersLog");
+    if (log) {
+      console.log("✅ Storage confirmed, redirecting to report page...");
+      //window.location.replace("https://jlvcpa.github.io/my-quizzes/student-activity-report.html", "_blank");    } else {
+	window.open("https://jlvcpa.github.io/my-quizzes/student-activity-report.html", "_blank");    } else {
+      console.log("⏳ Waiting for localStorage to be ready...");
+      setTimeout(waitForStorage, 50);
+    }
+  };
+
+  waitForStorage();
+
+} catch (err) {
+  console.error("❌ Submission error:", err);
+}
+}});
+
+</script>
+</body>
+</html>
