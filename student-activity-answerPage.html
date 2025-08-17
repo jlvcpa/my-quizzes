@@ -210,6 +210,7 @@
     let activityResultsData = {};
     let title = "";
     let attendanceId = "";
+    let countdownInterval = null;
 
     typeSelect.addEventListener("change", updateConstructedResponse);
     addEffectRowBtn.addEventListener("click", () => addEffectRow());
@@ -353,8 +354,6 @@ prevBtn.addEventListener("click", () => {
 });
 
 
-
-
     async function validateStudent(id, password, sectionCode) {
       const attendanceRef = doc(db, "attendance", sectionCode);
       const attendanceSnap = await getDoc(attendanceRef);
@@ -393,27 +392,58 @@ prevBtn.addEventListener("click", () => {
       return matchedActivity;
     }
 
+    function startCountdown(durationMinutes) {
+      const durationMillis = durationMinutes * 60 * 1000;
+      const endTime = Date.now() + durationMillis;
+
+      function updateTimer() {
+  const remainingMillis = endTime - Date.now();
+  const remainingSeconds = Math.max(0, Math.floor(remainingMillis / 1000));
+
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  const paddedMinutes = String(minutes).padStart(2, '0');
+  const paddedSeconds = String(seconds).padStart(2, '0');
+
+  document.getElementById("timerDisplay").textContent =
+    `Remaining Time: ${paddedMinutes}:${paddedSeconds}`;
+
+  if (remainingSeconds <= 0) {
+    clearInterval(countdownInterval);
+    console.log("⏰ Time's up!");
+    submitStudentAnswer(); // or disable inputs, show message, etc.
+  }
+}
+
+      updateTimer(); // run immediately
+      countdownInterval = setInterval(updateTimer, 1000);
+
+      // ⏳ Schedule auto-submit
+      setupAutoSubmit(endTime);
+    }
+
     function startActivity(questions) {
       if (!questions || questions.length === 0) {
         questionText.textContent = "❌ No questions found in this activity.";
         return;
       }
 
-const enrichedQuestions = questions.map((q, i) => {
-  const answersArray = Array.isArray(q.answer) ? q.answer : [q.answer];
-  const correctAnswer = answersArray.find(a => a?.type && Array.isArray(a.effects));
+    const enrichedQuestions = questions.map((q, i) => {
+      const answersArray = Array.isArray(q.answer) ? q.answer : [q.answer];
+      const correctAnswer = answersArray.find(a => a?.type && Array.isArray(a.effects));
 
-  if (!correctAnswer) {
-    console.warn(`⚠️ Question ${i} missing valid correctAnswer`, q);
-  }
+      if (!correctAnswer) {
+        console.warn(`⚠️ Question ${i} missing valid correctAnswer`, q);
+      }
 
-  return {
-    ...q,
-    correctAnswer: correctAnswer || null // fallback to null for safety
-  };
-});
+      return {
+        ...q,
+        correctAnswer: correctAnswer || null // fallback to null for safety
+      };
+    });
 
-shuffledQuestions = shuffleArray(enrichedQuestions);
+    shuffledQuestions = shuffleArray(enrichedQuestions);
 
       selectedQuestionIndex = 0;
       displayQuestion(selectedQuestionIndex);
@@ -425,8 +455,11 @@ shuffledQuestions = shuffleArray(enrichedQuestions);
       typeSelect.disabled = false;
       addEffectRowBtn.disabled = false;
       submitBtn.disabled = false;
+      
+      startCountdown(activityResultsData.duration);
 
-      setupAutoSubmit(new Date(activityResultsData.endTime).getTime());
+
+     // setupAutoSubmit(new Date(activityResultsData.endTime).getTime());
     }
 
     function extractAndRenderMetadata(questions) {
