@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Activity Report</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 2rem;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header {
+      border-bottom: 2px solid #ccc;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.2rem;
+    }
+    .meta, .summary, .qa {
+      background: #fff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .meta div, .summary div {
+      margin-bottom: 0.5rem;
+    }
+    .qa h3 {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.3rem;
+    }
+    .qa pre {
+      background: #f0f0f0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .rubric {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>📘 Student Activity Report</h1>
+    <p><strong>Submitted:</strong> <span id="timesubmittedAt"></span></p>
+  </header>
+
+  <section class="meta">
+    <h2>📌 Activity Details</h2>
+    <div><strong>School Year:</strong> <span id="schoolyear"></span></div>
+    <div><strong>Subject:</strong> <span id="subject"></span></div>
+    <div><strong>Term:</strong> <span id="term"></span></div>
+    <div><strong>Section:</strong> <span id="section"></span></div>
+    <div><strong>Title:</strong> <span id="title"></span></div>
+    <div><strong>Type:</strong> <span id="type"></span></div>
+    <div><strong>Topics:</strong> <span id="topics"></span></div>
+    <div><strong>Instructions:</strong> <span id="instructions"></span></div>
+    <div><strong>Duration:</strong> <span id="duration"></span></div>
+    <div><strong>End Time:</strong> <span id="endTime"></span></div>
+  </section>
+
+  <section class="summary">
+    <h2>📊 Performance Summary</h2>
+    <div><strong>Total Score:</strong> <span id="totalScore"></span></div>
+    <div><strong>Grade:</strong> <span id="letterGrade"></span></div>
+    <div><strong>Number of Questions:</strong> <span id="numOfQuestions"></span></div>
+  </section>
+
+  <section class="rubric">
+    <h2>📋 Rubric</h2>
+    <div id="rubricHTML"></div>
+  </section>
+
+  <section class="qa">
+    <h2>🧠 Questions & Answers</h2>
+    <div id="questionsAndAnswers"></div>
+  </section>
+
+  <script>
+    // Simulated fetch from Firebase
+    const activityData = {
+      "01_schoolyear": "SY 2025-2026",
+      "02_subject": "FABM 1",
+      "03_term": "1st Semester",
+      "04_title": "Financial Literacy Challenge",
+      "05_section": "11-ABM-A",
+      "06_type": "Quiz",
+      "07_topics": "Budgeting, Cash Flow, Ethics",
+      "08_numOfQuestions": 5,
+      "09_instructions": "Answer all questions carefully.",
+      "10_rubric": "<ul><li>✅ Correct answers earn 1 point each</li><li>❌ Incorrect answers earn 0</li></ul>",
+      "11_duration": "30 minutes",
+      "12_endTime": "Sun, Aug 17, 2025, 05:30 PM",
+      "13_totalScore": 23,
+      "14_letterGrade": "P",
+      "15_timesubmittedAt": new Date().toISOString(),
+      "16_questionsAndAnswers": {
+        q1: {
+          "01_question": "What is budgeting?",
+          "02_scoreThisQuestion": "5 out of 5",
+          "04_studentAnswers": {
+            "a_studentAnswerType": "Descriptive✅",
+            "b_studentAnswerEffects": [{ effect: { clarity: "✅", relevance: "✅", accuracy: "✅" } }],
+            "c_rawStudentInput": { type: "Descriptive", effects: [{ clarity: true, relevance: true, accuracy: true }] }
+          }
+        },
+        // Add more questions as needed...
+      }
+    };
+
+    // Populate fields
+    document.getElementById("schoolyear").textContent = activityData["01_schoolyear"];
+    document.getElementById("subject").textContent = activityData["02_subject"];
+    document.getElementById("term").textContent = activityData["03_term"];
+    document.getElementById("title").textContent = activityData["04_title"];
+    document.getElementById("section").textContent = activityData["05_section"];
+    document.getElementById("type").textContent = activityData["06_type"];
+    document.getElementById("topics").textContent = activityData["07_topics"];
+    document.getElementById("numOfQuestions").textContent = activityData["08_numOfQuestions"];
+    document.getElementById("instructions").textContent = activityData["09_instructions"];
+    document.getElementById("rubricHTML").innerHTML = activityData["10_rubric"];
+    document.getElementById("duration").textContent = activityData["11_duration"];
+    document.getElementById("endTime").textContent = activityData["12_endTime"];
+    document.getElementById("totalScore").textContent = activityData["13_totalScore"];
+    document.getElementById("letterGrade").textContent = activityData["14_letterGrade"];
+    document.getElementById("timesubmittedAt").textContent = new Date(activityData["15_timesubmittedAt"]).toLocaleString();
+
+    // Render Q&A
+    const qaContainer = document.getElementById("questionsAndAnswers");
+    const qaLog = activityData["16_questionsAndAnswers"];
+    Object.entries(qaLog).forEach(([key, entry]) => {
+      const qaBlock = document.createElement("div");
+      qaBlock.innerHTML = `
+        <h3>${key.toUpperCase()}: ${entry["01_question"]}</h3>
+        <p><strong>Score:</strong> ${entry["02_scoreThisQuestion"]}</p>
+        <pre>${JSON.stringify(entry["04_studentAnswers"], null, 2)}</pre>
+      `;
+      qaContainer.appendChild(qaBlock);
+    });
+  </script>
+
+</body>
+</html>
