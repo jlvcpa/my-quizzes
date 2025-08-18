@@ -954,82 +954,108 @@ const questionScore = totalPossibleCorrect;
 
   // 🧠 Store the answer for the last question before submission
   // Save to log using q1, q2, ...
-    const questionKey = `q${selectedQuestionIndex + 1}`;
-    studentAnswersLog[questionKey] = {
-      "01_question": selectedQuestion.question,
-      "02_scoreThisQuestion": `${score} out of ${questionScore}`,
-      "03_questionAnswerKey": {
-        "a_answerKeyType": correctAnswer.type,
-        "b_answerKeyEffects": correctAnswer.effects
-      },
-      "04_studentAnswers": {
-        "a_studentAnswerType": markedType,
-        "b_studentAnswerEffects": markedEffects,
-        "c_rawStudentInput": selectedAnswer
-      }
-    };
+    const questionKey = `Q${String(selectedQuestionIndex + 1).padStart(2, "0")}`;
+studentAnswersLog["16_questionsAndAnswers"] ||= {};
+studentAnswersLog["16_questionsAndAnswers"][questionKey] = {
+  "01_question": selectedQuestion.question,
+  "02_scoreThisQuestion": `${score} out of ${questionScore}`,
+  "03_questionAnswerKey": {
+    "a_answerKeyType": correctAnswer.type,
+    "b_answerKeyEffects": correctAnswer.effects
+  },
+  "04_studentAnswers": {
+    "a_studentAnswerType": markedType,
+    "b_studentAnswerEffects": markedEffects,
+    "c_rawStudentInput": selectedAnswer
+  }
+};
 
-// 🧮 Calculate total score and total items
 let totalScore = 0;
 let totalItems = 0;
 
-Object.values(studentAnswersLog).forEach(entry => {
-  const scoreText = entry["02_scoreThisQuestion"];
-  const match = scoreText?.match(/^(\d+)\s+out\s+of\s+(\d+)/);
-  if (match) {
-    const score = parseInt(match[1], 10);
-    const possible = parseInt(match[2], 10);
-    totalScore += score;
-    totalItems += possible;
+shuffledQuestions.forEach((question, index) => {
+  const questionKey = `Q${String(index + 1).padStart(2, "0")}`;
+  const correctAnswer = Array.isArray(question.answer)
+    ? { effects: question.answer }
+    : question.answer;
+
+  if (!correctAnswer) {
+    console.warn(`⚠️ ${questionKey} missing correctAnswer`);
+    return;
+  }
+
+  // ✅ Compute max possible points
+  let maxPoints = 0;
+  if (correctAnswer.type) maxPoints += 1;
+  if (Array.isArray(correctAnswer.effects)) maxPoints += correctAnswer.effects.length * 4;
+  totalItems += maxPoints;
+
+  // ✅ Extract score from studentAnswersLog
+  const studentEntry = studentAnswersLog["16_questionsAndAnswers"]?.[questionKey];
+  const scoreText = studentEntry?.["02_scoreThisQuestion"];
+
+  if (typeof scoreText === "string") {
+    const match = scoreText.match(/^(\d+)\s*out\s+of\s+(\d+)$/i);
+    if (match) {
+      const score = parseInt(match[1], 10);
+      const max = parseInt(match[2], 10);
+
+      if (!isNaN(score) && score <= max) {
+        totalScore += score;
+        console.log(`✅ ${questionKey}: ${score} of ${max}`);
+      } else {
+        console.warn(`⚠️ ${questionKey}: Invalid score values`, { scoreText });
+      }
+    } else {
+      console.warn(`⚠️ ${questionKey}: Score format mismatch`, { scoreText });
+    }
+  } else {
+    console.warn(`⚠️ ${questionKey}: Missing or non-string score`, { scoreText });
   }
 });
+// 📝 Format score and grade
+const formattedScore = `${totalScore} of ${totalItems}`;
+const percentage = (totalItems > 0) ? (totalScore / totalItems) * 100 : 0;
 
-console.log(`🧮 Final total score: ${totalScore} out of ${totalItems}`);
-
-// 🅰️ Determine letter grade
-let letterGrade = "IR"; // Default
-const percentage = (totalScore / totalItems) * 100;
-
+let letterGrade = "IR";
 if (percentage >= 95) letterGrade = "A";
 else if (percentage >= 85) letterGrade = "P";
 else if (percentage >= 75) letterGrade = "D";
 
+console.log(`🧮 Final total score: ${formattedScore}`);
 console.log(`📊 Final percentage: ${percentage.toFixed(2)}% → Grade: ${letterGrade}`);
 
-// 🧠 Store final results in log
-//studentAnswersLog["13_totalScore"] = totalScore;
-//studentAnswersLog["14_letterGrade"] = letterGrade;
+// 🧾 Final student record
+const collectionId = `results_${title}_${attendanceId}`;
+const documentId = `${studentCN}-${studentId}-${studentLastName}-${studentFirstName}`;
 
+const documentData = {
+  "01_schoolyear": "SY 2025-2026",
+  "02_subject": "FABM 1",
+  "03_term": "1st Semester",
+  "04_title": activityResultsData.title,
+  "05_section": attendanceId,
+  "06_type": activityResultsData.type,
+  "07_topics": activityResultsData.topics,
+  "08_numOfQuestions": activityResultsData.num,
+  "09_instructions": activityResultsData.instructions,
+  "10_rubric": activityResultsData.rubricHTML,
+  "11_duration": activityResultsData.duration,
+  "12_endTime": new Date(activityResultsData.endTime).toLocaleString("en-PH", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  }),
+  "13_totalScore": formattedScore,
+  "14_letterGrade": `${percentage.toFixed(2)}% → Grade: ${letterGrade}`,
+  "15_timesubmittedAt": new Date().toISOString(),
+  "16_questionsAndAnswers": studentAnswersLog
+};
 
-   // 🧾 Final student record
-  const collectionId = `results_${title}_${attendanceId}`;
-  const documentId = `${studentCN}-${studentId}-${studentLastName}-${studentFirstName}`;
-  const documentData = {
-    "01_schoolyear": "SY 2025-2026",
-    "02_subject": "FABM 1",
-    "03_term": "1st Semester",
-    "04_title": activityResultsData.title,
-    "05_section": attendanceId,
-    "06_type": activityResultsData.type,
-    "07_topics": activityResultsData.topics,
-    "08_numOfQuestions": activityResultsData.num,
-    "09_instructions": activityResultsData.instructions,
-    "10_rubric": activityResultsData.rubricHTML,
-    "11_duration": activityResultsData.duration,
-    "12_endTime": new Date(activityResultsData.endTime).toLocaleString("en-PH", {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true
-      }),
-    "13_totalScore": totalScore,
-    "14_letterGrade": letterGrade, 
-    "15_timesubmittedAt": new Date().toISOString(),
-    "16_questionsAndAnswers": studentAnswersLog
-    };
 const resultRef = doc(db, collectionId, documentId);
 
 try {
