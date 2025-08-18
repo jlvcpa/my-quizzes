@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Activity Report</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 2rem;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header, section {
+      background: #fff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    h1, h2 {
+      margin-bottom: 0.5rem;
+    }
+    .qa h3 {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.3rem;
+    }
+    .qa pre {
+      background: #f0f0f0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    #loginForm {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      max-width: 400px;
+      margin: 2rem auto;
+    }
+    #loginForm input {
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    #loginForm button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background: #0078D4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #statusMessage {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loginForm">
+  <h2>🔐 Student Login</h2>
+  <input type="text" id="studentId" placeholder="Student ID Number" required />
+  <input type="text" id="section" placeholder="Section (e.g., 11-AEQUITAS)" required />
+  <input type="date" id="attendanceDate" required />
+  <input type="password" id="password" placeholder="Password" required />
+  <button id="loginBtn">Login</button>
+  <div id="statusMessage"></div>
+</div>
+
+<div id="report" style="display:none;">
+  <header>
+    <h1>📘 Student Activity Report</h1>
+    <p><strong>Submitted:</strong> <span id="timesubmittedAt"></span></p>
+  </header>
+
+  <section id="meta">
+    <h2>📌 Activity Details</h2>
+    <div><strong>School Year:</strong> <span id="schoolyear"></span></div>
+    <div><strong>Subject:</strong> <span id="subject"></span></div>
+    <div><strong>Term:</strong> <span id="term"></span></div>
+    <div><strong>Section:</strong> <span id="section"></span></div>
+    <div><strong>Title:</strong> <span id="title"></span></div>
+    <div><strong>Type:</strong> <span id="type"></span></div>
+    <div><strong>Topics:</strong> <span id="topics"></span></div>
+    <div><strong>Instructions:</strong> <span id="instructions"></span></div>
+    <div><strong>Duration:</strong> <span id="duration"></span></div>
+    <div><strong>End Time:</strong> <span id="endTime"></span></div>
+  </section>
+
+  <section id="summary">
+    <h2>📊 Performance Summary</h2>
+    <div><strong>Total Score:</strong> <span id="totalScore"></span></div>
+    <div><strong>Grade:</strong> <span id="letterGrade"></span></div>
+    <div><strong>Number of Questions:</strong> <span id="numOfQuestions"></span></div>
+  </section>
+
+  <section id="rubric">
+    <h2>📋 Rubric</h2>
+    <div id="rubricHTML"></div>
+  </section>
+
+  <section class="qa">
+    <h2>🧠 Questions & Answers</h2>
+    <div id="questionsAndAnswers"></div>
+  </section>
+</div>
+
+<script type="module">
+  console.log("🔰 Script loaded");
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+    authDomain: "jlvcpa-quizzes.firebaseapp.com",
+    projectId: "jlvcpa-quizzes",
+    storageBucket: "jlvcpa-quizzes.appspot.com",
+    messagingSenderId: "629158256557",
+    appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const statusMessage = document.getElementById("statusMessage");
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    try {
+      statusMessage.textContent = "🔄 Validating credentials...";
+      console.log("🔐 Login button clicked");
+
+      const studentId = document.getElementById("studentId").value.trim();
+      const section = document.getElementById("section").value.trim();
+      const attendanceDate = document.getElementById("attendanceDate").value;
+      const password = document.getElementById("password").value.trim();
+
+      console.log("📥 Inputs:", { studentId, section, attendanceDate, password });
+
+      if (!studentId || !section || !attendanceDate || !password) {
+        statusMessage.textContent = "⚠️ Please fill in all fields.";
+        console.warn("⚠️ Missing input fields");
+        return;
+      }
+
+      const attendanceId = `${section}_${attendanceDate}`;
+      const attendanceRef = doc(db, "attendance", attendanceId);
+
+      console.log("📡 Fetching attendance document:", attendanceId);
+      const attendanceSnap = await getDoc(attendanceRef);
+
+      if (!attendanceSnap.exists()) {
+        statusMessage.textContent = `❌ Attendance record not found for ${attendanceId}`;
+        console.warn("⚠️ Attendance document missing:", attendanceId);
+        return;
+      }
+
+      const attendanceData = attendanceSnap.data();
+      console.log("✅ Attendance data loaded:", attendanceData);
+
+      const studentRecord = attendanceData.students.find(s => s.Idnumber === studentId);
+
+      if (!studentRecord) {
+        statusMessage.textContent = `❌ Student ID ${studentId} not found in attendance`;
+        console.warn("⚠️ Student not found:", studentId);
+        return;
+      }
+
+      console.log("👤 Student record found:", studentRecord);
+
+      if (studentRecord.status === "A") {
+        statusMessage.textContent = `🚫 You are marked absent for ${attendanceDate}. Please check with your teacher.`;
+        console.warn("🚫 Student marked absent:", studentId);
+        return;
+      }
+
+      const title = "mtformative06";
+      const studentCN = studentRecord.CN || "00";
+      if (!studentRecord.CN) console.warn("⚠️ CN field missing, using fallback:", studentCN);
+
+      const studentLastName = studentRecord.LastName;
+      const studentFirstName = studentRecord.firstName;
+
+      const collectionId = `results_${title}_${attendanceId}`;
+      const documentId = `${studentCN}-${studentId}-${studentLastName}-${studentFirstName}`;
+      const resultRef = doc(db, collectionId, documentId);
+
+      console.log("📡 Fetching result document:", collectionId, documentId);
+      const resultSnap = await getDoc(resultRef);
+
+      if (!resultSnap.exists()) {
+        statusMessage.textContent = `❌ No activity results found for ${studentFirstName} ${studentLastName}`;
+        console.warn("⚠️ Result document missing:", documentId);
+        return;
+      }
+
+      const studentAnswersLog = resultSnap.data();
+      console.log("✅ Loaded studentAnswersLog:", studentAnswersLog);
+
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("report").style.display = "block";
+      statusMessage.textContent = "";
+
+      // 🧠 Populate fields
+      document.getElementById("schoolyear").textContent = studentAnswersLog["01_schoolyear"];
+      document.getElementById("subject").textContent = studentAnswersLog["02_subject"];
+      document.getElementById("term").textContent = studentAnswersLog["03_term"];
+      document.getElementById("section").textContent = studentAnswersLog["05_section"];
+      document.getElementById("title").textContent = studentAnswersLog["04_title"];
+      document.getElementById("type").textContent = studentAnswersLog["06_type"];
+      document.getElementById("topics").textContent = studentAnswersLog["07_topics"];
+      document.getElementById("instructions").textContent = studentAnswersLog["09_instructions"];
+      document.getElementById("duration").textContent = studentAnswersLog["11_duration"];
+      document.getElementById("endTime").textContent = studentAnswersLog["12_endTime"];
+      document.getElementById("totalScore").textContent = studentAnswersLog["13_totalScore"];
+      document.getElementById("letterGrade").textContent = studentAnswersLog["14_letterGrade"];
+      document.getElementById("numOfQuestions").textContent = studentAnswersLog["08_numOfQuestions"];
+      document.getElementById("timesubmittedAt").textContent = new Date(studentAnswersLog["15_timesubmittedAt"]).toLocaleString("en-PH");
+
+      const qaContainer = document.getElementById("questionsAndAnswers");
+      const qaLog = studentAnswersLog["16_questionsAndAnswers"];
+
+Object.keys(qaLog)
+  .sort((a, b) => {
+    const numA = parseInt(a.replace(/\D/g, ""), 10);
+    const numB = parseInt(b.replace(/\D/g, ""), 10);
+    return numA - numB;
+  })
+  .forEach((key) => {
+    const entry = qaLog[key];
+    const qaBlock = document.createElement("div");
+
+    let filteredStudentAnswers = {};
+    if (entry["04_studentAnswers"] && typeof entry["04_studentAnswers"] === "object") {
+      const { a_studentAnswerType, b_studentAnswerEffects } = entry["04_studentAnswers"];
+      filteredStudentAnswers = { a_studentAnswerType, b_studentAnswerEffects };
+    } else {
+      console.warn(`⚠️ Missing or invalid studentAnswers for question ${key}`, entry);
+      filteredStudentAnswers = "⚠️ No student answer data available.";
+    }
+
+    qaBlock.innerHTML = `
+      <h3>${key.toUpperCase()}: ${entry["01_question"]}</h3>
+      <p><strong>Score:</strong> ${entry["02_scoreThisQuestion"]}</p>
+      <pre>${JSON.stringify({
+        studentAnswers: filteredStudentAnswers,
+        answerKey: entry["03_questionAnswerKey"]
+      }, null, 2)}</pre>
+    `;
+    qaContainer.appendChild(qaBlock);
+  });
+
+
+
+      document.getElementById("rubricHTML").innerHTML = studentAnswersLog["10_rubric"];
+
+    } catch (error) {
+      console.error("🔥 Unexpected error during login:", error);
+      statusMessage.textContent = "❌ Something went wrong. Please try again.";
+    }
+  });
+</script>
+
+</body>
+</html>
