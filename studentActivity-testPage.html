@@ -1159,8 +1159,8 @@ try {
   await setDoc(resultRef, documentData, { merge: true });
 
   console.log("✅ Submitted to Firestore:", documentData);
-  updateSubmitButtonState();
-
+  submitBtn.disabled = true;
+	
   // ✅ Save to localStorage for cross-page access
   localStorage.setItem("studentAnswersLog", JSON.stringify(documentData));
   console.log("📦 Saved to localStorage");
