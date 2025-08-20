@@ -221,7 +221,7 @@
 
 function displayQuestion(index) {
   const q = shuffledQuestions[index];
-  const questionKey = `q${index + 1}`;
+  const questionKey = `q${String(index + 1).padStart(2, "0")}`;
   const logEntry = studentAnswersLog[questionKey];
 
   // 📝 Display question text
@@ -252,107 +252,158 @@ if (Array.isArray(rawEffects)) {
 
 
 nextBtn.addEventListener("click", () => {
-  if (selectedQuestionIndex < shuffledQuestions.length - 1) {
-    const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
-    const correctAnswer = selectedQuestion.correctAnswer;
-    const selectedAnswer = assembleStudentAnswer(); // { type, effects }
+  if (selectedQuestionIndex >= shuffledQuestions.length - 1) return;
 
-    // Defensive guard
-    if (!correctAnswer || typeof correctAnswer !== "object" || !correctAnswer.effects) {
-      console.warn(`⚠️ Missing or invalid correctAnswer for question index ${selectedQuestionIndex}`);
-      studentAnswersLog[`q${selectedQuestionIndex + 1}`] = {
-        "01_question": selectedQuestion.question,
-        "02_scoreThisQuestion": "Error: Missing correct answer data",
-        "03_questionAnswerKey": null,
-        "04_studentAnswers": {
-          "c_rawStudentInput": selectedAnswer
-        }
-      };
-      selectedQuestionIndex++;
-      displayQuestion(selectedQuestionIndex);
-      return;
-    }
+  const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
+  const correctAnswer = selectedQuestion.correctAnswer;
+  const selectedAnswer = assembleStudentAnswer(); // { type, effects }
 
-// ✅ Mark per-field feedback
-const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
-const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
+  // 🛡️ Defensive guard for missing correctAnswer
+  if (!correctAnswer || typeof correctAnswer !== "object" || !correctAnswer.effects) {
+    console.warn(`⚠️ Missing or invalid correctAnswer for question index ${selectedQuestionIndex}`);
+    logAnswerForQuestion(selectedQuestionIndex, {
+      score: null,
+      questionScore: null,
+      markedType: selectedAnswer.type,
+      markedEffects: [],
+      selectedAnswer
+    }, "Error: Missing correct answer data");
 
-// ✅ Count all fields with ✅ marks
-const effectChecks = markedEffects.reduce((sum, entry, index) => {
-  const values = Object.values(entry.effect);
-  const checks = values.filter(v => v.includes("✅")).length;
-  console.log(`Effect ${index} ✅ count: ${checks}`);
-  return sum + checks;
-}, 0);
-
-const typeCheck = markedType.includes("✅") ? 1 : 0;
-console.log(`Type ✅ count: ${typeCheck}`);
-
-const score = effectChecks + typeCheck;
-
-// 📦 Count all fields total (regardless of correctness)
-const effectFieldCount = markedEffects.reduce((sum, entry) => {
-  return sum + Object.keys(entry.effect).length;
-}, 0);
-
-const totalPossibleCorrect = effectFieldCount + 1; // +1 for markedType
-console.log(`Total possible correct fields: ${totalPossibleCorrect}`);
-
-// Optional: assign to questionScore if needed
-const questionScore = totalPossibleCorrect;
-
-  // 🧠 Store answer for current question
-  // Save to log using q1, q2, ...
-    const questionKey = `q${selectedQuestionIndex + 1}`;
-    studentAnswersLog[questionKey] = {
-      "01_question": selectedQuestion.question,
-      "02_scoreThisQuestion": `${score} out of ${questionScore}`,
-      "03_questionAnswerKey": {
-        "a_answerKeyType": correctAnswer.type,
-        "b_answerKeyEffects": correctAnswer.effects
-      },
-      "04_studentAnswers": {
-        "a_studentAnswerType": markedType,
-        "b_studentAnswerEffects": markedEffects,
-        "c_rawStudentInput": selectedAnswer
-      }
-    };
-
-    // Move to next question
     selectedQuestionIndex++;
     displayQuestion(selectedQuestionIndex);
-    updateConstructedResponse()
+    updateConstructedResponse();
+    updateSubmitButtonState();    
+    return;
   }
+
+  // ✅ Mark per-field feedback
+  const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
+  const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
+
+  // ✅ Count correct fields
+  const effectChecks = markedEffects.reduce((sum, entry, index) => {
+    const checks = Object.values(entry.effect).filter(v => v.includes("✅")).length;
+    console.log(`Effect ${index} ✅ count: ${checks}`);
+    return sum + checks;
+  }, 0);
+
+  const typeCheck = markedType.includes("✅") ? 1 : 0;
+  console.log(`Type ✅ count: ${typeCheck}`);
+
+  const score = effectChecks + typeCheck;
+
+  // 📦 Count total fields
+  const effectFieldCount = markedEffects.reduce((sum, entry) => {
+    return sum + Object.keys(entry.effect).length;
+  }, 0);
+
+  const questionScore = effectFieldCount + 1; // +1 for type check
+  console.log(`Total possible correct fields: ${questionScore}`);
+
+  // 🧠 Save to log using modular function
+logAnswerForQuestion(
+  selectedQuestionIndex,
+  { score, questionScore, markedType, markedEffects, selectedAnswer },
+  "Scored",
+  studentAnswersLog
+);
+
+  // ➡️ Move to next question
+  selectedQuestionIndex++;
+  displayQuestion(selectedQuestionIndex);
+  updateConstructedResponse();
+  updateSubmitButtonState();
 });
 
 prevBtn.addEventListener("click", () => {
-  if (selectedQuestionIndex > 0) {
-    // 🧠 Save current answer before navigating
-    const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
-    const correctAnswer = selectedQuestion.correctAnswer;
-    const selectedAnswer = assembleStudentAnswer(); // { type, effects }
+  if (selectedQuestionIndex <= 0) return;
 
-    const questionKey = `q${selectedQuestionIndex + 1}`;
-    studentAnswersLog[questionKey] = {
-      "01_question": selectedQuestion.question,
-      "02_scoreThisQuestion": "Not scored yet", // Or leave blank
-      "03_questionAnswerKey": {
-        "a_answerKeyType": correctAnswer?.type || null,
-        "b_answerKeyEffects": correctAnswer?.effects || null
-      },
-      "04_studentAnswers": {
-        "a_studentAnswerType": selectedAnswer.type,
-        "b_studentAnswerEffects": [], // Not marked yet
-        "c_rawStudentInput": selectedAnswer
-      }
-    };
+  const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
+  const correctAnswer = selectedQuestion.correctAnswer;
+  const selectedAnswer = assembleStudentAnswer(); // { type, effects }
 
-    // 🔙 Navigate to previous question
+  // 🛡️ Defensive guard
+  if (!correctAnswer || typeof correctAnswer !== "object" || !correctAnswer.effects) {
+    console.warn(`⚠️ Missing or invalid correctAnswer for question index ${selectedQuestionIndex}`);
+    logAnswerForQuestion(selectedQuestionIndex, {
+      score: null,
+      questionScore: null,
+      markedType: selectedAnswer.type,
+      markedEffects: [],
+      selectedAnswer
+    }, "Error: Missing correct answer data");
+
     selectedQuestionIndex--;
     displayQuestion(selectedQuestionIndex);
+    updateConstructedResponse();
+    updateSubmitButtonState();
+    return;
   }
+
+  // ✅ Mark per-field feedback
+  const markedEffects = markStudentAnswers(selectedAnswer.effects, correctAnswer.effects);
+  const markedType = `${selectedAnswer.type}${selectedAnswer.type === correctAnswer.type ? '✅' : '❌'}`;
+
+  // ✅ Count correct fields
+  const effectChecks = markedEffects.reduce((sum, entry) => {
+    const checks = Object.values(entry.effect).filter(v => v.includes("✅")).length;
+    return sum + checks;
+  }, 0);
+
+  const typeCheck = markedType.includes("✅") ? 1 : 0;
+  const score = effectChecks + typeCheck;
+
+  // 📦 Count total fields
+  const effectFieldCount = markedEffects.reduce((sum, entry) => {
+    return sum + Object.keys(entry.effect).length;
+  }, 0);
+
+  const questionScore = effectFieldCount + 1; // +1 for type check
+
+  // 🧠 Log answer before moving
+  logAnswerForQuestion(
+    selectedQuestionIndex,
+    { score, questionScore, markedType, markedEffects, selectedAnswer },
+    "Scored",
+    studentAnswersLog
+  );
+
+  // ⬅️ Move to previous question
+  selectedQuestionIndex--;
+  displayQuestion(selectedQuestionIndex);
+  updateConstructedResponse();
+  updateSubmitButtonState();
 });
 
+function logAnswerForQuestion(
+  index,
+  { score = null, questionScore = null, markedType = null, markedEffects = [] , selectedAnswer },
+  status = "Not scored yet",
+  targetObject = studentAnswersLog
+) {
+  const question = shuffledQuestions[index];
+  const correctAnswer = question.correctAnswer;
+
+  // ✅ Use lowercase key for consistency with restoration logic
+  const questionKey = `q${String(index + 1).padStart(2, "0")}`;
+
+  // 🧠 Always log raw input for restoration
+  targetObject[questionKey] = {
+    "01_question": question.question,
+    "02_scoreThisQuestion": (score !== null && questionScore !== null)
+      ? `${score} out of ${questionScore}`
+      : status,
+    "03_questionAnswerKey": {
+      "a_answerKeyType": correctAnswer?.type || null,
+      "b_answerKeyEffects": correctAnswer?.effects || null
+    },
+    "04_studentAnswers": {
+      "a_studentAnswerType": markedType || selectedAnswer?.type || null,
+      "b_studentAnswerEffects": markedEffects || [],
+      "c_rawStudentInput": selectedAnswer || {}
+    }
+  };
+}
 
     async function validateStudent(id, password, sectionCode) {
       const attendanceRef = doc(db, "attendance", sectionCode);
@@ -894,12 +945,7 @@ function calculateTotalScore(questions) {
       return "IR";
     }
 
-    function updateSubmitButtonState() {
-      const allAnswered = shuffledQuestions.every(q => q.studentAnswer);
-      submitBtn.disabled = !allAnswered;
-    }
-
-    function setupAutoSubmit(endTimeMillis) {
+   function setupAutoSubmit(endTimeMillis) {
       const now = Date.now();
       const delay = endTimeMillis - now;
       if (delay > 0) {
@@ -910,6 +956,60 @@ function calculateTotalScore(questions) {
         }, delay);
       }
     }
+
+    function updateSubmitButtonState() {
+      //const allAnswered = shuffledQuestions.every(q => q.studentAnswer);
+      //submitBtn.disabled = !allAnswered;
+  const totalItems = getTotalExpectedInputs(shuffledQuestions);
+  const rawInputCount = countRawStudentInputs(studentAnswersLog);
+
+  console.log(`🧮 Raw Inputs Logged: ${rawInputCount} / ${totalItems}`);
+  submitBtn.disabled = rawInputCount < totalItems;
+    }
+
+function getTotalExpectedInputs(shuffledQuestions) {
+let totalItems = 0;
+
+shuffledQuestions.forEach((question, index) => {
+  const questionKey = `Q${String(index + 1).padStart(2, "0")}`;
+  const correctAnswer = Array.isArray(question.answer)
+    ? { effects: question.answer }
+    : question.answer;
+
+  if (!correctAnswer) {
+    console.warn(`⚠️ ${questionKey} missing correctAnswer`);
+    return;
+  }
+
+  // ✅ Compute max possible points
+  let maxPoints = 0;
+  if (correctAnswer.type) maxPoints += 1;
+  if (Array.isArray(correctAnswer.effects)) {
+    maxPoints += correctAnswer.effects.length * 4;
+  }
+  totalItems += maxPoints;
+  });
+  return totalItems;
+}
+
+function countRawStudentInputs(studentAnswersLog) {
+  let count = 0;
+
+  Object.values(studentAnswersLog).forEach(entry => {
+    const rawInput = entry?.["04_studentAnswers"]?.["c_rawStudentInput"];
+    if (!rawInput) return;
+
+    if (rawInput.type) count += 1;
+
+    if (Array.isArray(rawInput.effects)) {
+      rawInput.effects.forEach(effect => {
+        count += Object.keys(effect).length;
+      });
+    }
+  });
+
+  return count;
+}
 
 async function submitStudentAnswer() {
   const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
@@ -952,29 +1052,18 @@ console.log(`Total possible correct fields: ${totalPossibleCorrect}`);
 // Optional: assign to questionScore if needed
 const questionScore = totalPossibleCorrect;
 
-  // 🧠 Store the answer for the last question before submission
-  // Save to log using q1, q2, ...
-    const questionKey = `Q${String(selectedQuestionIndex + 1).padStart(2, "0")}`;
-studentAnswersLog["16_questionsAndAnswers"] ||= {};
-studentAnswersLog["16_questionsAndAnswers"][questionKey] = {
-  "01_question": selectedQuestion.question,
-  "02_scoreThisQuestion": `${score} out of ${questionScore}`,
-  "03_questionAnswerKey": {
-    "a_answerKeyType": correctAnswer.type,
-    "b_answerKeyEffects": correctAnswer.effects
-  },
-  "04_studentAnswers": {
-    "a_studentAnswerType": markedType,
-    "b_studentAnswerEffects": markedEffects,
-    "c_rawStudentInput": selectedAnswer
-  }
-};
+logAnswerForQuestion(
+  selectedQuestionIndex,
+  { score, questionScore, markedType, markedEffects, selectedAnswer },
+  "Scored",
+  studentAnswersLog
+);
 
 let totalScore = 0;
 let totalItems = 0;
 
 shuffledQuestions.forEach((question, index) => {
-  const questionKey = `Q${String(index + 1).padStart(2, "0")}`;
+  const questionKey = `q${String(index + 1).padStart(2, "0")}`;
   const correctAnswer = Array.isArray(question.answer)
     ? { effects: question.answer }
     : question.answer;
@@ -987,11 +1076,13 @@ shuffledQuestions.forEach((question, index) => {
   // ✅ Compute max possible points
   let maxPoints = 0;
   if (correctAnswer.type) maxPoints += 1;
-  if (Array.isArray(correctAnswer.effects)) maxPoints += correctAnswer.effects.length * 4;
+  if (Array.isArray(correctAnswer.effects)) {
+    maxPoints += correctAnswer.effects.length * 4;
+  }
   totalItems += maxPoints;
 
   // ✅ Extract score from studentAnswersLog
-  const studentEntry = studentAnswersLog["16_questionsAndAnswers"]?.[questionKey];
+  const studentEntry = studentAnswersLog?.[questionKey];
   const scoreText = studentEntry?.["02_scoreThisQuestion"];
 
   if (typeof scoreText === "string") {
