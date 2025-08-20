@@ -1012,6 +1012,12 @@ function countRawStudentInputs(studentAnswersLog) {
 }
 
 async function submitStudentAnswer() {
+   // 🛑 Stop timer if running
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    console.log("🛑 Timer stopped due to early submission.");
+  }
+
   const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
   const { Idnumber, CN, LastName, firstName } = currentStudent;
   const studentId = Idnumber;
