@@ -328,7 +328,7 @@ function restoreJournalEntriesForQuestion(index) {
 }
 
 nextBtn.addEventListener("click", () => {
-  if (!validateJournalStructure()) return;
+  //if (!validateJournalStructure()) return;
 
   // 🔒 Lock current journal entries
   lockJournalEntriesForCurrentQuestion();
@@ -351,7 +351,7 @@ nextBtn.addEventListener("click", () => {
 });
 
 prevBtn.addEventListener("click", () => {
-  if (!validateJournalStructure()) return;
+  //if (!validateJournalStructure()) return;
 
   // 🔒 Lock current journal entries
   lockJournalEntriesForCurrentQuestion();
