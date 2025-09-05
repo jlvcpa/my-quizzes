@@ -1,0 +1,1894 @@
+/* THIS VERSION HAS THE finalJournalHTML and the unique console validation logs */
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Challenge UI</title>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 1em;
+    background: #f9f9f9;
+    max-width: 600px;
+    margin: auto;
+  }
+
+  #loginPanel, #activityPanel {
+    background: white;
+    padding: 1em;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 1em;
+  }
+
+  #questionPanel {
+    margin-top: 1em;
+    padding: 1em;
+    background: #fffbe6;
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  #questionText {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 1em 0;
+  }
+
+  #timerDisplay {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #d00;
+    margin-bottom: 0.5em;
+  }
+
+  #answerPanel {
+    margin-top: 1em;
+  }
+
+  #submitBtn {
+    display: block;
+    margin: 0 auto 1em auto;
+    padding: 0.8em 1.5em;
+    font-size: 1em;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+.journal-account {
+  font-family: monospace;
+  white-space: pre;
+}
+
+  #submitBtn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  } 
+
+  .effectsGroup {
+    margin-top: 0.5em;
+  }
+
+  .effectRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-left: 1em;
+    margin-top: 0.3em;
+  }
+
+  .fieldGroup {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
+  .fieldGroup label {
+    margin-bottom: 0.2em;
+    font-size: 0.9em;
+  }
+
+  .fieldGroup select,
+  .fieldGroup input {
+    padding: 0.3em;
+    font-size: 0.95em;
+  }
+
+  .groupLabel {
+    font-weight: bold;
+    margin-bottom: 0.2em;
+    display: block;
+    font-size: 1em;
+  }
+
+  @media (min-width: 600px) {
+    .effectRow {
+      flex-wrap: nowrap;
+      gap: 1em;
+    }
+
+    .fieldGroup {
+      min-width: 150px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- 🔐 Login Panel -->
+<div id="loginPanel">
+  <h2>Student Login</h2>
+  <form id="studentLoginForm">
+    <input type="text" id="Idnumber" placeholder="Your ID number" required /><br><br>
+    <input type="text" id="sectionCode" placeholder="Section code" required /><br><br>
+    <input type="password" id="passWord" placeholder="Your password" required /><br><br>
+    <button type="submit">Login</button>
+  </form>
+</div>
+
+<!-- 🎯 activity Panel -->
+<div id="activityPanel" style="display:none;">
+  <button id="submitBtn" >Submit Answer</button>
+
+  <div id="questionPanel">
+    <div id="timerDisplay">Remaining Time: -- seconds</div>
+    <div id="questionText">Waiting for an active activity...</div>
+    <button id="prevBtn">⬅️ Prev</button>
+    <button id="nextBtn">Next ➡️</button>
+  </div>
+
+	  <!-- 🧩 Available Accounts Panel -->
+  <div id="availableAccountsPanel"></div>
+
+  <div id="answerPanel" style="display: flex; flex-direction: column; gap: 1em;">
+    <!-- 📝 Constructed Response Panel -->
+    <div id="constructedResponsePanel" style="overflow-x: auto;"></div>
+    <div id="submissionSummary" style="margin-top: 1rem;"></div>
+    <div id="submittedJournalPanel" style="margin-top: 1rem;"></div>
+
+  </div>
+</div>
+</div>
+
+<!-- 🔧 Script -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, collection, getDocs, setDoc
+  } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+    authDomain: "jlvcpa-quizzes.firebaseapp.com",
+    projectId: "jlvcpa-quizzes",
+    storageBucket: "jlvcpa-quizzes.appspot.com",
+    messagingSenderId: "629158256557",
+    appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    
+    // 🔀 Shuffle utility
+    const shuffleArray = array =>
+      array.map(item => ({ item, sortKey: Math.random() }))
+           .sort((a, b) => a.sortKey - b.sortKey)
+           .map(({ item }) => item);
+
+    // 🧭 DOM elements
+    const loginForm = document.getElementById("studentLoginForm");
+    const loginStatus = document.createElement("p");
+    loginForm.appendChild(loginStatus);
+
+    const questionText = document.getElementById("questionText");
+    const activityPanel = document.getElementById("activityPanel");
+    const loginPanel = document.getElementById("loginPanel");
+
+    //const answerInput = document.getElementById("answerInput");
+    const submitBtn = document.getElementById("submitBtn");
+
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+const validationConsoleLogs = [];
+
+const journalState = {}; // Stores year/month per questionKey
+
+
+    let shuffledQuestions = [];
+    let currentStudent = null;
+    let selectedQuestionIndex = 0;
+    let studentAnswersLog = {}; // key: questionIndex, value: { question, answerKey, studentAnswers }
+    
+    let title = "";
+    let attendanceId = "";
+    let countdownInterval = null;
+    let journalRowCount = 0;
+
+    let declaredYears = [];
+    let declaredMonths = [];
+
+    let globalYear = null;
+    let globalMonth = null;
+
+    submitBtn.addEventListener("click", async () => {
+      await submitStudentAnswer();
+    });
+
+
+function logToValidation(message) {
+  validationConsoleLogs.push(message);
+  console.log(message); // optional: still shows in browser console
+}
+
+function displayQuestion(index) {
+  selectedQuestionIndex = index;
+
+  // 🔢 Generate question key
+  const questionKey = `q${String(index + 1).padStart(2, "0")}`;
+  shuffledQuestions[index].key = questionKey; // ✅ Store key for validation
+
+  // 📅 Sort questions chronologically once (if not already sorted)
+  if (!shuffledQuestions._sorted) {
+    shuffledQuestions.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+    shuffledQuestions._sorted = true; // Prevent re-sorting
+  }
+
+  // 📝 Display question with date prefix
+  const q = shuffledQuestions[index];
+  questionText.textContent = q?.Date
+    ? `(${q.Date}) - ${q.question}`
+    : q?.question || "❓";
+
+  // ⏮️⏭️ Enable/disable navigation buttons
+  prevBtn.disabled = index === 0;
+  nextBtn.disabled = index === shuffledQuestions.length - 1;
+
+  // 🔍 Filter and enable rows for current question
+  const allRows = document.querySelectorAll("#journalBody tr");
+  allRows.forEach(row => {
+    const isCurrent = row.dataset.questionKey === questionKey;
+    row.querySelectorAll("input").forEach(input => {
+      input.disabled = !isCurrent;
+    });
+  });
+
+  const currentRows = Array.from(allRows).filter(
+    row => row.dataset.questionKey === questionKey
+  );
+
+  // ➕ Add 4 rows if none exist for this question
+  const body = document.getElementById("journalBody");
+  if (currentRows.length === 0 && body) {
+    for (let i = 0; i < 4; i++) {
+      const newRow = createJournalRow(questionKey);
+      body.appendChild(newRow);
+      journalRowCount++;
+    }
+  }
+
+  // 🔄 Update scroll behavior
+  updateJournalScroll();
+
+  // 🧠 Reattach input listener for Add Row button
+  monitorLastRowForInput();
+}
+
+function lockJournalEntriesForCurrentQuestion() {
+  const questionKey = `q${String(selectedQuestionIndex + 1).padStart(2, "0")}`;
+  const allRows = Array.from(document.querySelectorAll("#journalBody tr"));
+
+  const journalEntries = [];
+
+  for (const row of allRows) {
+    // ✅ Only consider rows tagged to this question
+    if (row.dataset.questionKey !== questionKey || row.dataset.visible !== "true") continue;
+
+    const date = row.querySelector(".journal-date")?.value.trim();
+    const account = row.querySelector(".journal-account")?.value.trim();
+    const pr = row.querySelector(".journal-pr")?.value.trim();
+    const debit = row.querySelector(".journal-debit")?.value.trim();
+    const credit = row.querySelector(".journal-credit")?.value.trim();
+
+    const isEmpty = !date && !account && !pr && !debit && !credit;
+    if (isEmpty) continue; // ✅ Skip blank rows
+
+    journalEntries.push({ date, account, pr, debit, credit });
+
+    // 🔒 Lock this row
+    row.querySelectorAll("input").forEach(input => input.disabled = true);
+    row.dataset.visible = "false"; // ✅ Mark as locked
+  }
+
+  // ✅ Save only if there's something to save
+  if (journalEntries.length > 0) {
+    studentAnswersLog[questionKey] = {
+      question: shuffledQuestions[selectedQuestionIndex],
+      journalEntries
+    };
+  }
+}
+
+function restoreJournalEntriesForQuestion(index) {
+  const questionKey = `q${String(index + 1).padStart(2, "0")}`;
+  const saved = studentAnswersLog[questionKey];
+  const panel = document.getElementById("constructedResponsePanel");
+  if (!panel) return;
+
+  renderJournalEntryForm(saved?.question?.question || "❓");
+
+  const body = document.getElementById("journalBody");
+  journalRowCount = 0;
+
+  if (saved?.journalEntries) {
+    saved.journalEntries.forEach(entry => {
+      const row = createJournalRow();
+      row.querySelector(".journal-date").value = entry.date;
+      row.querySelector(".journal-account").value = entry.account;
+      row.querySelector(".journal-pr").value = entry.pr;
+      row.querySelector(".journal-debit").value = entry.debit;
+      row.querySelector(".journal-credit").value = entry.credit;
+
+      // Reactivate inputs
+      row.querySelectorAll("input").forEach(input => input.disabled = false);
+
+      body.appendChild(row);
+      journalRowCount++;
+    });
+  }
+}
+
+nextBtn.addEventListener("click", () => {
+  //if (!validateJournalStructure()) return;
+
+  lockJournalEntriesForCurrentQuestion();
+
+  if (selectedQuestionIndex >= shuffledQuestions.length - 1) return;
+
+  selectedQuestionIndex++;
+  displayQuestion(selectedQuestionIndex);
+});
+
+prevBtn.addEventListener("click", () => {
+  //if (!validateJournalStructure()) return;
+
+  lockJournalEntriesForCurrentQuestion();
+
+  if (selectedQuestionIndex <= 0) return;
+
+  selectedQuestionIndex--;
+  displayQuestion(selectedQuestionIndex);
+});
+
+function logAnswerForQuestion(
+  index,
+  { score = null, questionScore = null, markedType = null, markedEffects = [] , selectedAnswer },
+  status = "Not scored yet",
+  targetObject = studentAnswersLog
+) {
+  const question = shuffledQuestions[index];
+  const correctAnswer = question.correctAnswer;
+
+  // ✅ Use lowercase key for consistency with restoration logic
+  const questionKey = `q${String(index + 1).padStart(2, "0")}`;
+
+  // 🧠 Always log raw input for restoration
+  targetObject[questionKey] = {
+    "01_question": question.question,
+    "02_scoreThisQuestion": (score !== null && questionScore !== null)
+      ? `${score} out of ${questionScore}`
+      : status,
+    "03_questionAnswerKey": {
+      "a_answerKeyType": correctAnswer?.type || null,
+      "b_answerKeyEffects": correctAnswer?.effects || null
+    },
+    "04_studentAnswers": {
+      "a_studentAnswerType": markedType || selectedAnswer?.type || null,
+      "b_studentAnswerEffects": markedEffects || [],
+      "c_rawStudentInput": selectedAnswer || {}
+    }
+  };
+}
+
+async function validateStudent(id, password, sectionCode) {
+  const attendanceRef = doc(db, "attendance", sectionCode);
+  const attendanceSnap = await getDoc(attendanceRef);
+  if (!attendanceSnap.exists()) throw new Error("Attendance record not found.");
+
+  const student = attendanceSnap.data().students.find(s =>
+    s.Idnumber === id && s.passWord === password
+  );
+
+  if (!student) throw new Error("Invalid credentials.");
+  if (student.status === "A") throw new Error("Marked absent.");
+
+  attendanceId = sectionCode;
+
+  // ✅ Check if student already submitted answers
+  const activity = await findActiveActivity(sectionCode); // sets global studentAnswersLog
+  const title = activity.title || "Untitled";
+
+  const collectionId = `results_${title}_${sectionCode}`;
+  const documentId = `${student.CN}-${student.Idnumber}-${student.LastName}-${student.firstName}`;
+  const resultRef = doc(db, collectionId, documentId);
+  const resultSnap = await getDoc(resultRef);
+   if (resultSnap.exists()) {
+    throw new Error("Already submitted answers for this activity.");
+  }
+       return student;
+    }
+
+async function findActiveActivity(sectionCode) {
+  const now = Date.now();
+  const activitiesSnap = await getDocs(collection(db, "activities"));
+
+  const matched = activitiesSnap.docs.find(doc => {
+    const id = doc.id;
+    const data = doc.data();
+
+    const isMatchingSection = id.endsWith(`_${sectionCode}`);
+    const endTimeMillis = new Date(data.endTime).getTime();
+    const isStillActive = endTimeMillis > now;
+
+    return isMatchingSection && isStillActive;
+  });
+
+  if (!matched) {
+    throw new Error("No active activity found.");
+  }
+
+  const activityData = matched.data();
+
+  // ✅ Log activity metadata into studentAnswersLog
+  Object.assign(studentAnswersLog, {
+    title: activityData.title || "Untitled",
+    type: activityData.type || "unspecified",
+    topics: activityData.topics || [],
+    num: activityData.numOfQuestions || 0,
+    instructions: activityData.instructions || "No instructions provided.",
+    rubricHTML: activityData.rubricHTML || "<p>No rubric available.</p>",
+    duration: activityData.duration || "unspecified",
+    endTime: activityData.endTime || new Date().toISOString()
+  });
+
+  console.log("✅ Active activity found and logged:", activityData);
+  return activityData;
+}
+
+
+
+function startCountdown(durationMinutes) {
+  const durationMillis = durationMinutes * 60 * 1000;
+  const endTime = Date.now() + durationMillis;
+
+  function updateTimer() {
+  const remainingMillis = endTime - Date.now();
+  const remainingSeconds = Math.max(0, Math.floor(remainingMillis / 1000));
+
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  const paddedMinutes = String(minutes).padStart(2, '0');
+  const paddedSeconds = String(seconds).padStart(2, '0');
+
+  document.getElementById("timerDisplay").textContent =
+    `Remaining Time: ${paddedMinutes}:${paddedSeconds}`;
+
+  if (remainingSeconds <= 0) {
+    clearInterval(countdownInterval);
+    console.log("⏰ Time's up!");
+    submitStudentAnswer(); // or disable inputs, show message, etc.
+  }
+}
+
+      updateTimer(); // run immediately
+      countdownInterval = setInterval(updateTimer, 1000);
+
+      // ⏳ Schedule auto-submit
+      setupAutoSubmit(endTime);
+    }
+
+function startActivity(questions) {
+  if (!questions || questions.length === 0) {
+    questionText.textContent = "❌ No questions found in this activity.";
+    return;
+  }
+
+  const enrichedQuestions = questions.map((q, i) => {
+    const answersArray = Array.isArray(q.answer) ? q.answer : [q.answer];
+    const correctAnswer = answersArray.find(a => a?.type && Array.isArray(a.effects));
+    return {
+      ...q,
+      correctAnswer: correctAnswer || null
+    };
+  });
+
+  shuffledQuestions = shuffleArray(enrichedQuestions);
+  selectedQuestionIndex = 0;
+
+  // ✅ Render the journal form first
+  renderJournalEntryForm("Journalizing Activity");
+
+  // ✅ Then display the first question
+  displayQuestion(selectedQuestionIndex);
+
+  loginPanel.style.display = "none";
+  activityPanel.style.display = "block";
+  submitBtn.disabled = false;
+  startCountdown(studentAnswersLog.duration);
+}
+
+function extractAndRenderMetadata(questions) {
+  const accountsSet = new Set();
+
+  questions.forEach(q => {
+    const answersArray = Array.isArray(q.answer) ? q.answer : [q.answer];
+
+    answersArray.forEach(a => {
+      if (a?.account) accountsSet.add(a.account);
+
+      if (Array.isArray(a.effects)) {
+        a.effects.forEach(effect => {
+          if (effect?.account) accountsSet.add(effect.account);
+        });
+      }
+    });
+  });
+
+  const sortedAccounts = [...accountsSet].sort();
+  window.availableAccounts = sortedAccounts;
+
+  extractAndRenderAvailableAccounts(sortedAccounts);
+}
+
+function extractAndRenderAvailableAccounts(accounts) {
+  const panel = document.getElementById("availableAccountsPanel");
+  if (!panel) {
+    console.warn("⚠️ 'availableAccountsPanel' not found.");
+    return;
+  }
+
+  panel.innerHTML = ""; // Clear previous content
+
+  if (accounts.length === 0) {
+    panel.textContent = "⚠️ No accounts found.";
+    return;
+  }
+
+  const columnCount = 3;
+  const columns = Array.from({ length: columnCount }, () => document.createElement("ul"));
+
+  accounts.forEach((account, index) => {
+    const columnIndex = index % columnCount;
+    const item = document.createElement("li");
+    item.textContent = account;
+    columns[columnIndex].appendChild(item);
+  });
+
+  const container = document.createElement("div");
+  container.style.display = "flex";
+  container.style.gap = "2rem";
+
+  columns.forEach(col => {
+    col.style.flex = "1";
+    container.appendChild(col);
+  });
+
+  panel.appendChild(container);
+}
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("Idnumber").value.trim();
+  const sectionCode = document.getElementById("sectionCode").value.trim();
+  const password = document.getElementById("passWord").value.trim();
+
+  loginStatus.textContent = "🔍 Validating...";
+  try {
+    currentStudent = await validateStudent(id, password, sectionCode);
+    loginStatus.textContent = "✅ Login successful. Checking for activity...";
+    const activity = await findActiveActivity(sectionCode);
+    if (!activity) {
+      loginStatus.textContent = "⚠️ No active activity found for this section.";
+      return;
+    }
+
+    const questions = activity.questions || [];
+    console.log("📦 Activity found:", activity);
+    console.log("📋 Questions in activity:", activity.questions);
+    try {
+      console.log("🚀 Starting activity...");
+      startActivity(questions);
+      console.log("✅ Activity started.");
+      console.log("🧠 Extracting metadata...");
+      extractAndRenderMetadata(questions);
+      console.log("✅ Metadata rendered.");
+
+    } catch (err) {
+      console.error("🔥 Error during activity rendering:", err.message);
+      loginStatus.textContent = `🚫 Failed to render activity: ${err.message}`;
+    }
+
+  } catch (err) {
+    console.error("🔥 Error:", err.message);
+    loginStatus.textContent = `🚫 ${err.message}`;
+  }
+});
+
+function renderJournalEntryForm(headerText) {
+  const panel = document.getElementById("constructedResponsePanel");
+  if (!panel) {
+    console.warn("⚠️ constructedResponsePanel not found.");
+    return;
+  }
+
+  panel.innerHTML = `
+    <h3>${headerText}</h3>
+    <div style="overflow-x: auto;">
+      <table style="width: max-content; border-collapse: collapse;">
+      <div id="journalFeedback" style="color: red; margin-top: 0.5rem;"></div>
+        <thead>
+          <tr>
+            <th style="width: 7ch; font-family: monospace; font-size: 14px;">Date</th>
+            <th style="width: 35ch; font-family: monospace; font-size: 14px;">Account Titles and Explanation</th>
+            <th style="width: 3ch; font-family: monospace; font-size: 14px;">PR</th>
+            <th style="width: 10ch; font-family: monospace; font-size: 14px; text-align: center;">Debit</th>
+            <th style="width: 10ch; font-family: monospace; font-size: 14px; text-align: center;">Credit</th>
+          </tr>
+        </thead>
+      </table>
+      <div style="max-height: 300px; overflow-y: auto;">
+        <table id="journalTable" style="width: max-content; border-collapse: collapse;">
+          <tbody id="journalBody"></tbody>
+        </table>
+      </div>
+     </div>
+    <button id="addJournalRowBtn" style="margin-top: 0.5rem;" disabled>➕ Add Row</button>
+    <div id="journalFeedback" style="color: red; margin-top: 0.5rem;"></div>
+    `;
+    journalRowCount = 0;
+    setTimeout(() => {
+      const body = document.getElementById("journalBody");
+      const addRowBtn = document.getElementById("addJournalRowBtn");
+      if (!body || !addRowBtn) {
+        console.warn("⚠️ journalBody or addJournalRowBtn not found.");
+        return;
+      }
+
+// ➕ Add one row when button is clicked
+addRowBtn.addEventListener("click", () => {
+  if (journalRowCount >= 10) return;
+
+    const questionKey = `q${String(selectedQuestionIndex + 1).padStart(2, "0")}`;
+    const newRow = createJournalRow(questionKey);
+    body.appendChild(newRow);
+    journalRowCount++;
+
+    addRowBtn.disabled = true;
+    monitorLastRowForInput();
+    });
+  }, 0);
+}
+
+function createJournalRow(questionKey = null) {
+  const row = document.createElement("tr");
+
+  // ✅ Tag immediately if questionKey is provided
+  if (questionKey) {
+    row.dataset.questionKey = questionKey;
+    row.dataset.visible = "true";
+  }
+
+row.innerHTML = `
+  <td><input type="text" class="journal-date" maxlength="7" style="text-align: right; width: 7ch;" /></td>
+  <td><input type="text" class="journal-account" style="width: 35ch; font-family: monospace; white-space: pre;" /></td>
+  <td><input type="text" class="journal-pr" maxlength="3" style="text-align: center; width: 3ch;" /></td>
+  <td><input type="text" class="journal-debit" maxlength="12" style="text-align: right; width: 10ch;" /></td>
+  <td style="display: flex; align-items: center;">
+    <input type="text" class="journal-credit" maxlength="12" style="text-align: right; width: 10ch;" />
+    <div class="effectRowMenu" style="position: relative;">
+      <button class="menuButton" style="margin-left: 0.5em;">⋮</button>
+      <ul class="menuDropdown" style="display: none; position: absolute; right: 0; background: white; border: 1px solid #ccc; list-style: none; padding: 0.2em; margin: 0; z-index: 10;">
+        <li class="delete-row-btn" style="cursor: pointer; padding: 0.2em 0.5em;">🗑️ Delete</li>
+      </ul>
+    </div>
+  </td>
+`;
+// ✅ Wire up delete button
+// Add event listeners for dropdown toggle and delete
+  const menuButton = row.querySelector(".menuButton");
+  const dropdown = row.querySelector(".menuDropdown");
+  const deleteBtn = row.querySelector(".delete-row-btn");
+
+menuButton.addEventListener("click", () => {
+  const isVisible = dropdown.style.display === "block";
+  dropdown.style.display = isVisible ? "none" : "block";
+});
+
+deleteBtn.addEventListener("click", deleteJournalRow);
+
+document.addEventListener("click", (e) => {
+  if (!row.contains(e.target)) {
+    dropdown.style.display = "none";
+  }
+});
+
+  // 🧠 Still keep the input listener for fallback tagging
+  const inputs = row.querySelectorAll("input");
+  inputs.forEach(input => {
+    input.addEventListener("input", () => {
+      if (!row.dataset.questionKey && questionKey) {
+        row.dataset.questionKey = questionKey;
+        row.dataset.visible = "true";
+      }
+    });
+  });
+
+  // ✅ Attach validation listeners to this row
+  bindValidationToRow(row);
+
+  setTimeout(updateJournalScroll, 0);
+  return row;
+}
+
+function deleteJournalRow(event) {
+  const button = event.target;
+  const row = button.closest("tr");
+  if (row) {
+    row.remove();
+    updateJournalScroll(); // Optional: refresh scroll or layout
+  }
+}
+
+
+
+function monitorLastRowForInput() {
+  const body = document.getElementById("journalBody");
+  const addRowBtn = document.getElementById("addJournalRowBtn");
+  if (!body || !addRowBtn) return;
+
+  const rows = Array.from(body.querySelectorAll("tr"));
+  const lastRow = rows[rows.length - 1];
+  if (!lastRow) return;
+
+  const inputs = lastRow.querySelectorAll("input");
+
+  const checkInput = () => {
+    const hasInput = Array.from(inputs).some(inp => inp.value.trim());
+    addRowBtn.disabled = !hasInput;
+  };
+
+  inputs.forEach(input => {
+    //input.addEventListener("input", checkInput);
+    //input.addEventListener("change", checkInput);
+    input.addEventListener("blur", checkInput); // ✅ catches outside click
+    input.addEventListener("paste", checkInput); // ✅ catches paste
+  });
+
+  // Initial check in case input already exists
+  checkInput();
+}
+
+function attachValidationListeners(questionKey) {
+  const allRows = Array.from(document.querySelectorAll("#journalBody tr"));
+  const currentQuestionRows = allRows.filter(r =>
+    r.dataset.questionKey === questionKey && r.dataset.visible === "true"
+  );
+
+  currentQuestionRows.forEach((row, index) => {
+    const inputs = row.querySelectorAll("input");
+
+    inputs.forEach(input => {
+      input.addEventListener("blur", () => {
+        console.log(`🔍 Validating row ${index + 1} on blur...`);
+        validateRowStructure(row, index, currentQuestionRows, questionKey);
+      });
+
+     /* input.addEventListener("input", () => {
+        console.log(`🔁 Validating row ${index + 1} on input...`);
+        validateRowStructure(row, index, currentQuestionRows, questionKey);
+      });*/
+    });
+  });
+}
+
+/*function isBlankRow(index) {
+  const row = currentRows[index];
+  const inputs = row.querySelectorAll("input");
+  return Array.from(inputs).every(input => !input.value.trim());
+}*/
+
+function isExplanationRow(row) {
+  const accountRaw = row.querySelector(".journal-account")?.value || "";
+  const debitValue = row.querySelector(".journal-debit")?.value.trim() || "";
+  const creditValue = row.querySelector(".journal-credit")?.value.trim() || "";
+  return accountRaw.trim() && !debitValue && !creditValue;
+}
+
+function bindValidationToRow(row) {
+  const inputs = row.querySelectorAll("input");
+
+  inputs.forEach(input => {
+    input.addEventListener("input", () => {
+      const rowIndex = Array.from(document.querySelectorAll("#journalBody tr")).indexOf(row);
+      console.log(`🔁 Validating row ${rowIndex + 1} on input...`);
+      validateRowStructure(row, rowIndex);
+    });
+
+    input.addEventListener("blur", () => {
+      const rowIndex = Array.from(document.querySelectorAll("#journalBody tr")).indexOf(row);
+      console.log(`🔍 Validating row ${rowIndex + 1} on blur...`);
+      validateRowStructure(row, rowIndex);
+    });
+  });
+}
+
+function appendRowWarning(message) {
+  const feedback = document.getElementById("journalFeedback");
+  if (feedback.textContent) {
+    feedback.textContent += `\n${message}`;
+  } else {
+    feedback.textContent = message;
+  }
+}
+
+
+
+// START OF validate ROW STRUCTURE
+function validateRowStructure(row, index, currentQuestionRows) {
+  logToValidation(`🚨 validateRowStructure triggered for Row ${index + 1}`);
+
+  const feedback = document.getElementById("journalFeedback");
+  feedback.textContent = "";
+
+  const questionKey = row.dataset.questionKey;
+  if (!journalState[questionKey]) {
+    journalState[questionKey] = { year: null, month: null };
+  }
+
+  let hasError = false;
+  const triggerWarning = message => {
+    if (feedback.textContent) {
+      feedback.textContent += `\n${message}`;
+    } else {
+      feedback.textContent = message;
+    }
+    hasError = true;
+  };
+
+ 		const currentQuestion = shuffledQuestions[selectedQuestionIndex];
+
+  const localState = journalState[questionKey];
+  const datePatternYear = /^\d{4}$/;
+  const datePatternFullMonth = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}$/;
+  const datePatternDayOnly = /^\d{1,2}$/;  
+	
+  const accountRaw = row.querySelector(".journal-account")?.value || "";
+  const debitValue = row.querySelector(".journal-debit")?.value.trim() || "";
+  const creditValue = row.querySelector(".journal-credit")?.value.trim() || "";
+    const normalizedAccountRaw = accountRaw.replace(/\t/g, "    ");
+const accountTrimmed = normalizedAccountRaw.replace(/\s+/g, " ").trim();
+const normalizedAccount = accountTrimmed.toLowerCase();
+
+//const accountTrimmed = accountRaw.trim();
+  const currentRows = Array.from(document.querySelectorAll("#journalBody tr"));
+  const isFirstQuestion = selectedQuestionIndex === 0;
+
+  // visibleQuestionRows REPLACES currentQuestionRows
+  const visibleQuestionRows = currentRows.filter(r => r.dataset.questionKey === questionKey && r.dataset.visible === "true"); 
+  const currentRowIndexInGroup = visibleQuestionRows.indexOf(row);
+  const isFirstRowOfQuestion = currentRowIndexInGroup === 0;
+  const isSecondRowOfQuestion = currentRowIndexInGroup === 1;
+  
+const dateRaw = row.querySelector(".journal-date")?.value.trim() || "";
+  const dateAlreadyDeclared = localState.year || localState.month || (currentRowIndexInGroup > 0 && !isFirstQuestion);
+	if (index === 2) { // Row 3 (0-based index)
+  logToValidation(`🔍 Row ${index + 1} — Date Validation Trace`);
+  logToValidation(`🗓️ Raw date: "${dateRaw}"`);
+  logToValidation(`🧪 Matches YYYY: ${datePatternYear.test(dateRaw)}`);
+  logToValidation(`🧪 Matches Mmm d: ${datePatternFullMonth.test(dateRaw)}`);
+  logToValidation(`🧪 Matches day-only: ${datePatternDayOnly.test(dateRaw)}`);
+  logToValidation(`📦 dateAlreadyDeclared: ${dateAlreadyDeclared}`);
+}
+
+const firstRow = visibleQuestionRows[0];
+
+  const hasAccountOrAmount = accountRaw || debitValue || creditValue;
+  const otherKeys = Object.keys(journalState).filter(k => k !== questionKey);
+  const otherYears = otherKeys.map(k => journalState[k].year).filter(y => y !== null);
+  const otherMonths = otherKeys.map(k => journalState[k].month).filter(m => m !== null);
+  const firstRowDateRaw = firstRow.querySelector(".journal-date")?.value.trim() || "";
+  const firstRowDeclaredYear = datePatternYear.test(firstRowDateRaw);
+  const firstRowDeclaredMonth = datePatternFullMonth.test(firstRowDateRaw);
+  const firstRowDeclaredDay = datePatternDayOnly.test(firstRowDateRaw);
+  let explanationDetected = false;
+
+  logToValidation(`Row ${index + 1} — Date: "${dateRaw}", Account: "${accountRaw}", Debit: "${debitValue}", Credit: "${creditValue}"`);
+
+  const missing = [];
+
+// ✅ Early exit for valid year-only structural row
+if (isFirstRowOfQuestion && datePatternYear.test(dateRaw) && !accountTrimmed && !debitValue && !creditValue) {
+  logToValidation(`✅ Row ${index + 1} is a valid year-only structural row`);
+  return true;
+}
+	
+  // 🗓️ First row of any question
+  if (isFirstRowOfQuestion) {
+    if (isFirstQuestion) {
+      if (!datePatternYear.test(dateRaw)) {
+       // triggerWarning(`⚠️ Row ${index + 1}: First transaction must begin with a year (YYYY) only.`);
+      } else {
+        const year = parseInt(dateRaw, 10);
+        localState.year = year;
+        logToValidation(`✅ Year ${year} set for ${questionKey}`);
+		// 🧾 Match declared year to expected year from Firebase
+const firebaseDate = shuffledQuestions[selectedQuestionIndex]?.Date;
+if (firebaseDate) {
+  const [expectedYear] = firebaseDate.split("-").map(str => parseInt(str, 10));
+  if (year === expectedYear) {
+    logToValidation(`✅ Row ${index + 1}: Declared year matches expected year (${expectedYear})`);
+  } else {
+   // triggerWarning(`⚠️ Row ${index + 1}: Declared year ${year} does not match expected year (${expectedYear})`);
+  }
+}
+        if (hasAccountOrAmount) {
+         // triggerWarning(`⚠️ Row ${index + 1}: Year row must not contain account or amount entries.`);
+        }
+      }
+    } else {
+      if (datePatternYear.test(dateRaw)) {
+        const year = parseInt(dateRaw, 10);
+        if (otherYears.includes(year)) {
+         // triggerWarning(`⚠️ Row ${index + 1}: Year ${year} already declared. Use ${Math.max(...otherYears) + 1} if transaction is changing a year.`);
+        } else {
+          localState.year = year;
+          logToValidation(`✅ New year ${year} set for ${questionKey}`);
+        }
+        if (hasAccountOrAmount) {
+         // triggerWarning(`⚠️ Row ${index + 1}: Year row must not contain account or amount entries.`);
+        }
+      } else if (datePatternFullMonth.test(dateRaw)) {
+        const month = dateRaw.split(" ")[0];
+        if (otherMonths.includes(month)) {
+         // triggerWarning(`⚠️ Row ${index + 1}: Month "${month}" already declared. Use day only ("d" or "dd") unless declaring a new month.`);
+        } else {
+          localState.month = month;
+          logToValidation(`✅ New month "${month}" set for ${questionKey}`);
+			// 🧾 Match declared full date or day to expected date from Firebase
+const firebaseDate = shuffledQuestions[selectedQuestionIndex]?.Date;
+if (firebaseDate && localState.year && localState.month && dateRaw) {
+  const [expectedYear, expectedMonthNum, expectedDay] = firebaseDate.split("-").map(str => parseInt(str, 10));
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const expectedMonthName = monthNames[expectedMonthNum - 1];
+
+  const declaredYear = localState.year;
+  const declaredMonth = localState.month;
+  const isFullMonthDay = datePatternFullMonth.test(dateRaw);
+  const isDayOnly = datePatternDayOnly.test(dateRaw);
+  const declaredDay = isFullMonthDay
+    ? parseInt(dateRaw.split(" ")[1], 10)
+    : isDayOnly
+      ? parseInt(dateRaw, 10)
+      : null;
+
+  if (isFullMonthDay) {
+    if (
+      declaredYear === expectedYear &&
+      declaredMonth === expectedMonthName &&
+      declaredDay === expectedDay
+    ) {
+      logToValidation(`✅ Row ${index + 1}: Full date matches expected date (${firebaseDate})`);
+    } else {
+     // triggerWarning(`⚠️ Row ${index + 1}: Declared date (${declaredMonth} ${declaredDay}, ${declaredYear}) does not match expected date (${firebaseDate})`);
+    }
+  } else if (isDayOnly) {
+    if (declaredDay === expectedDay) {
+      logToValidation(`✅ Row ${index + 1}: Declared day ${declaredDay} matches expected day (${expectedDay})`);
+    } else {
+     // triggerWarning(`⚠️ Row ${index + 1}: Declared day ${declaredDay} does not match expected day (${expectedDay})`);
+    }
+  }
+}
+        }
+      } else if (datePatternDayOnly.test(dateRaw)) {
+        logToValidation(`✅ Day-only date "${dateRaw}" accepted in Row ${index + 1}`);
+      } else {
+       // triggerWarning(`⚠️ Row ${index + 1}: Invalid date format. Use a new year, a new month, or day only ("d" or "dd").`);
+      }
+    }
+  }
+
+  if (isSecondRowOfQuestion) {
+    if (isFirstQuestion) {
+      if (!datePatternFullMonth.test(dateRaw)) {
+       // triggerWarning(`⚠️ Row ${index + 1}: Second row must contain a full date in the format "Mmm d" or "Mmm dd" (e.g., "Jan 2").`);
+      } else {
+        const month = dateRaw.split(" ")[0];
+        localState.month = month;
+        logToValidation(`✅ Month "${month}" set for ${questionKey}`);
+		
+			
+      }
+    } else {
+      if (firstRowDeclaredYear) {
+        if (!datePatternFullMonth.test(dateRaw)) {
+         // triggerWarning(`⚠️ Row ${index + 1}: After declaring a new year, you must declare a full date in the format "Mmm d" or "Mmm dd".`);
+        } else {
+          const month = dateRaw.split(" ")[0];
+          localState.month = month;
+          logToValidation(`✅ Month "${month}" set for ${questionKey}`);
+        }
+      } else if (firstRowDeclaredMonth || firstRowDeclaredDay) {
+        if (dateRaw) {
+         // triggerWarning(`⚠️ Row ${index + 1}: Date entry not allowed here. A valid date was already declared in the first row of this transaction.`);
+        } else {
+          logToValidation(`✅ No date entered in Row ${index + 1} — correct`);
+        }
+      } else {
+        if (datePatternDayOnly.test(dateRaw)) {
+          logToValidation(`✅ Day-only date "${dateRaw}" accepted in Row ${index + 1}`);
+        } else if (datePatternFullMonth.test(dateRaw)) {
+          if (!firstRowDeclaredYear) {
+           // triggerWarning(`⚠️ Row ${index + 1}: Month cannot be declared unless a year was declared in the previous row.`);
+          } else {
+            const month = dateRaw.split(" ")[0];
+            localState.month = month;
+            logToValidation(`✅ Month "${month}" set for ${questionKey}`);
+          }
+        } else if (dateRaw) {
+         // triggerWarning(`⚠️ Row ${index + 1}: Invalid date format. Use "Mmm d", "Mmm dd", or day-only ("d" or "dd").`);
+        }
+      }
+    }
+  }
+
+  if (dateAlreadyDeclared && currentRowIndexInGroup > 1 && dateRaw) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Date entry not allowed after a valid date has already been declared for this transaction.`);
+  }
+
+  const isSecondRowOfFirstQuestion = isFirstQuestion && isSecondRowOfQuestion;
+  if (!isFirstRowOfQuestion && !isSecondRowOfFirstQuestion && dateRaw && !datePatternDayOnly.test(dateRaw)) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Only day ("d" or "dd") allowed unless declaring a new month or year.`);
+  }
+
+const availableAccounts = window.availableAccounts || [];
+const normalizedList = availableAccounts.map(acc => acc.toLowerCase().replace(/\s+/g, " ").trim());
+
+let priorDebitExists = false;
+let priorCreditExists = false;
+
+for (let j = 0; j < index; j++) {
+  const prevRow = visibleQuestionRows[j];
+  if (!prevRow) continue;
+
+  const prevDebit = prevRow.querySelector(".journal-debit")?.value.trim() || "";
+  const prevCredit = prevRow.querySelector(".journal-credit")?.value.trim() || "";
+
+  const cleanPrevDebit = prevDebit.replace(/[^\d.-]/g, "").trim();
+  const cleanPrevCredit = prevCredit.replace(/[^\d.-]/g, "").trim();
+
+  if (cleanPrevDebit && !isNaN(parseFloat(cleanPrevDebit))) priorDebitExists = true;
+  if (cleanPrevCredit && !isNaN(parseFloat(cleanPrevCredit))) priorCreditExists = true;
+
+  if (priorDebitExists && priorCreditExists) break;
+}
+
+logToValidation(`🔍 Prior transaction scan for Row ${index + 1}:`, {
+  priorDebitExists,
+  priorCreditExists
+});
+
+if (debitValue && !isValidAmountFormat(debitValue)) {
+ // triggerWarning(`⚠️ Row ${index + 1}: Debit amount must have comma and 2 decimal places.`);
+}
+
+const cleanDebit = debitValue.replace(/[^\d.-]/g, "").trim();
+const hasValidDebit = cleanDebit && !isNaN(parseFloat(cleanDebit));
+
+const cleanCredit = creditValue.replace(/[^\d.-]/g, "").trim();
+const hasValidCredit = cleanCredit && !isNaN(parseFloat(cleanCredit));
+
+// ✅ Match student-entered amounts against expected values
+//const currentQuestion = shuffledQuestions[selectedQuestionIndex];
+const expectedEffects = currentQuestion?.correctAnswer?.effects || [];
+
+const formatAmount = raw => {
+  const num = parseFloat(raw?.replace(/[^\d.-]/g, "").trim());
+  return isNaN(num) ? null : num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const parseAmount = str => parseFloat(str?.replace(/[^\d.-]/g, "").trim());
+
+const expectedDebitAmounts = expectedEffects
+  .filter(e => e.isDebitCredit?.toLowerCase() === "debit")
+  .map(e => parseAmount(e.amount))
+  .filter(a => !isNaN(a));
+
+const expectedCreditAmounts = expectedEffects
+  .filter(e => e.isDebitCredit?.toLowerCase() === "credit")
+  .map(e => parseAmount(e.amount))
+  .filter(a => !isNaN(a));
+
+const studentDebitAmount = parseAmount(debitValue);
+const studentCreditAmount = parseAmount(creditValue);
+
+logToValidation(`🔍 Row ${index + 1} — Expected Debit Amounts:`, expectedDebitAmounts);
+logToValidation(`🔍 Row ${index + 1} — Expected Credit Amounts:`, expectedCreditAmounts);
+logToValidation(`🔍 Row ${index + 1} — Student Debit: "${cleanDebit}", Student Credit: "${cleanCredit}"`);
+
+if (hasValidDebit) {
+  if (expectedDebitAmounts.includes(studentDebitAmount)) {
+    logToValidation(`✅ Row ${index + 1}: Debit amount ${studentDebitAmount} matches expected amount`);
+  } else {
+   // triggerWarning(`⚠️ Row ${index + 1}: Debit amount ${studentDebitAmount} does not match expected amount`);
+  }
+}
+
+if (hasValidCredit) {
+  if (expectedCreditAmounts.includes(studentCreditAmount)) {
+    logToValidation(`✅ Row ${index + 1}: Credit amount ${studentCreditAmount} matches expected amount`);
+  } else {
+   // triggerWarning(`⚠️ Row ${index + 1}: Credit amount ${studentCreditAmount} does not match expected amount`);
+  }
+}
+
+if (accountTrimmed && !hasValidDebit && !hasValidCredit) {
+  if (!priorDebitExists || !priorCreditExists) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Incomplete journal entry. Missing valid account name, valid debit or credit amount.`);
+  }
+}
+
+if (hasValidDebit) {
+  if (!accountTrimmed) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Debit amount entered but no account name provided.`);
+  } else {
+    const matchIndex = normalizedList.findIndex(acc => acc === normalizedAccount);
+    if (matchIndex === -1) {
+     // triggerWarning(`⚠️ Row ${index + 1}: "${accountTrimmed}" is not in the list of allowed accounts.`);
+    } else {
+      const originalAccount = availableAccounts[matchIndex].replace(/\s+/g, " ").trim();
+      if (originalAccount !== accountTrimmed) {
+       // triggerWarning(`⚠️ Row ${index + 1}: Account name casing mismatch. Expected "${originalAccount}", but got "${accountTrimmed}".`);
+      }
+    }
+  }
+
+
+  if (hasAnyIndentation(accountRaw)) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Debit account must not be indented. Please remove leading spaces.`);
+  }
+
+  if (!isValidDebitOrder(row, questionKey)) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Debit entry must come before any credit entry.`);
+  }
+}
+
+// 💰 Credit format
+if (creditValue && !isValidAmountFormat(creditValue)) {
+ // triggerWarning(`⚠️ Row ${index + 1}: Credit amount must have comma and 2 decimal places.`);
+}
+
+if (hasValidCredit) {
+  if (!accountTrimmed) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Credit amount entered but no account name provided.`);
+  } else {
+    const matchIndex = normalizedList.findIndex(acc => acc === normalizedAccount);
+    if (matchIndex === -1) {
+     // triggerWarning(`⚠️ Row ${index + 1}: "${accountTrimmed}" is not in the list of allowed accounts.`);
+    } else {
+      const originalAccount = availableAccounts[matchIndex].replace(/\s+/g, " ").trim();
+      if (originalAccount !== accountTrimmed) {
+       // triggerWarning(`⚠️ Row ${index + 1}: Account name casing mismatch. Expected "${originalAccount}", but got "${accountTrimmed}".`);
+      }
+    }
+  }
+
+  if (!/^ {5}\S/.test(normalizedAccountRaw)) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Credit account must be indented by exactly 5 spaces.`);
+  }
+}
+
+// ✅ Semantic match to expected debit/credit accounts from the question
+
+const expectedDebits = expectedEffects
+  .filter(e => e.isDebitCredit?.toLowerCase() === "debit")
+  .map(e => e.account.toLowerCase().replace(/\s+/g, " ").trim());
+
+const expectedCredits = expectedEffects
+  .filter(e => e.isDebitCredit?.toLowerCase() === "credit")
+  .map(e => e.account.toLowerCase().replace(/\s+/g, " ").trim());
+
+logToValidation(`🔍 Row ${index + 1} — Expected Debit Accounts:`, expectedDebits);
+logToValidation(`🔍 Row ${index + 1} — Expected Credit Accounts:`, expectedCredits);
+
+if (hasValidDebit) {
+  if (expectedDebits.includes(normalizedAccount)) {
+    logToValidation(`✅ Row ${index + 1}: Debited account "${accountTrimmed}" matches expected debit`);
+  } else {
+   // triggerWarning(`⚠️ Row ${index + 1}: Debited account "${accountTrimmed}" does not match expected debit`);
+  }
+}
+
+if (hasValidCredit) {
+  if (expectedCredits.includes(normalizedAccount)) {
+    logToValidation(`✅ Row ${index + 1}: Credited account "${accountTrimmed}" matches expected credit`);
+  } else {
+   // triggerWarning(`⚠️ Row ${index + 1}: Credited account "${accountTrimmed}" does not match expected credit`);
+  }
+}
+
+  // 🧾 Explanation validation
+const explanationCheck = isExplanationValid(index, questionKey);
+	const explanationDebitExists = priorDebitExists;
+ 	const explanationCreditExists = priorCreditExists;
+
+const hasBlankRowAfter = explanationCheck.blankRowExists;
+
+const isOnlyAccountEntry = accountTrimmed && !debitValue && !creditValue;
+logToValidation(`Row ${index + 1} — isOnlyAccountEntry: ${isOnlyAccountEntry}`);
+
+if (isOnlyAccountEntry) {
+  if (!explanationDebitExists || !explanationCreditExists) {
+    missing.push("valid explanation (must follow debit and credit)");
+  }
+
+  if (!isIndented(normalizedAccountRaw, 8)) {
+    missing.push("proper indentation for explanation (8 spaces)");
+  }
+
+  if (normalizedAccountRaw.trim().length <= 8) {
+    missing.push("meaningful explanation content");
+  }
+
+  if (!hasBlankRowAfter) {
+    missing.push("blank row after explanation");
+  }
+
+  // ✅ Real-time warnings for explanation layout
+  if (priorDebitExists && priorCreditExists) {
+    if (!isIndented(normalizedAccountRaw, 8)) {
+     // triggerWarning(`⚠️ Row ${index + 1}: Explanation must be indented by 8 spaces.`);
+    }
+
+    if (normalizedAccountRaw.trim().length <= 8) {
+     // triggerWarning(`⚠️ Row ${index + 1}: Explanation must contain meaningful content.`);
+    }
+
+    if (!hasBlankRowAfter) {
+     // triggerWarning(`⚠️ Row ${index + 1}: Explanation must be followed by a blank row.`);
+    }
+  }
+
+  // ✅ If explanation is fully valid, mark it
+	logToValidation(`🔍 Explanation validation check for Row ${index + 1}:`, {
+  explanationDebitExists,
+  explanationCreditExists,
+  indentationValid: isIndented(normalizedAccountRaw, 8),
+  contentLength: normalizedAccountRaw.trim().length,
+  hasBlankRowAfter
+});
+  if (
+     explanationDebitExists &&
+    explanationCreditExists &&
+    isIndented(normalizedAccountRaw, 8) &&
+    normalizedAccountRaw.trim().length > 8 &&
+    hasBlankRowAfter
+  ) {
+    explanationDetected = true;
+    row.dataset.skipNext = "true";
+    logToValidation(`✅ Row ${index + 1} marked as explanation — skipNext set`);
+  }
+// 🔍 Diagnostic fallback
+if (!row.dataset.skipNext) {
+  console.warn(`⚠️ Row ${index + 1} did not qualify for skipNext`);
+}
+}
+
+const hasValidAccount = accountTrimmed && normalizedList.includes(normalizedAccount);
+
+const hasAnyInput = dateRaw || accountTrimmed || debitValue || creditValue;
+const isMissingRequiredFields = 
+  (!dateRaw && !dateAlreadyDeclared) || 
+  !hasValidAccount || 
+  (!hasValidDebit && !hasValidCredit);
+
+const isIncompleteTransaction = !isOnlyAccountEntry && hasAnyInput && isMissingRequiredFields;
+if (isIncompleteTransaction) {
+  const missingParts = [];
+  if (!dateRaw && !dateAlreadyDeclared) {
+    missingParts.push("date");
+  } else if (!dateRaw && dateAlreadyDeclared) {
+    logToValidation(`✅ Row ${index + 1} inherits date from earlier row`);
+  }
+  if (!hasValidAccount) {
+    missingParts.push("valid account name");
+  }
+  if (!hasValidDebit && !hasValidCredit) {
+    missingParts.push("valid debit or credit amount");
+  }
+  // ✅ Only trigger if missingParts is non-empty
+  if (missingParts.length > 0) {
+   // triggerWarning(`⚠️ Row ${index + 1}: Incomplete journal entry. Missing ${missingParts.join(", ")}.`);
+    }
+  }
+  return !hasError;
+} // END OF validate ROW STRUCTURE
+
+
+function isValidAmountFormat(value) {
+  const regex = /^\d{1,3}(,\d{3})*(\.\d{2})$/;
+  return regex.test(value);
+}
+
+function isValidDebitOrder(row, questionKey) {
+  const allRows = Array.from(document.querySelectorAll("#journalBody tr"));
+  const currentQuestionRows = allRows.filter(r =>
+    r.dataset.questionKey === questionKey && r.dataset.visible === "true"
+  );
+
+  const localIndex = currentQuestionRows.indexOf(row);
+  if (localIndex === -1 || localIndex >= currentQuestionRows.length) return true;
+
+  console.log(`🔍 Checking debit order for Row ${localIndex + 1} in question "${questionKey}"`);
+
+  for (let j = 0; j < localIndex; j++) {
+    const creditInput = currentQuestionRows[j].querySelector(".journal-credit");
+    const rawCredit = creditInput?.value || "";
+    const cleanPrevCredit = rawCredit.replace(/[^\d.-]/g, "").trim();
+
+    console.log(`🔍 Row ${j + 1} — Credit: "${cleanPrevCredit}"`);
+
+    if (cleanPrevCredit && !isNaN(parseFloat(cleanPrevCredit))) {
+      console.log(`⛔ Found prior credit before debit in Row ${j + 1}`);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// FOR DEBIT NO INDENTION VALIDATION
+function hasAnyIndentation(accountRaw) {
+  return /^\s/.test(accountRaw);
+}
+
+// FOR CREDIT AND EXPLANATION INDENTION VALIDATION
+function isIndented(accountRaw, expectedSpaces = 0) {
+  const match = accountRaw.match(/^(\s*)(\S.*)?$/);
+  if (!match) return false;
+  const leadingSpaces = match[1] || "";
+  return leadingSpaces.length === expectedSpaces;
+}
+
+
+function isExplanationValid(index, questionKey) {
+  let priorDebitComplete = false;
+  let priorCreditComplete = false;
+
+  const allRows = Array.from(document.querySelectorAll("#journalBody tr"));
+  const explanationRow = allRows[index];
+  const currentQuestionRows = allRows.filter(r =>
+    r.dataset.questionKey === questionKey && r.dataset.visible === "true"
+  );
+  const localIndex = currentQuestionRows.indexOf(explanationRow);
+
+  // 🔍 Check for prior debit and credit
+  for (let j = 0; j < localIndex; j++) {
+    const row = currentQuestionRows[j];
+    const account = row.querySelector(".journal-account")?.value.trim();
+    const debit = row.querySelector(".journal-debit")?.value.trim();
+    const credit = row.querySelector(".journal-credit")?.value.trim();
+
+    const cleanDebit = debit.replace(/[^\d.-]/g, "").trim();
+    const cleanCredit = credit.replace(/[^\d.-]/g, "").trim();
+
+    if (account && cleanDebit && !isNaN(parseFloat(cleanDebit))) {
+      priorDebitComplete = true;
+    }
+
+    if (account && cleanCredit && !isNaN(parseFloat(cleanCredit))) {
+      priorCreditComplete = true;
+    }
+
+    if (priorDebitComplete && priorCreditComplete) break;
+  }
+
+  const explanationIsAllowed = priorDebitComplete && priorCreditComplete;
+
+  // 🔍 Check for blank row after explanation
+  const nextRow = currentQuestionRows[localIndex + 1];
+  let blankRowExists = false;
+
+  if (nextRow) {
+    const inputs = nextRow.querySelectorAll("input");
+    blankRowExists = Array.from(inputs).every(input => !input.value.trim());
+  }
+
+  // ✅ Determine if explanation is valid and next row should be skipped
+  const isExplanationValid = explanationIsAllowed && blankRowExists;
+  const shouldSkipNextRow = isExplanationValid;
+
+  return {
+    explanationIsAllowed,
+    blankRowExists,
+    isExplanationValid,
+    shouldSkipNextRow
+  };
+}
+
+function validateJournalStructure() {
+  const index = selectedQuestionIndex;
+  const currentKey = `q${String(index + 1).padStart(2, "0")}`;
+
+  console.log(`🔍 Validating journal structure for questionKey: "${currentKey}" (index ${index})`);
+  const isValid = validateJournalStructureForKey(currentKey);
+
+  console.log(`✅ Validation result for "${currentKey}":`, isValid);
+  return isValid;
+}
+
+ // NEW VERSION OF VALIDATE JOURNAL STRUCTURE STARTS HERE
+function validateJournalStructureForKey(questionKey) {
+  const feedback = document.getElementById("journalFeedback");
+  feedback.textContent = "";
+
+  const isFirstQuestion = questionKey === "q01";
+
+  const allRows = Array.from(document.querySelectorAll("#journalBody tr"));
+  const currentQuestionRows = allRows.filter(r =>
+    r.dataset.questionKey === questionKey && r.dataset.visible === "true"
+  );
+
+  console.log(`🔍 Validating ${currentQuestionRows.length} rows for questionKey: "${questionKey}"`);
+
+  if (currentQuestionRows.length === 0) {
+    console.warn(`⚠️ No visible rows found for questionKey: "${questionKey}". Validation skipped.`);
+    return true;
+  }
+
+  let hasError = false;
+  let explanationDetected = false;
+  let hasValidDebit = false;
+  let hasValidCredit = false;
+  let dateDeclared = journalState[questionKey]?.year || journalState[questionKey]?.month;
+  let skipNextRow = false;
+
+  const rowSummaries = [];
+
+  for (let i = 0; i < currentQuestionRows.length; i++) {
+    if (skipNextRow) {
+      skipNextRow = false;
+      continue;
+    }
+
+    const row = currentQuestionRows[i];
+    const prevRow = currentQuestionRows[i - 1];
+    if (prevRow && prevRow.dataset.skipNext === "true") {
+      console.log(`✅ Row ${i + 1} skipped due to previous row's skipNext flag`);
+      continue;
+    }
+
+    let isValid = validateRowStructure(row, i, currentQuestionRows);
+
+    const accountRaw = row.querySelector(".journal-account")?.value || "";
+    const debitValue = row.querySelector(".journal-debit")?.value.trim() || "";
+    const creditValue = row.querySelector(".journal-credit")?.value.trim() || "";
+    const accountTrimmed = accountRaw.trim();
+    const isOnlyAccountEntry = accountTrimmed && !debitValue && !creditValue;
+
+    if (!isValid) {
+      console.warn(`⚠️ Summary validator: Row ${i + 1} failed validateRowStructure`);
+      hasError = true;
+    }
+
+    const dateRaw = row.querySelector(".journal-date")?.value.trim() || "";
+    if (
+      dateRaw &&
+      (
+        /^\d{4}$/.test(dateRaw) || // Year
+        /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}$/.test(dateRaw) || // Month Day
+        /^\d{1,2}$/.test(dateRaw) // Day only
+      )
+    ) {
+      dateDeclared = true;
+    }
+
+    const isYearOnlyRow = /^\d{4}$/.test(dateRaw) && !accountTrimmed && !debitValue && !creditValue;
+
+    const cleanDebit = debitValue.replace(/[^\d.-]/g, "").trim();
+    const cleanCredit = creditValue.replace(/[^\d.-]/g, "").trim();
+    const normalizedAccount = accountTrimmed.toLowerCase().replace(/\s+/g, " ").trim();
+    const normalizedList = (window.availableAccounts || []).map(acc => acc.toLowerCase().replace(/\s+/g, " ").trim());
+    const hasValidAccount = accountTrimmed && normalizedList.includes(normalizedAccount);
+
+    const hasRowValidDebit = cleanDebit && !isNaN(parseFloat(cleanDebit));
+    const hasRowValidCredit = cleanCredit && !isNaN(parseFloat(cleanCredit));
+    if (hasRowValidDebit) hasValidDebit = true;
+    if (hasRowValidCredit) hasValidCredit = true;
+
+    const missing = [];
+
+    // 🧾 Explanation validation
+    if (isOnlyAccountEntry) {
+      const normalizedAccountRaw = accountRaw.replace(/\t/g, "    ");
+      let priorDebitExists = false;
+      let priorCreditExists = false;
+
+      for (let j = 0; j < i; j++) {
+        const earlierRow = currentQuestionRows[j];
+        const prevDebit = earlierRow.querySelector(".journal-debit")?.value.trim() || "";
+        const prevCredit = earlierRow.querySelector(".journal-credit")?.value.trim() || "";
+
+        const cleanPrevDebit = prevDebit.replace(/[^\d.-]/g, "").trim();
+        const cleanPrevCredit = prevCredit.replace(/[^\d.-]/g, "").trim();
+
+        if (cleanPrevDebit && !isNaN(parseFloat(cleanPrevDebit))) priorDebitExists = true;
+        if (cleanPrevCredit && !isNaN(parseFloat(cleanPrevCredit))) priorCreditExists = true;
+
+        if (priorDebitExists && priorCreditExists) break;
+      }
+
+      if (!priorDebitExists || !priorCreditExists) {
+        missing.push("valid explanation (must follow debit and credit)");
+      }
+
+      if (!isIndented(normalizedAccountRaw, 8)) {
+        missing.push("proper indentation for explanation (8 spaces)");
+      }
+
+      if (normalizedAccountRaw.trim().length <= 8) {
+        missing.push("meaningful explanation content");
+      }
+
+      let isBlankRow = false;
+
+      const nextRow = currentQuestionRows[i + 1];
+      if (!nextRow) {
+        missing.push("blank row after explanation");
+      } else {
+        const nextInputs = [
+          ".journal-date",
+          ".journal-account",
+          ".journal-pr",
+          ".journal-debit",
+          ".journal-credit"
+        ].map(sel => nextRow.querySelector(sel)?.value.trim());
+
+        console.log(`🔍 Next row inputs after Row ${i + 1}:`, nextInputs);
+
+        isBlankRow = nextInputs.every(val => !val || val.trim() === "");
+        if (!isBlankRow) {
+          missing.push("blank row after explanation");
+        }
+      }
+
+      console.log(`🔍 Summary validation check for Row ${i + 1}:`, {
+        priorDebitExists,
+        priorCreditExists,
+        indentationValid: isIndented(normalizedAccountRaw, 8),
+        contentLength: normalizedAccountRaw.trim().length,
+        isBlankRow
+      });
+
+      if (
+        priorDebitExists &&
+        priorCreditExists &&
+        isIndented(normalizedAccountRaw, 8) &&
+        normalizedAccountRaw.trim().length > 8 &&
+        isBlankRow
+      ) {
+        explanationDetected = true;
+        skipNextRow = true;
+        isValid = true;
+      }
+    }
+
+    if (missing.length > 0) {
+      rowSummaries.push(`- Row ${i + 1}: missing ${missing.join(", ")}`);
+    }
+  }
+
+  // ✅ Final completeness check
+  const finalMissing = [];
+  if (!dateDeclared) finalMissing.push("a date entry");
+  if (!hasValidDebit) finalMissing.push("a debit entry");
+  if (!hasValidCredit) finalMissing.push("a credit entry");
+  if (!explanationDetected) finalMissing.push("an explanation row");
+
+  if (finalMissing.length > 0) {
+    rowSummaries.push(`- Missing ${finalMissing.join(", ")} before navigating away from this question.`);
+    hasError = true;
+  }
+
+  if (hasError) {
+    const summaryText = rowSummaries.length > 0
+      ? `⚠️ You must complete the following before continuing:\n${rowSummaries.join("\n")}`
+      : `⚠️ One or more rows are invalid. Please review the warnings above.`;
+
+    feedback.textContent = summaryText;
+    return false;
+  }
+
+  return true;
+} // END OF VALIDATE JOURNAL STRUCTURE FOR KEY
+
+
+function updateJournalScroll() {
+  const body = document.getElementById("journalBody");
+  if (!body) return;
+
+  const rows = body.querySelectorAll("tr");
+  if (rows.length > 10) {
+    body.style.maxHeight = "300px"; // adjust as needed
+    body.style.overflowY = "auto";
+  } else {
+    body.style.maxHeight = "none";
+    body.style.overflowY = "hidden";
+  }
+}
+
+function formatAmount(value) {
+  // Remove currency symbols and other non-numeric characters
+  const cleaned = value.replace(/[^\d.,-]/g, "");
+  const num = parseFloat(cleaned.replace(/,/g, ""));
+  if (isNaN(num)) return "0.00";
+  return num.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+
+    function getLetterGrade(score, totalItems) {
+      const percentage = (score / totalItems) * 100;
+      if (percentage >= 95) return "A";
+      if (percentage >= 85) return "P";
+      if (percentage >= 75) return "D";
+      return "IR";
+    }
+
+   function setupAutoSubmit(endTimeMillis) {
+      const now = Date.now();
+      const delay = endTimeMillis - now;
+      if (delay > 0) {
+        setTimeout(() => {
+          if (!submitBtn.disabled) {
+            submitBtn.click();
+          }
+        }, delay);
+      }
+    }
+
+    function updateSubmitButtonState() {
+      //const allAnswered = shuffledQuestions.every(q => q.studentAnswer);
+      //submitBtn.disabled = !allAnswered;
+  const totalItems = getTotalExpectedInputs(shuffledQuestions);
+  const rawInputCount = countRawStudentInputs(studentAnswersLog);
+
+  console.log(`🧮 Raw Inputs Logged: ${rawInputCount} / ${totalItems}`);
+  submitBtn.disabled = rawInputCount < totalItems;
+    }
+
+window.printJournal = function() {
+  const content = document.getElementById("printableJournal").innerHTML;
+  const printWindow = window.open("", "", "width=800,height=600");
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Journal</title>
+        <style>
+          body { font-family: monospace; font-size: 14px; padding: 20px; }
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid #000; padding: 4px; text-align: left; }
+          th:nth-child(1), td:nth-child(1),
+          th:nth-child(4), td:nth-child(4),
+          th:nth-child(5), td:nth-child(5) {
+            text-align: right;
+          }
+          ul { padding-left: 1.2rem; }
+        </style>
+      </head>
+      <body>
+        ${content}
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+async function submitStudentAnswer() {
+  const selectedQuestion = shuffledQuestions[selectedQuestionIndex];
+  const { Idnumber, CN, LastName, firstName } = currentStudent;
+
+  const studentId = Idnumber;
+  const studentCN = CN;
+  const studentLastName = LastName;
+  const studentFirstName = firstName;
+
+  const collectionId = `results_${title}_${attendanceId}`;
+  const documentId = `${studentCN}-${studentId}-${studentLastName}-${studentFirstName}`;
+
+const sourceJournalBody = document.querySelector("#journalBody");
+const submittedPanel = document.getElementById("submittedJournalPanel");
+
+let finalJournalHTML = "";
+const validationLogs = [];
+
+if (sourceJournalBody) {
+  const cleanedRows = Array.from(sourceJournalBody.children).map((row, index) => {
+    const clonedRow = row.cloneNode(true);
+
+    // Replace inputs with static text, preserving indentation
+    clonedRow.querySelectorAll("input").forEach(input => {
+      const td = input.closest("td");
+      if (td) {
+        const rawValue = input.value || "";
+        const leadingSpaces = rawValue.match(/^ */)?.[0].length || 0;
+        const formattedValue = "&nbsp;".repeat(leadingSpaces) + rawValue.trim();
+        td.innerHTML = formattedValue;
+      }
+    });
+
+    // Apply styles to each cell
+    Array.from(clonedRow.children).forEach((td, colIndex) => {
+      td.style.border = "1px solid #000";
+      td.style.padding = "4px";
+      td.style.fontFamily = "monospace";
+      td.style.fontSize = "14px";
+      if ([0, 3, 4].includes(colIndex)) {
+        td.style.textAlign = "right";
+      }
+      if (!td.innerHTML.trim()) {
+        td.innerHTML = "&nbsp;";
+      }
+    });
+
+    // Remove interactive elements
+    clonedRow.querySelectorAll(".menuButton, .menuDropdown, .delete-row-btn").forEach(el => el.remove());
+
+    // 🔍 Run validation logic (example: explanation must be followed by blank row)
+    const isExplanationRow = row.dataset.explanation === "true";
+    const nextRow = sourceJournalBody.children[index + 1];
+    const blankRowExists = nextRow && Array.from(nextRow.querySelectorAll("input")).every(input => !input.value.trim());
+
+    if (isExplanationRow && !blankRowExists) {
+      validationLogs.push(`Row ${index + 1}: Explanation must be followed by a blank row.`);
+    }
+
+    return clonedRow.outerHTML;
+  });
+
+  // 🧾 Final journal table
+  finalJournalHTML = `
+    <table style="width: max-content; border-collapse: collapse; font-family: monospace; font-size: 14px; border: 1px solid #000;">
+      <thead>
+        <tr>
+          <th style="width: 7ch; border: 1px solid #000; text-align: right; padding: 4px;">Date</th>
+          <th style="width: 35ch; border: 1px solid #000; padding: 4px;">Account Titles and Explanation</th>
+          <th style="width: 3ch; border: 1px solid #000; padding: 4px;">PR</th>
+          <th style="width: 10ch; border: 1px solid #000; text-align: right; padding: 4px;">Debit</th>
+          <th style="width: 10ch; border: 1px solid #000; text-align: right; padding: 4px;">Credit</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cleanedRows.join("")}
+      </tbody>
+    </table>
+  `;
+
+  // 🧾 Validation log block
+const uniqueConsoleLogs = [...new Set(validationConsoleLogs)];
+const consoleLogHTML = uniqueConsoleLogs.length
+  ? `<div style="margin-top: 1rem; background: #eef; border: 1px solid #99c; padding: 0.75rem; border-radius: 6px;">
+      <h4 style="margin-top: 0;">🧠 Diagnostic Trace</h4>
+      <ul style="margin: 0; padding-left: 1.2rem;">
+        ${uniqueConsoleLogs.map(log => `<li>${log}</li>`).join("")}
+      </ul>
+    </div>`
+  : "";
+
+
+
+
+  // 🧾 Render to panel
+  if (submittedPanel) {
+const studentName = `${studentFirstName} ${studentLastName}`;
+const studentInfo = ` (${studentCN}) - ${studentName}`;
+const studentSection = attendanceId.split("_")[0];
+
+submittedPanel.innerHTML = `
+  <button onclick="printJournal()" style="
+    margin-top: 1rem;
+    padding: 6px 12px;
+    font-size: 14px;
+    background-color: #0078d4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  ">🖨️ Print Journal</button>
+
+  <div id="printableJournal">
+<div style="
+  text-align: center;
+  font-family: 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+">
+  <h5 style="margin: 0;">SACRED HEART SCHOOL - ATENEO DE CEBU</h5>
+  <h5 style="margin: 0;">Senior High School Department</h5>
+  <h6 style="margin: 0;">SY 2025–2026</h6>
+  <h7 style="margin: 0;">1st Semester</h7>
+  <h3 style="margin: 0;">FABM 1</h3>
+  <h3 style="margin: 0;">Midterm Performance Task No. 2</h3>
+</div>
+
+<div style="display: flex; justify-content: space-between; margin: 0 0 0.5rem;">
+  <div><strong>Student:</strong> ${studentInfo}</div>
+  <div><strong>Section:</strong> ${studentSection}</div>
+</div>
+
+    ${finalJournalHTML}
+     ${consoleLogHTML}
+
+  </div>
+
+`;
+  } else {
+    console.warn("⚠️ submittedJournalPanel not found in DOM.");
+  }
+}
+
+  const documentData = {
+    "01_schoolyear": "SY 2025-2026",
+    "02_subject": "FABM 1",
+    "03_term": "1st Semester",
+    "04_title": studentAnswersLog.title || "mtformative06",
+    "05_section": attendanceId,
+    "06_type": studentAnswersLog.type,
+    "07_topics": studentAnswersLog.topics,
+    "08_numOfQuestions": studentAnswersLog.num,
+    "09_instructions": studentAnswersLog.instructions,
+    "10_rubric": studentAnswersLog.rubricHTML,
+    "11_duration": studentAnswersLog.duration,
+    "12_endTime": new Date(studentAnswersLog.endTime).toLocaleString("en-PH", {
+      weekday: "short", year: "numeric", month: "short", day: "numeric",
+      hour: "2-digit", minute: "2-digit", hour12: true
+    }),
+    "13_timesubmittedAt": new Date().toISOString(),
+    "14_questionsAndAnswers": studentAnswersLog,
+    "15_finalJournalHTML": finalJournalHTML
+  };
+
+  const resultRef = doc(db, collectionId, documentId);
+
+  try {
+    await setDoc(resultRef, documentData, { merge: true });
+    console.log("✅ Submitted to Firestore:", documentData);
+    submitBtn.disabled = true;
+
+    localStorage.setItem("studentAnswersLog", JSON.stringify(documentData));
+    console.log("📦 Saved to localStorage");
+  } catch (err) {
+    console.error("❌ Submission error:", err);
+  		}
+ 	}  // END OF SUBMIT BUTTON
+
+});
+
+</script>
+</body>
+</html>
