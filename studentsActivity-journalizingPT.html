@@ -910,7 +910,7 @@ function appendRowWarning(message) {
  	 // Unified logger
  	 const pushLog = (icon, msg) => {
 	    logsByQuestion[questionKey][rowKey].push(`${icon} ${msg}`);
-   			 if (icon === '⚠️') triggerWarning(msg);
+   			 if (icon === '⚠️') Warning(msg);
  	 		};
 
  	 		const logPass = msg => pushLog('✅', msg);
