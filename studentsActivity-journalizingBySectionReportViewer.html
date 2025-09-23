@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Journal Results Viewer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 1rem;
+    }
+    .instructions {
+      background: #f9f9f9;
+      border-left: 4px solid #0078d4;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .instructions ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    .instructions li {
+      margin-bottom: 0.5rem;
+    }
+    #loginPanel,
+    #activityPanel {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #activityPanel {
+      display: none;
+    }
+    #submittedJournalPanel {
+      margin-top: 1rem;
+    }
+    #printableJournal h5,
+    #printableJournal h6,
+    #printableJournal h7,
+    #printableJournal h3 {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🔐 Login Panel -->
+  <div id="loginPanel">
+    <h2>Student Login</h2>
+    <form id="studentLoginForm">
+      <input type="text" id="Idnumber" placeholder="Your ID number" required /><br><br>
+      <input type="text" id="sectionCode" placeholder="Section code" required /><br><br>
+      <input type="password" id="passWord" placeholder="Your password" required /><br><br>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <!-- 🎯 Activity Panel -->
+  <div id="activityPanel">
+    <button id="printBtn" style="
+        margin-top: 1rem;
+        padding: 6px 12px;
+        font-size: 14px;
+        background-color: #0078d4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      ">
+      🖨️ Print Journal
+    </button>
+
+    <div id="submittedJournalPanel"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      collection
+    } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // ─── 1) Initialize Firebase ──────────────────────
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+      authDomain: "jlvcpa-quizzes.firebaseapp.com",
+      projectId: "jlvcpa-quizzes",
+      storageBucket: "jlvcpa-quizzes.appspot.com",
+      messagingSenderId: "629158256557",
+      appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // ─── 2) DOM references ───────────────────────────
+    const loginForm      = document.getElementById("studentLoginForm");
+    const loginPanel     = document.getElementById("loginPanel");
+    const activityPanel  = document.getElementById("activityPanel");
+    const submittedPanel = document.getElementById("submittedJournalPanel");
+    const printBtn       = document.getElementById("printBtn");
+
+    // ─── 3) Helper to open print window ─────────────
+    function printJournal() {
+      const content = document.getElementById("printableJournal");
+      const w = window.open("", "_blank");
+      w.document.write(content.outerHTML);
+      w.document.close();
+      w.focus();
+      w.print();
+      w.close();
+    }
+    printBtn.addEventListener("click", printJournal);
+
+    // ─── 4) Login + Fetch attendance ─────────────────
+    loginForm.addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const Idnumber    = document.getElementById("Idnumber").value.trim();
+  const sectionCode = document.getElementById("sectionCode").value.trim(); // e.g. "11-JUSTITIA_2025-09-08"
+  const password    = document.getElementById("passWord").value.trim();
+
+  const attendanceRef  = doc(db, "attendance", sectionCode);
+  const attendanceSnap = await getDoc(attendanceRef);
+
+  if (!attendanceSnap.exists()) {
+    alert(`Attendance record not found for ${sectionCode}`);
+    return;
+  }
+
+  const studentsArray = attendanceSnap.data().students || [];
+
+  const matchedStudent = studentsArray.find(
+    s => s.Idnumber === Idnumber && s.passWord === password
+  );
+
+  if (!matchedStudent) {
+    alert("Invalid ID number or password.");
+    return;
+  }
+
+  const { CN, LastName, firstName } = matchedStudent;
+  const studentId        = Idnumber;
+  const studentCN        = CN;
+  const studentLastName  = LastName;
+  const studentFirstName = firstName;
+  const studentInfo      = `${studentCN} – ${studentFirstName} ${studentLastName}`;
+  const studentSection   = sectionCode.split("_")[0];
+  const attendanceId     = sectionCode;
+
+  loginPanel.style.display    = "none";
+  activityPanel.style.display = "block";
+
+  const title        = "";
+  const collectionId = `results_${title}_${attendanceId}`;
+  const documentId   = `${studentCN}-${studentId}-${studentLastName}-${studentFirstName}`;
+  const resultRef    = doc(db, collectionId, documentId);
+  const resultSnap   = await getDoc(resultRef);
+
+  if (!resultSnap.exists()) {
+    submittedPanel.innerHTML = "<p>No results found.</p>";
+    return;
+  }
+
+  const docData = resultSnap.data();
+
+  submittedPanel.innerHTML = `
+    <div id="printableJournal">
+      <div style="text-align:center; font-family:'Times New Roman'; font-size:16px; line-height:1.4; margin-bottom:1rem;">
+        <h5>SACRED HEART SCHOOL - ATENEO DE CEBU</h5>
+        <h5>Senior High School Department</h5>
+        <h6>${docData["01_schoolyear"]}</h6>
+        <h7>${docData["03_term"]}</h7>
+        <h3>${docData["02_subject"]}</h3>
+        <h3>MT Performance Task 02</h3>
+      </div>
+
+      <div style="width:100%; text-align:right; font-family:monospace; margin-bottom:1rem;">
+        <div><strong>Score:</strong> ${docData["15_score"]}</div>
+        <div><strong>Grade:</strong> ${docData["16_letterGrade"]}</div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-bottom:.5rem;">
+        <div><strong>Student:</strong> ${studentInfo}</div>
+        <div><strong>Section:</strong> ${studentSection}</div>
+      </div>
+
+      ${docData["17_finalJournalHTML"]}
+      ${docData["18_validationHTML"]}
+    </div>
+  `;
+});
+  </script>
+</body>
+</html>
