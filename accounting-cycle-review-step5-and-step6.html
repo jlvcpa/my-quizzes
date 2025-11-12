@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting Cycle Mastery (PH Setting)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f6f8;
+        }
+        /* Custom style to lock scrolling */
+        .no-scroll {
+            overflow: hidden;
+            /* Prevents scrolling down the page if info is empty */
+            height: 100vh; 
+        }
+
+        /* Class for the printed PDF output only */
+        .print-layout {
+            font-family: 'Inter', sans-serif;
+            font-size: 10pt;
+            padding: 0.5in;
+        }
+        .rate-1 { color: green; font-weight: bold; }
+        .rate-2 { color: orange; font-weight: bold; }
+        .rate-3 { color: red; font-weight: bold; }
+        .rate-4 { color: gray; font-weight: bold; }
+    </style>
+</head>
+<body class="min-h-screen antialiased no-scroll">
+
+    <div id="app" class="max-w-4xl mx-auto p-4 md:p-6">
+
+        <section id="student-info-section" class="bg-yellow-50 p-5 rounded-xl shadow-lg mb-6 border-l-4 border-yellow-500">
+            <h2 class="text-xl font-bold text-yellow-800 mb-3">Student Data Input 📝</h2>
+            <p class="text-sm text-yellow-700 mb-4">Please complete all fields to unlock the practice session.</p>
+            <div class="space-y-3">
+                <input type="number" id="class-number" placeholder="Class Number" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
+                <input type="text" id="full-name" placeholder="Full Name (Surname, First Name, Middle Name)" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
+                <input type="text" id="grade-section" placeholder="Grade Level and Section (e.g., 11-CARITAS)" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
+            </div>
+            <button onclick="checkStudentInfo()" class="mt-4 w-full px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-700 transition duration-150">
+                Confirm & Start
+            </button>
+        </section>
+
+        <header id="main-header" class="bg-white sticky top-0 z-10 shadow-lg rounded-xl mb-6 hidden">
+            <div id="warning-message" class="bg-red-100 text-red-700 font-semibold p-3 text-sm text-center border-b border-red-200 rounded-t-xl">
+                ⚠️ **WARNING!** Make sure to **PRINT** your answers into **PDF format** before closing or refreshing the web page to avoid losing your progress or answers.
+            </div>
+            <div class="p-4 flex flex-col md:flex-row justify-between items-center border-b border-gray-100">
+                <h1 class="text-2xl font-extrabold text-blue-800 mb-2 md:mb-0">Accounting Cycle Mastery (Step 5 and 6) </h1>
+                <span class="text-sm font-medium text-gray-500">Adjustments, Worksheet, & Financial Statements</span>
+            </div>
+            <nav class="flex justify-around text-center p-2 text-sm md:text-base font-semibold">
+                <button onclick="showSection('theory')" class="nav-button p-2 flex-1 rounded-lg transition-colors duration-200 bg-blue-100 text-blue-800 hover:bg-blue-200">
+                    Theory & Concepts
+                </button>
+                <button onclick="showSection('practice')" class="nav-button p-2 flex-1 rounded-lg transition-colors duration-200 text-gray-700 hover:bg-gray-100">
+                    100 Practice Questions
+                </button>
+                <button onclick="printToPDF()" class="p-2 flex-1 rounded-lg transition-colors duration-200 bg-green-500 text-white font-bold hover:bg-green-600 ml-2">
+                    🖨️ Print to PDF
+                </button>
+            </nav>
+        </header>
+
+        <div id="content-container" class="hidden">
+
+            <section id="theory-section" class="space-y-6">
+                <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2">Theory & Concepts</h2>
+
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500">
+                    <h3 class="text-2xl font-extrabold text-green-700 mb-4">0. Fundamental Accounting Principles & Basis 💰</h3>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">A. Accrual Basis of Accounting (Core Principle)</h4>
+                    <p class="text-gray-600 mb-2">The **Accrual Basis of Accounting** is mandated under PFRS (Philippine Financial Reporting Standards). It dictates that financial transactions must be recorded when they **occur** (the service is performed or the cost is incurred), regardless of when the cash is received or paid. This provides a more meaningful picture of the entity's performance and position.</p>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">B. The Matching Principle (Expense Recognition)</h4>
+                    <p class="text-gray-600 mb-2">The **Matching Principle** is a component of the Accrual Basis. It states that **expenses must be recognized in the same period as the revenues they helped generate**. Adjusting entries are primarily driven by this principle. For example, the expense for utility services used in December should be recorded in December, even if the bill is paid in January.</p>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">C. The Five Recognition Principles (Criteria for Recording)</h4>
+                    <div class="space-y-3 p-3 bg-green-50 rounded-lg text-gray-600">
+                        <h5 class="font-bold text-lg text-green-800">1. Income (Revenue) Recognition Principle:</h5>
+                        <p class="text-sm">Income is recognized when it is **earned**, meaning the entity has substantially completed its performance obligation by providing the good or service. This holds true whether the cash is received (*Accrued Revenue*) or received in advance (*Unearned Revenue* adjustment). (*See Q4, Q15, Q19, Q22, Q28, Q30, Q61, Q69, Q79, Q81, Q85, Q87, Q92, Q99*)</p>
+
+                        <h5 class="font-bold text-lg text-green-800">2. Asset Recognition Principle:</h5>
+                        <p class="text-sm">An **Asset** is recognized if it is a resource controlled by the entity as a result of past events and from which **future economic benefits are expected to flow** to the entity. This applies to prepaid expenses (the unused portion) and accrued revenues (the right to receive cash). (*See Q4, Q9, Q20, Q23, Q25, Q46, Q50, Q57, Q60, Q71, Q77, Q88, Q90, Q97*)</p>
+
+                        <h5 class="font-bold text-lg text-green-800">3. Expense Recognition Principle (See Matching Principle):</h5>
+                        <p class="text-sm">An **Expense** is recognized when the **consumption of economic benefit occurs** (e.g., supplies are used) or when costs are incurred to generate revenue. This governs the recording of depreciation and all accrued expenses. (*See Q1, Q7, Q10, Q11, Q13, Q14, Q16, Q27, Q29, Q37, Q41, Q43, Q49, Q58, Q76, Q81, Q85, Q93, Q98, Q100*)</p>
+
+                        <h5 class="font-bold text-lg text-green-800">4. Liability Recognition Principle:</h5>
+                        <p class="text-sm">A **Liability** is recognized if it is a **present obligation** of the entity arising from past events, the settlement of which is expected to result in an **outflow of resources** embodying economic benefits. This applies to unearned revenue (the obligation to perform) and accrued expenses (the obligation to pay). (*See Q3, Q6, Q13, Q16, Q18, Q24, Q29, Q42, Q45, Q55, Q71, Q76, Q91*)</p>
+                        
+                        <h5 class="font-bold text-lg text-green-800">5. (Implied) Equity Recognition Principle:</h5>
+                        <p class="text-sm">Equity is the residual interest in the assets after deducting all liabilities. It is directly affected by the recognition of Income (increases) and Expenses/Drawings (decreases) in accordance with the principles above. (*See Q44, Q46, Q48, Q53, Q66, Q67, Q70, Q73, Q75, Q82, Q86, Q89, Q95*)</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-semibold text-blue-700 mb-3">1. Adjusting Entries (Accruals, Deferrals, Depreciation)</h3>
+                    <p class="text-gray-600 mb-4">Adjusting entries ensure compliance with the **Accrual Basis of Accounting** by matching revenues earned and expenses incurred to the correct reporting period. These adjustments are particularly crucial for deferred items, depending on their initial recording method.</p>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">A. Deferred Expenses (Prepayments) <span class="text-sm text-blue-500">(Q10, Q11, Q12, Q20, Q23)</span></h4>
+                    <p class="text-gray-600 mb-2">Costs paid in advance. The adjustment moves the portion *used* (Expense Recognition) or *unused* (Asset Recognition) to the correct account.</p>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">B. Deferred Income (Unearned Revenue) <span class="text-sm text-blue-500">(Q3, Q15, Q18, Q22, Q30)</span></h4>
+                    <p class="text-gray-600 mb-2">Cash received for services yet to be performed (Cash Before Revenue). The adjustment records the portion *earned* (Income Recognition) or *unearned* (Liability Recognition).</p>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">C. Accruals and Depreciation <span class="text-sm text-blue-500">(Q4, Q6, Q13, Q14, Q16, Q17, Q19, Q21, Q29, Q98, Q100)</span></h4>
+                    <p class="text-gray-600 mb-2">Accruals are for revenues earned or expenses incurred, but cash has not yet been exchanged. Depreciation allocates the cost of a long-term asset to expense over its life (Matching Principle).</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-semibold text-blue-700 mb-3">2. Preparation of the 10-Column Worksheet</h3>
+                    <p class="text-gray-600 mb-4">The worksheet is an optional, internal document used to organize data and ensure equality of debits and credits after adjustments, facilitating the preparation of the financial statements.</p>
+
+                    <h4 class="font-bold text-lg text-gray-700">Worksheet Columns & Principles <span class="text-sm text-blue-500">(Q31 to Q60)</span>:</h4>
+                    <ol class="list-decimal list-inside ml-4 text-gray-600 space-y-1">
+                        <li>**Trial Balance:** Unadjusted ledger balances.</li>
+                        <li>**Adjustments:** Input of AJE's (Accrual Basis/Matching Principles).</li>
+                        <li>**Adjusted Trial Balance:** Final ledger balances. Must balance. <span class="font-bold text-xs">(Q32, Q40)</span></li>
+                        <li>**Income Statement:** Temporary accounts (Revenue/Expense). Used to find Net Income/Loss. <span class="font-bold text-xs">(Q37, Q38, Q41, Q43, Q47, Q52, Q58, Q59)</span></li>
+                        <li>**Balance Sheet:** Permanent accounts (Asset, Liability, Equity, Drawings). <span class="font-bold text-xs">(Q34, Q36, Q42, Q46, Q50, Q55, Q57, Q60)</span></li>
+                    </ol>
+                    <p class="mt-3 text-sm text-gray-500">Net Income/Loss is the balancing figure, placed in the IS **opposite** the larger column and in the BS **opposite** the smaller column (Net Income is IS Debit, BS Credit).</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-semibold text-blue-700 mb-3">3. Preparation of the Financial Statements</h3>
+
+                    <h4 class="font-bold text-lg text-gray-700">A. Income Statement <span class="text-sm text-blue-500">(Q61, Q69, Q81, Q85, Q87, Q93, Q98, Q99)</span></h4>
+                    <p class="text-gray-600 mb-2">Measures performance **over a period of time** using the **Accrual Basis** (Revenues - Expenses = Net Income/Loss).</p>
+
+                    <h4 class="font-bold text-lg text-gray-700 mt-4">B. Statement of Changes in Equity (SCE) <span class="text-sm text-blue-500">(Q62, Q64, Q66, Q70, Q73, Q74, Q82, Q86, Q89, Q95)</span></h4>
+                    <p class="text-gray-600 mb-2">Links the Income Statement to the Balance Sheet by calculating the **Ending Capital** using Net Income/Loss and Drawings/Dividends.</p>
+
+                    <h4 class="font-bold text-lg text-gray-700 mt-4">C. Balance Sheet (Statement of Financial Position) <span class="text-sm text-blue-500">(Q63, Q71, Q72, Q77, Q80, Q83, Q88, Q96, Q97)</span></h4>
+                    <p class="text-gray-600 mb-2">Presents the financial position **at a specific point in time** (Assets = Liabilities + Equity) following the **Asset and Liability Recognition Principles**.</p>
+                </div>
+            </section>
+
+            <section id="practice-section" class="hidden space-y-6">
+                <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2">100 Practice Questions</h2>
+                <p class="text-gray-600">Test your knowledge with 100 theory and problem-solving questions. All figures are in **Philippine Peso (₱)**. Refer to the **Theory & Concepts** tab for principles and formulas. Use the space provided for your solutions and answers.</p>
+
+                <div id="questions-container" class="space-y-5">
+                    </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL VARIABLES ---
+        const questions = [
+            // Adjusting Entries (1-30) - All questions relate to the Accrual Basis, Matching, and the four Recognition Principles.
+            // Note: The 'a' field is the CORRECT answer for the grading logic.
+            { id: 1, type: 'Theory', topic: 'Adjustments', q: 'The expense recognition principle dictates that expenses should be recorded:', a: 'In the period the benefit or service is received.', s: 'This principle (often called the matching principle) ensures that costs are matched with the revenues they helped generate.' },
+            { id: 2, type: 'Theory', topic: 'Adjustments', q: 'Which category of adjusting entry involves cash being received or paid *before* the expense or revenue is recognized?', a: 'Deferrals.', s: 'Deferrals involve the postponement of an expense (Prepaid Expense - Asset recognition) or revenue (Unearned Revenue - Liability recognition) until the service or benefit is used or provided.' },
+            { id: 3, type: 'Theory', topic: 'Adjustments', q: 'An unearned revenue is classified as which type of account? (Relates to Liability Recognition)', a: 'A Liability.', s: 'Unearned revenue represents a company\'s obligation to perform a service or deliver a good in the future, thus it is a liability.' },
+            { id: 4, type: 'Theory', topic: 'Adjustments', q: 'Accrued Revenue means: (Relates to Income and Asset Recognition)', a: 'Revenue has been earned but not yet recorded in the ledger.', s: 'Accrued revenue is revenue recognized before cash is received. The adjusting entry debits an Asset (e.g., Accounts Receivable) and credits a Revenue account.' },
+            { id: 5, type: 'Theory', topic: 'Adjustments', q: 'What is the purpose of the Accumulated Depreciation account? (Relates to Matching Principle)', a: 'To show the total amount of depreciation expense recorded on an asset since it was acquired.', s: 'Accumulated Depreciation is a contra-asset account. It offsets the cost of the asset shown in the ledger.' },
+            { id: 6, type: 'Theory', topic: 'Adjustments', q: 'The adjusting entry for accrued interest expense involves which two account types? (Relates to Expense and Liability Recognition)', a: 'Liability and Expense.', s: 'Debit Interest Expense (Expense) and Credit Interest Payable (Liability).' },
+            { id: 7, type: 'Theory', topic: 'Adjustments', q: 'If the adjustment for supplies used is not recorded, what is the effect on the Income Statement? (Relates to Expense Recognition)', a: 'Net Income is overstated.', s: 'Not recording the expense means expenses are understated, leading to an overstated Net Income.' },
+            { id: 8, type: 'Theory', topic: 'Adjustments', q: 'Adjusting entries are normally prepared: (Relates to Accrual Basis)', a: 'At the end of the accounting period.', s: 'They are period-end adjustments to bring accounts up to date before financial statements are prepared.' },
+            { id: 9, type: 'Theory', topic: 'Adjustments', q: 'The book value of a depreciable asset is calculated as: (Relates to Asset Recognition)', a: 'Cost minus Accumulated Depreciation.', s: 'Book Value (or Carrying Amount) is the asset\'s cost less the portion that has been expensed (Accumulated Depreciation).' },
+            { id: 10, type: 'Theory', topic: 'Adjustments', q: 'Which account balance is typically decreased by an adjusting entry for a prepaid expense? (Relates to Expense Recognition/Matching)', a: 'An Asset account.', s: 'The prepaid asset account (e.g., Prepaid Insurance) is credited (decreased) and the corresponding expense is debited (increased).' },
+
+            { id: 11, type: 'Problem', topic: 'Adjustments', q: 'On Jan 1, a company paid **₱6,000** for a 1-year insurance policy. What is the adjusting entry on Dec 31? (Asset Method - Expense Recognition)', a: 'Debit Insurance Expense ₱6,000; Credit Prepaid Insurance ₱6,000.', s: '(₱6,000 / 12 months) * 12 months used = ₱6,000. All prepaid insurance is now expired and must be expensed.' },
+            { id: 12, type: 'Problem', topic: 'Adjustments', q: 'The Supplies account has a **₱2,500** debit balance. A count reveals **₱700** of supplies on hand. What is the adjustment amount? (Asset Method - Expense Recognition)', a: '1800', s: 'Used supplies = Beginning Balance (₱2,500) - Ending Balance (₱700) = ₱1,800. Entry: Debit Supplies Expense ₱1,800, Credit Supplies ₱1,800.' },
+            { id: 13, type: 'Problem', topic: 'Adjustments', q: 'A company borrowed **₱50,000** at 6% interest on Dec 1. The interest is due on March 1. What is the accrued interest expense on Dec 31? (Accrual - Expense/Liability Recognition)', a: '250', s: '(₱50,000 * 0.06) * (1/12) = ₱250. Entry: Debit Interest Expense ₱250, Credit Interest Payable ₱250.' },
+            { id: 14, type: 'Problem', topic: 'Adjustments', q: 'Depreciation for equipment is calculated to be **₱900** per month. The adjusting entry is recorded monthly. What is the entry? (Matching/Expense Recognition)', a: 'Debit Depreciation Expense ₱900; Credit Accumulated Depreciation - Equipment ₱900.', s: 'This records the monthly expense and the cumulative reduction in asset value.' },
+            { id: 15, type: 'Problem', topic: 'Adjustments', q: 'Unearned Revenue has a balance of **₱4,000**. During the period, **₱1,500** of the service was completed. What is the adjusting entry? (Liability Method - Income Recognition)', a: 'Debit Unearned Revenue ₱1,500; Credit Service Revenue ₱1,500.', s: 'The liability is reduced, and the corresponding revenue is recognized.' },
+            { id: 16, type: 'Problem', topic: 'Adjustments', q: 'Employees earn **₱800** per day for a 5-day week. The last payday was Friday, Dec 26. Dec 31 is Wednesday. What is the accrued salaries expense? (Accrual - Expense/Liability Recognition)', a: '2400', s: 'Dec 29, 30, and 31 (3 days) are unpaid. 3 days * ₱800/day = ₱2,400. Entry: Debit Salaries Expense ₱2,400, Credit Salaries Payable ₱2,400.' },
+            { id: 17, type: 'Problem', topic: 'Adjustments', q: 'A machine cost **₱45,000**, has a salvage value of **₱5,000**, and a useful life of 10 years. Calculate the annual straight-line depreciation. (Matching Principle)', a: '4000', s: '(₱45,000 - ₱5,000) / 10 years = ₱4,000.' },
+            { id: 18, type: 'Problem', topic: 'Adjustments', q: 'If Unearned Revenue was initially credited for **₱10,000**, and **₱3,000** has been earned, what is the post-adjustment balance of Unearned Revenue? (Liability Recognition)', a: '7000 Credit', s: '₱10,000 (initial credit) - ₱3,000 (debit for adjustment) = ₱7,000 liability remaining.' },
+            { id: 19, type: 'Problem', topic: 'Adjustments', q: 'The company performed **₱1,200** of services for a client but has not yet billed them. What is the adjusting entry? (Accrual - Income/Asset Recognition)', a: 'Debit Accounts Receivable ₱1,200; Credit Service Revenue ₱1,200.', s: 'This is accrued revenue; an asset is increased, and revenue is recognized.' },
+            { id: 20, type: 'Problem', topic: 'Adjustments', q: 'Prepaid Rent has a **₱3,600** balance. The company uses **₱300** of rent each month. What is the balance of Prepaid Rent after one month\'s adjustment? (Asset Recognition)', a: '3300', s: '₱3,600 - ₱300 (adjustment) = ₱3,300. This is the unexpired asset portion remaining.' },
+            { id: 21, type: 'Problem', topic: 'Adjustments', q: 'A laptop was purchased on July 1 for **₱2,400**. Useful life is 4 years, no salvage value. What is the depreciation expense on Dec 31 (6 months)? (Matching Principle)', a: '300', s: 'Annual Depreciation: ₱2,400 / 4 years = ₱600. Six months: ₱600 * (6/12) = ₱300.' },
+            { id: 22, type: 'Problem', topic: 'Adjustments', q: 'If Unearned Revenue is debited and Service Revenue is credited, this adjustment is for: (Income Recognition)', a: 'A deferral that adjusts a liability to revenue.', s: 'It recognizes the portion of the cash received in advance that has now been earned.' },
+            { id: 23, type: 'Problem', topic: 'Adjustments', q: 'A company recorded insurance paid for 24 months as an expense initially. 3 months have passed. What is the adjusting entry? (Expense Method - Asset Recognition)', a: 'Debit Prepaid Insurance; Credit Insurance Expense.', s: 'Since the initial entry was wrong (all expense), you must correct it: reverse 21 months of expense back to the asset account. Debit Prepaid Ins (Asset), Credit Ins Exp (Expense).' },
+            { id: 24, type: 'Problem', topic: 'Adjustments', q: 'The Dec 31 Trial Balance shows Interest Payable of **₱400**. The adjustment for December is for **₱150**. What is the total interest payable after adjustment? (Liability Recognition)', a: '550', s: 'A Trial Balance shows the account balance, not the adjustment amount. The existing liability (₱400) is carried forward, and the new liability (₱150) is added. ₱400 + ₱150 = ₱550.' },
+            { id: 25, type: 'Problem', topic: 'Adjustments', q: 'Equipment was purchased for **₱10,000**. Accumulated Depreciation is **₱2,000**. If the equipment is sold for **₱8,500**, what is the Gain or Loss? (Asset Recognition)', a: 'Gain of ₱500', s: 'Book Value = ₱10,000 - ₱2,000 = ₱8,000. Sale Price (₱8,500) > Book Value (₱8,000) = Gain of ₱500.' },
+            { id: 26, type: 'Problem', topic: 'Adjustments', q: 'If Prepaid Rent has a **₱900** adjustment (Debit Rent Expense, Credit Prepaid Rent), what does this mean about the cash flow? (Accrual Basis)', a: 'The cash was paid in a prior period.', s: 'This is a deferral adjustment, meaning the cash transaction occurred *before* the current period\'s expense recognition.' },
+            { id: 27, type: 'Problem', topic: 'Adjustments', q: 'On Dec 31, **₱1,000** of office supplies were purchased on account. They were correctly recorded. Does this require an adjusting entry? (Expense Recognition)', a: 'Only if the supplies have been used (partially or fully).', s: 'The purchase itself is a transaction, not an adjustment. The adjustment is required only for the amount *used* during the period.' },
+            { id: 28, type: 'Problem', topic: 'Adjustments', q: 'The company completes a service contract for **₱5,000**. They have been paid half the cash. What is the adjustment to recognize the full revenue? (Income Recognition)', a: 'No adjustment is needed, as the revenue was recorded when earned (by debiting cash and A/R and crediting revenue).', s: 'The completion of the service is the revenue event. The transaction should have been recorded: Debit Cash ₱2,500, Debit A/R ₱2,500, Credit Service Revenue ₱5,000. No *adjusting* entry is required, only a regular journal entry.' },
+            { id: 29, type: 'Problem', topic: 'Adjustments', q: 'Wages of **₱7,000** have been incurred but not yet paid or recorded. What is the impact of this adjustment on the Balance Sheet? (Liability Recognition)', a: 'Liabilities will increase by ₱7,000.', s: 'The entry is Debit Wages Expense, Credit Wages Payable. Wages Payable is a Liability account.' },
+            { id: 30, type: 'Problem', topic: 'Adjustments', q: 'The adjustment for Unearned Revenue involves a debit to a liability. What is the corresponding credit? (Income Recognition)', a: 'A Revenue account (e.g., Service Revenue).', s: 'The liability is reduced because the obligation has been fulfilled, and revenue is recognized.' },
+
+            // 10-Column Worksheet (31-60)
+            { id: 31, type: 'Theory', topic: 'Worksheet', q: 'The primary purpose of the worksheet is: (Accrual Basis)', a: 'To facilitate the preparation of financial statements and check mathematical accuracy.', s: 'It is a voluntary internal tool, not a required formal financial report.' },
+            { id: 32, type: 'Theory', topic: 'Worksheet', q: 'Which pair of columns must have equal totals on the worksheet *before* calculating Net Income?', a: 'Adjusted Trial Balance Debits and Credits.', s: 'The Adjusted Trial Balance (ATB) is the last set of columns that proves the equality of debits and credits based on the ledger balances.' },
+            { id: 33, type: 'Theory', topic: 'Worksheet', q: 'If a company has a Net Loss, how is the worksheet balanced in the Income Statement columns?', a: 'The Net Loss is placed in the Income Statement Credit column.', s: 'A Net Loss means Expenses (Debit) > Revenue (Credit). The balancing figure (Net Loss) is added to the Credit column to make the totals equal.' },
+            { id: 34, type: 'Theory', topic: 'Worksheet', q: 'The Balance Sheet columns of the worksheet include which accounts? (Asset/Liability Recognition)', a: 'Assets, Liabilities, and permanent Equity accounts (Capital, Drawings).', s: 'The Balance Sheet columns contain permanent accounts.' },
+            { id: 35, type: 'Theory', topic: 'Worksheet', q: 'Where do the figures for the Adjustments column come from?', a: 'The unposted adjusting journal entries.', s: 'The adjustments are entered directly into the worksheet columns to see their effect on the ATB and financial statements.' },
+            { id: 36, type: 'Theory', topic: 'Worksheet', q: 'In which column set does the Accumulated Depreciation account appear? (Asset Recognition)', a: 'Balance Sheet columns (as a Credit).', s: 'Accumulated Depreciation is a contra-asset, which is a permanent account that appears on the Balance Sheet.' },
+            { id: 37, type: 'Theory', topic: 'Worksheet', q: 'A debit entry in the Adjusted Trial Balance for Utilities Expense would be extended to which column of the worksheet? (Expense Recognition)', a: 'Income Statement Debit column.', s: 'Expense accounts are temporary accounts and appear on the Income Statement as debits.' },
+            { id: 38, type: 'Theory', topic: 'Worksheet', q: 'What is the purpose of the Income Statement columns on the worksheet? (Matching Principle)', a: 'To compute Net Income or Net Loss.', s: 'By summing revenues and expenses, the difference reveals the period\'s profitability.' },
+            { id: 39, type: 'Theory', topic: 'Worksheet', q: 'If the ATB Debits are **₱100,000** and the ATB Credits are **₱100,000**, and the Income Statement Debits are **₱40,000** and Credits are **₱70,000**, what is the Net Income?', a: '30000', s: '₱70,000 (Revenue) - ₱40,000 (Expense) = ₱30,000 Net Income.' },
+            { id: 40, type: 'Theory', topic: 'Worksheet', q: 'The column that confirms the mathematical equality of the ledger *after* all adjustments is the:', a: 'Adjusted Trial Balance.', s: 'The ATB columns are the final check of ledger integrity before splitting the amounts into IS and BS columns.' },
+
+            { id: 41, type: 'Problem', topic: 'Worksheet', q: 'ATB: Rent Expense **₱3,000**. Balance Sheet Debit column shows: (Expense Recognition)', a: '0', s: 'Rent Expense is an Income Statement account, so it should not be extended to the Balance Sheet columns.' },
+            { id: 42, type: 'Problem', topic: 'Worksheet', q: 'ATB: Accounts Payable **₱5,000** Credit. This amount is extended to which column and side? (Liability Recognition)', a: 'Balance Sheet Credit.', s: 'Accounts Payable is a Liability, a permanent account on the Balance Sheet, and has a normal Credit balance.' },
+            { id: 43, type: 'Problem', topic: 'Worksheet', q: 'If the Income Statement Debits are **₱80,000** and the Credits are **₱65,000**, the balancing figure is a:', a: 'Net Loss of ₱15,000.', s: 'Expenses (₱80,000 Debits) > Revenues (₱65,000 Credits) = Net Loss of ₱15,000.' },
+            { id: 44, type: 'Problem', topic: 'Worksheet', q: 'Where is the Net Income figure entered in the Balance Sheet columns of the worksheet?', a: 'Balance Sheet Credit column.', s: 'Net Income increases equity, and equity is a credit-balance account, so Net Income is added to the Balance Sheet Credit column to balance it.' },
+            { id: 45, type: 'Problem', topic: 'Worksheet', q: 'Trial Balance shows Unearned Revenue **₱1,000**. Adjustment is Debit **₱400**. What is the ATB balance? (Liability Recognition)', a: '600 Credit', s: '₱1,000 Credit - ₱400 Debit = ₱600 Credit.' },
+            { id: 46, type: 'Problem', topic: 'Worksheet', q: 'ATB: Capital **₱50,000** Credit, Drawings **₱5,000** Debit. Where are these extended?', a: 'Capital to BS Credit; Drawings to BS Debit.', s: 'Both are equity-related (permanent) accounts, extended to the Balance Sheet columns according to their normal balances.' },
+            { id: 47, type: 'Problem', topic: 'Worksheet', q: 'The total of the Income Statement Credit column is **₱90,000**, and the Income Statement Debit column is **₱55,000**. What figure balances the Income Statement?', a: '₱35,000 added to the Debit column.', s: '₱90,000 - ₱55,000 = ₱35,000 Net Income. It is added to the debit side to make Debits equal Credits.' },
+            { id: 48, type: 'Problem', topic: 'Worksheet', q: 'If the Balance Sheet Debits total **₱120,000** and the Credits total **₱85,000**, how is the Balance Sheet balanced?', a: '₱35,000 added to the Credit column.', s: 'Assets (Debit) must equal Liabilities + Equity (Credit). The difference is the Net Income (₱35,000), which is added to the Credit side.' },
+            { id: 49, type: 'Problem', topic: 'Worksheet', q: 'A new account, Depreciation Expense, is introduced in the Adjustments columns. In the ATB, this account will have a: (Expense Recognition)', a: 'Debit balance equal to the adjustment amount.', s: 'Since there was no prior balance, the adjustment debit becomes the ATB debit.' },
+            { id: 50, type: 'Problem', topic: 'Worksheet', q: 'The total of the Balance Sheet Debits (before balancing) represents the total of:', a: 'Assets and Drawings.', s: 'The normal balance for both Assets and Drawings is Debit, and they are extended to the BS Debit column.' },
+            { id: 51, type: 'Problem', topic: 'Worksheet', q: 'Trial Balance Debits total **₱200,000**. Adjustments Debits total **₱15,000**. What is the ATB Debit total?', a: 'Cannot be determined without knowing how the individual accounts adjusted.', s: 'The ATB total is NOT simply the sum of TB and Adjustments totals, because the adjustments affect both sides (Debits and Credits) of the TB.' },
+            { id: 52, type: 'Problem', topic: 'Worksheet', q: 'ATB: Service Revenue **₱40,000**. It is extended to the Income Statement Credit column. What is its value in the Balance Sheet Credit column? (Income Recognition)', a: '0', s: 'Revenues are temporary accounts and do not appear in the Balance Sheet columns.' },
+            { id: 53, type: 'Problem', topic: 'Worksheet', q: 'If the net change for the period is a Net Loss of **₱12,000**, where is this figure placed in the Balance Sheet columns?', a: 'Balance Sheet Debit column.', s: 'Net Loss decreases Equity. Since Equity has a normal Credit balance, a decrease in Equity is recorded as a Debit.' },
+            { id: 54, type: 'Problem', topic: 'Worksheet', q: 'A company reports a Net Income of **₱10,000**. What entry balances the Balance Sheet columns?', a: 'A ₱10,000 entry in the Credit column.', s: 'Net Income increases equity, which is recorded as a credit on the Balance Sheet.' },
+            { id: 55, type: 'Problem', topic: 'Worksheet', q: 'If Rent Payable has a **₱500** Credit adjustment, what is its extension on the worksheet? (Liability Recognition)', a: 'Balance Sheet Credit ₱500.', s: 'Rent Payable is a Liability, a permanent account.' },
+            { id: 56, type: 'Problem', topic: 'Worksheet', q: 'Which account type is NOT extended to the Income Statement columns?', a: 'Asset accounts.', s: 'Assets, Liabilities, and permanent Equity accounts are extended to the Balance Sheet columns.' },
+            { id: 57, type: 'Problem', topic: 'Worksheet', q: 'If the ATB balance for Accumulated Depreciation is **₱12,000**, its extension is: (Asset Recognition)', a: 'Balance Sheet Credit ₱12,000.', s: 'Contra-assets have a normal credit balance and are permanent accounts.' },
+            { id: 58, type: 'Problem', topic: 'Worksheet', q: 'The total of the Income Statement Debit column before balancing is **₱55,000**. This represents the total of all: (Expense Recognition)', a: 'Expenses for the period.', s: 'Expenses have a normal debit balance and are the only debit accounts extended to the IS columns.' },
+            { id: 59, type: 'Problem', topic: 'Worksheet', q: 'A Net Income of **₱25,000** appears in which two columns for balancing?', a: 'IS Debit and BS Credit.', s: 'It balances the IS (Debits) and increases Equity (BS Credits).' },
+            { id: 60, type: 'Problem', topic: 'Worksheet', q: 'Trial Balance: Cash **₱10,000**. Adjustment: None. ATB Balance Sheet extension is: (Asset Recognition)', a: 'Debit ₱10,000.', s: 'Cash is an asset, its balance is unchanged, and it is a Balance Sheet (permanent) account.' },
+
+            // Financial Statements & Mixed (61-100)
+            { id: 61, type: 'Theory', topic: 'Statements', q: 'The Income Statement is prepared for a *period of time*. What is the starting point for this statement? (Income Recognition)', a: 'Revenues.', s: 'The Income Statement starts by listing all revenues.' },
+            { id: 62, type: 'Theory', topic: 'Statements', q: 'Net Income is an essential figure that links which two financial statements?', a: 'Income Statement and Statement of Changes in Equity (or Retained Earnings).', s: 'Net Income is the final result of the Income Statement and the starting input for the Equity statement.' },
+            { id: 63, type: 'Theory', topic: 'Statements', q: 'Which of the following accounts is *not* found on the Balance Sheet?', a: 'Interest Expense.', s: 'Interest Expense is a temporary account found on the Income Statement.' },
+            { id: 64, type: 'Theory', topic: 'Statements', q: 'The Statement of Changes in Equity reports changes in equity for which type of entity?', a: 'Proprietorships and Partnerships.', s: 'For corporations, the Statement of Retained Earnings (a component of equity) is more common.' },
+            { id: 65, type: 'Theory', topic: 'Statements', q: 'What is the order of preparation for the three main financial statements?', a: 'Income Statement, Statement of Changes in Equity, Balance Sheet.', s: 'The output of each statement is needed for the next: Net Income -> Equity Statement -> Ending Equity -> Balance Sheet.' },
+            { id: 66, type: 'Theory', topic: 'Statements', q: 'A debit balance in the Drawings account on the Adjusted Trial Balance is carried to the:', a: 'Balance Sheet Debit column.', s: 'Drawings reduce equity, have a normal debit balance, and appear on the Balance Sheet columns of the worksheet and the Statement of Changes in Equity.' },
+            { id: 67, type: 'Theory', topic: 'Statements', q: 'In the Statement of Changes in Equity for a proprietorship, what *increases* the ending capital balance?', a: 'Net Income and Owner Investments.', s: 'These are additions. Net Loss and Owner Drawings reduce the balance.' },
+            { id: 68, type: 'Theory', topic: 'Statements', q: 'Which section of the worksheet provides the data for the Assets and Liabilities on the Balance Sheet?', a: 'Balance Sheet columns of the worksheet.', s: 'This section contains all the permanent accounts needed for the Balance Sheet.' },
+            { id: 69, type: 'Theory', topic: 'Statements', q: 'Which principle governs the presentation of revenues and expenses on the Income Statement? (Core concept)', a: 'Accrual basis accounting.', s: 'The entire adjusting process ensures the Income Statement follows the accrual basis by matching revenues and expenses.' },
+            { id: 70, type: 'Theory', topic: 'Statements', q: 'The formula: Beginning Capital + Net Income - Drawings = Ending Capital is used in which financial statement?', a: 'Statement of Changes in Equity.', s: 'This is the basic formula for a proprietorship\'s equity statement.' },
+            { id: 71, type: 'Theory', topic: 'Statements', q: 'If total Assets are **₱150,000** and total Liabilities are **₱60,000**, what is the total Owner\'s Equity? (Asset/Liability Recognition & Accounting Equation)', a: '90000', s: 'Accounting Equation: Assets = Liabilities + Equity. ₱150,000 - ₱60,000 = ₱90,000.' },
+            { id: 72, type: 'Theory', topic: 'Statements', q: 'Which statement provides information about the business at a **specific point in time**?', a: 'Balance Sheet (Statement of Financial Position).', s: 'Unlike the other two, the Balance Sheet is a snapshot of financial position on a particular date.' },
+            { id: 73, type: 'Theory', topic: 'Statements', q: 'In the Statement of Changes in Equity, which item is *not* an expense but reduces the owner\'s capital?', a: 'Drawings (or Dividends for a corporation).', s: 'Drawings are distributions of capital, not business expenses.' },
+            { id: 74, type: 'Theory', topic: 'Statements', q: 'What does the term "retained earnings" refer to in a corporation?', a: 'The cumulative net income earned by the company less the cumulative dividends declared since inception.', s: 'Retained Earnings represents the portion of profit kept (retained) in the business.' },
+            { id: 75, type: 'Theory', topic: 'Statements', q: 'The net effect of closing entries is to transfer the balances of all temporary accounts to:', a: 'The Capital/Retained Earnings account.', s: 'Closing entries zero out temporary accounts (Revenues, Expenses, Dividends/Drawings) and update the permanent equity account.' },
+            { id: 76, type: 'Theory', topic: 'Statements', q: 'An unadjusted revenue account balance is correct, but an accrued expense adjustment is forgotten. What is the impact on the Balance Sheet? (Expense/Liability Recognition)', a: 'Liabilities are understated and Equity is overstated.', s: 'The liability (Payable) is missing, and because Net Income is overstated, Equity is also overstated by the amount of the missed expense (e.g., ₱400).' },
+            { id: 77, type: 'Theory', topic: 'Statements', q: 'A contra-asset account is shown as a reduction of its related asset on which statement? (Asset Recognition)', a: 'Balance Sheet.', s: 'For example, Accumulated Depreciation reduces Equipment to show the Book Value.' },
+            { id: '78', type: 'Theory', topic: 'Statements', q: 'The Philippine framework generally mandates the Balance Sheet be classified into Current and Non-current items. This type of presentation is based on:', a: 'Liquidity/Solvency assessment.', s: 'Classification helps users assess the company\'s ability to meet short-term obligations (liquidity).' },
+            { id: 79, type: 'Theory', topic: 'Statements', q: 'If Rent Revenue has an ATB balance of **₱5,000** and Salaries Expense is **₱2,000**, the Income Statement Credit column total is *at least*:', a: '5000', s: 'The IS Credit column includes all Revenue accounts (Credits). The total is at least the sum of all revenue accounts.' },
+            { id: 80, type: 'Theory', topic: 'Statements', q: 'When preparing the Balance Sheet, which specific amount is sourced directly from the Statement of Changes in Equity?', a: 'The Ending Capital balance.', s: 'The SCE calculates the final capital amount, which is then shown in the Equity section of the Balance Sheet.' },
+
+            { id: 81, type: 'Problem', topic: 'Statements', q: 'Service Revenue **₱100,000**, Salaries Expense **₱30,000**, Rent Expense **₱10,000**. Calculate Net Income. (Income/Expense Recognition)', a: '60000', s: 'Net Income = ₱100,000 - ₱30,000 - ₱10,000 = ₱60,000.' },
+            { id: 82, type: 'Problem', topic: 'Statements', q: 'Beginning Capital **₱50,000**. Net Income **₱10,000**. Drawings **₱4,000**. Calculate Ending Capital.', a: '56000', s: '₱50,000 + ₱10,000 - ₱4,000 = ₱56,000.' },
+            { id: 83, type: 'Problem', topic: 'Statements', q: 'Total Assets **₱200,000**. Total Liabilities **₱50,000**. Total Equity must be: (Accounting Equation)', a: '150000', s: 'Accounting Equation: Assets = Liabilities + Equity. ₱200,000 - ₱50,000 = ₱150,000.' },
+            { id: 84, type: 'Problem', topic: 'Statements', q: 'If Unadjusted Trial Balance Debits total **₱150,000**, and the only adjustment is a Debit to Supplies Expense for **₱10,000** and a Credit to Supplies for **₱10,000**, what is the Adjusted Trial Balance Debit total?', a: '150000', s: 'Since the adjustment debit equals the adjustment credit (₱10,000), the total debit/credit totals remain the same.' },
+            { id: 85, type: 'Problem', topic: 'Statements', q: 'ATB: Rent Revenue **₱20,000**, Depreciation Expense **₱1,000**. What are the IS Debits and Credits? (Income/Expense Recognition)', a: 'IS Debits ₱1,000; IS Credits ₱20,000.', s: 'Revenue is a credit, Expense is a debit.' },
+            { id: 86, type: 'Problem', topic: 'Statements', q: 'Beginning Retained Earnings **₱30,000**. Net Loss **₱5,000**. Dividends Declared **₱2,000**. Calculate Ending Retained Earnings.', a: '23000', s: '₱30,000 - ₱5,000 (Loss) - ₱2,000 (Dividends) = ₱23,000.' },
+            { id: 87, type: 'Problem', topic: 'Statements', q: 'Total Revenues are **₱80,000**, and total Expenses are **₱65,000**. The Income Statement columns of the worksheet balance with: (Matching Principle)', a: '₱15,000 Net Income, entered as an IS Debit.', s: 'Net Income is Revenue minus Expense. It is added to the debit side to balance the IS columns.' },
+            { id: 88, type: 'Problem', topic: 'Statements', q: 'Equipment **₱50,000**, Accumulated Depreciation **₱10,000**, Cash **₱5,000**. What is the total of Current Assets? (Asset Recognition)', a: '5000', s: 'Cash is the only current asset listed. Equipment (net of Acc. Dep.) is a non-current (long-term) asset.' },
+            { id: 89, type: 'Problem', topic: 'Statements', q: 'If ending Owner\'s Capital is **₱90,000**, Beginning Capital was **₱70,000**, and Drawings were **₱5,000**, calculate the Net Income (assuming no new investments).', a: '25000', s: 'Ending Cap. (₱90,000) = Beg. Cap. (₱70,000) + NI - Drawings (₱5,000). NI = ₱90,000 - ₱70,000 + ₱5,000 = ₱25,000.' },
+            { id: 90, type: 'Problem', topic: 'Statements', q: 'If the ATB balance for Prepaid Rent is **₱1,200**, and the amount expired is **₱1,000**, what is the amount of the Prepaid Rent on the Balance Sheet? (Asset Recognition)', a: '200', s: 'The ATB balance of Prepaid Rent *after* adjustment should have already been ₱200 (since ₱1,200 - ₱1,000 was expensed). The ₱200 unexpired portion is the asset on the Balance Sheet.' },
+            { id: 91, type: 'Problem', topic: 'Statements', q: 'An accrued expense adjustment of **₱400** (Debit Expense, Credit Payable) is missed. What is the effect on the Balance Sheet? (Liability Recognition)', a: 'Liabilities are understated by ₱400.', s: 'The liability (Payable account) is missing, causing Liabilities to be understated.' },
+            { id: 92, type: 'Problem', topic: 'Statements', q: 'Which pair of accounts would *not* appear in the same section (IS or BS) of the worksheet?', a: 'Unearned Revenue and Service Revenue.', s: 'Unearned Revenue is BS (Liability); Service Revenue is IS (Revenue).' },
+            { id: 93, type: 'Problem', topic: 'Statements', q: 'What is the amount of total expenses if Rent Exp. is **₱5,000**, Salaries Exp. is **₱15,000**, and Depreciation Exp. is **₱2,000**? (Expense Recognition)', a: '22000', s: 'Total Expenses = ₱5,000 + ₱15,000 + ₱2,000 = ₱22,000.' },
+            { id: 94, type: 'Problem', topic: 'Statements', q: 'If the total of the Balance Sheet Debits (before balancing) is **₱250,000** and the Net Income is **₱30,000**, what must the total of the Balance Sheet Credits be (before balancing)?', a: '220000', s: 'Total BS Debits (₱250,000) = Total BS Credits (x) + Net Income (₱30,000). x = ₱250,000 - ₱30,000 = ₱220,000.' },
+            { id: 95, type: 'Problem', topic: 'Statements', q: 'A company reports a Net Loss of **₱12,000**. How does this affect the calculation of ending Owner\'s Capital?', a: 'It reduces the capital balance.', s: 'Net Loss is subtracted from the beginning capital balance.' },
+            { id: 96, type: 'Problem', topic: 'Statements', q: 'A full Balance Sheet reports Equipment at Cost of **₱70,000**. Accumulated Depreciation is **₱15,000**. How is this presented? (Asset Recognition)', a: 'Non-current Asset, Equipment ₱70,000 less Accumulated Depreciation ₱15,000 (Book Value ₱55,000).', s: 'Assets are reported at their book value, which is cost minus accumulated depreciation.' },
+            { id: 97, type: 'Problem', topic: 'Statements', q: 'If Unearned Revenue (liability) has an ATB balance of **₱500**, and Cash (asset) has a balance of **₱5,000**, what is the total of the Balance Sheet Debits from just these accounts? (Asset Recognition)', a: '5000', s: 'Only the Asset (Cash) has a Debit balance. The Liability (Unearned Revenue) has a Credit balance.' },
+            { id: 98, type: 'Problem', topic: 'Statements', q: 'A company recorded salaries paid as **₱15,000**. Accrued salaries are **₱2,000**. What is the total Salaries Expense on the Income Statement? (Matching Principle)', a: '17000', s: 'Total Expense = Paid Expense (₱15,000) + Accrued Expense (₱2,000) = ₱17,000.' },
+            { id: 99, type: 'Problem', topic: 'Statements', q: 'The formula: Revenue - Cost of Goods Sold = Gross Profit is the starting point for which format of the Income Statement?', a: 'Multi-Step Income Statement (used by merchandising firms).', s: 'A service firm typically uses a Single-Step Income Statement.' },
+            { id: 100, type: 'Problem', topic: 'Statements', q: 'A Trial Balance shows Rent Expense **₱1,000**. The adjustment is Debit Rent Expense **₱500**, Credit Rent Payable **₱500**. What is the Rent Expense in the Income Statement columns? (Matching/Expense Recognition)', a: '1500', s: 'ATB Rent Expense = TB Rent Exp. (₱1,000) + Adjustment Debit (₱500) = ₱1,500.' },
+        ];
+
+        // --- HELPER FUNCTIONS ---
+
+        /**
+         * Cleans and normalizes a student's numerical or theoretical answer.
+         * For numbers, it removes commas and gets the integer part.
+         * For theory, it removes punctuation and converts to lower case.
+         * @param {string} answer - The student's input or correct answer.
+         * @param {string} type - The question type ('Theory' or 'Problem').
+         * @returns {string} The cleaned, comparable answer string.
+         */
+        function cleanAnswer(answer, type) {
+            if (!answer) return "";
+            answer = String(answer).trim();
+
+            if (type === 'Problem') {
+                // Remove non-numeric characters (except period for decimals)
+                answer = answer.replace(/[^0-9.]/g, '');
+                // For number answers, we only compare the integer part if the correct answer has no decimals
+                if (!answer.includes('.') && answer.length > 0) {
+                     return parseInt(answer).toString();
+                }
+                return answer;
+
+            } else { // Theory
+                // Remove common punctuation and convert to lower case for fuzzy matching
+                answer = answer.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').replace(/\s{2,}/g, ' ');
+                return answer;
+            }
+        }
+        
+        /**
+         * Performs a simple percentage match for theory questions.
+         * @param {string} studentAnswer - The cleaned student answer.
+         * @param {string} correctAnswer - The cleaned correct answer.
+         * @returns {number} The percentage match (0.0 to 1.0).
+         */
+        function theoryMatch(studentAnswer, correctAnswer) {
+            if (!studentAnswer || !correctAnswer) return 0;
+            const studentWords = studentAnswer.split(/\s+/);
+            const correctWords = correctAnswer.split(/\s+/);
+
+            if (correctWords.length === 0) return 0;
+
+            let matches = 0;
+            const matchedCorrectIndices = new Set();
+            
+            // Simple word-by-word matching
+            studentWords.forEach(sWord => {
+                let bestMatchIndex = -1;
+                let bestMatchLength = 0;
+
+                for (let i = 0; i < correctWords.length; i++) {
+                    if (!matchedCorrectIndices.has(i)) {
+                        const cWord = correctWords[i];
+                        if (sWord === cWord) {
+                            bestMatchIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (bestMatchIndex !== -1) {
+                    matches++;
+                    matchedCorrectIndices.add(bestMatchIndex);
+                }
+            });
+
+            // Calculate percentage based on matched words out of total correct words
+            return matches / correctWords.length;
+        }
+
+        // --- GRADING AND RATING LOGIC ---
+
+        function getRatingAndFeedback(question, studentAnswer) {
+            const cleanStudentAnswer = cleanAnswer(studentAnswer, question.type);
+            const cleanCorrectAnswer = cleanAnswer(question.a, question.type);
+
+            let rate = 4; // Default to Rate 4 (No Answer/No Effort)
+            let feedback = "No answer was provided for this question.";
+
+            if (cleanStudentAnswer === "") {
+                return { rate: 4, feedback: "No answer was provided." };
+            }
+
+            if (question.type === 'Problem') {
+                if (cleanStudentAnswer === cleanCorrectAnswer) {
+                    rate = 1; // Correct
+                    feedback = "Correct numerical answer.";
+                } else {
+                    rate = 3; // Effort shown, but incorrect
+                    feedback = `Incorrect answer. Correct value is **${question.a}**.`;
+                }
+            } else { // Theory
+                const matchPercentage = theoryMatch(cleanStudentAnswer, cleanCorrectAnswer);
+                const percentage = matchPercentage * 100;
+
+                if (percentage >= 90) {
+                    rate = 1;
+                    feedback = `Excellent answer. ${percentage.toFixed(0)}% match.`;
+                } else if (percentage >= 75) {
+                    rate = 2;
+                    feedback = `Good effort. ${percentage.toFixed(0)}% match. Closer to the correct answer.`;
+                } else if (percentage >= 60) {
+                    rate = 3;
+                    feedback = `Fair effort. ${percentage.toFixed(0)}% match. Requires more conceptual detail.`;
+                } else {
+                    rate = 4;
+                    feedback = `Low match (${percentage.toFixed(0)}%). Answer is conceptually off.`;
+                }
+            }
+
+            return { rate: rate, feedback: feedback };
+        }
+        
+        // --- DOM MANIPULATION & LOGIC ---
+
+        const questionsContainer = document.getElementById('questions-container');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const contentContainer = document.getElementById('content-container');
+        const studentInfoSection = document.getElementById('student-info-section');
+        const mainHeader = document.getElementById('main-header');
+
+        // Function to check student info and lock/unlock the page
+        function checkStudentInfo() {
+            const classNumber = document.getElementById('class-number').value.trim();
+            const fullName = document.getElementById('full-name').value.trim();
+            const gradeSection = document.getElementById('grade-section').value.trim();
+
+            if (classNumber === "" || fullName === "" || gradeSection === "") {
+                document.body.classList.add('no-scroll');
+                contentContainer.classList.add('hidden');
+                mainHeader.classList.add('hidden');
+                studentInfoSection.classList.remove('hidden');
+                return false;
+            } else {
+                document.body.classList.remove('no-scroll');
+                contentContainer.classList.remove('hidden');
+                mainHeader.classList.remove('hidden');
+                studentInfoSection.classList.add('hidden');
+                return true;
+            }
+        }
+
+        // Function to render all questions (UPDATED to replace buttons with a worksheet area)
+        function renderQuestions() {
+            questionsContainer.innerHTML = ''; // Clear previous content
+
+            questions.forEach(q => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500';
+                questionElement.innerHTML = `
+                    <p class="text-sm font-bold text-blue-600 mb-1">Q${q.id} (${q.type} - ${q.topic}) <span class="text-xs font-normal text-gray-400">Related Concept: Section 0-C</span></p>
+                    <p class="text-gray-800 font-semibold mb-4">${q.q}</p>
+                    
+                    <label for="worksheet-${q.id}" class="block text-sm font-medium text-gray-700 mt-4 mb-2">
+                        Your Worksheet / Computation / Answer:
+                    </label>
+                    <textarea id="worksheet-${q.id}" class="worksheet-input w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 font-mono text-sm" 
+                              rows="4" placeholder="Input your solution/journal entry/final answer here..."></textarea>
+                    
+                    <div id="answer-container-${q.id}" class="hidden print:block mt-3 p-2 border border-green-200 bg-green-50 rounded-lg text-xs">
+                        <p class="font-semibold text-green-700 mb-1">Correct Answer (For Teacher Reference):</p>
+                        <p class="text-green-800 font-medium">${q.a}</p>
+                        <p class="font-semibold text-gray-700 mt-1 mb-0">Explanation:</p>
+                        <p class="text-gray-600 text-sm">${q.s}</p>
+                    </div>
+                `;
+                questionsContainer.appendChild(questionElement);
+            });
+        }
+
+        // Function to handle section switching
+        function showSection(sectionId) {
+            // Only allow section switch if student info is present (page is unlocked)
+            if (studentInfoSection.classList.contains('hidden')) {
+                const sections = {
+                    'theory': document.getElementById('theory-section'),
+                    'practice': document.getElementById('practice-section')
+                };
+
+                // Hide all sections
+                Object.values(sections).forEach(section => section.classList.add('hidden'));
+
+                // Show the target section
+                sections[sectionId].classList.remove('hidden');
+
+                // Update navigation button styles
+                navButtons.forEach(button => {
+                    if (button.textContent.toLowerCase().includes(sectionId)) {
+                        button.classList.add('bg-blue-100', 'text-blue-800');
+                        button.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                    } else {
+                        button.classList.remove('bg-blue-100', 'text-blue-800');
+                        button.classList.add('text-gray-700', 'hover:bg-gray-100');
+                    }
+                });
+            } else {
+                 alert("Please complete the Student Data Input before navigating.");
+            }
+        }
+
+        // --- PRINT TO PDF FUNCTIONALITY ---
+        function printToPDF() {
+            if (!checkStudentInfo()) {
+                alert("Please fill out your Class Number, Full Name, and Grade/Section before printing.");
+                return;
+            }
+
+            // Get student data
+            const classNumber = document.getElementById('class-number').value.trim();
+            const fullName = document.getElementById('full-name').value.trim();
+            const gradeSection = document.getElementById('grade-section').value.trim();
+            const fileName = `${classNumber}_${gradeSection}_${fullName.replace(/[^a-zA-Z0-9]/g, '')}_AccountingAnswers.pdf`;
+            
+            // --- GRADING PROCESS ---
+            let totalRate = 0;
+            const gradedQuestions = [];
+
+            questions.forEach(q => {
+                const answerTextarea = document.getElementById(`worksheet-${q.id}`);
+                const studentAnswer = answerTextarea ? answerTextarea.value.trim() : "";
+                
+                const { rate, feedback } = getRatingAndFeedback(q, studentAnswer);
+                totalRate += rate;
+
+                gradedQuestions.push({
+                    q: q.q,
+                    a: q.a,
+                    studentAnswer: studentAnswer,
+                    rate: rate,
+                    feedback: feedback
+                });
+            });
+
+            const averageRate = totalRate / questions.length;
+            let letterGrade = '';
+
+            if (averageRate >= 1.00 && averageRate <= 1.50) {
+                letterGrade = 'A';
+            } else if (averageRate > 1.50 && averageRate <= 2.50) {
+                letterGrade = 'P';
+            } else if (averageRate > 2.50 && averageRate <= 3.50) {
+                letterGrade = 'D';
+            } else { // 3.51 to 4.00
+                letterGrade = 'IR';
+            }
+
+            // --- PDF CONTENT GENERATION ---
+            
+            // Temporarily hide parts not relevant to the printout and show practice section
+            const originalBodyClass = document.body.className;
+            const originalTheoryHidden = document.getElementById('theory-section').classList.contains('hidden');
+            const originalPracticeHidden = document.getElementById('practice-section').classList.contains('hidden');
+            const originalStudentInfoHidden = studentInfoSection.classList.contains('hidden');
+            
+            document.getElementById('theory-section').classList.add('hidden');
+            document.getElementById('practice-section').classList.remove('hidden');
+            studentInfoSection.classList.add('hidden'); // Hide input section on print
+            
+            // Create a dedicated print container with header and answers
+            const printContent = document.createElement('div');
+            printContent.className = 'print-layout';
+            printContent.id = 'print-content';
+            
+            // 1. Title and Student Info Header
+            printContent.innerHTML += `
+                <div class="mb-6 border-b-4 border-blue-800 pb-3">
+                    <h1 class="text-3xl font-extrabold text-blue-800">Accounting Cycle Mastery: Graded Answers</h1>
+                    <p class="text-md font-semibold text-gray-700 mt-1">Student: ${fullName}</p>
+                    <p class="text-md font-semibold text-gray-700">Class No: ${classNumber} | Grade/Section: ${gradeSection}</p>
+                    <p class="text-sm text-gray-500 mt-2">Date Printed: ${new Date().toLocaleDateString()}</p>
+                </div>
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h2 class="text-xl font-bold text-blue-800 mb-2">Overall Rating</h2>
+                    <p class="text-lg font-bold text-gray-800">Average Rate: <span class="text-2xl font-extrabold">${averageRate.toFixed(2)}</span> / 4.00</p>
+                    <p class="text-lg font-bold text-gray-800">Letter Grade: <span class="text-2xl font-extrabold">${letterGrade}</span></p>
+                    <p class="text-sm text-gray-600 mt-2">A: 1.00-1.50 | P: 1.51-2.50 | D: 2.51-3.50 | IR: 3.51-4.00</p>
+                </div>
+            `;
+
+            // 2. Loop through graded questions
+            gradedQuestions.forEach((gq, index) => {
+                const rateClass = `rate-${gq.rate}`;
+                printContent.innerHTML += `
+                    <div class="mb-5 p-4 border border-gray-200 rounded-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-md font-bold text-blue-600">Q${index + 1}</p>
+                            <p class="text-sm font-extrabold ${rateClass}">Rate: ${gq.rate}</p>
+                        </div>
+                        <p class="text-gray-800 font-semibold mb-2">${gq.q}</p>
+                        
+                        <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 mb-2">
+                            <p class="text-xs font-medium text-gray-700">Student's Response:</p>
+                            <pre class="whitespace-pre-wrap text-sm font-mono">${gq.studentAnswer || "--- No Answer Provided ---"}</pre>
+                        </div>
+                        
+                        <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                             <p class="text-xs font-medium text-yellow-700">Feedback:</p>
+                             <p class="text-sm text-yellow-800">${gq.feedback}</p>
+                             <p class="text-xs font-medium text-green-700 mt-2">Correct Answer:</p>
+                             <p class="text-sm text-green-800">${gq.a}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Append the temporary print content to the body for generation
+            document.body.appendChild(printContent);
+
+            // Options for html2pdf
+            const opt = {
+                margin: 0.5,
+                filename: fileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, logging: false, dpi: 192, letterRendering: true },
+                jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' }
+            };
+
+            // Generate the PDF
+            html2pdf().set(opt).from(printContent).save().then(() => {
+                // Cleanup: Remove the temporary print content and restore original view
+                document.body.removeChild(printContent);
+                document.body.className = originalBodyClass;
+                // Restore section visibility
+                if (originalTheoryHidden) {
+                    document.getElementById('theory-section').classList.add('hidden');
+                } else {
+                    document.getElementById('theory-section').classList.remove('hidden');
+                }
+                if (originalPracticeHidden) {
+                    document.getElementById('practice-section').classList.add('hidden');
+                } else {
+                    document.getElementById('practice-section').classList.remove('hidden');
+                }
+                if (originalStudentInfoHidden) {
+                    studentInfoSection.classList.add('hidden');
+                } else {
+                     studentInfoSection.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Initialize the app
+        window.onload = function() {
+            renderQuestions();
+            checkStudentInfo(); // This will lock the page initially
+            showSection('theory'); // Start on the theory tab (but hidden if not confirmed)
+        };
+    </script>
+</body>
+</html>
