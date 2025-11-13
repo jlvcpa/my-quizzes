@@ -243,7 +243,7 @@
             { id: 75, type: 'Theory', topic: 'Statements', q: 'The net effect of closing entries is to transfer the balances of all temporary accounts to:', a: 'The Capital/Retained Earnings account.', s: 'Closing entries zero out temporary accounts (Revenues, Expenses, Dividends/Drawings) and update the permanent equity account.' },
             { id: 76, type: 'Theory', topic: 'Statements', q: 'An unadjusted revenue account balance is correct, but an accrued expense adjustment is forgotten. What is the impact on the Balance Sheet? (Expense/Liability Recognition)', a: 'Liabilities are understated and Equity is overstated.', s: 'The liability (Payable) is missing, and because Net Income is overstated, Equity is also overstated by the amount of the missed expense (e.g., ₱400).' },
             { id: 77, type: 'Theory', topic: 'Statements', q: 'A contra-asset account is shown as a reduction of its related asset on which statement? (Asset Recognition)', a: 'Balance Sheet.', s: 'For example, Accumulated Depreciation reduces Equipment to show the Book Value.' },
-            { id: '78', type: 'Theory', topic: 'Statements', q: 'The Philippine framework generally mandates the Balance Sheet be classified into Current and Non-current items. This type of presentation is based on:', a: 'Liquidity/Solvency assessment.', s: 'Classification helps users assess the company\'s ability to meet short-term obligations (liquidity).' },
+            { id: 78, type: 'Theory', topic: 'Statements', q: 'The Philippine framework generally mandates the Balance Sheet be classified into Current and Non-current items. This type of presentation is based on:', a: 'Liquidity/Solvency assessment.', s: 'Classification helps users assess the company\'s ability to meet short-term obligations (liquidity).' },
             { id: 79, type: 'Theory', topic: 'Statements', q: 'If Rent Revenue has an ATB balance of **₱5,000** and Salaries Expense is **₱2,000**, the Income Statement Credit column total is *at least*:', a: '5000', s: 'The IS Credit column includes all Revenue accounts (Credits). The total is at least the sum of all revenue accounts.' },
             { id: 80, type: 'Theory', topic: 'Statements', q: 'When preparing the Balance Sheet, which specific amount is sourced directly from the Statement of Changes in Equity?', a: 'The Ending Capital balance.', s: 'The SCE calculates the final capital amount, which is then shown in the Equity section of the Balance Sheet.' },
 
@@ -287,6 +287,10 @@
                 // Remove non-numeric characters (except period for decimals)
                 answer = answer.replace(/[^0-9.]/g, '');
                 // For number answers, we only compare the integer part if the correct answer has no decimals
+                // The existing logic already determines if the correct answer has no decimal amounts, 
+                // but the clean process here focuses on making the student input comparable.
+                // Since the original requirement was to disregard decimals if the correct answer has no decimal, 
+                // we'll primarily strip non-digits for integer comparison unless a decimal is explicitly in the student's answer.
                 if (!answer.includes('.') && answer.length > 0) {
                      return parseInt(answer).toString();
                 }
@@ -307,8 +311,8 @@
          */
         function theoryMatch(studentAnswer, correctAnswer) {
             if (!studentAnswer || !correctAnswer) return 0;
-            const studentWords = studentAnswer.split(/\s+/);
-            const correctWords = correctAnswer.split(/\s+/);
+            const studentWords = studentAnswer.split(/\s+/).filter(w => w.length > 0);
+            const correctWords = correctAnswer.split(/\s+/).filter(w => w.length > 0);
 
             if (correctWords.length === 0) return 0;
 
@@ -318,8 +322,7 @@
             // Simple word-by-word matching
             studentWords.forEach(sWord => {
                 let bestMatchIndex = -1;
-                let bestMatchLength = 0;
-
+                
                 for (let i = 0; i < correctWords.length; i++) {
                     if (!matchedCorrectIndices.has(i)) {
                         const cWord = correctWords[i];
@@ -340,7 +343,7 @@
             return matches / correctWords.length;
         }
 
-        // --- GRADING AND RATING LOGIC ---
+        // --- GRADING AND RATING LOGIC (REVISED) ---
 
         function getRatingAndFeedback(question, studentAnswer) {
             const cleanStudentAnswer = cleanAnswer(studentAnswer, question.type);
@@ -354,29 +357,52 @@
             }
 
             if (question.type === 'Problem') {
-                if (cleanStudentAnswer === cleanCorrectAnswer) {
+                // Check if the correct answer is meant to be an integer (no decimal in the correct answer string)
+                const isIntegerAnswer = !String(question.a).includes('.');
+                
+                let isCorrect = false;
+                if (isIntegerAnswer) {
+                    // Problem answer logic: disregard decimal points if correct answer has no decimal
+                    const studentInt = parseInt(cleanStudentAnswer.replace(/\..*$/, ''));
+                    const correctInt = parseInt(cleanCorrectAnswer);
+                    if (!isNaN(studentInt) && studentInt === correctInt) {
+                        isCorrect = true;
+                    }
+                } else {
+                    // If the correct answer has decimals, a direct string comparison is the simplest route here.
+                    if (cleanStudentAnswer === cleanCorrectAnswer) {
+                        isCorrect = true;
+                    }
+                }
+
+                if (isCorrect) {
                     rate = 1; // Correct
                     feedback = "Correct numerical answer.";
                 } else {
-                    rate = 3; // Effort shown, but incorrect
+                    rate = 3; // Effort shown, but incorrect (as per request: rate 3 for effort in solving)
                     feedback = `Incorrect answer. Correct value is **${question.a}**.`;
                 }
-            } else { // Theory
+
+            } else { // Theory (REVISED THRESHOLDS)
                 const matchPercentage = theoryMatch(cleanStudentAnswer, cleanCorrectAnswer);
                 const percentage = matchPercentage * 100;
 
-                if (percentage >= 90) {
+                /* * ORIGINAL: 90%+ (R1), 75-89% (R2), 60-74% (R3), <60 (R4)
+                 * REVISED (50% Looser): 70%+, 62.5-69.9%, 55-62.4%, <55% 
+                 */
+                
+                if (percentage >= 70.0) { // New 70% threshold
                     rate = 1;
-                    feedback = `Excellent answer. ${percentage.toFixed(0)}% match.`;
-                } else if (percentage >= 75) {
+                    feedback = `Excellent answer. ${percentage.toFixed(1)}% match. (New threshold: 70%)`;
+                } else if (percentage >= 62.5) { // New 62.5% threshold
                     rate = 2;
-                    feedback = `Good effort. ${percentage.toFixed(0)}% match. Closer to the correct answer.`;
-                } else if (percentage >= 60) {
+                    feedback = `Good effort. ${percentage.toFixed(1)}% match. Closer to the correct answer. (New threshold: 62.5%)`;
+                } else if (percentage >= 55.0) { // New 55% threshold
                     rate = 3;
-                    feedback = `Fair effort. ${percentage.toFixed(0)}% match. Requires more conceptual detail.`;
+                    feedback = `Fair effort. ${percentage.toFixed(1)}% match. Requires more conceptual detail. (New threshold: 55%)`;
                 } else {
                     rate = 4;
-                    feedback = `Low match (${percentage.toFixed(0)}%). Answer is conceptually off.`;
+                    feedback = `Low match (${percentage.toFixed(1)}%). Answer is conceptually off.`;
                 }
             }
 
@@ -506,11 +532,15 @@
             const averageRate = totalRate / questions.length;
             let letterGrade = '';
 
-            if (averageRate >= 1.00 && averageRate <= 1.50) {
+            /* * REVISED LETTER GRADE THRESHOLDS (50% looser)
+             * Original: A: 1.00-1.50 | P: 1.51-2.50 | D: 2.51-3.50 | IR: 3.51-4.00
+             * New:      A: 1.00-2.00 | P: 2.01-3.00 | D: 3.01-3.50 | IR: 3.51-4.00
+             */
+            if (averageRate >= 1.00 && averageRate <= 2.00) {
                 letterGrade = 'A';
-            } else if (averageRate > 1.50 && averageRate <= 2.50) {
+            } else if (averageRate > 2.00 && averageRate <= 3.00) {
                 letterGrade = 'P';
-            } else if (averageRate > 2.50 && averageRate <= 3.50) {
+            } else if (averageRate > 3.00 && averageRate <= 3.50) {
                 letterGrade = 'D';
             } else { // 3.51 to 4.00
                 letterGrade = 'IR';
@@ -536,7 +566,7 @@
             // 1. Title and Student Info Header
             printContent.innerHTML += `
                 <div class="mb-6 border-b-4 border-blue-800 pb-3">
-                    <h1 class="text-3xl font-extrabold text-blue-800">Accounting Cycle Mastery: Graded Answers</h1>
+                    <h1 class="text-3xl font-extrabold text-blue-800">Accounting Cycle Mastery: Graded Answers (LOOSENED CRITERIA)</h1>
                     <p class="text-md font-semibold text-gray-700 mt-1">Student: ${fullName}</p>
                     <p class="text-md font-semibold text-gray-700">Class No: ${classNumber} | Grade/Section: ${gradeSection}</p>
                     <p class="text-sm text-gray-500 mt-2">Date Printed: ${new Date().toLocaleDateString()}</p>
@@ -545,7 +575,7 @@
                     <h2 class="text-xl font-bold text-blue-800 mb-2">Overall Rating</h2>
                     <p class="text-lg font-bold text-gray-800">Average Rate: <span class="text-2xl font-extrabold">${averageRate.toFixed(2)}</span> / 4.00</p>
                     <p class="text-lg font-bold text-gray-800">Letter Grade: <span class="text-2xl font-extrabold">${letterGrade}</span></p>
-                    <p class="text-sm text-gray-600 mt-2">A: 1.00-1.50 | P: 1.51-2.50 | D: 2.51-3.50 | IR: 3.51-4.00</p>
+                    <p class="text-sm text-gray-600 mt-2">A: 1.00-2.00 | P: 2.01-3.00 | D: 3.01-3.50 | IR: 3.51-4.00 (Grading Loosened by 50%)</p>
                 </div>
             `;
 
