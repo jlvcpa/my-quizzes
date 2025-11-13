@@ -388,18 +388,18 @@
                 const percentage = matchPercentage * 100;
 
                 /* * ORIGINAL: 90%+ (R1), 75-89% (R2), 60-74% (R3), <60 (R4)
-                 * REVISED (50% Looser): 70%+, 62.5-69.9%, 55-62.4%, <55% 
+                 * REVISED (50% Looser): 45%+, 37.5-44.9%, 30-37.4%, <30% 
                  */
                 
-                if (percentage >= 70.0) { // New 70% threshold
+                if (percentage >= 45.0) { // New 70% threshold
                     rate = 1;
-                    feedback = `Excellent answer. ${percentage.toFixed(1)}% match. (New threshold: 70%)`;
-                } else if (percentage >= 62.5) { // New 62.5% threshold
+                    feedback = `Excellent answer. ${percentage.toFixed(1)}% match.`;
+                } else if (percentage >= 37.5) { // New 62.5% threshold
                     rate = 2;
-                    feedback = `Good effort. ${percentage.toFixed(1)}% match. Closer to the correct answer. (New threshold: 62.5%)`;
-                } else if (percentage >= 55.0) { // New 55% threshold
+                    feedback = `Good effort. ${percentage.toFixed(1)}% match. Closer to the correct answer.`;
+                } else if (percentage >= 30.0) { // New 55% threshold
                     rate = 3;
-                    feedback = `Fair effort. ${percentage.toFixed(1)}% match. Requires more conceptual detail. (New threshold: 55%)`;
+                    feedback = `Fair effort. ${percentage.toFixed(1)}% match. Requires more conceptual detail.`;
                 } else {
                     rate = 4;
                     feedback = `Low match (${percentage.toFixed(1)}%). Answer is conceptually off.`;
@@ -566,7 +566,7 @@
             // 1. Title and Student Info Header
             printContent.innerHTML += `
                 <div class="mb-6 border-b-4 border-blue-800 pb-3">
-                    <h1 class="text-3xl font-extrabold text-blue-800">Accounting Cycle Mastery: Graded Answers (LOOSENED CRITERIA)</h1>
+                    <h1 class="text-3xl font-extrabold text-blue-800">Accounting Cycle Mastery: Graded Answers</h1>
                     <p class="text-md font-semibold text-gray-700 mt-1">Student: ${fullName}</p>
                     <p class="text-md font-semibold text-gray-700">Class No: ${classNumber} | Grade/Section: ${gradeSection}</p>
                     <p class="text-sm text-gray-500 mt-2">Date Printed: ${new Date().toLocaleDateString()}</p>
