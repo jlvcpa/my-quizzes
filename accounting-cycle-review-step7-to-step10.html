@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting Cycle Mastery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f6f8;
+        }
+        /* Custom style to lock scrolling */
+        .no-scroll {
+            overflow: hidden;
+            /* Prevents scrolling down the page if info is empty */
+            height: 100vh; 
+        }
+
+        /* Class for the printed PDF output only */
+        .print-layout {
+            font-family: 'Inter', sans-serif;
+            font-size: 10pt;
+            padding: 0.5in;
+        }
+        
+        /* PDF-specific styling for correct/incorrect */
+        .feedback-correct {
+            background-color: #f0fdf4; /* green-50 */
+            border: 1px solid #bbf7d0; /* green-200 */
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+        }
+        .feedback-incorrect {
+            background-color: #fef2f2; /* red-50 */
+            border: 1px solid #fecaca; /* red-200 */
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+        }
+
+    </style>
+</head>
+<body class="min-h-screen antialiased no-scroll">
+
+    <div id="app" class="max-w-4xl mx-auto p-4 md:p-6">
+
+        <section id="student-info-section" class="bg-yellow-50 p-5 rounded-xl shadow-lg mb-6 border-l-4 border-yellow-500">
+            <h2 class="text-xl font-bold text-yellow-800 mb-3">Student Data Input 📝</h2>
+            <p class="text-sm text-yellow-700 mb-4">Please complete all fields to unlock the practice session.</p>
+            <div class="space-y-3">
+                <input type="number" id="class-number" placeholder="Class Number" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
+                <input type="text" id="full-name" placeholder="Full Name (Surname, First Name, Middle Name)" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
+                <input type="text" id="grade-section" placeholder="Grade Level and Section (e.g., 11-CARITAS)" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
+            </div>
+            <button onclick="checkStudentInfo()" class="mt-4 w-full px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-700 transition duration-150">
+                Confirm & Start
+            </button>
+        </section>
+
+        <header id="main-header" class="bg-white sticky top-0 z-10 shadow-lg rounded-xl mb-6 hidden">
+            <div id="warning-message" class="bg-red-100 text-red-700 font-semibold p-3 text-sm text-center border-b border-red-200 rounded-t-xl">
+                ⚠️ **WARNING!** Make sure to **PRINT** your answers into **PDF format** before closing or refreshing the web page to avoid losing your progress or answers.
+            </div>
+            <div class="p-4 flex flex-col md:flex-row justify-between items-center border-b border-gray-100">
+                <h1 class="text-2xl font-extrabold text-blue-800 mb-2 md:mb-0">Accounting Cycle Mastery (Steps 7-10)</h1>
+                <span class="text-sm font-medium text-gray-500">Closing, Post-Closing, & Reversing Entries</span>
+            </div>
+            <nav class="flex justify-around text-center p-2 text-sm md:text-base font-semibold">
+                <button onclick="showSection('theory')" class="nav-button p-2 flex-1 rounded-lg transition-colors duration-200 bg-blue-100 text-blue-800 hover:bg-blue-200">
+                    Theory & Concepts
+                </button>
+                <button onclick="showSection('practice')" class="nav-button p-2 flex-1 rounded-lg transition-colors duration-200 text-gray-700 hover:bg-gray-100">
+                    200 Practice Questions
+                </button>
+                <button onclick="printToPDF()" class="p-2 flex-1 rounded-lg transition-colors duration-200 bg-green-500 text-white font-bold hover:bg-green-600 ml-2">
+                    🖨️ Print to PDF
+                </button>
+            </nav>
+        </header>
+
+        <div id="content-container" class="hidden">
+
+            <section id="theory-section" class="space-y-6">
+                <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2">Theory & Concepts (Steps 7-10)</h2>
+
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+                    <h3 class="text-2xl font-extrabold text-blue-700 mb-4">Step 7: Journalizing and Posting Adjusting Entries</h3>
+                    
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">A. Purpose</h4>
+                    <p class="text-gray-600 mb-2">While the worksheet is a useful tool, it is an *internal document*. The adjustments calculated on it have not yet been formally entered into the accounting records. Step 7 is the process of formally recording these adjusting entries into the **General Journal**.</p>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">B. Procedure</h4>
+                    <ol class="list-decimal list-inside ml-4 text-gray-600 space-y-1">
+                        <li><strong>Journalizing:</strong> Systematically copy each adjustment from the "Adjustments" columns of the worksheet directly into the General Journal. Each adjustment will have at least one debit and one credit.</li>
+                        <li><strong>Posting:</strong> Transfer these journal entries to their respective accounts in the **General Ledger**. This updates the ledger balances to reflect the "Adjusted Trial Balance" columns of the worksheet.</li>
+                    </ol>
+                    <p class="mt-3 text-sm text-gray-500 bg-blue-50 p-3 rounded-lg"><strong>Example:</strong> If the worksheet shows a ₱1,000 debit to Supplies Expense and a ₱1,000 credit to Supplies, you would create a journal entry:
+                    <br> <span class="font-mono">Supplies Expense (Debit) ... 1,000</span>
+                    <br> <span class="font-mono ml-4">Supplies (Credit) ........... 1,000</span>
+                    <br>...and then post these amounts to the ledger accounts.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500">
+                    <h3 class="text-2xl font-extrabold text-green-700 mb-4">Step 8: Journalizing and Posting Closing Entries</h3>
+                    
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">A. Purpose</h4>
+                    <p class="text-gray-600 mb-2">The goal of closing entries is to reset the company's "scorecard" for the next period. This involves:</p>
+                    <ul class="list-disc list-inside ml-4 text-gray-600 space-y-1">
+                        <li>Zeroing out all **Temporary (or Nominal) Accounts**: These are the accounts on the Income Statement (Revenues, Expenses) and the Drawings account. They only measure activity for *one period*.</li>
+                        <li>Transferring the net effect of these accounts (Net Income or Net Loss) and Drawings into the **Permanent (or Real) Account** for owner's equity (e.g., Owner's Capital).</li>
+                    </ul>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">B. The Four-Step Closing Process (REID)</h4>
+                    <p class="text-gray-600 mb-2">A temporary clearing account called **"Income Summary"** is used to facilitate this process.</p>
+                    <ol class="list-decimal list-inside ml-4 text-gray-700 space-y-3">
+                        <li><strong>Close <span class="font-bold">R</span>evenues:</strong> Revenues have a normal *credit* balance. To close them, you *debit* each revenue account for its balance and credit Income Summary for the total.</li>
+                        <li><strong>Close <span class="font-bold">E</span>xpenses:</strong> Expenses have a normal *debit* balance. To close them, you *credit* each expense account for its balance and debit Income Summary for the total.
+                        <br><span class="text-sm text-gray-500 italic">(At this point, the balance in Income Summary equals the Net Income or Net Loss).</span></li>
+                        <li><strong>Close <span class="font-bold">I</span>ncome Summary:</strong>
+                            <ul class="list-disc list-inside ml-6">
+                                <li>If there is a **Net Income** (Income Summary has a *credit* balance), you *debit* Income Summary and *credit* Owner's Capital.</li>
+                                <li>If there is a **Net Loss** (Income Summary has a *debit* balance), you *credit* Income Summary and *debit* Owner's Capital.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Close <span class="font-bold">D</span>rawings:</strong> Drawings has a normal *debit* balance. To close it, you *credit* the Drawings account and *debit* Owner's Capital.</li>
+                    </ol>
+                    <p class="mt-2 text-sm text-gray-600">After posting these entries, all Revenue, Expense, and Drawings accounts will have a **zero balance**, and Owner's Capital will be updated to its correct ending balance.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-500">
+                    <h3 class="text-2xl font-extrabold text-yellow-700 mb-4">Step 9: Preparing the Post-Closing Trial Balance</h3>
+                    
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">A. Purpose</h4>
+                    <p class="text-gray-600 mb-2">This is the *final* check of the ledger after all adjusting and closing entries have been posted. Its purpose is twofold:</p>
+                    <ul class="list-disc list-inside ml-4 text-gray-600 space-y-1">
+                        <li>To prove that total debits still equal total credits.</li>
+                        <li>To verify that all temporary accounts have been closed (i.e., they have zero balances and do not appear on this trial balance).</li>
+                    </ul>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">B. Content</h4>
+                    <p class="text-gray-600 mb-2">The Post-Closing Trial Balance (PCTB) lists **only permanent (real) accounts** and their balances. These are:</p>
+                    <ul class="list-disc list-inside ml-4 text-gray-600 space-y-1">
+                        <li><strong>Assets</strong> (e.g., Cash, Accounts Receivable, Equipment, Accumulated Depreciation)</li>
+                        <li><strong>Liabilities</strong> (e.g., Accounts Payable, Unearned Revenue, Salaries Payable)</li>
+                        <li><strong>Equity</strong> (e.g., Owner's Capital - now at its final ending balance)</li>
+                    </ul>
+                    <p class="mt-2 text-sm text-gray-600">The balances on the PCTB are the same balances that will appear on the Balance Sheet, and they become the *beginning* balances for the next accounting period.</p>
+                </div>
+                
+                <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-purple-500">
+                    <h3 class="text-2xl font-extrabold text-purple-700 mb-4">Step 10: Reversing Entries (Optional)</h3>
+                    
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">A. Purpose</h4>
+                    <p class="text-gray-600 mb-2">Reversing entries are an *optional* step prepared on the *first day of the new accounting period*. They are the exact opposite of certain adjusting entries made at the end of the prior period. Their only purpose is to **simplify bookkeeping** in the new period, preventing the bookkeeper from having to remember a prior-period adjustment when making a routine entry (like paying salaries).</p>
+
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">B. Which Entries are Reversed?</h4>
+                    <p class="text-gray-600 mb-2">Typically, only two types of adjustments are reversed:</p>
+                    <ol class="list-decimal list-inside ml-4 text-gray-600 space-y-1">
+                        <li><strong>All Accruals:</strong> Both accrued expenses (like Salaries Payable) and accrued revenues (like Interest Receivable).</li>
+                        <li><strong>Deferrals originally recorded in "Expense" or "Revenue" accounts:</strong> (e.g., if a prepaid insurance was initially debited to *Insurance Expense* instead of *Prepaid Insurance*).</li>
+                    </ol>
+                    <p class="mt-2 text-sm text-gray-600">Adjustments for depreciation and bad debts are **never** reversed.</p>
+                    
+                    <h4 class="font-bold text-xl text-gray-800 mt-5 mb-2">C. Example</h4>
+                    <p class="text-gray-600 mb-2">
+                        <strong>Dec 31 (Adjusting):</strong> You accrued ₱2,000 in salaries.
+                        <br><span class="font-mono">Salaries Expense (Debit) ...... 2,000</span>
+                        <br><span class="font-mono ml-4">Salaries Payable (Credit) ... 2,000</span>
+                        <br><br>
+                        <strong>Jan 1 (Reversing):</strong> You reverse this entry.
+                        <br><span class="font-mono">Salaries Payable (Debit) ...... 2,000</span>
+                        <br><span class="font-mono ml-4">Salaries Expense (Credit) ... 2,000</span>
+                        <br><span class="text-sm italic">(This puts a ₱2,000 credit balance in Salaries Expense, which is unusual, but temporary).</span>
+                        <br><br>
+                        <strong>Jan 5 (Next Payday):</strong> You pay the full ₱5,000 payroll.
+                        <br><span class="font-mono">Salaries Expense (Debit) ...... 5,000</span>
+                        <br><span class="font-mono ml-4">Cash (Credit) ............... 5,000</span>
+                    </p>
+                    <p class="mt-3 text-sm text-gray-500 bg-purple-50 p-3 rounded-lg">
+                        <strong>Result:</strong> The Salaries Expense account now has a ₱3,000 debit balance (₱5,000 debit - ₱2,000 credit), which is the correct expense for January. Without the reversing entry, the bookkeeper would have had to split the Jan 5 entry (Debit Salaries Payable ₱2,000, Debit Salaries Expense ₱3,000, Credit Cash ₱5,000), which is more complex.
+                    </p>
+                </div>
+            </section>
+
+            <section id="practice-section" class="hidden space-y-6">
+                <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2">200 Practice Questions</h2>
+                <p class="text-gray-600">Test your knowledge with 200 theory and problem-solving questions. All figures are in **Philippine Peso (₱)**. Refer to the **Theory & Concepts** tab for principles. Use the space provided for your solutions and answers.</p>
+
+                <div id="questions-container" class="space-y-5">
+                    <!-- Questions will be dynamically loaded here by JavaScript -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- NEW PRINT RANGE MODAL -->
+    <div id="print-range-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 z-40 flex justify-center items-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h2 class="text-xl font-bold text-blue-800 mb-4">Select Print Range</h2>
+            <p class="text-gray-600 mb-4">To ensure a stable download, the report will be generated in parts of 50 questions.</p>
+            <div class="space-y-3">
+                <div>
+                    <label for="range-start" class="block text-sm font-medium text-gray-700">From Question:</label>
+                    <input type="number" id="range-start" value="1" min="1" max="200" class="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="range-end" class="block text-sm font-medium text-gray-700">To Question:</label>
+                    <input type="number" id="range-end" value="200" min="1" max="200" class="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="cancelPrintProcess()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="startPrintProcess()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Start Print Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT PREVIEW MODAL (Unchanged) -->
+    <div id="print-preview-modal" class="hidden fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
+        <header class="sticky top-0 bg-white border-b border-gray-300 p-4 shadow-md flex flex-col md:flex-row justify-between items-center z-10">
+            <h2 class="text-xl font-bold text-blue-800 mb-2 md:mb-0">Print Preview</h2>
+            <div class="flex items-center">
+                <button onclick="cancelPrintPreview()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 mr-3 transition-colors">
+                    Cancel
+                </button>
+                <button id="download-pdf-button" onclick="runActualPDFGeneration()" class="px-4 py-2 bg-green-300 text-gray-500 rounded-lg cursor-not-allowed transition-colors" disabled>
+                    Scroll to bottom to enable
+                </button>
+            </div>
+        </header>
+
+        <!-- This is where the graded content will be injected -->
+        <div id="print-preview-content" class="p-4 md:p-8">
+            <!-- Content will be generated by JS -->
+        </div>
+
+        <!-- Add a small footer to be the scroll target -->
+        <footer class="text-center p-10 text-gray-500 font-semibold">
+            --- End of Report ---
+        </footer>
+    </div>
+
+
+    <script>
+        // --- GLOBAL VARIABLES ---
+        const questions = [
+            // --- Original 100 Questions (Steps 5 & 6) ---
+            // Adjusting Entries (1-30)
+            { id: 1, type: 'Theory', topic: 'Adjustments', q: 'The expense recognition principle dictates that expenses should be recorded:', 
+              options: ['When cash is paid.', 'In the period the benefit or service is received.', 'At the end of the year.', 'When the invoice is received.'],
+              a: 'In the period the benefit or service is received.', s: 'This principle (often called the matching principle) ensures that costs are matched with the revenues they helped generate in the same period.' },
+            { id: 2, type: 'Theory', topic: 'Adjustments', q: 'Which category of adjusting entry involves cash being received or paid *before* the expense or revenue is recognized?', 
+              options: ['Accruals.', 'Deferrals.', 'Corrections.', 'Estimates.'],
+              a: 'Deferrals.', s: 'Deferrals involve the postponement of an expense (Prepaid Expense) or revenue (Unearned Revenue) until the service or benefit is used or provided.' },
+            { id: 3, type: 'Theory', topic: 'Adjustments', q: 'An unearned revenue is classified as which type of account?', 
+              options: ['An Asset.', 'An Expense.', 'A Liability.', 'A Revenue.'],
+              a: 'A Liability.', s: 'Unearned revenue represents a company\'s obligation to perform a service or deliver a good in the future, thus it is a liability.' },
+            { id: 4, type: 'Theory', topic: 'Adjustments', q: 'Accrued Revenue means:', 
+              options: ['Revenue has been earned but not yet recorded in the ledger.', 'Cash has been received but the service is not yet performed.', 'Revenue has been recorded but the cash has not been received.', 'Cash has been paid for a future revenue.'],
+              a: 'Revenue has been earned but not yet recorded in the ledger.', s: 'Accrued revenue is revenue recognized before cash is received. The adjusting entry debits an Asset (e.g., Accounts Receivable) and credits a Revenue account.' },
+            { id: 5, type: 'Theory', topic: 'Adjustments', q: 'What is the purpose of the Accumulated Depreciation account?', 
+              options: ['To record the cash set aside to replace the asset.', 'To show the total amount of depreciation expense recorded on an asset since it was acquired.', 'To record the market value of the asset.', 'To expense the asset in the year of purchase.'],
+              a: 'To show the total amount of depreciation expense recorded on an asset since it was acquired.', s: 'Accumulated Depreciation is a contra-asset account. It offsets the cost of the asset shown in the ledger.' },
+            { id: 6, type: 'Theory', topic: 'Adjustments', q: 'The adjusting entry for accrued interest expense involves which two account types?', 
+              options: ['Asset and Revenue.', 'Asset and Expense.', 'Liability and Expense.', 'Liability and Revenue.'],
+              a: 'Liability and Expense.', s: 'Debit Interest Expense (Expense) and Credit Interest Payable (Liability).' },
+            { id: 7, type: 'Theory', topic: 'Adjustments', q: 'If the adjustment for supplies used is not recorded, what is the effect on the Income Statement?', 
+              options: ['Net Income is overstated.', 'Net Income is understated.', 'Expenses are overstated.', 'Revenues are understated.'],
+              a: 'Net Income is overstated.', s: 'Not recording the expense means expenses are understated, leading to an overstated Net Income.' },
+            { id: 8, type: 'Theory', topic: 'Adjustments', q: 'Adjusting entries are normally prepared:', 
+              options: ['At the beginning of the accounting period.', 'At the end of the accounting period.', 'When cash is paid or received.', 'On a weekly basis.'],
+              a: 'At the end of the accounting period.', s: 'They are period-end adjustments to bring accounts up to date before financial statements are prepared.' },
+            { id: 9, type: 'Theory', topic: 'Adjustments', q: 'The book value of a depreciable asset is calculated as:', 
+              options: ['Cost minus Salvage Value.', 'Cost minus Accumulated Depreciation.', 'Market Value minus Cost.', 'Original Cost only.'],
+              a: 'Cost minus Accumulated Depreciation.', s: 'Book Value (or Carrying Amount) is the asset\'s cost less the portion that has been expensed (Accumulated Depreciation).' },
+            { id: 10, type: 'Theory', topic: 'Adjustments', q: 'Which account balance is typically decreased by an adjusting entry for a prepaid expense?', 
+              options: ['An Expense account.', 'A Liability account.', 'An Asset account.', 'A Revenue account.'],
+              a: 'An Asset account.', s: 'The prepaid asset account (e.g., Prepaid Insurance) is credited (decreased) and the corresponding expense is debited (increased).' },
+            { id: 11, type: 'Problem', topic: 'Adjustments', q: 'On Jan 1, a company paid **₱6,000** for a 1-year insurance policy. What is the adjusting entry on Dec 31? (Asset Method)', 
+              options: ['Debit Insurance Expense ₱500; Credit Prepaid Insurance ₱500.', 'Debit Prepaid Insurance ₱6,000; Credit Cash ₱6,000.', 'Debit Insurance Expense ₱6,000; Credit Prepaid Insurance ₱6,000.', 'Debit Prepaid Insurance ₱5,500; Credit Insurance Expense ₱5,500.'],
+              a: 'Debit Insurance Expense ₱6,000; Credit Prepaid Insurance ₱6,000.', s: '(₱6,000 / 12 months) * 12 months used = ₱6,000. All prepaid insurance is now expired and must be expensed.' },
+            { id: 12, type: 'Problem', topic: 'Adjustments', q: 'The Supplies account has a **₱2,500** debit balance. A count reveals **₱700** of supplies on hand. What is the adjustment amount for supplies used?', 
+              options: ['700', '1800', '2500', '3200'],
+              a: '1800', s: 'Used supplies = Beginning Balance (₱2,500) - Ending Balance (₱700) = ₱1,800. Entry: Debit Supplies Expense ₱1,800, Credit Supplies ₱1,800.' },
+            { id: 13, type: 'Problem', topic: 'Adjustments', q: 'A company borrowed **₱50,000** at 6% interest on Dec 1. The interest is due on March 1. What is the accrued interest expense on Dec 31?', 
+              options: ['0', '250', '750', '3000'],
+              a: '250', s: '(₱50,000 * 0.06) * (1/12) = ₱250. Entry: Debit Interest Expense ₱250, Credit Interest Payable ₱250.' },
+            { id: 14, type: 'Problem', topic: 'Adjustments', q: 'Depreciation for equipment is calculated to be **₱900** per month. The adjusting entry is recorded monthly. What is the entry?', 
+              options: ['Debit Depreciation Expense ₱900; Credit Equipment ₱900.', 'Debit Accumulated Depreciation ₱900; Credit Depreciation Expense ₱900.', 'Debit Depreciation Expense ₱900; Credit Accumulated Depreciation - Equipment ₱900.', 'Debit Equipment ₱900; Credit Depreciation Expense ₱900.'],
+              a: 'Debit Depreciation Expense ₱900; Credit Accumulated Depreciation - Equipment ₱900.', s: 'This records the monthly expense and the cumulative reduction in asset value.' },
+            { id: 15, type: 'Problem', topic: 'Adjustments', q: 'Unearned Revenue has a balance of **₱4,000**. During the period, **₱1,500** of the service was completed. What is the adjusting entry? (Liability Method)', 
+              options: ['Debit Unearned Revenue ₱1,500; Credit Service Revenue ₱1,500.', 'Debit Service Revenue ₱1,500; Credit Unearned Revenue ₱1,500.', 'Debit Unearned Revenue ₱2,500; Credit Service Revenue ₱2,500.', 'Debit Service Revenue ₱4,000; Credit Unearned Revenue ₱4,000.'],
+              a: 'Debit Unearned Revenue ₱1,500; Credit Service Revenue ₱1,500.', s: 'The liability is reduced (debited) as the revenue is recognized (credited).' },
+            { id: 16, type: 'Problem', topic: 'Adjustments', q: 'Employees earn **₱800** per day for a 5-day week. The last payday was Friday, Dec 26. Dec 31 is Wednesday. What is the accrued salaries expense?', 
+              options: ['800', '1600', '2400', '4000'],
+              a: '2400', s: 'Dec 29, 30, and 31 (3 days) are unpaid. 3 days * ₱800/day = ₱2,400. Entry: Debit Salaries Expense ₱2,400, Credit Salaries Payable ₱2,400.' },
+            { id: 17, type: 'Problem', topic: 'Adjustments', q: 'A machine cost **₱45,000**, has a salvage value of **₱5,000**, and a useful life of 10 years. Calculate the annual straight-line depreciation.', 
+              options: ['4500', '5000', '4000', '500'],
+              a: '4000', s: '(₱45,000 - ₱5,000) / 10 years = ₱4,000.' },
+            { id: 18, type: 'Problem', topic: 'Adjustments', q: 'If Unearned Revenue was initially credited for **₱10,000**, and **₱3,000** has been earned, what is the post-adjustment balance of Unearned Revenue?', 
+              options: ['3000 Credit', '7000 Credit', '10000 Credit', '7000 Debit'],
+              a: '7000 Credit', s: '₱10,000 (initial credit) - ₱3,000 (debit for adjustment) = ₱7,000 liability remaining.' },
+            { id: 19, type: 'Problem', topic: 'Adjustments', q: 'The company performed **₱1,200** of services for a client but has not yet billed them. What is the adjusting entry?', 
+              options: ['Debit Cash ₱1,200; Credit Service Revenue ₱1,200.', 'Debit Accounts Receivable ₱1,200; Credit Service Revenue ₱1,200.', 'Debit Service Revenue ₱1,200; Credit Accounts Receivable ₱1,200.', 'No entry is needed yet.'],
+              a: 'Debit Accounts Receivable ₱1,200; Credit Service Revenue ₱1,200.', s: 'This is accrued revenue; an asset (Accounts Receivable) is increased, and revenue is recognized.' },
+            { id: 20, type: 'Problem', topic: 'Adjustments', q: 'Prepaid Rent has a **₱3,600** balance. The company uses **₱300** of rent each month. What is the balance of Prepaid Rent after one month\'s adjustment?', 
+              options: ['300', '3300', '3600', '3900'],
+              a: '3300', s: '₱3,600 - ₱300 (adjustment) = ₱3,300. This is the unexpired asset portion remaining.' },
+            { id: 21, type: 'Problem', topic: 'Adjustments', q: 'A laptop was purchased on July 1 for **₱2,400**. Useful life is 4 years, no salvage value. What is the depreciation expense on Dec 31 (6 months)?', 
+              options: ['200', '300', '600', '2400'],
+              a: '300', s: 'Annual Depreciation: ₱2,400 / 4 years = ₱600. Six months: ₱600 * (6/12) = ₱300.' },
+            { id: 22, type: 'Problem', topic: 'Adjustments', q: 'If Unearned Revenue is debited and Service Revenue is credited, this adjustment is for:', 
+              options: ['An accrual of revenue.', 'A deferral that adjusts a liability to revenue.', 'A deferral that adjusts an asset to an expense.', 'A correction of an error.'],
+              a: 'A deferral that adjusts a liability to revenue.', s: 'It recognizes the portion of the cash received in advance (the liability) that has now been earned (the revenue).' },
+            { id: 23, type: 'Problem', topic: 'Adjustments', q: 'A company recorded insurance paid for 24 months as an expense initially (Expense Method). 3 months have passed. What is the adjusting entry?', 
+              options: ['Debit Insurance Expense; Credit Prepaid Insurance.', 'Debit Prepaid Insurance; Credit Cash.', 'Debit Prepaid Insurance; Credit Insurance Expense.', 'Debit Insurance Expense; Credit Cash.'],
+              a: 'Debit Prepaid Insurance; Credit Insurance Expense.', s: 'Since the initial entry was all expense, the adjustment must establish the unexpired portion (21 months) as an asset. Debit Prepaid Insurance (Asset), Credit Insurance Expense (to reduce the expense).' },
+            { id: 24, type: 'Problem', topic: 'Adjustments', q: 'The Dec 31 Trial Balance shows Interest Payable of **₱400**. The adjustment for December is for **₱150**. What is the total interest payable after adjustment?', 
+              options: ['150', '250', '400', '550'],
+              a: '550', s: 'The existing liability (₱400) is carried forward, and the new liability (₱150) is added. ₱400 + ₱150 = ₱550.' },
+            { id: 25, type: 'Problem', topic: 'Adjustments', q: 'Equipment was purchased for **₱10,000**. Accumulated Depreciation is **₱2,000**. If the equipment is sold for **₱8,500**, what is the Gain or Loss?', 
+              options: ['Gain of ₱500', 'Loss of ₱500', 'Gain of ₱1,500', 'Loss of ₱1,500'],
+              a: 'Gain of ₱500', s: 'Book Value = ₱10,000 - ₱2,000 = ₱8,000. Sale Price (₱8,500) > Book Value (₱8,000) = Gain of ₱500.' },
+            { id: 26, type: 'Problem', topic: 'Adjustments', q: 'If Prepaid Rent has a **₱900** adjustment (Debit Rent Expense, Credit Prepaid Rent), what does this mean about the cash flow?', 
+              options: ['The cash was paid in a prior period.', 'The cash will be paid in a future period.', 'The cash was paid in this period.', 'Cash is not affected.'],
+              a: 'The cash was paid in a prior period.', s: 'This is a deferral adjustment, meaning the cash transaction occurred *before* the current period\'s expense recognition.' },
+            { id: 27, type: 'Problem', topic: 'Adjustments', q: 'On Dec 31, **₱1,000** of office supplies were purchased on account and correctly recorded. Does this *purchase* require an adjusting entry?', 
+              options: ['Yes, Debit Supplies Expense ₱1,000; Credit Supplies ₱1,000.', 'Yes, Debit Supplies ₱1,000; Credit Supplies Expense ₱1,000.', 'No, but an adjustment is needed for any supplies *used* during the period.', 'No, this transaction is ignored for adjustments.'],
+              a: 'No, but an adjustment is needed for any supplies *used* during the period.', s: 'The purchase itself is a regular transaction. The adjusting entry is only for the amount *used* (consumed) during the period.' },
+            { id: 28, type: 'Problem', topic: 'Adjustments', q: 'A company completes a service contract for **₱5,000**. They have been paid half the cash. What is the *transaction* entry?', 
+              options: ['Debit Cash ₱2,500; Credit Service Revenue ₱2,500.', 'Debit Cash ₱5,000; Credit Service Revenue ₱5,000.', 'Debit Cash ₱2,500; Debit Accounts Receivable ₱2,500; Credit Service Revenue ₱5,000.', 'Debit Accounts Receivable ₱5,000; Credit Service Revenue ₱5,000.'],
+              a: 'Debit Cash ₱2,500; Debit Accounts Receivable ₱2,500; Credit Service Revenue ₱5,000.', s: 'Revenue is recognized when earned (₱5,000). The entry records the cash received (₱2,500) and the amount still to be received (₱2,500). This is a regular transaction, not an adjustment.' },
+            { id: 29, type: 'Problem', topic: 'Adjustments', q: 'Wages of **₱7,000** have been incurred but not yet paid or recorded. What is the impact of this adjustment on the Balance Sheet?', 
+              options: ['Assets will increase by ₱7,000.', 'Liabilities will increase by ₱7,000.', 'Equity will increase by ₱7,000.', 'Assets will decrease by ₱7,000.'],
+              a: 'Liabilities will increase by ₱7,000.', s: 'The entry is Debit Wages Expense, Credit Wages Payable. Wages Payable is a Liability account.' },
+            { id: 30, type: 'Problem', topic: 'Adjustments', q: 'The adjustment for Unearned Revenue involves a debit to a liability. What is the corresponding credit?', 
+              options: ['An Asset account (e.g., Cash).', 'An Expense account.', 'The Owner\'s Capital account.', 'A Revenue account (e.g., Service Revenue).'],
+              a: 'A Revenue account (e.g., Service Revenue).', s: 'The liability is reduced (debited) because the obligation has been fulfilled, and revenue is recognized (credited).' },
+
+            // 10-Column Worksheet (31-60)
+            { id: 31, type: 'Theory', topic: 'Worksheet', q: 'The primary purpose of the worksheet is:', 
+              options: ['To serve as a formal, published financial statement.', 'To facilitate the preparation of financial statements and check mathematical accuracy.', 'To replace the general journal.', 'To replace the general ledger.'],
+              a: 'To facilitate the preparation of financial statements and check mathematical accuracy.', s: 'It is a voluntary internal tool, not a required formal financial report.' },
+            { id: 32, type: 'Theory', topic: 'Worksheet', q: 'Which pair of columns must have equal totals on the worksheet *before* calculating Net Income?', 
+              options: ['Trial Balance Debits and Credits.', 'Adjustments Debits and Credits.', 'Adjusted Trial Balance Debits and Credits.', 'Income Statement Debits and Credits.'],
+              a: 'Adjusted Trial Balance Debits and Credits.', s: 'The Adjusted Trial Balance (ATB) is the last set of columns that proves the equality of debits and credits based on the ledger balances.' },
+            { id: 33, type: 'Theory', topic: 'Worksheet', q: 'If a company has a Net Loss, how is the worksheet balanced in the Income Statement columns?', 
+              options: ['The Net Loss is placed in the Income Statement Debit column.', 'The Net Loss is placed in the Income Statement Credit column.', 'The Net Loss is subtracted from the Debit column.', 'The Net Loss is added to both columns.'],
+              a: 'The Net Loss is placed in the Income Statement Credit column.', s: 'A Net Loss means Expenses (Debit) > Revenue (Credit). The balancing figure (Net Loss) is added to the Credit column to make the totals equal.' },
+            { id: 34, type: 'Theory', topic: 'Worksheet', q: 'The Balance Sheet columns of the worksheet include which accounts?', 
+              options: ['Assets, Liabilities, and permanent Equity accounts (Capital, Drawings).', 'Revenues and Expenses only.', 'Assets and Liabilities only.', 'Assets, Revenues, and Expenses.'],
+              a: 'Assets, Liabilities, and permanent Equity accounts (Capital, Drawings).', s: 'The Balance Sheet columns contain permanent accounts.' },
+            { id: 35, type: 'Theory', topic: 'Worksheet', q: 'Where do the figures for the Adjustments column come from?', 
+              options: ['The original trial balance.', 'The unposted adjusting journal entries.', 'The financial statements.', 'The general ledger balances.'],
+              a: 'The unposted adjusting journal entries.', s: 'The adjustments are entered directly into the worksheet columns to see their effect on the ATB and financial statements.' },
+            { id: 36, type: 'Theory', topic: 'Worksheet', q: 'In which column set does the Accumulated Depreciation account appear?', 
+              options: ['Income Statement columns (as a Debit).', 'Income Statement columns (as a Credit).', 'Balance Sheet columns (as a Debit).', 'Balance Sheet columns (as a Credit).'],
+              a: 'Balance Sheet columns (as a Credit).', s: 'Accumulated Depreciation is a contra-asset, which is a permanent account that appears on the Balance Sheet.' },
+            { id: 37, type: 'Theory', topic: 'Worksheet', q: 'A debit entry in the Adjusted Trial Balance for Utilities Expense would be extended to which column of the worksheet?', 
+              options: ['Income Statement Debit column.', 'Income Statement Credit column.', 'Balance Sheet Debit column.', 'Balance Sheet Credit column.'],
+              a: 'Income Statement Debit column.', s: 'Expense accounts are temporary accounts and appear on the Income Statement as debits.' },
+            { id: 38, type: 'Theory', topic: 'Worksheet', q: 'What is the purpose of the Income Statement columns on the worksheet?', 
+              options: ['To prove that assets equal liabilities plus equity.', 'To list all permanent accounts.', 'To compute Net Income or Net Loss.', 'To list all cash transactions.'],
+              a: 'To compute Net Income or Net Loss.', s: 'By summing revenues and expenses, the difference reveals the period\'s profitability.' },
+            { id: 39, type: 'Problem', topic: 'Worksheet', q: 'If the ATB Debits are **₱100,000** and the ATB Credits are **₱100,000**, and the Income Statement Debits are **₱40,000** and Credits are **₱70,000**, what is the Net Income?', 
+              options: ['30000', '40000', '70000', '110000'],
+              a: '30000', s: '₱70,000 (Revenue) - ₱40,000 (Expense) = ₱30,000 Net Income.' },
+            { id: 40, type: 'Theory', topic: 'Worksheet', q: 'The column that confirms the mathematical equality of the ledger *after* all adjustments is the:', 
+              options: ['Trial Balance.', 'Adjustments.', 'Adjusted Trial Balance.', 'Income Statement.'],
+              a: 'Adjusted Trial Balance.', s: 'The ATB columns are the final check of ledger integrity before splitting the amounts into IS and BS columns.' },
+            { id: 41, type: 'Problem', topic: 'Worksheet', q: 'ATB: Rent Expense **₱3,000**. Its value in the Balance Sheet Debit column is:', 
+              options: ['3000', '0', '6000', '(3000)'],
+              a: '0', s: 'Rent Expense is an Income Statement account, so it should not be extended to the Balance Sheet columns.' },
+            { id: 42, type: 'Problem', topic: 'Worksheet', q: 'ATB: Accounts Payable **₱5,000** Credit. This amount is extended to which column and side?', 
+              options: ['Income Statement Credit.', 'Income Statement Debit.', 'Balance Sheet Credit.', 'Balance Sheet Debit.'],
+              a: 'Balance Sheet Credit.', s: 'Accounts Payable is a Liability, a permanent account on the Balance Sheet, and has a normal Credit balance.' },
+            { id: 43, type: 'Problem', topic: 'Worksheet', q: 'If the Income Statement Debits are **₱80,000** and the Credits are **₱65,000**, the balancing figure is a:', 
+              options: ['Net Income of ₱15,000.', 'Net Loss of ₱15,000.', 'Net Income of ₱145,000.', 'Net Loss of ₱145,000.'],
+              a: 'Net Loss of ₱15,000.', s: 'Expenses (₱80,000 Debits) > Revenues (₱65,000 Credits) = Net Loss of ₱15,000.' },
+            { id: 44, type: 'Problem', topic: 'Worksheet', q: 'Where is the Net Income figure entered in the Balance Sheet columns of the worksheet?', 
+              options: ['Balance Sheet Debit column.', 'Balance Sheet Credit column.', 'Both Debit and Credit columns.', 'It is not entered in the Balance Sheet columns.'],
+              a: 'Balance Sheet Credit column.', s: 'Net Income increases equity, and equity is a credit-balance account, so Net Income is added to the Balance Sheet Credit column to balance it.' },
+            { id: 45, type: 'Problem', topic: 'Worksheet', q: 'Trial Balance shows Unearned Revenue **₱1,000**. Adjustment is Debit **₱400**. What is the ATB balance?', 
+              options: ['400 Credit', '600 Credit', '1000 Credit', '1400 Credit'],
+              a: '600 Credit', s: '₱1,000 Credit - ₱400 Debit = ₱600 Credit.' },
+            { id: 46, type: 'Problem', topic: 'Worksheet', q: 'ATB: Capital **₱50,000** Credit, Drawings **₱5,000** Debit. Where are these extended?', 
+              options: ['Both to BS Credit.', 'Both to BS Debit.', 'Capital to BS Credit; Drawings to BS Debit.', 'Capital to IS Credit; Drawings to IS Debit.'],
+              a: 'Capital to BS Credit; Drawings to BS Debit.', s: 'Both are equity-related (permanent) accounts, extended to the Balance Sheet columns according to their normal balances.' },
+            { id: 47, type: 'Problem', topic: 'Worksheet', q: 'The total of the Income Statement Credit column is **₱90,000**, and the Income Statement Debit column is **₱55,000**. What figure balances the Income Statement?', 
+              options: ['₱35,000 added to the Debit column.', '₱35,000 added to the Credit column.', '₱145,000 added to the Debit column.', '₱145,000 added to the Credit column.'],
+              a: '₱35,000 added to the Debit column.', s: '₱90,000 - ₱55,000 = ₱35,000 Net Income. It is added to the debit side to make Debits equal Credits.' },
+            { id: 48, type: 'Problem', topic: 'Worksheet', q: 'If the Balance Sheet Debits total **₱120,000** and the Credits total **₱85,000** (before balancing), how is the Balance Sheet balanced?', 
+              options: ['₱35,000 added to the Debit column.', '₱35,000 added to the Credit column.', '₱205,000 added to the Credit column.', 'The sheet is already balanced.'],
+              a: '₱35,000 added to the Credit column.', s: 'Assets (Debit) must equal Liabilities + Equity (Credit). The difference is the Net Income (₱35,000), which is added to the Credit side.' },
+            { id: 49, type: 'Problem', topic: 'Worksheet', q: 'A new account, Depreciation Expense, is introduced in the Adjustments columns. In the ATB, this account will have a:', 
+              options: ['Debit balance equal to the adjustment amount.', 'Credit balance equal to the adjustment amount.', 'Zero balance.', 'A balance equal to the related asset.'],
+              a: 'Debit balance equal to the adjustment amount.', s: 'Since there was no prior balance, the adjustment debit becomes the ATB debit.' },
+            { id: 50, type: 'Problem', topic: 'Worksheet', q: 'The total of the Balance Sheet Debits (before balancing) represents the total of:', 
+              options: ['Assets only.', 'Assets and Expenses.', 'Assets and Drawings.', 'Assets and Liabilities.'],
+              a: 'Assets and Drawings.', s: 'The normal balance for both Assets and Drawings is Debit, and they are extended to the BS Debit column.' },
+            { id: 51, type: 'Problem', topic: 'Worksheet', q: 'Trial Balance Debits total **₱200,000**. Adjustments Debits total **₱15,000**, Adjustments Credits total **₱15,000**. What is the ATB Debit total?', 
+              options: ['200000', '215000', '185000', 'Cannot be determined without knowing how the individual accounts adjusted.'],
+              a: 'Cannot be determined without knowing how the individual accounts adjusted.', s: 'The ATB total is NOT simply the sum of TB and Adjustments totals. An adjustment debit might be to an account that had a credit balance, or vice-versa.' },
+            { id: 52, type: 'Problem', topic: 'Worksheet', q: 'ATB: Service Revenue **₱40,000**. It is extended to the Income Statement Credit column. What is its value in the Balance Sheet Credit column?', 
+              options: ['40000', '0', '(40000)', '20000'],
+              a: '0', s: 'Revenues are temporary accounts and do not appear in the Balance Sheet columns.' },
+            { id: 53, type: 'Problem', topic: 'Worksheet', q: 'If the net change for the period is a Net Loss of **₱12,000**, where is this figure placed in the Balance Sheet columns?', 
+              options: ['Balance Sheet Debit column.', 'Balance Sheet Credit column.', 'Income Statement Debit column.', 'It is not placed in the BS columns.'],
+              a: 'Balance Sheet Debit column.', s: 'Net Loss decreases Equity. Since Equity has a normal Credit balance, a decrease in Equity is recorded as a Debit.' },
+            { id: 54, type: 'Problem', topic: 'Worksheet', q: 'A company reports a Net Income of **₱10,000**. What entry balances the Balance Sheet columns?', 
+              options: ['A ₱10,000 entry in the Debit column.', 'A ₱10,000 entry in the Credit column.', 'A ₱20,000 entry in the Debit column.', 'A ₱20,000 entry in the Credit column.'],
+              a: 'A ₱10,000 entry in the Credit column.', s: 'Net Income increases equity, which is recorded as a credit on the Balance Sheet.' },
+            { id: 55, type: 'Problem', topic: 'Worksheet', q: 'If Rent Payable has a **₱500** Credit adjustment, what is its extension on the worksheet?', 
+              options: ['Income Statement Credit ₱500.', 'Income Statement Debit ₱500.', 'Balance Sheet Credit ₱500.', 'Balance Sheet Debit ₱500.'],
+              a: 'Balance Sheet Credit ₱500.', s: 'Rent Payable is a Liability, a permanent account.' },
+            { id: 56, type: 'Theory', topic: 'Worksheet', q: 'Which account type is NOT extended to the Income Statement columns?', 
+              options: ['Revenue accounts.', 'Expense accounts.', 'Asset accounts.', 'Contra-Revenue accounts.'],
+              a: 'Asset accounts.', s: 'Assets, Liabilities, and permanent Equity accounts are extended to the Balance Sheet columns.' },
+            { id: 57, type: 'Problem', topic: 'Worksheet', q: 'If the ATB balance for Accumulated Depreciation is **₱12,000**, its extension is:', 
+              options: ['Balance Sheet Debit ₱12,000.', 'Balance Sheet Credit ₱12,000.', 'Income Statement Debit ₱12,000.', 'Income Statement Credit ₱12,000.'],
+              a: 'Balance Sheet Credit ₱12,000.', s: 'Contra-assets have a normal credit balance and are permanent accounts.' },
+            { id: 58, type: 'Problem', topic: 'Worksheet', q: 'The total of the Income Statement Debit column before balancing is **₱55,000**. This represents the total of all:', 
+              options: ['Revenues for the period.', 'Expenses for the period.', 'Assets for the period.', 'Liabilities for the period.'],
+              a: 'Expenses for the period.', s: 'Expenses have a normal debit balance and are the only debit accounts extended to the IS columns.' },
+            { id: 59, type: 'Problem', topic: 'Worksheet', q: 'A Net Income of **₱25,000** appears in which two columns for balancing?', 
+              options: ['IS Debit and BS Credit.', 'IS Credit and BS Debit.', 'IS Debit and BS Debit.', 'IS Credit and BS Credit.'],
+              a: 'IS Debit and BS Credit.', s: 'It balances the IS (added to the smaller Debit side) and increases Equity (added to the smaller Credit side, as Assets > L+E before NI).' },
+            { id: 60, type: 'Problem', topic: 'Worksheet', q: 'Trial Balance: Cash **₱10,000**. Adjustment: None. ATB Balance Sheet extension is:', 
+              options: ['Debit ₱10,000.', 'Credit ₱10,000.', 'Debit ₱0.', 'Credit ₱0.'],
+              a: 'Debit ₱10,000.', s: 'Cash is an asset, its balance is unchanged, and it is a Balance Sheet (permanent) account.' },
+
+            // Financial Statements & Mixed (61-100)
+            { id: 61, type: 'Theory', topic: 'Statements', q: 'The Income Statement is prepared for a *period of time*. What is the starting point for this statement?', 
+              options: ['Assets.', 'Expenses.', 'Revenues.', 'Equity.'],
+              a: 'Revenues.', s: 'The Income Statement starts by listing all revenues.' },
+            { id: 62, type: 'Theory', topic: 'Statements', q: 'Net Income is an essential figure that links which two financial statements?', 
+              options: ['Income Statement and Balance Sheet.', 'Balance Sheet and Statement of Cash Flows.', 'Income Statement and Statement of Changes in Equity (or Retained Earnings).', 'Balance Sheet and Trial Balance.'],
+              a: 'Income Statement and Statement of Changes in Equity (or Retained Earnings).', s: 'Net Income is the final result of the Income Statement and the starting input for the Equity statement.' },
+            { id: 63, type: 'Theory', topic: 'Statements', q: 'Which of the following accounts is *not* found on the Balance Sheet?', 
+              options: ['Cash.', 'Accounts Payable.', 'Interest Expense.', 'Accumulated Depreciation.'],
+              a: 'Interest Expense.', s: 'Interest Expense is a temporary account found on the Income Statement.' },
+            { id: 64, type: 'Theory', topic: 'Statements', q: 'The Statement of Changes in Equity reports changes in equity for which type of entity?', 
+              options: ['Corporations only.', 'Proprietorships and Partnerships.', 'Non-profit organizations.', 'Government agencies.'],
+              a: 'Proprietorships and Partnerships.', s: 'For corporations, the Statement of Retained Earnings (a component of equity) is more common.' },
+            { id: 65, type: 'Theory', topic: 'Statements', q: 'What is the order of preparation for the three main financial statements?', 
+              options: ['Balance Sheet, Income Statement, Statement of Changes in Equity.', 'Income Statement, Statement of Changes in Equity, Balance Sheet.', 'Statement of Changes in Equity, Balance Sheet, Income Statement.', 'Balance Sheet, Statement of Changes in Equity, Income Statement.'],
+              a: 'Income Statement, Statement of Changes in Equity, Balance Sheet.', s: 'The output of each statement is needed for the next: Net Income -> Equity Statement -> Ending Equity -> Balance Sheet.' },
+            { id: 66, type: 'Theory', topic: 'Statements', q: 'A debit balance in the Drawings account on the Adjusted Trial Balance is used to prepare:', 
+              options: ['The Income Statement.', 'The Balance Sheet.', 'The Statement of Changes in Equity.', 'The Post-Closing Trial Balance.'],
+              a: 'The Statement of Changes in Equity.', s: 'Drawings reduce equity and are a key component in calculating the ending capital on the SCE.' },
+            { id: 67, type: 'Theory', topic: 'Statements', q: 'In the Statement of Changes in Equity for a proprietorship, what *increases* the ending capital balance?', 
+              options: ['Net Loss and Owner Investments.', 'Net Income and Owner Drawings.', 'Net Loss and Owner Drawings.', 'Net Income and Owner Investments.'],
+              a: 'Net Income and Owner Investments.', s: 'These are additions. Net Loss and Owner Drawings reduce the balance.' },
+            { id: 68, type: 'Theory', topic: 'Statements', q: 'Which section of the worksheet provides the data for the Assets and Liabilities on the Balance Sheet?', 
+              options: ['Income Statement columns.', 'Adjustments columns.', 'Trial Balance columns.', 'Balance Sheet columns.'],
+              a: 'Balance Sheet columns of the worksheet.', s: 'This section contains all the permanent accounts needed for the Balance Sheet.' },
+            { id: 69, type: 'Theory', topic: 'Statements', q: 'Which principle governs the presentation of revenues and expenses on the Income Statement?', 
+              options: ['Cash basis accounting.', 'Accrual basis accounting.', 'The cost principle.', 'The conservatism principle.'],
+              a: 'Accrual basis accounting.', s: 'The entire adjusting process ensures the Income Statement follows the accrual basis by matching revenues and expenses.' },
+            { id: 70, type: 'Theory', topic: 'Statements', q: 'The formula: Beginning Capital + Net Income - Drawings = Ending Capital is used in which financial statement?', 
+              options: ['Income Statement.', 'Balance Sheet.', 'Statement of Changes in Equity.', 'Statement of Cash Flows.'],
+              a: 'Statement of Changes in Equity.', s: 'This is the basic formula for a proprietorship\'s equity statement.' },
+            { id: 71, type: 'Problem', topic: 'Statements', q: 'If total Assets are **₱150,000** and total Liabilities are **₱60,000**, what is the total Owner\'s Equity?', 
+              options: ['90000', '210000', '150000', '60000'],
+              a: '90000', s: 'Accounting Equation: Assets = Liabilities + Equity. ₱150,000 - ₱60,000 = ₱90,000.' },
+            { id: 72, type: 'Theory', topic: 'Statements', q: 'Which statement provides information about the business at a **specific point in time**?', 
+              options: ['Income Statement.', 'Statement of Changes in Equity.', 'Balance Sheet (Statement of Financial Position).', 'Statement of Cash Flows.'],
+              a: 'Balance Sheet (Statement of Financial Position).', s: 'Unlike the other two, the Balance Sheet is a snapshot of financial position on a particular date.' },
+            { id: 73, type: 'Theory', topic: 'Statements', q: 'In the Statement of Changes in Equity, which item is *not* an expense but reduces the owner\'s capital?', 
+              options: ['Rent Expense.', 'Salaries Expense.', 'Drawings (or Dividends for a corporation).', 'Depreciation Expense.'],
+              a: 'Drawings (or Dividends for a corporation).', s: 'Drawings are distributions of capital, not business expenses.' },
+            { id: 74, type: 'Theory', topic: 'Statements', q: 'What does the term "retained earnings" refer to in a corporation?', 
+              options: ['The amount of cash the company has.', 'The cumulative net income earned by the company less the cumulative dividends declared since inception.', 'The total amount of revenue earned in the period.', 'The total value of the company\'s assets.'],
+              a: 'The cumulative net income earned by the company less the cumulative dividends declared since inception.', s: 'Retained Earnings represents the portion of profit kept (retained) in the business.' },
+            { id: 75, type: 'Theory', topic: 'Statements', q: 'The net effect of closing entries is to transfer the balances of all temporary accounts to:', 
+              options: ['The Cash account.', 'The Asset accounts.', 'The Capital/Retained Earnings account.', 'The Liability accounts.'],
+              a: 'The Capital/Retained Earnings account.', s: 'Closing entries zero out temporary accounts (Revenues, Expenses, Dividends/Drawings) and update the permanent equity account.' },
+            { id: 76, type: 'Theory', topic: 'Statements', q: 'An unadjusted revenue account balance is correct, but an accrued expense adjustment is forgotten. What is the impact on the Balance Sheet?', 
+              options: ['Assets are overstated and Equity is overstated.', 'Liabilities are understated and Equity is overstated.', 'Liabilities are overstated and Equity is understated.', 'Assets are understated and Liabilities are understated.'],
+              a: 'Liabilities are understated and Equity is overstated.', s: 'The liability (Payable) is missing, and because Net Income is overstated (due to missing expense), Equity is also overstated.' },
+            { id: 77, type: 'Theory', topic: 'Statements', q: 'A contra-asset account is shown as a reduction of its related asset on which statement?', 
+              options: ['Income Statement.', 'Balance Sheet.', 'Statement of Changes in Equity.', 'It is not shown, only the net amount.'],
+              a: 'Balance Sheet.', s: 'For example, Accumulated Depreciation reduces Equipment to show the Book Value.' },
+            { id: 78, type: 'Theory', topic: 'Statements', q: 'The Philippine framework generally mandates the Balance Sheet be classified into Current and Non-current items. This type of presentation is based on:', 
+              options: ['Profitability.', 'Historical cost.', 'Liquidity/Solvency assessment.', 'Owner\'s preference.'],
+              a: 'Liquidity/Solvency assessment.', s: 'Classification helps users assess the company\'s ability to meet short-term obligations (liquidity).' },
+            { id: 79, type: 'Problem', topic: 'Statements', q: 'If Rent Revenue has an ATB balance of **₱5,000** and Salaries Expense is **₱2,000**, the Income Statement Credit column total is *at least*:', 
+              options: ['2000', '3000', '5000', '7000'],
+              a: '5000', s: 'The IS Credit column includes all Revenue accounts (Credits). The total is at least the sum of all revenue accounts.' },
+            { id: 80, type: 'Theory', topic: 'Statements', q: 'When preparing the Balance Sheet, which specific amount is sourced directly from the Statement of Changes in Equity?', 
+              options: ['The Ending Capital balance.', 'Total Assets.', 'Net Income.', 'Total Liabilities.'],
+              a: 'The Ending Capital balance.', s: 'The SCE calculates the final capital amount, which is then shown in the Equity section of the Balance Sheet.' },
+            { id: 81, type: 'Problem', topic: 'Statements', q: 'Service Revenue **₱100,000**, Salaries Expense **₱30,000**, Rent Expense **₱10,000**. Calculate Net Income.', 
+              options: ['60000', '70000', '100000', '140000'],
+              a: '60000', s: 'Net Income = ₱100,000 - ₱30,000 - ₱10,000 = ₱60,000.' },
+            { id: 82, type: 'Problem', topic: 'Statements', q: 'Beginning Capital **₱50,000**. Net Income **₱10,000**. Drawings **₱4,000**. Calculate Ending Capital.', 
+              options: ['50000', '56000', '60000', '64000'],
+              a: '56000', s: '₱50,000 + ₱10,000 - ₱4,000 = ₱56,000.' },
+            { id: 83, type: 'Problem', topic: 'Statements', q: 'Total Assets **₱200,000**. Total Liabilities **₱50,000**. Total Equity must be:', 
+              options: ['50000', '150000', '200000', '250000'],
+              a: '150000', s: 'Accounting Equation: Assets = Liabilities + Equity. ₱200,000 - ₱50,000 = ₱150,000.' },
+            { id: 84, type: 'Problem', topic: 'Statements', q: 'If Unadjusted Trial Balance Debits total **₱150,000**, and the only adjustment is a Debit to Supplies Expense for **₱10,000** and a Credit to Supplies for **₱10,000**, what is the Adjusted Trial Balance Debit total?', 
+              options: ['140000', '150000', '160000', '10000'],
+              a: '150000', s: 'Since the adjustment debit equals the adjustment credit (₱10,000), the total debit/credit totals remain the same.' },
+            { id: 85, type: 'Problem', topic: 'Statements', q: 'ATB: Rent Revenue **₱20,000**, Depreciation Expense **₱1,000**. What are the IS Debits and Credits?', 
+              options: ['IS Debits ₱1,000; IS Credits ₱20,000.', 'IS Debits ₱20,000; IS Credits ₱1,000.', 'IS Debits ₱21,000; IS Credits ₱0.', 'IS Debits ₱0; IS Credits ₱21,000.'],
+              a: 'IS Debits ₱1,000; IS Credits ₱20,000.', s: 'Revenue is a credit, Expense is a debit.' },
+            { id: 86, type: 'Problem', topic: 'Statements', q: 'Beginning Retained Earnings **₱30,000**. Net Loss **₱5,000**. Dividends Declared **₱2,000**. Calculate Ending Retained Earnings.', 
+              options: ['23000', '27000', '33000', '37000'],
+              a: '23000', s: '₱30,000 - ₱5,000 (Loss) - ₱2,000 (Dividends) = ₱23,000.' },
+            { id: 87, type: 'Problem', topic: 'Statements', q: 'Total Revenues are **₱80,000**, and total Expenses are **₱65,000**. The Income Statement columns of the worksheet balance with:', 
+              options: ['₱15,000 Net Income, entered as an IS Debit.', '₱15,000 Net Income, entered as an IS Credit.', '₱15,000 Net Loss, entered as an IS Debit.', '₱15,000 Net Loss, entered as an IS Credit.'],
+              a: '₱15,000 Net Income, entered as an IS Debit.', s: 'Net Income is Revenue minus Expense. It is added to the debit side to balance the IS columns.' },
+            { id: 88, type: 'Problem', topic: 'Statements', q: 'Equipment **₱50,000**, Accumulated Depreciation **₱10,000**, Cash **₱5,000**. What is the total of Current Assets?', 
+              options: ['5000', '40000', '45000', '55000'],
+              a: '5000', s: 'Cash is the only current asset listed. Equipment (net of Acc. Dep.) is a non-current (long-term) asset.' },
+            { id: 89, type: 'Problem', topic: 'Statements', q: 'If ending Owner\'s Capital is **₱90,000**, Beginning Capital was **₱70,000**, and Drawings were **₱5,000**, calculate the Net Income (assuming no new investments).', 
+              options: ['15000', '20000', '25000', '30000'],
+              a: '25000', s: 'Ending Cap. (₱90,000) = Beg. Cap. (₱70,000) + NI - Drawings (₱5,000). NI = ₱90,000 - ₱70,000 + ₱5,000 = ₱25,000.' },
+            { id: 90, type: 'Problem', topic: 'Statements', q: 'The ATB balance for Prepaid Rent is **₱1,200**. This represents 6 months of rent. What was the *monthly* rent expense?', 
+              options: ['1200', '200', '7200', 'Cannot be determined.'],
+              a: '200', s: 'If the remaining asset is ₱1,200 for 6 months, the monthly rate is ₱1,200 / 6 = ₱200.' },
+            { id: 91, type: 'Problem', topic: 'Statements', q: 'An accrued expense adjustment of **₱400** (Debit Expense, Credit Payable) is missed. What is the effect on the Balance Sheet?', 
+              options: ['Liabilities are understated by ₱400.', 'Assets are understated by ₱400.', 'Liabilities are overstated by ₱400.', 'Equity is understated by ₱400.'],
+              a: 'Liabilities are understated by ₱400.', s: 'The liability (Payable account) is missing, causing Liabilities to be understated.' },
+            { id: 92, type: 'Theory', topic: 'Statements', q: 'Which pair of accounts would *not* appear in the same section (IS or BS) of the worksheet?', 
+              options: ['Cash and Accounts Payable.', 'Salaries Expense and Rent Expense.', 'Unearned Revenue and Service Revenue.', 'Owner\'s Capital and Owner\'s Drawings.'],
+              a: 'Unearned Revenue and Service Revenue.', s: 'Unearned Revenue is BS (Liability); Service Revenue is IS (Revenue).' },
+            { id: 93, type: 'Problem', topic: 'Statements', q: 'What is the amount of total expenses if Rent Exp. is **₱5,000**, Salaries Exp. is **₱15,000**, and Depreciation Exp. is **₱2,000**?', 
+              options: ['20000', '22000', '18000', '15000'],
+              a: '22000', s: 'Total Expenses = ₱5,000 + ₱15,000 + ₱2,000 = ₱22,000.' },
+            { id: 94, type: 'Problem', topic: 'Statements', q: 'If the total of the Balance Sheet Debits (before balancing) is **₱250,000** and the Net Income is **₱30,000**, what must the total of the Balance Sheet Credits be (before balancing)?', 
+              options: ['220000', '250000', '280000', '30000'],
+              a: '220000', s: 'Total BS Debits (₱250,000) = Total BS Credits (x) + Net Income (₱30,000). x = ₱250,000 - ₱30,000 = ₱220,000.' },
+            { id: 95, type: 'Theory', topic: 'Statements', q: 'A company reports a Net Loss of **₱12,000**. How does this affect the calculation of ending Owner\'s Capital?', 
+              options: ['It increases the capital balance.', 'It reduces the capital balance.', 'It has no effect on capital.', 'It increases liabilities.'],
+              a: 'It reduces the capital balance.', s: 'Net Loss is subtracted from the beginning capital balance.' },
+            { id: 96, type: 'Problem', topic: 'Statements', q: 'A full Balance Sheet reports Equipment at Cost of **₱70,000**. Accumulated Depreciation is **₱15,000**. How is this presented?', 
+              options: ['Non-current Asset, Equipment ₱70,000.', 'Non-current Asset, Equipment ₱55,000.', 'Non-current Asset, Equipment ₱70,000 less Accumulated Depreciation ₱15,000 (Book Value ₱55,000).', 'Non-current Asset, Equipment ₱15,000.'],
+              a: 'Non-current Asset, Equipment ₱70,000 less Accumulated Depreciation ₱15,000 (Book Value ₱55,000).', s: 'Assets are reported at their book value, which is cost minus accumulated depreciation.' },
+            { id: 97, type: 'Problem', topic: 'Statements', q: 'If Unearned Revenue (liability) has an ATB balance of **₱500**, and Cash (asset) has a balance of **₱5,000**, what is the total of the Balance Sheet Debits from just these accounts?', 
+              options: ['4500', '5000', '5500', '500'],
+              a: '5000', s: 'Only the Asset (Cash) has a Debit balance. The Liability (Unearned Revenue) has a Credit balance.' },
+            { id: 98, type: 'Problem', topic: 'Statements', q: 'A company recorded salaries paid as **₱15,000**. Accrued salaries are **₱2,000**. What is the total Salaries Expense on the Income Statement?', 
+              options: ['2000', '13000', '15000', '17000'],
+              a: '17000', s: 'Total Expense = Paid Expense (₱15,000) + Accrued Expense (₱2,000) = ₱17,000.' },
+            { id: 99, type: 'Theory', topic: 'Statements', q: 'The formula: Revenue - Cost of Goods Sold = Gross Profit is the starting point for which format of the Income Statement?', 
+              options: ['Single-Step Income Statement (used by service firms).', 'Multi-Step Income Statement (used by merchandising firms).', 'Statement of Changes in Equity.', 'Balance Sheet.'],
+              a: 'Multi-Step Income Statement (used by merchandising firms).', s: 'A service firm typically uses a Single-Step Income Statement (Total Revenues - Total Expenses).' },
+            { id: 100, type: 'Problem', topic: 'Statements', q: 'A Trial Balance shows Rent Expense **₱1,000**. The adjustment is Debit Rent Expense **₱500**, Credit Rent Payable **₱500**. What is the Rent Expense in the Income Statement columns?', 
+              options: ['500', '1000', '1500', '2000'],
+              a: '1500', s: 'ATB Rent Expense = TB Rent Exp. (₱1,000) + Adjustment Debit (₱500) = ₱1,500.' },
+
+            // --- NEW 100 Questions (Steps 7-10) ---
+            // Adjusting Entries (Journalizing/Posting) - 5 Questions
+            { id: 101, type: 'Theory', topic: 'Step 7', q: 'What is the primary purpose of Step 7: Journalizing Adjusting Entries?', 
+              options: ['To prepare the worksheet.', 'To formally record the adjustments from the worksheet into the general journal.', 'To close the temporary accounts.', 'To prepare the post-closing trial balance.'],
+              a: 'To formally record the adjustments from the worksheet into the general journal.', s: 'The worksheet is an internal tool; this step makes the adjustments part of the permanent accounting record.' },
+            { id: 102, type: 'Theory', topic: 'Step 7', q: 'After journalizing adjusting entries, what is the immediate next step?', 
+              options: ['Posting the adjusting entries to the general ledger.', 'Preparing the income statement.', 'Preparing the closing entries.', 'Preparing the reversing entries.'],
+              a: 'Posting the adjusting entries to the general ledger.', s: 'Journalizing (Step 7a) is followed by Posting (Step 7b) to update the ledger account balances.' },
+            { id: 103, type: 'Problem', topic: 'Step 7', q: 'The worksheet adjustment for insurance shows a ₱500 debit to Insurance Expense and ₱500 credit to Prepaid Insurance. What is the journal entry?', 
+              options: ['Debit Prepaid Insurance ₱500; Credit Insurance Expense ₱500.', 'Debit Insurance Expense ₱500; Credit Prepaid Insurance ₱500.', 'Debit Insurance Expense ₱500; Credit Cash ₱500.', 'Debit Prepaid Insurance ₱500; Credit Cash ₱500.'],
+              a: 'Debit Insurance Expense ₱500; Credit Prepaid Insurance ₱500.', s: 'The journal entry is a direct copy of the adjustment columns from the worksheet.' },
+            { id: 104, type: 'Theory', topic: 'Step 7', q: 'If adjusting entries are journalized but *not* posted, what will be incorrect?', 
+              options: ['The general journal.', 'The worksheet.', 'The general ledger balances and the financial statements.', 'The bank statement.'],
+              a: 'The general ledger balances and the financial statements.', s: 'Posting is required to update the ledger, which is the source for the financial statements.' },
+            { id: 105, type: 'Problem', topic: 'Step 7', q: 'The worksheet shows an adjustment for accrued salaries: ₱1,200 debit to Salaries Expense, ₱1,200 credit to Salaries Payable. Write the journal entry.', 
+              options: ['Debit Salaries Payable ₱1,200; Credit Salaries Expense ₱1,200.', 'Debit Salaries Expense ₱1,200; Credit Cash ₱1,200.', 'Debit Salaries Expense ₱1,200; Credit Salaries Payable ₱1,200.', 'Debit Cash ₱1,200; Credit Salaries Payable ₱1,200.'],
+              a: 'Debit Salaries Expense ₱1,200; Credit Salaries Payable ₱1,200.', s: 'This formally records the accrued expense in the journal.' },
+
+            // Closing Entries (Theory) - 20 Questions
+            { id: 106, type: 'Theory', topic: 'Step 8', q: 'What is the primary purpose of closing entries?', 
+              options: ['To prepare the adjusting entries.', 'To record daily transactions.', 'To zero out all temporary accounts and transfer net income/loss to the capital account.', 'To correct errors made during the period.'],
+              a: 'To zero out all temporary accounts and transfer net income/loss to the capital account.', s: 'This resets the nominal accounts (revenues, expenses, drawings) for the next period.' },
+            { id: 107, type: 'Theory', topic: 'Step 8', q: 'Which of the following accounts is a "temporary" or "nominal" account?', 
+              options: ['Cash.', 'Rent Expense.', 'Accounts Payable.', 'Owner\'s Capital.'],
+              a: 'Rent Expense.', s: 'Expenses, Revenues, and Drawings are temporary. Assets, Liabilities, and Capital are permanent.' },
+            { id: 108, type: 'Theory', topic: 'Step 8', q: 'Which of the following accounts is a "permanent" or "real" account?', 
+              options: ['Service Revenue.', 'Accumulated Depreciation.', 'Salaries Expense.', 'Owner\'s Drawings.'],
+              a: 'Accumulated Depreciation.', s: 'Accumulated Depreciation is a contra-asset, which is a permanent balance sheet account.' },
+            { id: 109, type: 'Theory', topic: 'Step 8', q: 'The temporary account used to facilitate the closing process is called:', 
+              options: ['Income Summary.', 'Owner\'s Capital.', 'Net Income.', 'Retained Earnings.'],
+              a: 'Income Summary.', s: 'Revenues and expenses are closed to Income Summary first.' },
+            { id: 110, type: 'Theory', topic: 'Step 8', q: 'What is the first step in the four-step closing process?', 
+              options: ['Close all Expense accounts to Income Summary.', 'Close all Revenue accounts to Income Summary.', 'Close Income Summary to Owner\'s Capital.', 'Close Owner\'s Drawings to Owner\'s Capital.'],
+              a: 'Close all Revenue accounts to Income Summary.', s: 'The acronym is REID: Revenues, Expenses, Income Summary, Drawings.' },
+            { id: 111, type: 'Theory', topic: 'Step 8', q: 'What is the second step in the four-step closing process?', 
+              options: ['Close all Expense accounts to Income Summary.', 'Close all Revenue accounts to Income Summary.', 'Close Income Summary to Owner\'s Capital.', 'Close Owner\'s Drawings to Owner\'s Capital.'],
+              a: 'Close all Expense accounts to Income Summary.', s: 'REID: Revenues, Expenses, Income Summary, Drawings.' },
+            { id: 112, type: 'Theory', topic: 'Step 8', q: 'What is the third step in the four-step closing process?', 
+              options: ['Close all Expense accounts to Income Summary.', 'Close all Revenue accounts to Income Summary.', 'Close the Income Summary account to Owner\'s Capital.', 'Close the Drawings account to Owner\'s Capital.'],
+              a: 'Close the Income Summary account to Owner\'s Capital.', s: 'REID: Revenues, Expenses, Income Summary, Drawings. This step transfers the net income or loss.' },
+            { id: 113, type: 'Theory', topic: 'Step 8', q: 'What is the fourth step in the four-step closing process?', 
+              options: ['Close all Expense accounts to Income Summary.', 'Close all Revenue accounts to Income Summary.', 'Close Income Summary to Owner\'s Capital.', 'Close the Drawings account to Owner\'s Capital.'],
+              a: 'Close the Drawings account to Owner\'s Capital.', s: 'REID: Revenues, Expenses, Income Summary, Drawings. This step reduces capital by the owner\'s withdrawals.' },
+            { id: 114, type: 'Theory', topic: 'Step 8', q: 'After closing entries are posted, what will be the balance of the Service Revenue account?', 
+              options: ['Its ending balance.', 'Its beginning balance.', 'Zero.', 'A negative balance.'],
+              a: 'Zero.', s: 'All temporary accounts (revenues, expenses, drawings) are reset to zero.' },
+            { id: 115, type: 'Theory', topic: 'Step 8', q: 'After closing entries are posted, what will be the balance of the Salaries Expense account?', 
+              options: ['Its ending balance.', 'Its beginning balance.', 'Zero.', 'A positive balance.'],
+              a: 'Zero.', s: 'All temporary accounts (revenues, expenses, drawings) are reset to zero.' },
+            { id: 116, type: 'Theory', topic: 'Step 8', q: 'After closing entries are posted, what will be the balance of the Drawings account?', 
+              options: ['Its ending balance.', 'Its beginning balance.', 'Zero.', 'A credit balance.'],
+              a: 'Zero.', s: 'All temporary accounts (revenues, expenses, drawings) are reset to zero.' },
+            { id: 117, type: 'Theory', topic: 'Step 8', q: 'After closing entries are posted, what will be the balance of the Cash account?', 
+              options: ['Its ending balance (it is not closed).', 'Zero.', 'Its beginning balance.', 'A credit balance.'],
+              a: 'Its ending balance (it is not closed).', s: 'Cash is a permanent (asset) account and is not affected by closing entries.' },
+            { id: 118, type: 'Theory', topic: 'Step 8', q: 'Service Revenue has a ₱50,000 credit balance. The closing entry involves:', 
+              options: ['A debit to Service Revenue for ₱50,000.', 'A credit to Service Revenue for ₱50,000.', 'A debit to Income Summary for ₱50,000.', 'A debit to Owner\'s Capital for ₱50,000.'],
+              a: 'A debit to Service Revenue for ₱50,000.', s: 'To close a credit-balance account, you must debit it.' },
+            { id: 119, type: 'Theory', topic: 'Step 8', q: 'Rent Expense has a ₱10,000 debit balance. The closing entry involves:', 
+              options: ['A debit to Rent Expense for ₱10,000.', 'A credit to Rent Expense for ₱10,000.', 'A credit to Income Summary for ₱10,000.', 'A debit to Owner\'s Capital for ₱10,000.'],
+              a: 'A credit to Rent Expense for ₱10,000.', s: 'To close a debit-balance account, you must credit it.' },
+            { id: 120, type: 'Theory', topic: 'Step 8', q: 'If a company has a Net Income, the Income Summary account will have a:', 
+              options: ['Debit balance (before closing it to Capital).', 'Credit balance (before closing it to Capital).', 'Zero balance.', 'Negative balance.'],
+              a: 'Credit balance (before closing it to Capital).', s: 'Net Income means Revenues (Credits to IS) > Expenses (Debits to IS), leaving a credit balance.' },
+            { id: 121, type: 'Theory', topic: 'Step 8', q: 'If a company has a Net Loss, the Income Summary account will have a:', 
+              options: ['Debit balance (before closing it to Capital).', 'Credit balance (before closing it to Capital).', 'Zero balance.', 'Positive balance.'],
+              a: 'Debit balance (before closing it to Capital).', s: 'Net Loss means Revenues (Credits to IS) < Expenses (Debits to IS), leaving a debit balance.' },
+            { id: 122, type: 'Theory', topic: 'Step 8', q: 'If a company has a Net Income, the closing entry for Income Summary involves:', 
+              options: ['A debit to Income Summary and a credit to Owner\'s Capital.', 'A credit to Income Summary and a debit to Owner\'s Capital.', 'A debit to Income Summary and a credit to Cash.', 'A debit to Cash and a credit to Owner\'s Capital.'],
+              a: 'A debit to Income Summary and a credit to Owner\'s Capital.', s: 'This closes the credit balance in Income Summary and transfers the profit to Capital.' },
+            { id: 123, type: 'Theory', topic: 'Step 8', q: 'If a company has a Net Loss, the closing entry for Income Summary involves:', 
+              options: ['A debit to Income Summary and a credit to Owner\'s Capital.', 'A credit to Income Summary and a debit to Owner\'s Capital.', 'A credit to Income Summary and a debit to Cash.', 'A debit to Owner\'s Capital and a credit to Cash.'],
+              a: 'A credit to Income Summary and a debit to Owner\'s Capital.', s: 'This closes the debit balance in Income Summary and transfers the loss (a reduction) to Capital.' },
+            { id: 124, type: 'Theory', topic: 'Step 8', q: 'The closing entry for the Drawings account always involves:', 
+              options: ['A debit to Drawings and a credit to Owner\'s Capital.', 'A credit to Drawings and a debit to Owner\'s Capital.', 'A debit to Drawings and a credit to Income Summary.', 'A credit to Drawings and a debit to Income Summary.'],
+              a: 'A credit to Drawings and a debit to Owner\'s Capital.', s: 'Drawings reduce capital, so Capital is debited and the Drawings account is credited to close it.' },
+            { id: 125, type: 'Theory', topic: 'Step 8', q: 'Which of the following accounts is NOT closed at the end of the period?', 
+              options: ['Salaries Expense.', 'Service Revenue.', 'Owner\'s Drawings.', 'Accounts Payable.'],
+              a: 'Accounts Payable.', s: 'Accounts Payable is a permanent (liability) account.' },
+
+            // Closing Entries (Problems) - 25 Questions
+            { id: 126, type: 'Problem', topic: 'Step 8', q: 'Revenues are ₱80,000. Expenses are ₱50,000. What is the balance of Income Summary before the 3rd closing entry?', 
+              options: ['30000 Credit', '30000 Debit', '130000 Credit', '130000 Debit'],
+              a: '30000 Credit', s: 'Step 1: Credit IS ₱80,000. Step 2: Debit IS ₱50,000. Result: ₱30,000 Credit Balance (Net Income).' },
+            { id: 127, type: 'Problem', topic: 'Step 8', q: 'Revenues are ₱60,000. Expenses are ₱75,000. What is the balance of Income Summary before the 3rd closing entry?', 
+              options: ['15000 Credit', '15000 Debit', '135000 Credit', '135000 Debit'],
+              a: '15000 Debit', s: 'Step 1: Credit IS ₱60,000. Step 2: Debit IS ₱75,000. Result: ₱15,000 Debit Balance (Net Loss).' },
+            { id: 128, type: 'Problem', topic: 'Step 8', q: 'Service Revenue is ₱40,000. Rent Revenue is ₱5,000. What is the *first* closing entry?', 
+              options: ['Debit Income Summary ₱45,000; Credit Service Revenue ₱40,000; Credit Rent Revenue ₱5,000.', 'Debit Service Revenue ₱40,000; Debit Rent Revenue ₱5,000; Credit Income Summary ₱45,000.', 'Debit Owner\'s Capital ₱45,000; Credit Income Summary ₱45,000.', 'Debit Income Summary ₱45,000; Credit Owner\'s Capital ₱45,000.'],
+              a: 'Debit Service Revenue ₱40,000; Debit Rent Revenue ₱5,000; Credit Income Summary ₱45,000.', s: 'All revenue accounts are debited to close them, and Income Summary is credited for the total.' },
+            { id: 129, type: 'Problem', topic: 'Step 8', q: 'Salaries Expense is ₱20,000. Rent Expense is ₱10,000. What is the *second* closing entry?', 
+              options: ['Debit Income Summary ₱30,000; Credit Salaries Expense ₱20,000; Credit Rent Expense ₱10,000.', 'Debit Salaries Expense ₱20,000; Debit Rent Expense ₱10,000; Credit Income Summary ₱30,000.', 'Debit Owner\'s Capital ₱30,000; Credit Salaries Expense ₱20,000; Credit Rent Expense ₱10,000.', 'Debit Income Summary ₱30,000; Credit Owner\'s Capital ₱30,000.'],
+              a: 'Debit Income Summary ₱30,000; Credit Salaries Expense ₱20,000; Credit Rent Expense ₱10,000.', s: 'All expense accounts are credited to close them, and Income Summary is debited for the total.' },
+            { id: 130, type: 'Problem', topic: 'Step 8', q: 'Income Summary has a ₱25,000 credit balance. What is the *third* closing entry?', 
+              options: ['Debit Income Summary ₱25,000; Credit Owner\'s Capital ₱25,000.', 'Debit Owner\'s Capital ₱25,000; Credit Income Summary ₱25,000.', 'Debit Income Summary ₱25,000; Credit Drawings ₱25,000.', 'Debit Owner\'s Capital ₱25,000; Credit Cash ₱25,000.'],
+              a: 'Debit Income Summary ₱25,000; Credit Owner\'s Capital ₱25,000.', s: 'This closes the Income Summary (Net Income) and transfers the profit to Capital.' },
+            { id: 131, type: 'Problem', topic: 'Step 8', q: 'Income Summary has a ₱5,000 debit balance. What is the *third* closing entry?', 
+              options: ['Debit Income Summary ₱5,000; Credit Owner\'s Capital ₱5,000.', 'Debit Owner\'s Capital ₱5,000; Credit Income Summary ₱5,000.', 'Debit Owner\'s Capital ₱5,000; Credit Drawings ₱5,000.', 'Debit Cash ₱5,000; Credit Income Summary ₱5,000.'],
+              a: 'Debit Owner\'s Capital ₱5,000; Credit Income Summary ₱5,000.', s: 'This closes the Income Summary (Net Loss) and transfers the loss to Capital.' },
+            { id: 132, type: 'Problem', topic: 'Step 8', q: 'Owner\'s Drawings account has a ₱12,000 debit balance. What is the *fourth* closing entry?', 
+              options: ['Debit Owner\'s Capital ₱12,000; Credit Owner\'s Drawings ₱12,000.', 'Debit Owner\'s Drawings ₱12,000; Credit Owner\'s Capital ₱12,000.', 'Debit Income Summary ₱12,000; Credit Owner\'s Drawings ₱12,000.', 'Debit Owner\'s Capital ₱12,000; Credit Income Summary ₱12,000.'],
+              a: 'Debit Owner\'s Capital ₱12,000; Credit Owner\'s Drawings ₱12,000.', s: 'This closes the Drawings account and transfers the reduction to Capital.' },
+            { id: 133, type: 'Problem', topic: 'Step 8', q: 'Revenues ₱100,000. Expenses ₱60,000. Drawings ₱10,000. Beginning Capital ₱50,000. What is the ending capital?', 
+              options: ['80000', '100000', '90000', '120000'],
+              a: '80000', s: 'Beg. Cap (₱50k) + Net Income (₱100k - ₱60k) - Drawings (₱10k) = ₱50k + ₱40k - ₱10k = ₱80,000.' },
+            { id: 134, type: 'Problem', topic: 'Step 8', q: 'Revenues ₱70,000. Expenses ₱80,000. Drawings ₱5,000. Beginning Capital ₱40,000. What is the ending capital?', 
+              options: ['20000', '25000', '35000', '45000'],
+              a: '25000', s: 'Beg. Cap (₱40k) + Net Loss (₱70k - ₱80k) - Drawings (₱5k) = ₱40k - ₱10k - ₱5k = ₱25,000.' },
+            { id: 135, type: 'Problem', topic: 'Step 8', q: 'What is the total amount debited to Income Summary in the closing process if expenses are ₱45,000?', 
+              options: ['45000', '90000', '0', 'The amount of revenues.'],
+              a: '45000', s: 'The second closing entry is a debit to Income Summary for the total of all expenses.' },
+            { id: 136, type: 'Problem', topic: 'Step 8', q: 'What is the total amount credited to Income Summary in the closing process if revenues are ₱90,000?', 
+              options: ['90000', '45000', '0', 'The amount of expenses.'],
+              a: '90000', s: 'The first closing entry is a credit to Income Summary for the total of all revenues.' },
+            { id: 137, type: 'Problem', topic: 'Step 8', q: 'If Income Summary is debited for ₱30,000 (Expenses) and credited for ₱50,000 (Revenues), what is the third closing entry?', 
+              options: ['Debit Income Summary ₱20,000; Credit Owner\'s Capital ₱20,000.', 'Debit Owner\'s Capital ₱20,000; Credit Income Summary ₱20,000.', 'Debit Income Summary ₱80,000; Credit Owner\'s Capital ₱80,000.', 'Debit Owner\'s Capital ₱80,000; Credit Income Summary ₱80,000.'],
+              a: 'Debit Income Summary ₱20,000; Credit Owner\'s Capital ₱20,000.', s: 'The account has a ₱20,000 credit balance (Net Income). The entry must debit IS to close it.' },
+            { id: 138, type: 'Problem', topic: 'Step 8', q: 'If Income Summary is debited for ₱60,000 (Expenses) and credited for ₱55,000 (Revenues), what is the third closing entry?', 
+              options: ['Debit Income Summary ₱5,000; Credit Owner\'s Capital ₱5,000.', 'Debit Owner\'s Capital ₱5,000; Credit Income Summary ₱5,000.', 'Debit Income Summary ₱115,000; Credit Owner\'s Capital ₱115,000.', 'Debit Owner\'s Capital ₱115,000; Credit Income Summary ₱115,000.'],
+              a: 'Debit Owner\'s Capital ₱5,000; Credit Income Summary ₱5,000.', s: 'The account has a ₱5,000 debit balance (Net Loss). The entry must credit IS to close it.' },
+            { id: 139, type: 'Problem', topic: 'Step 8', q: 'Beg. Capital ₱100,000. End. Capital ₱120,000. Net Income ₱30,000. What was the amount of Owner\'s Drawings?', 
+              options: ['0', '10000', '20000', '50000'],
+              a: '10000', s: 'End Cap (₱120k) = Beg Cap (₱100k) + NI (₱30k) - Drawings (x). ₱120k = ₱130k - x. x = ₱10,000.' },
+            { id: 140, type: 'Problem', topic: 'Step 8', q: 'Beg. Capital ₱70,000. End. Capital ₱60,000. Net Loss ₱5,000. What was the amount of Owner\'s Drawings?', 
+              options: ['0', '5000', '10000', '15000'],
+              a: '5000', s: 'End Cap (₱60k) = Beg Cap (₱70k) - Net Loss (₱5k) - Drawings (x). ₱60k = ₱65k - x. x = ₱5,000.' },
+            { id: 141, type: 'Problem', topic: 'Step 8', q: 'Beg. Capital ₱80,000. End. Capital ₱100,000. Drawings ₱10,000. What was the Net Income or Net Loss?', 
+              options: ['Net Income ₱20,000', 'Net Loss ₱20,000', 'Net Income ₱30,000', 'Net Loss ₱30,000'],
+              a: 'Net Income ₱30,000', s: 'End Cap (₱100k) = Beg Cap (₱80k) + NI/NL (x) - Drawings (₱10k). ₱100k = ₱70k + x. x = ₱30,000 (Positive, so Net Income).' },
+            { id: 142, type: 'Problem', topic: 'Step 8', q: 'Beg. Capital ₱50,000. End. Capital ₱40,000. Drawings ₱0. What was the Net Income or Net Loss?', 
+              options: ['Net Income ₱10,000', 'Net Loss ₱10,000', 'Net Income ₱90,000', 'Net Loss ₱90,000'],
+              a: 'Net Loss ₱10,000', s: 'End Cap (₱40k) = Beg Cap (₱50k) + NI/NL (x) - Drawings (₱0). ₱40k = ₱50k + x. x = -₱10,000 (Negative, so Net Loss).' },
+            { id: 143, type: 'Problem', topic: 'Step 8', q: 'Which account is *not* involved in any of the four closing entries?', 
+              options: ['Cash.', 'Service Revenue.', 'Owner\'s Drawings.', 'Income Summary.'],
+              a: 'Cash.', s: 'Cash (Asset), Liabilities, and Capital itself (except as the *target* of NI/Loss/Drawings) are not closed.' },
+            { id: 144, type: 'Problem', topic: 'Step 8', q: 'Total Revenues ₱200,000. Total Expenses ₱120,000. What is the amount of Net Income?', 
+              options: ['80000', '120000', '200000', '320000'],
+              a: '80000', s: 'Net Income = Revenues (₱200,000) - Expenses (₱120,000) = ₱80,000.' },
+            { id: 145, type: 'Problem', topic: 'Step 8', q: 'Net Income is ₱45,000. Drawings are ₱15,000. What is the net *increase* to Owner\'s Capital from the closing process?', 
+              options: ['15000', '30000', '45000', '60000'],
+              a: '30000', s: 'Capital is increased by Net Income (₱45,000) and decreased by Drawings (₱15,000). Net effect = +₱30,000.' },
+            { id: 146, type: 'Problem', topic: 'Step 8', q: 'Net Loss is ₱10,000. Drawings are ₱5,000. What is the net *decrease* to Owner\'s Capital from the closing process?', 
+              options: ['5000', '10000', '15000', '0'],
+              a: '15000', s: 'Capital is decreased by Net Loss (₱10,000) and decreased by Drawings (₱5,000). Total decrease = ₱15,000.' },
+            { id: 147, type: 'Problem', topic: 'Step 8', q: 'Income Summary has a ₱15,000 credit balance. Drawings are ₱20,000. What is the net change to Owner\'s Capital?', 
+              options: ['Increase ₱5,000', 'Decrease ₱5,000', 'Increase ₱35,000', 'Decrease ₱35,000'],
+              a: 'Decrease ₱5,000', s: 'Capital increases by ₱15,000 (Net Income) and decreases by ₱20,000 (Drawings). Net effect = -₱5,000.' },
+            { id: 148, type: 'Problem', topic: 'Step 8', q: 'Income Summary has a ₱10,000 debit balance. Drawings are ₱2,000. What is the net change to Owner\'s Capital?', 
+              options: ['Decrease ₱8,000', 'Increase ₱8,000', 'Decrease ₱12,000', 'Increase ₱12,000'],
+              a: 'Decrease ₱12,000', s: 'Capital decreases by ₱10,000 (Net Loss) and decreases by ₱2,000 (Drawings). Net effect = -₱12,000.' },
+            { id: 149, type: 'Problem', topic: 'Step 8', q: 'After closing Revenues (₱50k) and Expenses (₱30k), what is the balance of Income Summary?', 
+              options: ['20000 Credit', '20000 Debit', '80000 Credit', '80000 Debit'],
+              a: '20000 Credit', s: 'Credit IS ₱50,000 (from Revenues), Debit IS ₱30,000 (from Expenses). Balance = ₱20,000 Credit.' },
+            { id: 150, type: 'Problem', topic: 'Step 8', q: 'After all four closing entries, what is the balance of the Income Summary account?', 
+              options: ['The Net Income amount.', 'The Net Loss amount.', 'Zero.', 'The beginning capital amount.'],
+              a: 'Zero.', s: 'Income Summary is a temporary clearing account. It is opened and closed during the closing process, ending at zero.' },
+
+            // Post-Closing Trial Balance (PCTB) - 20 Questions
+            { id: 151, type: 'Theory', topic: 'Step 9', q: 'What is the purpose of the Post-Closing Trial Balance (PCTB)?', 
+              options: ['To calculate the net income for the period.', 'To list all transactions for the period.', 'To verify that debits equal credits and that only permanent accounts remain open.', 'To prepare adjusting entries.'],
+              a: 'To verify that debits equal credits and that only permanent accounts remain open.', s: 'It\'s a final check after closing entries to ensure all temporary accounts are zero.' },
+            { id: 152, type: 'Theory', topic: 'Step 9', q: 'Which of the following accounts would *appear* on a Post-Closing Trial Balance?', 
+              options: ['Service Revenue.', 'Prepaid Insurance.', 'Salaries Expense.', 'Owner\'s Drawings.'],
+              a: 'Prepaid Insurance.', s: 'Prepaid Insurance is an Asset (a permanent account).' },
+            { id: 153, type: 'Theory', topic: 'Step 9', q: 'Which of the following accounts would *NOT* appear on a Post-Closing Trial Balance?', 
+              options: ['Cash.', 'Accounts Payable.', 'Service Revenue.', 'Owner\'s Capital.'],
+              a: 'Service Revenue.', s: 'Service Revenue is a temporary account and would have a zero balance after closing.' },
+            { id: 154, type: 'Theory', topic: 'Step 9', q: 'Which of the following accounts would *NOT* appear on a Post-Closing Trial Balance?', 
+              options: ['Salaries Expense.', 'Equipment.', 'Accumulated Depreciation.', 'Unearned Revenue.'],
+              a: 'Salaries Expense.', s: 'Salaries Expense is a temporary account and would have a zero balance after closing.' },
+            { id: 155, type: 'Theory', topic: 'Step 9', q: 'Which of the following accounts would *NOT* appear on a Post-Closing Trial Balance?', 
+              options: ['Owner\'s Drawings.', 'Supplies.', 'Salaries Payable.', 'Owner\'s Capital.'],
+              a: 'Owner\'s Drawings.', s: 'Drawings is a temporary account and would have a zero balance after closing.' },
+            { id: 156, type: 'Theory', topic: 'Step 9', q: 'The balances on the Post-Closing Trial Balance are used for what purpose?', 
+              options: ['They are transferred to the Income Statement.', 'They become the beginning balances for the next accounting period.', 'They are used to calculate net income.', 'They are discarded after printing.'],
+              a: 'They become the beginning balances for the next accounting period.', s: 'The PCTB represents the starting point (Assets, Liabilities, Equity) for the new period.' },
+            { id: 157, type: 'Theory', topic: 'Step 9', q: 'The Owner\'s Capital account on the PCTB reflects which balance?', 
+              options: ['The beginning capital balance for the period.', 'The ending capital balance for the period.', 'The total revenues for the period.', 'A zero balance.'],
+              a: 'The ending capital balance for the period.', s: 'After closing net income/loss and drawings, the Capital account is at its final ending balance.' },
+            { id: 158, type: 'Theory', topic: 'Step 9', q: 'The Post-Closing Trial Balance contains *only* which types of accounts?', 
+              options: ['Revenues, Expenses, and Drawings.', 'Assets, Liabilities, and Equity.', 'Assets, Revenues, and Expenses.', 'Liabilities, Equity, and Revenues.'],
+              a: 'Assets, Liabilities, and Equity.', s: 'These are the permanent (real) accounts, which form the Balance Sheet.' },
+            { id: 159, type: 'Theory', topic: 'Step 9', q: 'Which trial balance lists the greatest number of accounts?', 
+              options: ['Unadjusted Trial Balance.', 'Adjusted Trial Balance.', 'Post-Closing Trial Balance.', 'All trial balances list the same number.'],
+              a: 'Adjusted Trial Balance.', s: 'The ATB lists all accounts (permanent and temporary) *after* adjustments but *before* closing.' },
+            { id: 160, type: 'Theory', topic: 'Step 9', q: 'Which account balance on the PCTB is the direct result of the closing process?', 
+              options: ['Cash.', 'Accounts Payable.', 'Owner\'s Capital.', 'Equipment.'],
+              a: 'Owner\'s Capital.', s: 'The closing process updates the Owner\'s Capital account to its new ending balance.' },
+            { id: 161, type: 'Problem', topic: 'Step 9', q: 'A PCTB has Total Debits of ₱50,000. What must be the Total Credits?', 
+              options: ['0', '25000', '50000', '100000'],
+              a: '50000', s: 'The purpose of any trial balance is to prove that debits equal credits.' },
+            { id: 162, type: 'Problem', topic: 'Step 9', q: 'A company\'s PCTB shows: Cash ₱5,000; Equipment ₱10,000; Accounts Payable ₱3,000. What is the balance of Owner\'s Capital?', 
+              options: ['10000', '12000', '15000', '18000'],
+              a: '12000', s: 'Assets (₱5k + ₱10k) = Liabilities (₱3k) + Equity (x). ₱15,000 = ₱3,000 + x. x = ₱12,000.' },
+            { id: 163, type: 'Problem', topic: 'Step 9', q: 'Which of these accounts would have a *credit* balance on the PCTB?', 
+              options: ['Cash.', 'Accumulated Depreciation.', 'Prepaid Rent.', 'Equipment.'],
+              a: 'Accumulated Depreciation.', s: 'Accumulated Depreciation is a contra-asset, a permanent account with a normal credit balance.' },
+            { id: 164, type: 'Problem', topic: 'Step 9', q: 'Which of these accounts would have a *credit* balance on the PCTB?', 
+              options: ['Accounts Receivable.', 'Supplies.', 'Salaries Payable.', 'Owner\'s Drawings (if it appeared).'],
+              a: 'Salaries Payable.', s: 'Salaries Payable is a Liability, a permanent account with a normal credit balance.' },
+            { id: 165, type: 'Problem', topic: 'Step 9', q: 'An Adjusted Trial Balance shows: Cash ₱10k, Service Revenue ₱20k, Rent Expense ₱5k, Capital ₱(X). Which accounts will *not* be on the PCTB?', 
+              options: ['Cash and Capital.', 'Cash and Service Revenue.', 'Service Revenue and Rent Expense.', 'Capital and Rent Expense.'],
+              a: 'Service Revenue and Rent Expense.', s: 'These are temporary accounts that will be closed and have a zero balance.' },
+            { id: 166, type: 'Problem', topic: 'Step 9', q: 'A company\'s total assets on the PCTB are ₱100,000. Total liabilities are ₱40,000. What is the total Owner\'s Equity?', 
+              options: ['40000', '60000', '100000', '140000'],
+              a: '60000', s: 'Assets (₱100,000) = Liabilities (₱40,000) + Equity (x). x = ₱60,000.' },
+            { id: 167, type: 'Theory', topic: 'Step 9', q: 'If the Post-Closing Trial Balance does *not* balance, what is the most likely error?', 
+              options: ['An error was made in posting the adjusting entries.', 'An error was made in posting the closing entries.', 'An error was made in preparing the Income Statement.', 'An error was made in journalizing daily transactions.'],
+              a: 'An error was made in posting the closing entries.', s: 'This is the most common reason, as the ATB (which comes before closing) is assumed to have balanced.' },
+            { id: 168, type: 'Theory', topic: 'Step 9', q: 'The accounts on the Post-Closing Trial Balance are identical to the accounts on which financial statement?', 
+              options: ['The Income Statement.', 'The Balance Sheet.', 'The Statement of Changes in Equity.', 'The Statement of Cash Flows.'],
+              a: 'The Balance Sheet.', s: 'The PCTB is essentially a trial balance of the Balance Sheet accounts.' },
+            { id: 169, type: 'Problem', topic: 'Step 9', q: 'ATB shows: Cash ₱10k, A/R ₱5k, Supplies ₱1k, A/P ₱3k, Capital ₱13k. (Revenues/Expenses/Drawings balanced). What are total debits on the PCTB?', 
+              options: ['13000', '15000', '16000', '29000'],
+              a: '16000', s: 'The permanent debit accounts are Cash (₱10k) + A/R (₱5k) + Supplies (₱1k) = ₱16,000.' },
+            { id: 170, type: 'Problem', topic: 'Step 9', q: 'Using Q169 data, what are the total credits on the PCTB?', 
+              options: ['3000', '13000', '16000', '29000'],
+              a: '16000', s: 'The permanent credit accounts are A/P (₱3k) + Capital (₱13k) = ₱16,000. Debits equal credits.' },
+            
+            // Reversing Entries - 30 Questions
+            { id: 171, type: 'Theory', topic: 'Step 10', q: 'When are reversing entries prepared?', 
+              options: ['On the last day of the accounting period.', 'On the first day of the new accounting period.', 'After preparing the income statement.', 'Before preparing closing entries.'],
+              a: 'On the first day of the new accounting period.', s: 'They are dated the day after the previous period ends (e.g., January 1).' },
+            { id: 172, type: 'Theory', topic: 'Step 10', q: 'What is the primary purpose of reversing entries?', 
+              options: ['To correct errors from the prior period.', 'To simplify bookkeeping for routine entries in the new period.', 'To calculate net income.', 'To close the temporary accounts.'],
+              a: 'To simplify bookkeeping for routine entries in the new period.', s: 'They are an optional step for convenience, not a required part of GAAP/PFRS.' },
+            { id: 173, type: 'Theory', topic: 'Step 10', q: 'Are reversing entries optional or mandatory?', 
+              options: ['Optional.', 'Mandatory under PFRS.', 'Mandatory under GAAP.', 'Mandatory for all businesses.'],
+              a: 'Optional.', s: 'They are a bookkeeping convenience and not required by accounting standards.' },
+            { id: 174, 'type': 'Theory', topic: 'Step 10', q: 'A reversing entry is the exact opposite of what?', 
+              options: ['A closing entry.', 'A correcting entry.', 'An adjusting entry from the prior period.', 'A regular transaction.'],
+              a: 'An adjusting entry from the prior period.', s: 'The debits and credits of the adjusting entry are "reversed" or "flipped".' },
+            { id: 175, 'type': 'Theory', topic: 'Step 10', q: 'Which *type* of adjusting entry is *always* a candidate for reversal?', 
+              options: ['All deferrals.', 'All accruals (both accrued expenses and accrued revenues).', 'Depreciation and Bad Debts.', 'Corrections of errors.'],
+              a: 'All accruals (both accrued expenses and accrued revenues).', s: 'Reversing accruals simplifies the subsequent cash payment or receipt.' },
+            { id: 176, type: 'Theory', topic: 'Step 10', q: 'Which adjusting entry is *never* reversed?', 
+              options: ['Accrued Salaries.', 'Accrued Interest Revenue.', 'Depreciation Expense.', 'Prepaid Expense (Expense Method).'],
+              a: 'Depreciation Expense.', s: 'Reversing depreciation would make no logical sense and would disrupt the Accumulated Depreciation balance.' },
+            { id: 177, type: 'Theory', topic: 'Step 10', q: 'Which adjusting entry is *never* reversed?', 
+              options: ['Accrued Utilities Expense.', 'Bad Debt Expense.', 'Accrued Service Revenue.', 'Unearned Revenue (Revenue Method).'],
+              a: 'Bad Debt Expense.', s: 'Reversing bad debt expense would distort the Allowance for Doubtful Accounts.' },
+            { id: 178, type: 'Theory', topic: 'Step 10', q: 'If an adjusting entry for *accrued salaries* (Salaries Expense Dr, Salaries Payable Cr) is made, what is the reversing entry?', 
+              options: ['Debit Salaries Expense; Credit Salaries Payable.', 'Debit Salaries Payable; Credit Salaries Expense.', 'Debit Salaries Payable; Credit Cash.', 'Debit Owner\'s Capital; Credit Salaries Expense.'],
+              a: 'Debit Salaries Payable; Credit Salaries Expense.', s: 'It is the exact opposite of the adjusting entry.' },
+            { id: 179, type: 'Theory', topic: 'Step 10', q: 'If an adjusting entry for *accrued interest revenue* (Interest Receivable Dr, Interest Revenue Cr) is made, what is the reversing entry?', 
+              options: ['Debit Interest Revenue; Credit Interest Receivable.', 'Debit Interest Receivable; Credit Interest Revenue.', 'Debit Cash; Credit Interest Receivable.', 'Debit Interest Revenue; Credit Owner\'s Capital.'],
+              a: 'Debit Interest Revenue; Credit Interest Receivable.', s: 'It is the exact opposite of the adjusting entry.' },
+            { id: 180, type: 'Theory', topic: 'Step 10', q: 'What is the effect of a reversing entry for accrued salaries (Debit Salaries Payable, Credit Salaries Expense)?', 
+              options: ['It puts a temporary debit balance in the Salaries Expense account.', 'It puts a temporary credit balance in the Salaries Expense account.', 'It increases the Salaries Payable account.', 'It has no effect on the expense account.'],
+              a: 'It puts a temporary credit balance in the Salaries Expense account.', s: 'This credit balance will be offset by the larger debit when the full payroll is paid.' },
+            { id: 181, type: 'Theory', topic: 'Step 10', q: 'If a company reverses its deferrals, which *method* must they be using?', 
+              options: ['The Asset Method (for prepaid expenses) or the Liability Method (for unearned revenue).', 'The Expense Method (for prepaid expenses) or the Revenue Method (for unearned revenue).', 'The Accrual Method.', 'The Cash Method.'],
+              a: 'The Expense Method (for prepaid expenses) or the Revenue Method (for unearned revenue).', s: 'Deferrals recorded using the Asset Method or Liability Method are typically *not* reversed.' },
+            { id: 182, type: 'Theory', topic: 'Step 10', q: 'Adjusting Entry (Asset Method): Debit Insurance Expense, Credit Prepaid Insurance. Should this be reversed?', 
+              options: ['Yes, always.', 'Yes, to simplify bookkeeping.', 'No, adjustments from the asset/liability method are not typically reversed.', 'Only if the amount is large.'],
+              a: 'No, adjustments from the asset/liability method are not typically reversed.', s: 'There is no simplification benefit, as the asset account correctly reflects the balance.' },
+            { id: 183, type: 'Theory', topic: 'Step 10', q: 'Adjusting Entry (Expense Method): Debit Prepaid Insurance, Credit Insurance Expense. Should this be reversed?', 
+              options: ['Yes, this is a candidate for reversal.', 'No, this is never reversed.', 'No, because it affects an asset.', 'Only if the company makes a profit.'],
+              a: 'Yes, this is a candidate for reversal.', s: 'Reversing this (Debit Ins. Exp, Credit Prepaid Ins) returns the full expense to the expense account, simplifying future adjustments.' },
+            { id: 184, type: 'Theory', topic: 'Step 10', q: 'Adjusting Entry: Debit Supplies Expense, Credit Supplies. Should this be reversed?', 
+              options: ['Yes, always.', 'No.', 'Only if supplies are purchased on account.', 'Only if the company uses the expense method.'],
+              a: 'No.', s: 'This adjustment, based on a physical count, is almost never reversed.' },
+            { id: 185, type: 'Theory', topic: 'Step 10', q: 'If a company *does not* use reversing entries, what must the bookkeeper do when paying the next payroll (which includes a prior-period accrual)?', 
+              options: ['Record the entire payment as Salaries Expense for the new period.', 'Split the entry (e.g., Debit Salaries Payable, Debit Salaries Expense, Credit Cash).', 'Record the entire payment as Salaries Payable.', 'Wait until the end of the new period to record the payment.'],
+              a: 'Split the entry (e.g., Debit Salaries Payable, Debit Salaries Expense, Credit Cash).', s: 'The bookkeeper must remember to clear the payable and expense only the new period\'s portion.' },
+            { id: 186, type: 'Problem', topic: 'Step 10', q: 'AJE: Debit Salaries Expense ₱3,000; Credit Salaries Payable ₱3,000. What is the Jan 1 reversing entry?', 
+              options: ['Debit Salaries Expense ₱3,000; Credit Salaries Payable ₱3,000.', 'Debit Salaries Payable ₱3,000; Credit Salaries Expense ₱3,000.', 'Debit Salaries Payable ₱3,000; Credit Cash ₱3,000.', 'No entry is needed.'],
+              a: 'Debit Salaries Payable ₱3,000; Credit Salaries Expense ₱3,000.', s: 'The entry is flipped.' },
+            { id: 187, type: 'Problem', topic: 'Step 10', q: 'AJE: Debit Interest Receivable ₱500; Credit Interest Revenue ₱500. What is the Jan 1 reversing entry?', 
+              options: ['Debit Interest Receivable ₱500; Credit Interest Revenue ₱500.', 'Debit Cash ₱500; Credit Interest Receivable ₱500.', 'Debit Interest Revenue ₱500; Credit Interest Receivable ₱500.', 'No entry is needed.'],
+              a: 'Debit Interest Revenue ₱500; Credit Interest Receivable ₱500.', s: 'The entry is flipped.' },
+            { id: 188, type: 'Problem', topic: 'Step 10', q: '(Use Q186) After posting the reversing entry, what is the balance of Salaries Expense on Jan 1?', 
+              options: ['3000 Debit', '3000 Credit', '0', '6000 Debit'],
+              a: '3000 Credit', s: 'The closing entries zeroed out the account. The reversing entry credits it, creating a temporary credit balance.' },
+            { id: 189, type: 'Problem', topic: 'Step 10', q: '(Use Q186 & Q188) On Jan 5, the company pays the full ₱8,000 payroll. What is the journal entry?', 
+              options: ['Debit Salaries Expense ₱8,000; Credit Cash ₱8,000.', 'Debit Salaries Payable ₱3,000; Debit Salaries Expense ₱5,000; Credit Cash ₱8,000.', 'Debit Salaries Payable ₱8,000; Credit Cash ₱8,000.', 'Debit Salaries Expense ₱5,000; Credit Cash ₱5,000.'],
+              a: 'Debit Salaries Expense ₱8,000; Credit Cash ₱8,000.', s: 'Because of the reversing entry, the bookkeeper can make the normal, simple entry.' },
+            { id: 190, type: 'Problem', topic: 'Step 10', q: '(Use Q188 & Q189) After the Jan 5 payroll entry, what is the balance of Salaries Expense?', 
+              options: ['3000 Credit', '8000 Debit', '11000 Debit', '5000 Debit'],
+              a: '5000 Debit', s: '₱8,000 Debit (from payroll) - ₱3,000 Credit (from reversing entry) = ₱5,000 Debit, which is the correct expense for January.' },
+            { id: 191, type: 'Problem', topic: 'Step 10', q: '(No Reversing Entry) AJE: Debit Salaries Expense ₱3,000; Credit Salaries Payable ₱3,000. On Jan 5, the company pays the full ₱8,000 payroll. What is the entry?', 
+              options: ['Debit Salaries Expense ₱8,000; Credit Cash ₱8,000.', 'Debit Salaries Payable ₱3,000; Debit Salaries Expense ₱5,000; Credit Cash ₱8,000.', 'Debit Salaries Payable ₱8,000; Credit Cash ₱8,000.', 'Debit Salaries Expense ₱5,000; Credit Cash ₱5,000.'],
+              a: 'Debit Salaries Payable ₱3,000; Debit Salaries Expense ₱5,000; Credit Cash ₱8,000.', s: 'Without a reversing entry, the bookkeeper must manually split the payment to clear the liability and record the new expense.' },
+            { id: 192, type: 'Problem', topic: 'Step 10', q: 'AJE: Debit Depreciation Expense ₱1,000; Credit Accumulated Depreciation ₱1,000. What is the reversing entry?', 
+              options: ['Debit Accumulated Depreciation ₱1,000; Credit Depreciation Expense ₱1,000.', 'Debit Depreciation Expense ₱1,000; Credit Accumulated Depreciation ₱1,000.', 'None (This entry is not reversed).', 'Debit Owner\'s Capital ₱1,000; Credit Depreciation Expense ₱1,000.'],
+              a: 'None (This entry is not reversed).', s: 'Depreciation is a non-cash allocation and is never reversed.' },
+            { id: 193, type: 'Problem', topic: 'Step 10', q: 'AJE: Debit Bad Debt Expense ₱700; Credit Allowance for Doubtful Accounts ₱700. What is the reversing entry?', 
+              options: ['Debit Allowance for Doubtful Accounts ₱700; Credit Bad Debt Expense ₱700.', 'Debit Bad Debt Expense ₱700; Credit Allowance for Doubtful Accounts ₱700.', 'None (This entry is not reversed).', 'Debit Owner\'s Capital ₱700; Credit Bad Debt Expense ₱700.'],
+              a: 'None (This entry is not reversed).', s: 'Estimates for bad debts are not reversed.' },
+            { id: 194, type: 'Problem', topic: 'Step 10', q: 'AJE (Liability Method): Debit Unearned Revenue ₱400; Credit Service Revenue ₱400. What is the reversing entry?', 
+              options: ['Debit Service Revenue ₱400; Credit Unearned Revenue ₱400.', 'None (This entry is not typically reversed).', 'Debit Unearned Revenue ₱400; Credit Service Revenue ₱400.', 'Debit Cash ₱400; Credit Unearned Revenue ₱400.'],
+              a: 'None (This entry is not typically reversed).', s: 'Adjustments from the liability (or asset) method are not reversed as they correctly state the balance sheet accounts.' },
+            { id: 195, type: 'Problem', topic: 'Step 10', q: 'AJE: Debit Supplies Expense ₱600; Credit Supplies ₱600. What is the reversing entry?', 
+              options: ['Debit Supplies ₱600; Credit Supplies Expense ₱600.', 'None (This entry is not reversed).', 'Debit Supplies Expense ₱600; Credit Supplies ₱600.', 'Debit Owner\'s Capital ₱600; Credit Supplies Expense ₱600.'],
+              a: 'None (This entry is not reversed).', s: 'This adjustment is based on a physical count and is not reversed.' },
+            { id: 196, type: 'Theory', topic: 'Step 10', q: 'Reversing entries are posted to the:', 
+              options: ['Worksheet only.', 'General Journal and General Ledger.', 'Financial Statements only.', 'Adjusted Trial Balance only.'],
+              a: 'General Journal and General Ledger.', s: 'Like any journal entry, they must be journalized and then posted to update the ledger.' },
+            { id: 197, type: 'Theory', topic: 'Step 10', q: 'If a company *forgets* to make a reversing entry, what is the result?', 
+              options: ['The financial statements for the prior year will be wrong.', 'No financial error, but the first transaction of the next period may be recorded incorrectly if the bookkeeper is not careful.', 'The company will report a net loss.', 'The post-closing trial balance will not balance.'],
+              a: 'No financial error, but the first transaction of the next period may be recorded incorrectly if the bookkeeper is not careful.', s: 'It\'s a bookkeeping convenience. The risk is a human error in the next period, not a flaw in the system.' },
+            { id: 198, type: 'Problem', topic: 'Step 10', q: '(Use Q187) After posting the reversing entry, what is the balance of Interest Revenue on Jan 1?', 
+              options: ['500 Credit', '500 Debit', '0', '1000 Credit'],
+              a: '500 Debit', s: 'The closing entries zeroed out the account. The reversing entry debits it, creating a temporary debit balance.' },
+            { id: 199, type: 'Problem', topic: 'Step 10', q: '(Use Q198) On Jan 15, the company receives the full ₱900 interest payment. What is the journal entry?', 
+              options: ['Debit Cash ₱900; Credit Interest Revenue ₱900.', 'Debit Cash ₱900; Credit Interest Receivable ₱500; Credit Interest Revenue ₱400.', 'Debit Cash ₱900; Credit Interest Receivable ₱900.', 'Debit Interest Revenue ₱900; Credit Cash ₱900.'],
+              a: 'Debit Cash ₱900; Credit Interest Revenue ₱900.', s: 'Because of the reversing entry, the bookkeeper can make the normal, simple entry.' },
+            { id: 200, type: 'Problem', topic: 'Step 10', q: '(Use Q198 & Q199) After the Jan 15 cash receipt, what is the balance of Interest Revenue?', 
+              options: ['500 Debit', '900 Credit', '400 Credit', '1400 Credit'],
+              a: '400 Credit', s: '₱900 Credit (from cash receipt) - ₱500 Debit (from reversing entry) = ₱400 Credit, which is the correct revenue earned in January.' },
+        ];
+
+        let displayedQuestions = []; // Array to hold the shuffled question order
+
+        // --- NEW GLOBAL VARS FOR CHUNKED PRINTING ---
+        let allGradedQuestions = [];
+        let printChunks = [];
+        let currentChunkIndex = 0;
+        let studentPrintInfo = {};
+        const CHUNK_SIZE = 50; // Print in chunks of 50
+
+        // --- HELPER FUNCTIONS ---
+
+        /**
+        * Cleans and normalizes a student's numerical or theoretical answer.
+        * For numbers, it removes commas, peso signs, and spaces.
+        * For theory, it removes punctuation and converts to lower case.
+        * @param {string} answer - The student's input or correct answer.
+        * @param {string} type - The question type ('Theory' or 'Problem').
+        * @returns {string} The cleaned, comparable answer string.
+        */
+        function cleanAnswer(answer, type) {
+            if (!answer) return "";
+            answer = String(answer).trim();
+
+            // For Multiple Choice, the value is the exact string.
+            // We just need a consistent, simple comparison.
+            // Let's just trim and lowercase for simplicity.
+            
+            return String(answer).trim().toLowerCase();
+            
+            /*
+            if (type === 'Problem') {
+                // Remove non-numeric characters (except period for decimals and a negative sign at the start)
+                // Remove commas, currency symbols, spaces
+                answer = answer.replace(/[₱,]/g, '').replace(/\s+/g, '');
+                // Standardize journal entries: remove spaces, lowercase, remove "expense", "revenue", etc.
+                answer = answer.toLowerCase()
+                               .replace(/expense/g, '')
+                               .replace(/revenue/g, '')
+                               .replace(/payable/g, '')
+                               .replace(/receivable/g, '')
+                               .replace(/insurance/g, 'ins')
+                               .replace(/depreciation/g, 'dep')
+                               .replace(/accumulated/g, 'acc')
+                               .replace(/salaries/g, 'sal')
+                               .replace(/owner's/g, '')
+                               .replace(/drawings/g, 'draw')
+                               .replace(/capital/g, 'cap')
+                               .replace(/summary/g, 'sum')
+                               .replace(/accounts/g, 'accts')
+                               .replace(/prepaid/g, 'ppd')
+                               .replace(/unearned/g, 'un')
+                               .replace(/;|\n/g, '') // remove semicolons and newlines
+                               .replace(/\s/g, ''); // remove all spaces
+                
+                // Special handling for number answers vs text answers
+                const numericAnswer = parseFloat(answer);
+                if (!isNaN(numericAnswer) && !/[a-z]/.test(answer)) {
+                    // It's a number, return it as a string
+                    return numericAnswer.toString();
+                }
+                // It's a text-based problem answer (like a journal entry)
+                return answer;
+
+            } else { // Theory
+                // Remove common punctuation and convert to lower case for fuzzy matching
+                answer = answer.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').replace(/\s{2,}/g, ' ');
+                return answer;
+            }
+            */
+        }
+        
+        /**
+        * Performs a simple percentage match for theory questions.
+        * @param {string} studentAnswer - The cleaned student answer.
+        * @param {string} correctAnswer - The cleaned correct answer.
+        * @returns {number} The percentage match (0.0 to 1.0).
+        */
+        function theoryMatch(studentAnswer, correctAnswer) {
+            if (!studentAnswer || !correctAnswer) return 0;
+            const studentWords = new Set(studentAnswer.split(/\s+/).filter(w => w.length > 1)); // Use a Set for unique words > 1 char
+            const correctWords = new Set(correctAnswer.split(/\s+/).filter(w => w.length > 1));
+
+            if (correctWords.size === 0) return 0;
+
+            let matches = 0;
+            for (const sWord of studentWords) {
+                if (correctWords.has(sWord)) {
+                    matches++;
+                }
+            }
+            // Calculate percentage based on matched words out of total *correct* words
+            return matches / correctWords.size;
+        }
+
+
+        // --- NEW GRADING AND RATING LOGIC ---
+
+        /**
+         * Grades a question and returns a score (1 or 0) and feedback.
+         * @param {object} question - The question object.
+         * @param {string} studentAnswer - The raw student answer.
+         * @returns {object} { score: (1 or 0), isCorrect: (true or false), feedback: "..." }
+         */
+        function getRatingAndFeedback(question, studentAnswer) {
+            // studentAnswer is the raw string value from the selected radio button
+            const cleanStudentAnswer = cleanAnswer(studentAnswer, question.type); 
+            const cleanCorrectAnswer = cleanAnswer(question.a, question.type);
+
+            let isCorrect = false;
+            let feedback = "Incorrect.";
+            let score = 0;
+
+            if (cleanStudentAnswer === "") {
+                return { score: 0, isCorrect: false, feedback: "No answer was provided." };
+            }
+            
+            // Multiple choice is an exact match.
+            if (cleanStudentAnswer === cleanCorrectAnswer) {
+                 isCorrect = true;
+            }
+            
+            // Final check
+            if (isCorrect) {
+                score = 1;
+                feedback = "Correct.";
+            }
+
+            return { score: score, isCorrect: isCorrect, feedback: feedback };
+        }
+        
+        // --- DOM MANIPULATION & LOGIC ---
+
+        const questionsContainer = document.getElementById('questions-container');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const contentContainer = document.getElementById('content-container');
+        const studentInfoSection = document.getElementById('student-info-section');
+        const mainHeader = document.getElementById('main-header');
+
+        // Function to check student info and lock/unlock the page
+        function checkStudentInfo() {
+            const classNumber = document.getElementById('class-number').value.trim();
+            const fullName = document.getElementById('full-name').value.trim();
+            const gradeSection = document.getElementById('grade-section').value.trim();
+
+            if (classNumber === "" || fullName === "" || gradeSection === "") {
+                document.body.classList.add('no-scroll');
+                contentContainer.classList.add('hidden');
+                mainHeader.classList.add('hidden');
+                studentInfoSection.classList.remove('hidden');
+                return false;
+            } else {
+                document.body.classList.remove('no-scroll');
+                contentContainer.classList.remove('hidden');
+                mainHeader.classList.remove('hidden');
+                studentInfoSection.classList.add('hidden');
+                return true;
+            }
+        }
+
+        // Function to render all questions
+        function renderQuestions() {
+            questionsContainer.innerHTML = ''; // Clear previous content
+
+            // Shuffle the questions array for variety and store it
+            // displayedQuestions = [...questions].sort(() => Math.random() - 0.5); // <-- REMOVED
+            displayedQuestions = [...questions]; // <-- CHANGED: Questions are now in sequential order
+
+            displayedQuestions.forEach((q, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500';
+                
+                // Shuffle the options for this specific question
+                const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+                
+                let optionsHtml = '';
+                const optionLetters = ['A', 'B', 'C', 'D', 'E']; // Support up to 5 options
+                
+                // Ensure options exist and are an array
+                if (shuffledOptions && Array.isArray(shuffledOptions)) {
+                    shuffledOptions.forEach((option, optionIndex) => {
+                        const optionLetter = optionLetters[optionIndex] || String.fromCharCode(65 + optionIndex);
+                        const optionId = `q${q.id}-opt${optionIndex}`; // Use q.id for uniqueness
+                        
+                        // Need to escape quotes inside the value attribute
+                        const escapedOption = option.replace(/"/g, '&quot;');
+
+                        optionsHtml += `
+                            <label for="${optionId}" class="flex items-start p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer">
+                                <input type="radio" name="q${q.id}-options" id="${optionId}" value="${escapedOption}" class="mr-3 mt-1 text-blue-600 focus:ring-blue-500 shrink-0">
+                                <span class="text-gray-700">${optionLetter}. ${option}</span>
+                            </label>
+                        `;
+                    });
+                }
+
+                questionElement.innerHTML = `
+                    <p class="text-sm font-bold text-blue-600 mb-1">Question ${index + 1} (${q.type} - ${q.topic})</p>
+                    <p class="text-gray-800 font-semibold mb-4">${q.q}</p>
+                    <div class="space-y-3" id="options-container-${q.id}">
+                        ${optionsHtml}
+                    </div>
+                    <!-- This hidden input will store the selected answer text -->
+                    <input type="hidden" id="student-answer-${q.id}" value="">
+                `;
+                
+                questionsContainer.appendChild(questionElement);
+
+                // Add event listeners to update the hidden input's value when a radio button is selected
+                questionElement.querySelectorAll(`input[name="q${q.id}-options"]`).forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        const hiddenInput = document.getElementById(`student-answer-${q.id}`);
+                        if (hiddenInput) {
+                            hiddenInput.value = e.target.value;
+                        }
+                    });
+                });
+            });
+        }
+
+        // Function to handle section switching
+        function showSection(sectionId) {
+            // Only allow section switch if student info is present (page is unlocked)
+            if (studentInfoSection.classList.contains('hidden')) {
+                const sections = {
+                    'theory': document.getElementById('theory-section'),
+                    'practice': document.getElementById('practice-section')
+                };
+
+                // Hide all sections
+                Object.values(sections).forEach(section => section.classList.add('hidden'));
+
+                // Show the target section
+                sections[sectionId].classList.remove('hidden');
+
+                // Update navigation button styles
+                navButtons.forEach(button => {
+                    if (button.textContent.toLowerCase().includes(sectionId)) {
+                        button.classList.add('bg-blue-100', 'text-blue-800');
+                        button.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                    } else if (!button.textContent.includes('Print')) {
+                        button.classList.remove('bg-blue-100', 'text-blue-800');
+                        button.classList.add('text-gray-700', 'hover:bg-gray-100');
+                    }
+                });
+            } else {
+                 // Do not use alert()
+                 console.log("Please complete the Student Data Input before navigating.");
+                 // Optionally, we can flash the student info section
+                 studentInfoSection.classList.remove('border-yellow-500');
+                 studentInfoSection.classList.add('border-red-500');
+                 setTimeout(() => {
+                    studentInfoSection.classList.remove('border-red-500');
+                    studentInfoSection.classList.add('border-yellow-500');
+                 }, 500);
+            }
+        }
+
+        // --- PRINT TO PDF FUNCTIONALITY (REVISED) ---
+        
+        // Step 1: Called by "Print to PDF". Grades and shows the range modal.
+        function printToPDF() {
+            if (!checkStudentInfo()) {
+                console.log("Please fill out your Class Number, Full Name, and Grade/Section before printing.");
+                return;
+            }
+
+            // --- 1. GRADING PROCESS ---
+            allGradedQuestions = []; // Reset
+            displayedQuestions.forEach(q => {
+                const answerInput = document.getElementById(`student-answer-${q.id}`);
+                const studentAnswer = answerInput ? answerInput.value.trim() : "";
+                
+                const { score, isCorrect, feedback } = getRatingAndFeedback(q, studentAnswer);
+
+                allGradedQuestions.push({
+                    q: q.q,
+                    a: q.a,
+                    s: q.s,
+                    studentAnswer: studentAnswer,
+                    isCorrect: isCorrect,
+                    score: score
+                });
+            });
+
+            // --- 2. STORE STUDENT INFO ---
+            studentPrintInfo = {
+                classNumber: document.getElementById('class-number').value.trim(),
+                fullName: document.getElementById('full-name').value.trim(),
+                gradeSection: document.getElementById('grade-section').value.trim(),
+            };
+
+            // --- 3. SHOW RANGE MODAL ---
+            document.getElementById('range-start').value = 1;
+            document.getElementById('range-end').value = allGradedQuestions.length;
+            document.getElementById('print-range-modal').classList.remove('hidden');
+        }
+
+        // Step 2: Called by "Start Print Preview" from the range modal.
+        function startPrintProcess() {
+            let startQ = parseInt(document.getElementById('range-start').value) || 1;
+            let endQ = parseInt(document.getElementById('range-end').value) || allGradedQuestions.length;
+
+            startQ = Math.max(1, startQ);
+            endQ = Math.min(allGradedQuestions.length, endQ);
+
+            if (startQ > endQ) {
+                [startQ, endQ] = [endQ, startQ]; // Swap if in wrong order
+            }
+
+            // Get the *subset* of questions to print
+            const questionsToPrint = allGradedQuestions.slice(startQ - 1, endQ);
+
+            // --- 2. BREAK INTO CHUNKS ---
+            printChunks = [];
+            for (let i = 0; i < questionsToPrint.length; i += CHUNK_SIZE) {
+                printChunks.push(questionsToPrint.slice(i, i + CHUNK_SIZE));
+            }
+            
+            currentChunkIndex = 0;
+            
+            // --- 3. HIDE RANGE MODAL & START FIRST CHUNK ---
+            document.getElementById('print-range-modal').classList.add('hidden');
+
+            if (printChunks.length > 0) {
+                loadPrintChunk(currentChunkIndex);
+            } else {
+                console.log("No questions in selected range.");
+                cancelPrintProcess();
+            }
+        }
+
+        // Step 3: Loads a specific chunk into the preview modal.
+        function loadPrintChunk(chunkIndex) {
+            const chunkData = printChunks[chunkIndex];
+            const { classNumber, fullName, gradeSection } = studentPrintInfo;
+
+            // --- 1. CALCULATE STATS FOR THIS CHUNK ---
+            // Note: Overall stats are calculated for the *entire selected range*
+            let totalScore = 0;
+            allGradedQuestions.slice(parseInt(document.getElementById('range-start').value) - 1, parseInt(document.getElementById('range-end').value)).forEach(q => {
+                totalScore += q.score;
+            });
+            const totalQuestions = allGradedQuestions.slice(parseInt(document.getElementById('range-start').value) - 1, parseInt(document.getElementById('range-end').value)).length;
+            const percentage = (totalQuestions > 0) ? (totalScore / totalQuestions) * 100 : 0;
+            let letterGrade = '';
+
+            if (percentage >= 95) letterGrade = 'A';
+            else if (percentage >= 85) letterGrade = 'P';
+            else if (percentage >= 75) letterGrade = 'D';
+            else letterGrade = 'IR';
+
+            // --- 2. GENERATE HTML FOR THIS CHUNK ---
+            let printContentHTML = `
+                <div class="mb-6 border-b-4 border-blue-800 pb-3">
+                    <h1 class="text-3xl font-extrabold text-blue-800">Accounting Cycle Mastery: Graded Answers</h1>
+                    <p class="text-md font-semibold text-gray-700 mt-1">Student: ${fullName}</p>
+                    <p class="text-md font-semibold text-gray-700">Class No: ${classNumber} | Grade/Section: ${gradeSection}</p>
+                    <p class="text-sm text-gray-500 mt-2">Date Printed: ${new Date().toLocaleDateString()}</p>
+                    <p class="text-lg font-bold text-blue-700 mt-2">Printing Part ${chunkIndex + 1} of ${printChunks.length} (Questions ${chunkData[0].q.split(' ')[0].replace('Q', '')} to ${chunkData[chunkData.length - 1].q.split(' ')[0].replace('Q', '')})</p>
+                </div>
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h2 class="text-xl font-bold text-blue-800 mb-2">Overall Rating (for Q ${parseInt(document.getElementById('range-start').value)} to ${parseInt(document.getElementById('range-end').value)})</h2>
+                    <p class="text-lg font-bold text-gray-800">Total Score: <span class="text-2xl font-extrabold">${totalScore} / ${totalQuestions}</span></p>
+                    <p class="text-lg font-bold text-gray-800">Percentage: <span class="text-2xl font-extrabold">${percentage.toFixed(2)}%</span></p>
+                    <p class="text-lg font-bold text-gray-800">Letter Grade: <span class="text-2xl font-extrabold">${letterGrade}</span></p>
+                    <p class="text-sm text-gray-600 mt-2">Grading Scale: 95-100% = A | 85-94% = P | 75-84% = D | < 75% = IR</p>
+                </div>
+            `;
+
+            chunkData.forEach((gq, index) => {
+                let feedbackHtml = '';
+                
+                if (gq.isCorrect) {
+                    feedbackHtml = `<div class="feedback-correct"><p class="text-sm font-bold text-green-700">Correct.</p></div>`;
+                } else {
+                    feedbackHtml = `
+                    <div class="feedback-incorrect">
+                        <p class="text-xs font-medium text-red-700">Feedback:</p>
+                        <p class="text-sm text-red-800 font-bold">Incorrect.</p>
+                        <p class="text-xs font-medium text-green-700 mt-2">Correct Answer:</p>
+                        <p class="text-sm text-green-800">${gq.a}</p>
+                        <p class="text-xs font-medium text-gray-700 mt-2">Explanation:</p>
+                        <p class="text-sm text-gray-600">${gq.s}</p>
+                    </div>
+                    `;
+                }
+                
+                // Get the original question number
+                const originalQuestionNumber = allGradedQuestions.indexOf(gq) + 1;
+
+                printContentHTML += `
+                    <div class="mb-5 p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                        <p class="text-md font-bold text-blue-600 mb-2">Question ${originalQuestionNumber}</p>
+                        <p class="text-gray-800 font-semibold mb-2">${gq.q}</p>
+                        
+                        <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 mb-2">
+                            <p class="text-xs font-medium text-gray-700">Student's Response:</p>
+                            <div class="whitespace-pre-wrap text-sm font-mono">${gq.studentAnswer || "--- No Answer Provided ---"}</div>
+                        </div>
+                        
+                        ${feedbackHtml}
+                    </div>
+                `;
+            });
+
+            // --- 3. SHOW PREVIEW MODAL ---
+            const previewModal = document.getElementById('print-preview-modal');
+            document.getElementById('print-preview-content').innerHTML = printContentHTML;
+            previewModal.classList.remove('hidden');
+            previewModal.scrollTop = 0; // Start at the top
+
+            // --- 4. RESET BUTTON ---
+            const btn = document.getElementById('download-pdf-button');
+            btn.disabled = true;
+            btn.innerText = `Scroll to enable Part ${chunkIndex + 1} of ${printChunks.length}`;
+            btn.classList.add('bg-green-300', 'text-gray-500', 'cursor-not-allowed');
+            btn.classList.remove('bg-green-600', 'hover:bg-green-700', 'text-white');
+            
+            // Set the correct onclick for *this* chunk
+            btn.onclick = () => runActualPDFGeneration(chunkIndex);
+
+            // --- 5. ATTACH SCROLL LISTENER ---
+            previewModal.onscroll = () => {
+                if (previewModal.scrollTop + previewModal.clientHeight >= previewModal.scrollHeight - 50) {
+                    const btn = document.getElementById('download-pdf-button');
+                    btn.disabled = false;
+                    btn.innerText = `Download PDF Part ${chunkIndex + 1} of ${printChunks.length}`;
+                    btn.classList.remove('bg-green-300', 'text-gray-500', 'cursor-not-allowed');
+                    btn.classList.add('bg-green-600', 'hover:bg-green-700', 'text-white');
+                    previewModal.onscroll = null;
+                }
+            };
+        }
+
+        // Step 4: Called by the "Download PDF Part X" button.
+        function runActualPDFGeneration(chunkIndex) {
+            const btn = document.getElementById('download-pdf-button');
+            btn.disabled = true;
+            btn.innerText = `Generating Part ${chunkIndex + 1}...`;
+            
+            const { fullName, gradeSection, classNumber } = studentPrintInfo;
+            const startQ = (chunkIndex * CHUNK_SIZE) + (parseInt(document.getElementById('range-start').value) || 1);
+            const endQ = Math.min(startQ + CHUNK_SIZE - 1, parseInt(document.getElementById('range-end').value) || allGradedQuestions.length);
+            
+            const fileName = `${classNumber}_${gradeSection}_${fullName.replace(/[^a-zA-Z0-9]/g, '')}_Q${startQ}-Q${endQ}.pdf`;
+
+            const renderedHtml = document.getElementById('print-preview-content').innerHTML;
+
+            const printElement = document.createElement('div');
+            printElement.className = 'print-layout';
+            printElement.innerHTML = renderedHtml;
+            document.body.appendChild(printElement);
+
+            document.getElementById('app').style.display = 'none';
+            document.getElementById('print-preview-modal').classList.add('hidden');
+
+            const opt = {
+                margin: 0.5,
+                filename: fileName,
+                image: { type: 'jpeg', quality: 0.98 }, // From working file
+                html2canvas: { scale: 2, logging: false, dpi: 192, letterRendering: true }, // From working file
+                jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(printElement).save().then(() => {
+                document.body.removeChild(printElement);
+                
+                // --- MOVE TO NEXT CHUNK ---
+                currentChunkIndex++;
+                if (currentChunkIndex < printChunks.length) {
+                    // Load the next chunk
+                    loadPrintChunk(currentChunkIndex);
+                } else {
+                    // All chunks are done
+                    cancelPrintProcess();
+                }
+            });
+        }
+
+        // Step 5: Called by "Cancel" or after all chunks are finished.
+        function cancelPrintProcess() {
+            document.getElementById('print-range-modal').classList.add('hidden');
+            const previewModal = document.getElementById('print-preview-modal');
+            previewModal.classList.add('hidden');
+            previewModal.onscroll = null;
+            document.getElementById('print-preview-content').innerHTML = '';
+            document.getElementById('app').style.display = 'block';
+
+            // Clear all print data
+            allGradedQuestions = [];
+            printChunks = [];
+            currentChunkIndex = 0;
+            studentPrintInfo = {};
+        }
+        
+        // Renamed function to avoid confusion
+        function cancelPrintPreview() {
+            // This function is now just for the "Cancel" button on the preview modal
+            cancelPrintProcess(); // It does the same as finishing the whole process
+        }
+
+
+        // Initialize the app
+        window.onload = function() {
+            renderQuestions();
+            checkStudentInfo(); // This will lock the page initially
+            showSection('theory'); // Start on the theory tab (but hidden if not confirmed)
+        };
+    </script>
+</body>
+</html>
