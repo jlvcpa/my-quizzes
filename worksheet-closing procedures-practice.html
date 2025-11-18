@@ -27,6 +27,15 @@
             font-size: 0.85rem;
             background-color: #f0f9ff;
         }
+        .fs-input {
+            border: 1px solid #9ca3af;
+            background-color: #f9fafb;
+            padding: 4px 8px;
+            text-align: right;
+            border-radius: 6px;
+            font-weight: 500;
+            width: 100px; /* Standard width for line items */
+        }
         .header-bg { background-color: #0f172a; color: white; }
         .footer-bg { background-color: #334155; color: white; }
         .validation-icon {
@@ -44,8 +53,8 @@
             body { background-color: white; color: black; }
             .shadow-xl, .rounded-xl, .border { border: none !important; box-shadow: none !important; }
             .header-bg, .footer-bg { background-color: #fff !important; color: #000 !important; }
-            /* Force table inputs to be black text on white background when printing */
-            .table-input, .text-input {
+            /* Force table inputs and FS inputs to be black text on white background when printing */
+            .table-input, .text-input, .fs-input {
                 border-color: #000 !important;
                 background-color: white !important;
                 color: black !important;
@@ -193,6 +202,11 @@
             const roundedNum = Math.round(num * 100) / 100;
             // Removed ₱ sign
             return roundedNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        
+        /** Sanitizes account name for use as a unique HTML input ID part. */
+        const getAccountId = (name) => {
+            return name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
         };
         
         /** Gets the display name for the current step. */
@@ -658,8 +672,8 @@
         };
         
         // Helper to save FS inputs
-        const saveFSInput = (type, field, value) => {
-            state.fsInputs[type][field] = Number(value) || 0;
+        const saveFSInput = (type, id, value) => {
+            state.fsInputs[type][id] = Number(value) || 0;
         };
 
         /** NEW Step 2: Income Statement Preparation */
@@ -669,9 +683,8 @@
             const revenue = IS_accounts.filter(acc => acc.type === 'revenue');
             const expenses = IS_accounts.filter(acc => acc.type === 'expense');
 
-            // Find max expense name length for alignment (aesthetics)
-            const maxNameLength = expenses.reduce((max, acc) => Math.max(max, acc.name.length), 0);
-            const expensePadding = Math.max(0, maxNameLength - 15) * 4; // approximate px padding
+            // Determine if Net Income or Net Loss
+            const isNetIncome = worksheetData.netIncome > 0;
 
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6 max-w-lg mx-auto p-6 bg-white rounded-xl shadow-lg border border-green-200">
@@ -679,51 +692,69 @@
                         <h3 class="text-2xl font-bold text-indigo-700">STEP 2: Income Statement (IS)</h3>
                         <p class="text-base font-semibold text-gray-600">A & M Cleaning Services</p>
                         <p class="text-sm text-gray-500">For the Year Ended December 31, 2024</p>
-                        <p class="text-xs mt-2 text-red-500">Input the calculated totals to validate this step.</p>
+                        <p class="text-xs mt-2 text-red-500">Input ALL revenue, expense, and total amounts to validate this step.</p>
                     </header>
 
                     <div class="space-y-4">
                         <!-- Revenue Section -->
                         <h4 class="font-bold text-lg border-b pb-1 text-green-700">Service Revenue</h4>
-                        ${revenue.map(acc => `
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-700">${acc.name}</span>
-                                <span class="font-medium">${formatPHP(acc.ATB_CR)}</span>
-                            </div>
-                        `).join('')}
+                        ${revenue.map(acc => {
+                            const id = getAccountId(acc.name) + '_is_li';
+                            return `
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-700">${acc.name}</span>
+                                    <div class="relative w-1/3">
+                                        <input type="number" id="${id}" oninput="saveFSInput('is', '${id}', this.value)" class="fs-input" placeholder="Amount" value="${state.fsInputs.is[id] || ''}">
+                                        <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
 
                         <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
                             <label for="is_total_revenue" class="text-md text-green-700">TOTAL SERVICE REVENUE:</label>
-                            <input type="number" id="is_total_revenue" oninput="saveFSInput('is', 'total_revenue', this.value)" class="table-input w-2/5 md:w-1/3" placeholder="Input Total">
-                            <span id="is_total_revenue_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            <div class="relative w-1/3">
+                                <input type="number" id="is_total_revenue" oninput="saveFSInput('is', 'is_total_revenue', this.value)" class="fs-input" placeholder="Total" value="${state.fsInputs.is.is_total_revenue || ''}">
+                                <span id="is_total_revenue_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
                         </div>
 
                         <!-- Expenses Section -->
                         <h4 class="font-bold text-lg border-b pb-1 pt-4 text-red-700">Expenses</h4>
-                        ${expenses.map(acc => `
-                            <div class="flex justify-between items-center text-sm pl-4">
-                                <span class="text-gray-700" style="padding-left: ${expensePadding}px;">${acc.name}</span>
-                                <span class="font-medium">${formatPHP(acc.ATB_DR)}</span>
-                            </div>
-                        `).join('')}
+                        ${expenses.map(acc => {
+                            const id = getAccountId(acc.name) + '_is_li';
+                            return `
+                                <div class="flex justify-between items-center text-sm pl-4">
+                                    <span class="text-gray-700">${acc.name}</span>
+                                    <div class="relative w-1/3">
+                                        <input type="number" id="${id}" oninput="saveFSInput('is', '${id}', this.value)" class="fs-input" placeholder="Amount" value="${state.fsInputs.is[id] || ''}">
+                                        <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
 
                         <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
                             <label for="is_total_expense" class="text-md text-red-700">TOTAL EXPENSES:</label>
-                            <input type="number" id="is_total_expense" oninput="saveFSInput('is', 'total_expense', this.value)" class="table-input w-2/5 md:w-1/3" placeholder="Input Total">
-                            <span id="is_total_expense_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            <div class="relative w-1/3">
+                                <input type="number" id="is_total_expense" oninput="saveFSInput('is', 'is_total_expense', this.value)" class="fs-input" placeholder="Total" value="${state.fsInputs.is.is_total_expense || ''}">
+                                <span id="is_total_expense_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
                         </div>
 
                         <!-- Net Income/Loss -->
                         <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
-                            <label for="is_net_income" class="text-xl text-indigo-800">${worksheetData.netIncome > 0 ? 'NET INCOME' : 'NET LOSS'}:</label>
-                            <input type="number" id="is_net_income" oninput="saveFSInput('is', 'net_income', this.value)" class="table-input w-2/5 md:w-1/3 text-indigo-800" placeholder="Input Amount">
-                            <span id="is_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            <label for="is_net_income" class="text-xl text-indigo-800">${isNetIncome ? 'NET INCOME' : 'NET LOSS'}:</label>
+                            <div class="relative w-1/3">
+                                <input type="number" id="is_net_income" oninput="saveFSInput('is', 'is_net_income', this.value)" class="fs-input text-indigo-800" placeholder="Amount" value="${state.fsInputs.is.is_net_income || ''}">
+                                <span id="is_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
             document.getElementById('next-step-btn').innerText = "Validate IS & Proceed to Step 3";
-            renderMessageBox("Enter the calculated totals for Revenue, Expenses, and Net Income/Loss.");
+            renderMessageBox("Enter all amounts in the Income Statement (Revenue, Expenses, and Totals).");
         };
 
 
@@ -739,40 +770,51 @@
                         <h3 class="text-2xl font-bold text-indigo-700">STEP 3: Statement of Changes in Equity (SCE)</h3>
                         <p class="text-base font-semibold text-gray-600">A & M Cleaning Services</p>
                         <p class="text-sm text-gray-500">For the Year Ended December 31, 2024</p>
-                        <p class="text-xs mt-2 text-red-500">Input the calculated **Ending Capital** to validate this step.</p>
+                        <p class="text-xs mt-2 text-red-500">Input ALL figures (Starting Capital, Net Income/Loss, Withdrawals, and Ending Capital) to validate this step.</p>
                     </header>
                     
                     <div class="space-y-3">
                         
-                        <!-- Starting Capital -->
+                        <!-- Starting Capital Input -->
                         <div class="flex justify-between items-center text-base font-medium border-b border-gray-300 pb-1">
-                            <span class="text-gray-700">A, Capital, January 1, 2024</span>
-                            <span class="font-bold">${formatPHP(worksheetData.startingCapital)}</span>
+                            <label for="sce_starting_capital" class="text-gray-700">A, Capital, January 1, 2024</label>
+                            <div class="relative w-1/3">
+                                <input type="number" id="sce_starting_capital" oninput="saveFSInput('sce', 'sce_starting_capital', this.value)" class="fs-input font-bold" placeholder="Amount" value="${state.fsInputs.sce.sce_starting_capital || ''}">
+                                <span id="sce_starting_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
                         </div>
 
-                        <!-- Net Income/Loss -->
+                        <!-- Net Income/Loss Input -->
                         <div class="flex justify-between items-center text-sm ${isNetIncome ? 'text-green-600' : 'text-red-600'}">
-                            <span>${netIncomeLabel}</span>
-                            <span>${formatPHP(Math.abs(worksheetData.netIncome))}</span>
+                            <label for="sce_net_income"><span>${netIncomeLabel}</span></label>
+                            <div class="relative w-1/3">
+                                <input type="number" id="sce_net_income" oninput="saveFSInput('sce', 'sce_net_income', this.value)" class="fs-input" placeholder="Amount" value="${state.fsInputs.sce.sce_net_income || ''}">
+                                <span id="sce_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
                         </div>
                         
-                        <!-- Withdrawals -->
+                        <!-- Withdrawals Input -->
                         <div class="flex justify-between items-center text-sm text-red-600">
-                            <span>Less: A, Withdrawals</span>
-                            <span>(${formatPHP(worksheetData.withdrawals)})</span>
+                            <label for="sce_withdrawals"><span>Less: A, Withdrawals</span></label>
+                            <div class="relative w-1/3">
+                                <input type="number" id="sce_withdrawals" oninput="saveFSInput('sce', 'sce_withdrawals', this.value)" class="fs-input" placeholder="Amount" value="${state.fsInputs.sce.sce_withdrawals || ''}">
+                                <span id="sce_withdrawals_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
                         </div>
 
                         <!-- Ending Capital Input -->
                         <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
                             <label for="sce_ending_capital" class="text-xl text-indigo-800">A, Capital, December 31, 2024</label>
-                            <input type="number" id="sce_ending_capital" oninput="saveFSInput('sce', 'ending_capital', this.value)" class="table-input w-1/3 text-indigo-800" placeholder="Input Amount">
-                            <span id="sce_ending_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            <div class="relative w-1/3">
+                                <input type="number" id="sce_ending_capital" oninput="saveFSInput('sce', 'sce_ending_capital', this.value)" class="fs-input text-indigo-800" placeholder="Input Amount" value="${state.fsInputs.sce.sce_ending_capital || ''}">
+                                <span id="sce_ending_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
             document.getElementById('next-step-btn').innerText = "Validate SCE & Proceed to Step 4";
-            renderMessageBox("Calculate and enter the final Ending Capital balance.");
+            renderMessageBox("Enter all four amounts in the Statement of Changes in Equity.");
         };
 
 
@@ -783,16 +825,13 @@
             const assets = BS_accounts.filter(acc => acc.type === 'asset' || acc.type === 'contra-asset');
             const liabilities = BS_accounts.filter(acc => acc.type === 'liability');
             
-            // Calculate correct totals (for display purposes)
-            const totalLiabilities = liabilities.reduce((sum, acc) => sum + acc.ATB_CR, 0);
-
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6 max-w-lg mx-auto p-6 bg-white rounded-xl shadow-lg border border-red-200">
                     <header class="text-center">
                         <h3 class="text-2xl font-bold text-indigo-700">STEP 4: Balance Sheet (BS)</h3>
                         <p class="text-base font-semibold text-gray-600">A & M Cleaning Services</p>
                         <p class="text-sm text-gray-500">As of December 31, 2024</p>
-                        <p class="text-xs mt-2 text-red-500">Input the final totals for Assets and Liabilities & Equity to validate this step.</p>
+                        <p class="text-xs mt-2 text-red-500">Input ALL Assets, Liabilities, Ending Capital, and Total amounts to validate this step.</p>
                     </header>
 
                     <div class="grid grid-cols-2 gap-8">
@@ -800,17 +839,26 @@
                         <div class="col-span-1 space-y-3">
                             <h4 class="font-bold text-lg border-b pb-1 text-blue-700">ASSETS</h4>
                             <div class="space-y-1 text-sm">
-                                ${assets.map(acc => `
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-700 ${acc.type === 'contra-asset' ? 'pl-4 text-red-500 italic' : ''}">${acc.name}</span>
-                                        <span class="font-medium">${formatPHP(acc.ATB_DR || acc.ATB_CR)}</span>
-                                    </div>
-                                `).join('')}
+                                ${assets.map(acc => {
+                                    const id = getAccountId(acc.name) + '_bs_li';
+                                    const isContra = acc.type === 'contra-asset';
+                                    return `
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 ${isContra ? 'pl-4 text-red-500 italic' : ''}">${acc.name}</span>
+                                            <div class="relative w-3/5 ${isContra ? 'opacity-75' : ''}">
+                                                <input type="number" id="${id}" oninput="saveFSInput('bs', '${id}', this.value)" class="fs-input" placeholder="Amount" value="${state.fsInputs.bs[id] || ''}">
+                                                <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
                             <div class="flex justify-between items-center font-extrabold border-t-2 border-blue-500 pt-3 bg-blue-50 p-2 rounded">
                                 <label for="bs_total_assets" class="text-md text-blue-800">TOTAL ASSETS:</label>
-                                <input type="number" id="bs_total_assets" oninput="saveFSInput('bs', 'total_assets', this.value)" class="table-input w-2/5 text-blue-800" placeholder="Input Total">
-                                <span id="bs_total_assets_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                <div class="relative w-3/5">
+                                    <input type="number" id="bs_total_assets" oninput="saveFSInput('bs', 'bs_total_assets', this.value)" class="fs-input text-blue-800" placeholder="Input Total" value="${state.fsInputs.bs.bs_total_assets || ''}">
+                                    <span id="bs_total_assets_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                </div>
                             </div>
                         </div>
 
@@ -818,31 +866,42 @@
                         <div class="col-span-1 space-y-3">
                             <h4 class="font-bold text-lg border-b pb-1 text-red-700">LIABILITIES</h4>
                             <div class="space-y-1 text-sm">
-                                ${liabilities.map(acc => `
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-700">${acc.name}</span>
-                                        <span class="font-medium">${formatPHP(acc.ATB_CR)}</span>
-                                    </div>
-                                `).join('')}
+                                ${liabilities.map(acc => {
+                                    const id = getAccountId(acc.name) + '_bs_li';
+                                    return `
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700">${acc.name}</span>
+                                            <div class="relative w-3/5">
+                                                <input type="number" id="${id}" oninput="saveFSInput('bs', '${id}', this.value)" class="fs-input" placeholder="Amount" value="${state.fsInputs.bs[id] || ''}">
+                                                <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
 
                             <h4 class="font-bold text-lg border-b pb-1 pt-4 text-purple-700">OWNER'S EQUITY</h4>
                             <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-700">A, Capital, Dec 31, 2024</span>
-                                <span class="font-medium">${formatPHP(worksheetData.endingCapital)}</span>
+                                <label for="bs_ending_capital_bs" class="text-gray-700">A, Capital, Dec 31, 2024</label>
+                                <div class="relative w-3/5">
+                                    <input type="number" id="bs_ending_capital_bs" oninput="saveFSInput('bs', 'bs_ending_capital_bs', this.value)" class="fs-input" placeholder="Amount" value="${state.fsInputs.bs.bs_ending_capital_bs || ''}">
+                                    <span id="bs_ending_capital_bs_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                </div>
                             </div>
 
                             <div class="flex justify-between items-center font-extrabold border-t-2 border-red-500 pt-3 bg-red-50 p-2 rounded">
                                 <label for="bs_total_liab_equity" class="text-md text-red-800">TOTAL LIA. & EQUITY:</label>
-                                <input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs', 'total_liab_equity', this.value)" class="table-input w-2/5 text-red-800" placeholder="Input Total">
-                                <span id="bs_total_liab_equity_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                <div class="relative w-3/5">
+                                    <input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs', 'bs_total_liab_equity', this.value)" class="fs-input text-red-800" placeholder="Input Total" value="${state.fsInputs.bs.bs_total_liab_equity || ''}">
+                                    <span id="bs_total_liab_equity_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
             document.getElementById('next-step-btn').innerText = "Validate BS & Complete Task";
-            renderMessageBox("Enter the final totals for Total Assets and Total Liabilities & Owner's Equity.");
+            renderMessageBox("Enter all amounts in the Balance Sheet (Assets, Liabilities, Equity, and Totals).");
         };
 
         /** Final Step 5: Task Completion */
@@ -1081,6 +1140,20 @@
             const acceptableError = 0.01;
             let overallValid = true;
 
+            const IS_accounts = data.accounts.filter(acc => acc.isFS === 'IS');
+
+            // 1. Check line items (Revenue/Expense amounts)
+            IS_accounts.forEach(acc => {
+                const id = getAccountId(acc.name) + '_is_li';
+                const correctVal = acc.type === 'revenue' ? acc.ATB_CR : acc.ATB_DR;
+                const inputVal = state.fsInputs.is[id] || 0;
+                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                
+                renderValidation(id, isCorrect);
+                if (!isCorrect) overallValid = false;
+            });
+
+            // 2. Check totals
             const checks = [
                 ['is_total_revenue', data.totalRevenue],
                 ['is_total_expense', data.totalExpenses],
@@ -1103,13 +1176,20 @@
             const acceptableError = 0.01;
             let overallValid = true;
 
-            const correctVal = data.endingCapital;
-            const inputVal = state.fsInputs.sce.ending_capital || 0;
-            
-            let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
-            
-            renderValidation('sce_ending_capital', isCorrect);
-            if (!isCorrect) overallValid = false;
+            const checks = [
+                ['sce_starting_capital', data.startingCapital],
+                ['sce_net_income', Math.abs(data.netIncome)],
+                ['sce_withdrawals', data.withdrawals],
+                ['sce_ending_capital', data.endingCapital]
+            ];
+
+            checks.forEach(([id, correctVal]) => {
+                const inputVal = state.fsInputs.sce[id] || 0;
+                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                
+                renderValidation(id, isCorrect);
+                if (!isCorrect) overallValid = false;
+            });
             
             return overallValid;
         };
@@ -1118,7 +1198,32 @@
             const data = calculateWorksheetAnswers();
             const acceptableError = 0.01;
             let overallValid = true;
+            
+            const BS_accounts = data.BSAccounts.filter(acc => acc.name !== 'A, Withdrawals');
 
+            // 1. Check line items (Assets/Liabilities/Ending Capital amounts)
+            BS_accounts.forEach(acc => {
+                // Skip the explicit ending capital for now, handled below
+                if (acc.name === 'A, Capital') return;
+
+                const id = getAccountId(acc.name) + '_bs_li';
+                const correctVal = acc.type === 'asset' ? acc.ATB_DR : acc.ATB_CR;
+                const inputVal = state.fsInputs.bs[id] || 0;
+                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                
+                renderValidation(id, isCorrect);
+                if (!isCorrect) overallValid = false;
+            });
+
+            // 2. Check the explicit Ending Capital input
+            const endingCapitalInputVal = state.fsInputs.bs.bs_ending_capital_bs || 0;
+            const endingCapitalCorrectVal = data.endingCapital;
+            let endingCapitalCorrect = Math.abs(endingCapitalInputVal - endingCapitalCorrectVal) < acceptableError;
+
+            renderValidation('bs_ending_capital_bs', endingCapitalCorrect);
+            if (!endingCapitalCorrect) overallValid = false;
+
+            // 3. Check final totals
             const checks = [
                 ['bs_total_assets', data.BS_DR_Total],
                 ['bs_total_liab_equity', data.BS_CR_Total]
