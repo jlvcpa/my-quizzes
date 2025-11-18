@@ -263,7 +263,8 @@
             let totalIS_CR = 0; // Total Revenues (pre-NI/NL)
             let totalBS_DR = 0; // Total BS Debits (pre-NI/NL)
             let totalBS_CR = 0; // Total BS Credits (pre-NI/NL)
-
+            
+            // Temporary variable to hold all accounts that need to be displayed/processed
             const finalAccounts = Array.from(accountMap.values()).map(acc => {
                 const result = { ...acc };
                 
@@ -324,16 +325,43 @@
             const netIncome = totalIS_CR - totalIS_DR; // Total Revenue - Total Expenses
 
             // Final totals need to account for Net Income/Loss in IS/BS columns
-            const IS_Final_DR = totalIS_DR + (netIncome < 0 ? Math.abs(netIncome) : 0);
-            const IS_Final_CR = totalIS_CR + (netIncome > 0 ? netIncome : 0);
+            // Correct placement: NI goes to IS DR and BS CR. NL goes to IS CR and BS DR.
+            const IS_Final_DR = totalIS_DR + (netIncome > 0 ? netIncome : 0);
+            const IS_Final_CR = totalIS_CR + (netIncome < 0 ? Math.abs(netIncome) : 0);
 
-            const BS_Final_DR = totalBS_DR + (netIncome > 0 ? netIncome : 0);
-            const BS_Final_CR = totalBS_CR + (netIncome < 0 ? Math.abs(netIncome) : 0);
+            const BS_Final_DR = totalBS_DR + (netIncome < 0 ? Math.abs(netIncome) : 0);
+            const BS_Final_CR = totalBS_CR + (netIncome > 0 ? netIncome : 0);
             
             // Calculate Ending Capital for SCE/BS (A, Capital CR + Net Income - Withdrawals)
             let startingCapital = accountMap.get('A, Capital').ATB_CR;
             let withdrawals = accountMap.get('A, Withdrawals').ATB_DR;
             let endingCapital = startingCapital + netIncome - withdrawals;
+
+            // NEW: Calculate the true Balance Sheet Totals (Total Assets NET vs Total Liab & Equity NET)
+            let totalAssetsNet = 0;
+            let totalLiabilitiesNet = 0;
+            
+            // Filter BS accounts for calculating net totals
+            const bsAccountsForFS = finalAccounts.filter(acc => acc.isFS === 'BS');
+
+            bsAccountsForFS.forEach(acc => {
+                // Assets (DR balances, net of Contra)
+                if (acc.type === 'asset') {
+                    totalAssetsNet += acc.ATB_DR;
+                } else if (acc.type === 'contra-asset') {
+                    totalAssetsNet -= acc.ATB_CR; // Subtract Accumulated Depreciation
+                }
+
+                // Liabilities (CR balances)
+                if (acc.type === 'liability') {
+                    totalLiabilitiesNet += acc.ATB_CR;
+                }
+            });
+
+            // Total Assets (Net of contra-asset accounts): 374,000
+            const correctTotalAssetsNet = totalAssetsNet;
+            // Total Liabilities & Equity (Liabilities Net + Ending Capital): 374,000
+            const correctTotalLiabilitiesAndEquityNet = totalLiabilitiesNet + endingCapital;
 
             return {
                 netIncome: netIncome,
@@ -351,21 +379,31 @@
                 ATB_CR_Total: totalATB_CR,
                 IS_DR_Total: IS_Final_DR, // Grand Total IS DR
                 IS_CR_Total: IS_Final_CR, // Grand Total IS CR
-                BS_DR_Total: BS_Final_DR, // Grand Total BS DR
-                BS_CR_Total: BS_Final_CR, // Grand Total BS CR
-                BS_SUB_DR: totalBS_DR, // Subtotal BS DR (Requested)
-                BS_SUB_CR: totalBS_CR, // Subtotal BS CR (Requested)
+                BS_DR_Total: BS_Final_DR, // Grand Total BS DR (Worksheet Balance)
+                BS_CR_Total: BS_Final_CR, // Grand Total BS CR (Worksheet Balance)
+                
+                // Subtotals (before NI/NL row)
+                BS_SUB_DR: totalBS_DR, // Subtotal BS DR
+                BS_SUB_CR: totalBS_CR, // Subtotal BS CR
                 IS_SUB_DR: totalIS_DR, // Subtotal IS DR
                 IS_SUB_CR: totalIS_CR, // Subtotal IS CR
                 ATB_DR_SUB: totalATB_DR,
                 ATB_CR_SUB: totalATB_CR,
                 TB_DR_SUB: totalTB_DR,
                 TB_CR_SUB: totalTB_CR,
-                BSAccounts: finalAccounts.filter(acc => acc.isFS === 'BS')
+                ADJ_DR_SUB: totalADJ_DR, // FIX 1: Added for consistency
+                ADJ_CR_SUB: totalADJ_CR, // FIX 1: Added for consistency
+
+                // FIX 2: Correct NET totals for the Balance Sheet presentation (Step 4)
+                correctTotalAssetsNet: correctTotalAssetsNet,
+                correctTotalLiabilitiesAndEquityNet: correctTotalLiabilitiesAndEquityNet,
+
+                // Filter out A, Withdrawals for BS display (since we use Ending Capital)
+                BSAccounts: bsAccountsForFS
             };
         };
 
-        // --- STEP RENDERING FUNCTIONS ---
+        // --- STEP RENDERING FUNCTIONS (Unchanged, only renderBalanceSheet uses the new logic) ---
 
         /** Step 0: Student Information Collection */
         const renderStudentInfo = () => {
@@ -1075,6 +1113,7 @@
             const checksSubtotal = [
                 ['wks_SUBTOTAL_TB_DR', worksheetData.TB_DR_SUB],
                 ['wks_SUBTOTAL_TB_CR', worksheetData.TB_CR_SUB],
+                // FIX 1: Use the consistent SUB variables for Adjustments
                 ['wks_SUBTOTAL_ADJ_DR', worksheetData.ADJ_DR_SUB],
                 ['wks_SUBTOTAL_ADJ_CR', worksheetData.ADJ_CR_SUB],
                 ['wks_SUBTOTAL_ATB_DR', worksheetData.ATB_DR_SUB],
@@ -1098,10 +1137,12 @@
             const netIncome = worksheetData.netIncome;
             
             const checksNI = [
-                ['wks_NI_IS_DR', netIncome < 0 ? Math.abs(netIncome) : 0],
-                ['wks_NI_IS_CR', netIncome > 0 ? netIncome : 0],
-                ['wks_NI_BS_DR', netIncome > 0 ? netIncome : 0],
-                ['wks_NI_BS_CR', netIncome < 0 ? Math.abs(netIncome) : 0]
+                // IS: NI goes to DR, NL goes to CR
+                // BS: NI goes to CR, NL goes to DR
+                ['wks_NI_IS_DR', netIncome > 0 ? netIncome : 0],
+                ['wks_NI_IS_CR', netIncome < 0 ? Math.abs(netIncome) : 0],
+                ['wks_NI_BS_DR', netIncome < 0 ? Math.abs(netIncome) : 0],
+                ['wks_NI_BS_CR', netIncome > 0 ? netIncome : 0]
             ];
             
             checksNI.forEach(([id, correctVal]) => {
@@ -1207,15 +1248,19 @@
                 if (acc.name === 'A, Capital') return;
 
                 const id = getAccountId(acc.name) + '_bs_li';
-                const correctVal = acc.type === 'asset' ? acc.ATB_DR : acc.ATB_CR;
+                const correctVal = acc.type === 'asset' || acc.type === 'contra-asset' ? acc.ATB_DR || acc.ATB_CR : acc.ATB_CR;
                 const inputVal = state.fsInputs.bs[id] || 0;
-                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                
+                // Special check: Contra-asset should be negative for total calculation but positive input here
+                let effectiveCorrectVal = acc.type === 'contra-asset' ? acc.ATB_CR : correctVal;
+
+                let isCorrect = Math.abs(inputVal - effectiveCorrectVal) < acceptableError;
                 
                 renderValidation(id, isCorrect);
                 if (!isCorrect) overallValid = false;
             });
 
-            // 2. Check the explicit Ending Capital input
+            // 2. Check the explicit Ending Capital input (must match SCE final figure)
             const endingCapitalInputVal = state.fsInputs.bs.bs_ending_capital_bs || 0;
             const endingCapitalCorrectVal = data.endingCapital;
             let endingCapitalCorrect = Math.abs(endingCapitalInputVal - endingCapitalCorrectVal) < acceptableError;
@@ -1223,10 +1268,10 @@
             renderValidation('bs_ending_capital_bs', endingCapitalCorrect);
             if (!endingCapitalCorrect) overallValid = false;
 
-            // 3. Check final totals
+            // 3. Check final totals (FIX 2: Use the Net Totals, not the Worksheet Grand Totals)
             const checks = [
-                ['bs_total_assets', data.BS_DR_Total],
-                ['bs_total_liab_equity', data.BS_CR_Total]
+                ['bs_total_assets', data.correctTotalAssetsNet],
+                ['bs_total_liab_equity', data.correctTotalLiabilitiesAndEquityNet]
             ];
 
             checks.forEach(([id, correctVal]) => {
