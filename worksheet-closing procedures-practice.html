@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accounting Cycle Performance Task (PHP)</title>
+    <title>Accounting Cycle Performance Task</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -15,7 +15,7 @@
             padding: 4px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            text-align: right;
+            text-align: right; /* Right-align amounts */
             font-size: 0.85rem;
             background-color: #f0f9ff; /* light blue background for input areas */
         }
@@ -29,6 +29,13 @@
         }
         .header-bg { background-color: #0f172a; color: white; }
         .footer-bg { background-color: #334155; color: white; }
+        .validation-icon {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-left: 5px;
+            /* Position icon over the input field without disrupting layout */
+            pointer-events: none; /* Allows clicks to go through to the input */
+        }
 
         /* Print-specific styles */
         @media print {
@@ -43,12 +50,14 @@
                 background-color: white !important;
                 color: black !important;
             }
+            /* Remove validation icons when printing */
+            .validation-icon { display: none !important; }
         }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <!-- Firebase SDK Imports (Mandatory setup, even if not using database for this specific task) -->
+    <!-- Firebase SDK Imports (Mandatory setup) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -95,7 +104,7 @@
                 Accounting Cycle Performance Task
             </h1>
             <h2 class="text-xl md:text-2xl font-semibold text-gray-200 mt-1">
-                A & M Cleaning Services - Year End (₱)
+                A & M Cleaning Services - Year End
             </h2>
             <p class="text-sm font-light text-gray-400 mt-2">
                 Sole Proprietorship Service Business | For the Year Ended December 31, 2024
@@ -112,7 +121,7 @@
             <div id="message-box" class="text-lg font-medium text-gray-700 min-h-8">
                 <!-- Validation messages go here -->
             </div>
-            <button id="next-step-btn" onclick="handleNextStep()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-200 disabled:opacity-50" disabled>
+            <button id="next-step-btn" onclick="handleNextStep()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-200 disabled:opacity-50">
                 Proceed to Step 1: Student Info
             </button>
         </div>
@@ -128,7 +137,7 @@
     <script>
         // --- GLOBAL STATE AND CONSTANTS ---
         let state = {
-            currentStep: 0, // 0: Student Info, 1: Worksheet, 2: Financial Statements, etc.
+            currentStep: 0, // 0: Student Info, 1: Worksheet, 2: IS, 3: SCE, 4: BS, 5: Complete
             studentInfo: null,
             isAuthReady: false,
             // Initial Trial Balance Data (PHP)
@@ -154,9 +163,7 @@
                 { name: 'Rent Expense', type: 'expense', isFS: 'IS', isClosing: true },
                 { name: 'Depreciation Expense', type: 'expense', isFS: 'IS', isClosing: true },
                 { name: 'Salaries Payable', type: 'liability', isFS: 'BS', isClosing: false },
-                { name: 'Accounts Receivable', type: 'asset', isFS: 'BS', isClosing: false }, // Already exists, will just be adjusted
-                { name: 'Service Revenue', type: 'revenue', isFS: 'IS', isClosing: true }, // Already exists, will just be adjusted
-                { name: 'Accrued Service Revenue', type: 'asset', isFS: 'BS', isClosing: false }, // Explicit new account for accrued revenue for clarity in journal
+                { name: 'Accrued Service Revenue', type: 'asset', isFS: 'BS', isClosing: false }, 
             ],
             // Adjustment requirements and answers (for validation)
             adjustments: [
@@ -165,30 +172,37 @@
                 { desc: "C. Depreciation of equipment for the year, ₱ 15,000.", dr: 'Depreciation Expense', cr: 'Accumulated Depreciation-Equip.', amount: 15000, isReversing: false },
                 { desc: "D. Accrued salaries not yet paid, ₱ 8,000.", dr: 'Salaries Expense', cr: 'Salaries Payable', amount: 8000, isReversing: true }, // Reversing candidate
                 { desc: "E. Unearned Service Revenue earned during the period, ₱ 6,000.", dr: 'Unearned Service Revenue', cr: 'Service Revenue', amount: 6000, isReversing: false },
-                { desc: "F. Services rendered but unbilled/uncollected (Accrued Revenue), ₱ 4,000. (Using Accrued Service Revenue account for clarity)", dr: 'Accrued Service Revenue', cr: 'Service Revenue', amount: 4000, isReversing: true }, // Reversing candidate (if using Accrued AR)
+                { desc: "F. Services rendered but unbilled/uncollected (Accrued Revenue), ₱ 4,000. (Using Accrued Service Revenue account for clarity)", dr: 'Accrued Service Revenue', cr: 'Service Revenue', amount: 4000, isReversing: true }, // Reversing candidate
             ],
             worksheetInputs: {}, // Stores user input for worksheet columns
-            journalEntries: { adjusting: [], closing: [], reversing: [] }, // Stores user input for journal entries
+            fsInputs: { // Stores user input for the new Financial Statement Steps
+                is: {},
+                sce: {},
+                bs: {}
+            },
+            // NEW: Tracking failed validation attempts for steps 1-4
+            validationAttempts: { 1: 0, 2: 0, 3: 0, 4: 0 }
         };
 
         // --- UTILITY FUNCTIONS ---
 
-        /** Formats a number as Philippine Peso (₱). */
+        /** Formats a number without the ₱ sign, ensuring it's right-aligned and has 2 decimal places. */
         const formatPHP = (num) => {
-            if (typeof num !== 'number' || isNaN(num)) return '';
-            return '₱ ' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (typeof num !== 'number' || isNaN(num) || num === 0) return '';
+            // Ensure number is rounded to 2 decimal places before formatting
+            const roundedNum = Math.round(num * 100) / 100;
+            // Removed ₱ sign
+            return roundedNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
-
+        
         /** Gets the display name for the current step. */
         const getStepTitle = (step) => {
             const titles = [
                 "Student Information",
                 "Step 1: 10-Column Worksheet",
-                "Step 2: Financial Statements",
-                "Step 3: Journalizing Adjusting Entries",
-                "Step 4: Journalizing Closing Entries",
-                "Step 5: Post-Closing Trial Balance",
-                "Step 6: Journalizing Reversing Entries",
+                "Step 2: Income Statement (IS)",
+                "Step 3: Statement of Changes in Equity (SCE)",
+                "Step 4: Balance Sheet (BS)",
                 "Task Complete!"
             ];
             return titles[step] || "Unknown Step";
@@ -199,6 +213,142 @@
             const box = document.getElementById('message-box');
             box.className = `text-lg font-medium min-h-8 ${isError ? 'text-red-600' : 'text-green-600'}`;
             box.innerHTML = message;
+        };
+        
+        // --- CALCULATION LOGIC ---
+        
+        /** Calculates the correct totals for the Adjustments, ATB, IS, and BS columns. */
+        const calculateWorksheetAnswers = () => {
+            const accounts = [...state.initialTB.slice(0, -1)]; 
+            const accountMap = new Map();
+
+            // Consolidate all accounts (initial + new)
+            accounts.forEach(acc => accountMap.set(acc.name, { ...acc, ADJ_DR: 0, ADJ_CR: 0, ATB_DR: acc.TB_DR, ATB_CR: acc.TB_CR }));
+            state.newAccounts.forEach(newAcc => {
+                if (!accountMap.has(newAcc.name)) {
+                    accountMap.set(newAcc.name, { ...newAcc, TB_DR: 0, TB_CR: 0, ADJ_DR: 0, ADJ_CR: 0, ATB_DR: 0, ATB_CR: 0 });
+                }
+            });
+
+            // Apply Adjustments to generate ADJ column and preliminary ATB
+            state.adjustments.forEach(adj => {
+                const drAcc = accountMap.get(adj.dr);
+                const crAcc = accountMap.get(adj.cr);
+
+                if (drAcc) drAcc.ADJ_DR += adj.amount;
+                if (crAcc) crAcc.ADJ_CR += adj.amount;
+            });
+            
+            let totalTB_DR = state.initialTB.at(-1).TB_DR; // 515000
+            let totalTB_CR = state.initialTB.at(-1).TB_CR; // 515000
+            let totalADJ_DR = 0;
+            let totalADJ_CR = 0;
+            let totalATB_DR = 0;
+            let totalATB_CR = 0;
+            let totalIS_DR = 0; // Total Expenses (pre-NI/NL)
+            let totalIS_CR = 0; // Total Revenues (pre-NI/NL)
+            let totalBS_DR = 0; // Total BS Debits (pre-NI/NL)
+            let totalBS_CR = 0; // Total BS Credits (pre-NI/NL)
+
+            const finalAccounts = Array.from(accountMap.values()).map(acc => {
+                const result = { ...acc };
+                
+                // 1. Calculate ATB (Fixed Logic)
+                const ATB_DR_Net = result.TB_DR + result.ADJ_DR;
+                const ATB_CR_Net = result.TB_CR + result.ADJ_CR;
+                
+                // Determine final balance and put it on the correct side
+                const balance = ATB_DR_Net - ATB_CR_Net;
+
+                if (balance > 0) {
+                    result.ATB_DR = balance;
+                    result.ATB_CR = 0;
+                } else if (balance < 0) {
+                    result.ATB_DR = 0;
+                    result.ATB_CR = Math.abs(balance);
+                } else {
+                    result.ATB_DR = 0;
+                    result.ATB_CR = 0;
+                }
+
+                // 2. Calculate IS and BS columns
+                result.IS_DR = 0;
+                result.IS_CR = 0;
+                result.BS_DR = 0;
+                result.BS_CR = 0;
+
+                if (result.isFS === 'IS') {
+                    // Income Statement accounts (Revenues and Expenses)
+                    result.IS_DR = result.ATB_DR;
+                    result.IS_CR = result.ATB_CR;
+                    totalIS_DR += result.IS_DR;
+                    totalIS_CR += result.IS_CR;
+
+                } else if (result.isFS === 'BS') {
+                    // Balance Sheet accounts (Assets, Liabilities, Equity)
+                    result.BS_DR = result.ATB_DR;
+                    result.BS_CR = result.ATB_CR;
+                    totalBS_DR += result.BS_DR;
+                    totalBS_CR += result.BS_CR;
+                }
+
+                // Accumulate totals for the validation check
+                totalADJ_DR += result.ADJ_DR;
+                totalADJ_CR += result.ADJ_CR;
+                totalATB_DR += result.ATB_DR;
+                totalATB_CR += result.ATB_CR;
+                
+                return result;
+            }).filter(acc => acc.TB_DR !== 0 || acc.TB_CR !== 0 || acc.ADJ_DR !== 0 || acc.ADJ_CR !== 0); // Only keep accounts with a balance/adjustment
+
+            // Sort before returning (Assets, Contra-Assets, Liabilities, Equity, Revenue, Expenses)
+            finalAccounts.sort((a, b) => {
+                const order = { 'asset': 1, 'contra-asset': 2, 'liability': 3, 'equity': 4, 'revenue': 5, 'expense': 6 };
+                return (order[a.type] || 9) - (order[b.type] || 9);
+            });
+
+            const netIncome = totalIS_CR - totalIS_DR; // Total Revenue - Total Expenses
+
+            // Final totals need to account for Net Income/Loss in IS/BS columns
+            const IS_Final_DR = totalIS_DR + (netIncome < 0 ? Math.abs(netIncome) : 0);
+            const IS_Final_CR = totalIS_CR + (netIncome > 0 ? netIncome : 0);
+
+            const BS_Final_DR = totalBS_DR + (netIncome > 0 ? netIncome : 0);
+            const BS_Final_CR = totalBS_CR + (netIncome < 0 ? Math.abs(netIncome) : 0);
+            
+            // Calculate Ending Capital for SCE/BS (A, Capital CR + Net Income - Withdrawals)
+            let startingCapital = accountMap.get('A, Capital').ATB_CR;
+            let withdrawals = accountMap.get('A, Withdrawals').ATB_DR;
+            let endingCapital = startingCapital + netIncome - withdrawals;
+
+            return {
+                netIncome: netIncome,
+                totalRevenue: totalIS_CR, // Total Revenue
+                totalExpenses: totalIS_DR, // Total Expenses
+                startingCapital: startingCapital,
+                withdrawals: withdrawals,
+                endingCapital: endingCapital,
+                accounts: finalAccounts,
+                TB_DR_Total: totalTB_DR,
+                TB_CR_Total: totalTB_CR,
+                ADJ_DR_Total: totalADJ_DR,
+                ADJ_CR_Total: totalADJ_CR,
+                ATB_DR_Total: totalATB_DR,
+                ATB_CR_Total: totalATB_CR,
+                IS_DR_Total: IS_Final_DR, // Grand Total IS DR
+                IS_CR_Total: IS_Final_CR, // Grand Total IS CR
+                BS_DR_Total: BS_Final_DR, // Grand Total BS DR
+                BS_CR_Total: BS_Final_CR, // Grand Total BS CR
+                BS_SUB_DR: totalBS_DR, // Subtotal BS DR (Requested)
+                BS_SUB_CR: totalBS_CR, // Subtotal BS CR (Requested)
+                IS_SUB_DR: totalIS_DR, // Subtotal IS DR
+                IS_SUB_CR: totalIS_CR, // Subtotal IS CR
+                ATB_DR_SUB: totalATB_DR,
+                ATB_CR_SUB: totalATB_CR,
+                TB_DR_SUB: totalTB_DR,
+                TB_CR_SUB: totalTB_CR,
+                BSAccounts: finalAccounts.filter(acc => acc.isFS === 'BS')
+            };
         };
 
         // --- STEP RENDERING FUNCTIONS ---
@@ -213,53 +363,46 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-6 rounded-lg shadow-inner">
                         <div class="col-span-1">
                             <label for="idNumber" class="block text-sm font-medium text-gray-700">ID Number (One Box)</label>
-                            <input type="text" id="idNumber" class="text-input" placeholder="e.g., 2024-00123">
+                            <input type="text" id="idNumber" oninput="saveStudentInfo(this)" class="text-input" placeholder="e.g., 2024-00123" value="${state.studentInfo?.idNumber || ''}">
                         </div>
                         <div class="col-span-1">
                             <label for="classNumber" class="block text-sm font-medium text-gray-700">Class Number (One Box)</label>
-                            <input type="text" id="classNumber" class="text-input" placeholder="e.g., 5">
+                            <input type="text" id="classNumber" oninput="saveStudentInfo(this)" class="text-input" placeholder="e.g., 5" value="${state.studentInfo?.classNumber || ''}">
                         </div>
                         <div class="col-span-2">
                             <label for="fullName" class="block text-sm font-medium text-gray-700">Last Name and First Name (One Box)</label>
-                            <input type="text" id="fullName" class="text-input" placeholder="e.g., Dela Cruz, Juan Santos">
+                            <input type="text" id="fullName" oninput="saveStudentInfo(this)" class="text-input" placeholder="e.g., Dela Cruz, Juan Santos" value="${state.studentInfo?.fullName || ''}">
                         </div>
                         <div class="col-span-2">
                             <label for="gradeSection" class="block text-sm font-medium text-gray-700">Grade Level and Section (One Box)</label>
-                            <input type="text" id="gradeSection" class="text-input" placeholder="e.g., Grade 12 - STEM 1">
+                            <input type="text" id="gradeSection" oninput="saveStudentInfo(this)" class="text-input" placeholder="e.g., Grade 12 - STEM 1" value="${state.studentInfo?.gradeSection || ''}">
                         </div>
                     </div>
                 </div>
             `;
             document.getElementById('next-step-btn').innerText = "Submit Info & Proceed to Step 1";
-            document.getElementById('next-step-btn').disabled = false; // Always enabled for initial info collection
+            document.getElementById('next-step-btn').disabled = false;
             renderMessageBox("Please fill in your information to start the task.");
         };
 
-        /** Step 1: 10-Column Worksheet */
+        // Helper to save student info inputs immediately
+        const saveStudentInfo = (element) => {
+            if (!state.studentInfo) state.studentInfo = {};
+            state.studentInfo[element.id] = element.value.trim();
+        };
+
+        /** Step 1: 10-Column Worksheet Preparation */
         const renderWorksheet = () => {
-            const accounts = [...state.initialTB.slice(0, -1)]; // Exclude 'Totals' for now
-
-            // Add new required accounts for adjustments, if they don't already exist
-            state.newAccounts.forEach(newAcc => {
-                if (!accounts.some(acc => acc.name === newAcc.name) && newAcc.name !== 'Accounts Receivable' && newAcc.name !== 'Service Revenue') {
-                    accounts.push({ ...newAcc, TB_DR: 0, TB_CR: 0 });
-                }
-            });
-
-            // Re-sort to put expenses/revenues after equity (for better worksheet flow)
-            accounts.sort((a, b) => {
-                const order = { 'asset': 1, 'contra-asset': 2, 'liability': 3, 'equity': 4, 'revenue': 5, 'expense': 6 };
-                return order[a.type] - order[b.type];
-            });
-
+            const worksheetData = calculateWorksheetAnswers();
+            const accounts = worksheetData.accounts;
+            
             const renderRow = (acc, index, isTotal = false) => {
-                const isContra = acc.type === 'contra-asset' || acc.type === 'liability' || acc.type === 'equity' || acc.type === 'revenue';
                 const baseId = `wks_${index}_`;
                 const isIncomeStatement = acc.isFS === 'IS';
                 const isBalanceSheet = acc.isFS === 'BS';
 
                 return `
-                    <tr class="${isTotal ? 'font-bold bg-indigo-50/50' : (acc.TB_DR === 0 && acc.TB_CR === 0 ? 'bg-yellow-50/50' : 'hover:bg-gray-50')}">
+                    <tr class="${isTotal ? 'font-bold bg-indigo-50/50' : (acc.TB_DR === 0 && acc.TB_CR === 0 ? 'bg-yellow-50/50' : 'hover:bg-gray-50')}" id="row_${index}">
                         <td class="p-2 border border-gray-300 text-left ${isTotal ? 'text-center' : ''} whitespace-nowrap">
                             ${isTotal ? 'TOTALS' : acc.name}
                         </td>
@@ -268,31 +411,203 @@
                         <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_CR)}</td>
 
                         <!-- Adjustments (Input) -->
-                        <td class="p-0 border border-gray-300"><input type="number" id="${baseId}ADJ_DR" oninput="saveWorksheetInput('${baseId}ADJ_DR', this.value)" class="table-input" ${isTotal ? 'disabled' : ''}></td>
-                        <td class="p-0 border border-gray-300"><input type="number" id="${baseId}ADJ_CR" oninput="saveWorksheetInput('${baseId}ADJ_CR', this.value)" class="table-input" ${isTotal ? 'disabled' : ''}></td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="${baseId}ADJ_DR" oninput="saveWorksheetInput('${baseId}ADJ_DR', this.value)" class="table-input" ${isTotal ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'ADJ_DR'] || ''}">
+                            <span id="${baseId}ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="${baseId}ADJ_CR" oninput="saveWorksheetInput('${baseId}ADJ_CR', this.value)" class="table-input" ${isTotal ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'ADJ_CR'] || ''}">
+                            <span id="${baseId}ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
 
                         <!-- Adjusted Trial Balance (Input) -->
-                        <td class="p-0 border border-gray-300"><input type="number" id="${baseId}ATB_DR" oninput="saveWorksheetInput('${baseId}ATB_DR', this.value)" class="table-input" ${isTotal ? 'disabled' : ''}></td>
-                        <td class="p-0 border border-gray-300"><input type="number" id="${baseId}ATB_CR" oninput="saveWorksheetInput('${baseId}ATB_CR', this.value)" class="table-input" ${isTotal ? 'disabled' : ''}></td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="${baseId}ATB_DR" oninput="saveWorksheetInput('${baseId}ATB_DR', this.value)" class="table-input" ${isTotal ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'ATB_DR'] || ''}">
+                            <span id="${baseId}ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="${baseId}ATB_CR" oninput="saveWorksheetInput('${baseId}ATB_CR', this.value)" class="table-input" ${isTotal ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'ATB_CR'] || ''}">
+                            <span id="${baseId}ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
 
                         <!-- Income Statement (Input) -->
-                        <td class="p-0 border border-gray-300 ${!isIncomeStatement && !isTotal ? 'bg-gray-100' : ''}">
-                            <input type="number" id="${baseId}IS_DR" oninput="saveWorksheetInput('${baseId}IS_DR', this.value)" class="table-input" ${!isIncomeStatement || isTotal ? 'disabled' : ''}>
+                        <td class="p-0 border border-gray-300 ${!isIncomeStatement && !isTotal ? 'bg-gray-100' : ''} relative">
+                            <input type="number" id="${baseId}IS_DR" oninput="saveWorksheetInput('${baseId}IS_DR', this.value)" class="table-input" ${!isIncomeStatement || isTotal ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'IS_DR'] || ''}">
+                            <span id="${baseId}IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
-                        <td class="p-0 border border-gray-300 ${!isIncomeStatement && !isTotal ? 'bg-gray-100' : ''}">
-                            <input type="number" id="${baseId}IS_CR" oninput="saveWorksheetInput('${baseId}IS_CR', this.value)" class="table-input" ${!isIncomeStatement || isTotal ? 'disabled' : ''}>
+                        <td class="p-0 border border-gray-300 ${!isIncomeStatement && !isTotal ? 'bg-gray-100' : ''} relative">
+                            <input type="number" id="${baseId}IS_CR" oninput="saveWorksheetInput('${baseId}IS_CR', this.value)" class="table-input" ${!isIncomeStatement || isTotal ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'IS_CR'] || ''}">
+                            <span id="${baseId}IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
 
                         <!-- Balance Sheet (Input) -->
-                        <td class="p-0 border border-gray-300 ${!isBalanceSheet && !isTotal ? 'bg-gray-100' : ''}">
-                            <input type="number" id="${baseId}BS_DR" oninput="saveWorksheetInput('${baseId}BS_DR', this.value)" class="table-input" ${!isBalanceSheet || isTotal ? 'disabled' : ''}>
+                        <td class="p-0 border border-gray-300 ${!isBalanceSheet && !isTotal ? 'bg-gray-100' : ''} relative">
+                            <input type="number" id="${baseId}BS_DR" oninput="saveWorksheetInput('${baseId}BS_DR', this.value)" class="table-input" ${!isBalanceSheet || isTotal ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'BS_DR'] || ''}">
+                            <span id="${baseId}BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
-                        <td class="p-0 border border-gray-300 ${!isBalanceSheet && !isTotal ? 'bg-gray-100' : ''}">
-                            <input type="number" id="${baseId}BS_CR" oninput="saveWorksheetInput('${baseId}BS_CR', this.value)" class="table-input" ${!isBalanceSheet || isTotal ? 'disabled' : ''}>
+                        <td class="p-0 border border-gray-300 ${!isBalanceSheet && !isTotal ? 'bg-gray-100' : ''} relative">
+                            <input type="number" id="${baseId}BS_CR" oninput="saveWorksheetInput('${baseId}BS_CR', this.value)" class="table-input" ${!isBalanceSheet || isTotal ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'BS_CR'] || ''}">
+                            <span id="${baseId}BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                     </tr>
                 `;
             };
+
+            // Define the NEW subtotal row (Input fields for all 10 columns)
+            const subTotalRow = (wksData) => {
+                return `
+                    <tr class="font-bold bg-purple-100 text-purple-800 border-t-2 border-purple-500" id="row_SUBTOTAL">
+                        <td class="p-2 border border-gray-300 text-left">
+                            COLUMN TOTALS (Before NI/NL)
+                        </td>
+                        <!-- TB Totals (Input) -->
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_TB_DR" oninput="saveWorksheetInput('wks_SUBTOTAL_TB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_TB_DR'] || ''}">
+                            <span id="wks_SUBTOTAL_TB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_TB_CR" oninput="saveWorksheetInput('wks_SUBTOTAL_TB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_TB_CR'] || ''}">
+                            <span id="wks_SUBTOTAL_TB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+
+                        <!-- Adjustments Totals (Input) -->
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_ADJ_DR" oninput="saveWorksheetInput('wks_SUBTOTAL_ADJ_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ADJ_DR'] || ''}">
+                            <span id="wks_SUBTOTAL_ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_ADJ_CR" oninput="saveWorksheetInput('wks_SUBTOTAL_ADJ_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ADJ_CR'] || ''}">
+                            <span id="wks_SUBTOTAL_ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+
+                        <!-- Adjusted Trial Balance Totals (Input) -->
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_ATB_DR" oninput="saveWorksheetInput('wks_SUBTOTAL_ATB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ATB_DR'] || ''}">
+                            <span id="wks_SUBTOTAL_ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_ATB_CR" oninput="saveWorksheetInput('wks_SUBTOTAL_ATB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ATB_CR'] || ''}">
+                            <span id="wks_SUBTOTAL_ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                        
+                        <!-- Income Statement Subtotals (Input) -->
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_IS_DR" oninput="saveWorksheetInput('wks_SUBTOTAL_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_IS_DR'] || ''}">
+                            <span id="wks_SUBTOTAL_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_IS_CR" oninput="saveWorksheetInput('wks_SUBTOTAL_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_IS_CR'] || ''}">
+                            <span id="wks_SUBTOTAL_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+
+                        <!-- Balance Sheet Subtotals (Input - Fulfills request) -->
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_BS_DR" oninput="saveWorksheetInput('wks_SUBTOTAL_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_BS_DR'] || ''}">
+                            <span id="wks_SUBTOTAL_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="wks_SUBTOTAL_BS_CR" oninput="saveWorksheetInput('wks_SUBTOTAL_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_BS_CR'] || ''}">
+                            <span id="wks_SUBTOTAL_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </td>
+                    </tr>
+                `;
+            };
+
+            let rowsHtml = '';
+            const accountsForDisplay = worksheetData.accounts;
+            const insertSubtotalAfter = 'Depreciation Expense';
+            
+            // Generate rows and inject the subtotal row after the last expense account
+            accountsForDisplay.forEach((acc, i) => {
+                rowsHtml += renderRow(acc, i);
+
+                // Insert the new row immediately after Depreciation Expense
+                if (acc.name === insertSubtotalAfter) {
+                    rowsHtml += subTotalRow(worksheetData);
+                }
+            });
+
+
+            const netIncomeRow = `
+                <tr class="font-bold bg-green-50/50 text-green-700">
+                    <td class="p-2 border border-gray-300 text-left">
+                        ${worksheetData.netIncome > 0 ? 'Net Income' : 'Net Loss'}
+                    </td>
+                    <td colspan="6" class="p-2 border border-gray-300 text-center"></td>
+                    <!-- IS Balance Row -->
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_NI_IS_DR" oninput="saveWorksheetInput('wks_NI_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_IS_DR'] || ''}">
+                        <span id="wks_NI_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_NI_IS_CR" oninput="saveWorksheetInput('wks_NI_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_IS_CR'] || ''}">
+                        <span id="wks_NI_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <!-- BS Balance Row -->
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_NI_BS_DR" oninput="saveWorksheetInput('wks_NI_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_BS_DR'] || ''}">
+                        <span id="wks_NI_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_NI_BS_CR" oninput="saveWorksheetInput('wks_NI_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_BS_CR'] || ''}">
+                        <span id="wks_NI_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                </tr>
+            `;
+
+            const finalTotalRow = `
+                <tr class="font-bold bg-indigo-50/50 border-t-2 border-indigo-700">
+                    <td class="p-2 border border-gray-300 text-center">FINAL TOTALS</td>
+                    
+                    <!-- TB Totals (Input) -->
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_TB_DR" oninput="saveWorksheetInput('wks_FINAL_TB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_TB_DR'] || ''}">
+                        <span id="wks_FINAL_TB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_TB_CR" oninput="saveWorksheetInput('wks_FINAL_TB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_TB_CR'] || ''}">
+                        <span id="wks_FINAL_TB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+
+                    <!-- ADJ Totals (Input) -->
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_ADJ_DR" oninput="saveWorksheetInput('wks_FINAL_ADJ_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ADJ_DR'] || ''}">
+                        <span id="wks_FINAL_ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_ADJ_CR" oninput="saveWorksheetInput('wks_FINAL_ADJ_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ADJ_CR'] || ''}">
+                        <span id="wks_FINAL_ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+
+                    <!-- ATB Totals (Input) -->
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_ATB_DR" oninput="saveWorksheetInput('wks_FINAL_ATB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ATB_DR'] || ''}">
+                        <span id="wks_FINAL_ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_ATB_CR" oninput="saveWorksheetInput('wks_FINAL_ATB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ATB_CR'] || ''}">
+                        <span id="wks_FINAL_ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    
+                    <!-- Final IS/BS Totals (Input) -->
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_IS_DR" oninput="saveWorksheetInput('wks_FINAL_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_IS_DR'] || ''}">
+                        <span id="wks_FINAL_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_IS_CR" oninput="saveWorksheetInput('wks_FINAL_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_IS_CR'] || ''}">
+                        <span id="wks_FINAL_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_BS_DR" oninput="saveWorksheetInput('wks_FINAL_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_BS_DR'] || ''}">
+                        <span id="wks_FINAL_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                    <td class="p-0 border border-gray-300 relative">
+                        <input type="number" id="wks_FINAL_BS_CR" oninput="saveWorksheetInput('wks_FINAL_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_BS_CR'] || ''}">
+                        <span id="wks_FINAL_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </td>
+                </tr>
+            `;
 
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6">
@@ -306,7 +621,7 @@
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="min-w-full text-xs border-collapse border border-gray-400">
+                        <table id="worksheet-table" class="min-w-full text-xs border-collapse border border-gray-400">
                             <thead>
                                 <tr class="header-bg text-center">
                                     <th rowspan="2" class="p-2 border border-gray-300 w-[150px]">Account Titles</th>
@@ -317,205 +632,236 @@
                                     <th colspan="2" class="p-2 border border-gray-300">Balance Sheet</th>
                                 </tr>
                                 <tr class="bg-indigo-100 text-indigo-900 text-center">
-                                    <th class="p-1 border border-gray-300">Debit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Credit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Debit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Credit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Debit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Credit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Debit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Credit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Debit (₱)</th>
-                                    <th class="p-1 border border-gray-300">Credit (₱)</th>
+                                    <th class="p-1 border border-gray-300">Debit</th>
+                                    <th class="p-1 border border-gray-300">Credit</th>
+                                    <th class="p-1 border border-gray-300">Debit</th>
+                                    <th class="p-1 border border-gray-300">Credit</th>
+                                    <th class="p-1 border border-gray-300">Debit</th>
+                                    <th class="p-1 border border-gray-300">Credit</th>
+                                    <th class="p-1 border border-gray-300">Debit</th>
+                                    <th class="p-1 border border-gray-300">Credit</th>
+                                    <th class="p-1 border border-gray-300">Debit</th>
+                                    <th class="p-1 border border-gray-300">Credit</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${accounts.map((acc, i) => renderRow(acc, i)).join('')}
-                                ${renderRow(state.initialTB.at(-1), accounts.length, true)} <!-- Total Row -->
+                                ${rowsHtml}
+                                ${netIncomeRow}
+                                ${finalTotalRow}
                             </tbody>
                         </table>
                     </div>
                 </div>
             `;
             document.getElementById('next-step-btn').innerText = "Validate Worksheet & Print Step 1";
-            renderMessageBox("Complete the Adjustments, Adjusted Trial Balance, Income Statement, and Balance Sheet columns.");
+            renderMessageBox("Complete the Worksheet columns. Attempt validation when ready.");
+        };
+        
+        // Helper to save FS inputs
+        const saveFSInput = (type, field, value) => {
+            state.fsInputs[type][field] = Number(value) || 0;
         };
 
-        /** Step 2: Financial Statements (Placeholder for complex logic, will just prompt for printing here) */
-        const renderFinancialStatements = () => {
-            const worksheetData = calculateFSFromWorksheet();
+        /** NEW Step 2: Income Statement Preparation */
+        const renderIncomeStatement = () => {
+            const worksheetData = calculateWorksheetAnswers();
+            const IS_accounts = worksheetData.accounts.filter(acc => acc.isFS === 'IS');
+            const revenue = IS_accounts.filter(acc => acc.type === 'revenue');
+            const expenses = IS_accounts.filter(acc => acc.type === 'expense');
+
+            // Find max expense name length for alignment (aesthetics)
+            const maxNameLength = expenses.reduce((max, acc) => Math.max(max, acc.name.length), 0);
+            const expensePadding = Math.max(0, maxNameLength - 15) * 4; // approximate px padding
+
             document.getElementById('task-container').innerHTML = `
-                <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700">STEP 2: Financial Statements Preparation</h3>
+                <div class="space-y-6 max-w-lg mx-auto p-6 bg-white rounded-xl shadow-lg border border-green-200">
+                    <header class="text-center">
+                        <h3 class="text-2xl font-bold text-indigo-700">STEP 2: Income Statement (IS)</h3>
+                        <p class="text-base font-semibold text-gray-600">A & M Cleaning Services</p>
+                        <p class="text-sm text-gray-500">For the Year Ended December 31, 2024</p>
+                        <p class="text-xs mt-2 text-red-500">Input the calculated totals to validate this step.</p>
+                    </header>
 
-                    <div class="bg-green-50 p-6 rounded-lg border border-green-200 shadow-lg">
-                        <p class="text-base text-green-800">
-                            Based on your completed Worksheet (which has been validated), you are now required to prepare the following financial statements:
-                        </p>
-                        <ul class="list-disc list-inside mt-3 space-y-1 font-semibold text-gray-700">
-                            <li>Income Statement</li>
-                            <li>Statement of Changes in Equity</li>
-                            <li>Statement of Financial Position (Balance Sheet)</li>
-                        </ul>
-                        <p class="mt-4 text-sm text-gray-600">
-                            In a real-world scenario, you would draft these reports now. For this interactive task, proceed to the next step to simulate the completion of this report set.
-                        </p>
-                    </div>
+                    <div class="space-y-4">
+                        <!-- Revenue Section -->
+                        <h4 class="font-bold text-lg border-b pb-1 text-green-700">Service Revenue</h4>
+                        ${revenue.map(acc => `
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-700">${acc.name}</span>
+                                <span class="font-medium">${formatPHP(acc.ATB_CR)}</span>
+                            </div>
+                        `).join('')}
 
-                    <!-- Display Key Results from Worksheet -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                        <div class="p-4 bg-white rounded-lg shadow-md border-b-4 border-indigo-500">
-                            <p class="text-sm font-medium text-gray-500">Total Service Revenue</p>
-                            <p class="text-2xl font-bold text-indigo-600">${formatPHP(worksheetData.totalRevenue)}</p>
+                        <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
+                            <label for="is_total_revenue" class="text-md text-green-700">TOTAL SERVICE REVENUE:</label>
+                            <input type="number" id="is_total_revenue" oninput="saveFSInput('is', 'total_revenue', this.value)" class="table-input w-2/5 md:w-1/3" placeholder="Input Total">
+                            <span id="is_total_revenue_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </div>
-                        <div class="p-4 bg-white rounded-lg shadow-md border-b-4 border-red-500">
-                            <p class="text-sm font-medium text-gray-500">Total Expenses</p>
-                            <p class="text-2xl font-bold text-red-600">${formatPHP(worksheetData.totalExpenses)}</p>
+
+                        <!-- Expenses Section -->
+                        <h4 class="font-bold text-lg border-b pb-1 pt-4 text-red-700">Expenses</h4>
+                        ${expenses.map(acc => `
+                            <div class="flex justify-between items-center text-sm pl-4">
+                                <span class="text-gray-700" style="padding-left: ${expensePadding}px;">${acc.name}</span>
+                                <span class="font-medium">${formatPHP(acc.ATB_DR)}</span>
+                            </div>
+                        `).join('')}
+
+                        <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
+                            <label for="is_total_expense" class="text-md text-red-700">TOTAL EXPENSES:</label>
+                            <input type="number" id="is_total_expense" oninput="saveFSInput('is', 'total_expense', this.value)" class="table-input w-2/5 md:w-1/3" placeholder="Input Total">
+                            <span id="is_total_expense_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </div>
-                        <div class="p-4 bg-white rounded-lg shadow-md border-b-4 border-green-500">
-                            <p class="text-sm font-medium text-gray-500">${worksheetData.netIncome > 0 ? 'Net Income' : 'Net Loss'}</p>
-                            <p class="text-3xl font-extrabold text-green-600">${formatPHP(Math.abs(worksheetData.netIncome))}</p>
+
+                        <!-- Net Income/Loss -->
+                        <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
+                            <label for="is_net_income" class="text-xl text-indigo-800">${worksheetData.netIncome > 0 ? 'NET INCOME' : 'NET LOSS'}:</label>
+                            <input type="number" id="is_net_income" oninput="saveFSInput('is', 'net_income', this.value)" class="table-input w-2/5 md:w-1/3 text-indigo-800" placeholder="Input Amount">
+                            <span id="is_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </div>
                     </div>
                 </div>
             `;
-            document.getElementById('next-step-btn').innerText = "Simulate FS Completion & Print Step 2";
-            renderMessageBox("Prepare and review your Financial Statements. Print this page before proceeding.");
+            document.getElementById('next-step-btn').innerText = "Validate IS & Proceed to Step 3";
+            renderMessageBox("Enter the calculated totals for Revenue, Expenses, and Net Income/Loss.");
         };
 
-        /** Step 3: Adjusting Entries */
-        const renderAdjustingEntries = () => {
-             document.getElementById('task-container').innerHTML = `
-                <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700">STEP 3: Journalizing Adjusting Entries</h3>
 
-                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-                        <h4 class="font-bold text-lg text-red-700 mb-2">Instructions:</h4>
-                        <p class="text-sm text-gray-600">Journalize the 6 adjusting entries described in Step 1. Ensure Debits equal Credits for each entry. The order of entries does not matter.</p>
-                        <p class="text-sm text-gray-600 mt-2">Example: <span class="font-mono bg-gray-200 p-1 rounded">Date, Account Name (DR), P 10,000 | Date, Account Name (CR), P 10,000</span></p>
-                    </div>
+        /** NEW Step 3: Statement of Changes in Equity Preparation */
+        const renderStatementOfChangesInEquity = () => {
+            const worksheetData = calculateWorksheetAnswers();
+            const isNetIncome = worksheetData.netIncome > 0;
+            const netIncomeLabel = isNetIncome ? 'Add: Net Income' : 'Less: Net Loss';
+            
+            document.getElementById('task-container').innerHTML = `
+                <div class="space-y-6 max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg border border-purple-200">
+                    <header class="text-center">
+                        <h3 class="text-2xl font-bold text-indigo-700">STEP 3: Statement of Changes in Equity (SCE)</h3>
+                        <p class="text-base font-semibold text-gray-600">A & M Cleaning Services</p>
+                        <p class="text-sm text-gray-500">For the Year Ended December 31, 2024</p>
+                        <p class="text-xs mt-2 text-red-500">Input the calculated **Ending Capital** to validate this step.</p>
+                    </header>
+                    
+                    <div class="space-y-3">
+                        
+                        <!-- Starting Capital -->
+                        <div class="flex justify-between items-center text-base font-medium border-b border-gray-300 pb-1">
+                            <span class="text-gray-700">A, Capital, January 1, 2024</span>
+                            <span class="font-bold">${formatPHP(worksheetData.startingCapital)}</span>
+                        </div>
 
-                    <div id="journal-entries-container" class="space-y-4">
-                        ${[...Array(6).keys()].map(i => renderJournalEntryInput('ADJ', i)).join('')}
+                        <!-- Net Income/Loss -->
+                        <div class="flex justify-between items-center text-sm ${isNetIncome ? 'text-green-600' : 'text-red-600'}">
+                            <span>${netIncomeLabel}</span>
+                            <span>${formatPHP(Math.abs(worksheetData.netIncome))}</span>
+                        </div>
+                        
+                        <!-- Withdrawals -->
+                        <div class="flex justify-between items-center text-sm text-red-600">
+                            <span>Less: A, Withdrawals</span>
+                            <span>(${formatPHP(worksheetData.withdrawals)})</span>
+                        </div>
+
+                        <!-- Ending Capital Input -->
+                        <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
+                            <label for="sce_ending_capital" class="text-xl text-indigo-800">A, Capital, December 31, 2024</label>
+                            <input type="number" id="sce_ending_capital" oninput="saveFSInput('sce', 'ending_capital', this.value)" class="table-input w-1/3 text-indigo-800" placeholder="Input Amount">
+                            <span id="sce_ending_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                        </div>
                     </div>
-                    <button onclick="addJournalEntryInput('ADJ')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium no-print">
-                        + Add Another Entry (if needed)
-                    </button>
                 </div>
             `;
-            document.getElementById('next-step-btn').innerText = "Validate Adjusting Entries & Print Step 3";
-            renderMessageBox("Journalize all required adjusting entries.");
+            document.getElementById('next-step-btn').innerText = "Validate SCE & Proceed to Step 4";
+            renderMessageBox("Calculate and enter the final Ending Capital balance.");
         };
 
-        /** Step 4: Closing Entries */
-        const renderClosingEntries = () => {
-            document.getElementById('task-container').innerHTML = `
-                <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700">STEP 4: Journalizing Closing Entries</h3>
 
-                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                        <h4 class="font-bold text-lg text-yellow-700 mb-2">Instructions:</h4>
-                        <p class="text-sm text-gray-600">Journalize the 4 required closing entries for Revenue, Expenses, Income Summary, and Withdrawals.</p>
-                        <p class="text-sm text-gray-600 mt-2">Use 'Income Summary' as the intermediate account.</p>
-                    </div>
-
-                    <div id="journal-entries-container" class="space-y-4">
-                        ${[...Array(4).keys()].map(i => renderJournalEntryInput('CLS', i)).join('')}
-                    </div>
-                    <button onclick="addJournalEntryInput('CLS')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium no-print">
-                        + Add Another Entry (if needed)
-                    </button>
-                </div>
-            `;
-            document.getElementById('next-step-btn').innerText = "Validate Closing Entries & Print Step 4";
-            renderMessageBox("Journalize all 4 required closing entries.");
-        };
-
-        /** Step 5: Post-Closing Trial Balance */
-        const renderPCTB = () => {
-            const worksheetData = calculateFSFromWorksheet();
-            const accounts = worksheetData.BSAccounts.filter(acc => acc.name !== 'A, Withdrawals');
+        /** NEW Step 4: Balance Sheet Preparation */
+        const renderBalanceSheet = () => {
+            const worksheetData = calculateWorksheetAnswers();
+            const BS_accounts = worksheetData.BSAccounts.filter(acc => acc.name !== 'A, Withdrawals');
+            const assets = BS_accounts.filter(acc => acc.type === 'asset' || acc.type === 'contra-asset');
+            const liabilities = BS_accounts.filter(acc => acc.type === 'liability');
+            
+            // Calculate correct totals (for display purposes)
+            const totalLiabilities = liabilities.reduce((sum, acc) => sum + acc.ATB_CR, 0);
 
             document.getElementById('task-container').innerHTML = `
-                <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700">STEP 5: Post-Closing Trial Balance (PCTB)</h3>
+                <div class="space-y-6 max-w-lg mx-auto p-6 bg-white rounded-xl shadow-lg border border-red-200">
+                    <header class="text-center">
+                        <h3 class="text-2xl font-bold text-indigo-700">STEP 4: Balance Sheet (BS)</h3>
+                        <p class="text-base font-semibold text-gray-600">A & M Cleaning Services</p>
+                        <p class="text-sm text-gray-500">As of December 31, 2024</p>
+                        <p class="text-xs mt-2 text-red-500">Input the final totals for Assets and Liabilities & Equity to validate this step.</p>
+                    </header>
 
-                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <h4 class="font-bold text-lg text-purple-700 mb-2">Instructions:</h4>
-                        <p class="text-sm text-gray-600">List all permanent (Balance Sheet) accounts with their adjusted, post-closing balances. Remember: Capital must be updated for Net Income/Loss and Withdrawals.</p>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-sm border-collapse border border-gray-400">
-                            <thead>
-                                <tr class="header-bg text-center">
-                                    <th class="p-2 border border-gray-300 w-[200px]">Account Titles</th>
-                                    <th class="p-2 border border-gray-300">Debit (₱)</th>
-                                    <th class="p-2 border border-gray-300">Credit (₱)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${accounts.map((acc, i) => `
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="p-2 border border-gray-300 text-left">${acc.name}</td>
-                                        <td class="p-0 border border-gray-300"><input type="number" id="pctb_dr_${i}" oninput="savePCTBInput('${i}', 'DR', this.value)" class="table-input"></td>
-                                        <td class="p-0 border border-gray-300"><input type="number" id="pctb_cr_${i}" oninput="savePCTBInput('${i}', 'CR', this.value)" class="table-input"></td>
-                                    </tr>
+                    <div class="grid grid-cols-2 gap-8">
+                        <!-- ASSETS Column -->
+                        <div class="col-span-1 space-y-3">
+                            <h4 class="font-bold text-lg border-b pb-1 text-blue-700">ASSETS</h4>
+                            <div class="space-y-1 text-sm">
+                                ${assets.map(acc => `
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700 ${acc.type === 'contra-asset' ? 'pl-4 text-red-500 italic' : ''}">${acc.name}</span>
+                                        <span class="font-medium">${formatPHP(acc.ATB_DR || acc.ATB_CR)}</span>
+                                    </div>
                                 `).join('')}
-                                <tr class="font-bold bg-indigo-50/50">
-                                    <td class="p-2 border border-gray-300 text-center">TOTALS</td>
-                                    <td class="p-0 border border-gray-300"><input type="number" id="pctb_total_dr" disabled class="table-input font-bold bg-gray-200"></td>
-                                    <td class="p-0 border border-gray-300"><input type="number" id="pctb_total_cr" disabled class="table-input font-bold bg-gray-200"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                            </div>
+                            <div class="flex justify-between items-center font-extrabold border-t-2 border-blue-500 pt-3 bg-blue-50 p-2 rounded">
+                                <label for="bs_total_assets" class="text-md text-blue-800">TOTAL ASSETS:</label>
+                                <input type="number" id="bs_total_assets" oninput="saveFSInput('bs', 'total_assets', this.value)" class="table-input w-2/5 text-blue-800" placeholder="Input Total">
+                                <span id="bs_total_assets_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
+                        </div>
+
+                        <!-- LIABILITIES & EQUITY Column -->
+                        <div class="col-span-1 space-y-3">
+                            <h4 class="font-bold text-lg border-b pb-1 text-red-700">LIABILITIES</h4>
+                            <div class="space-y-1 text-sm">
+                                ${liabilities.map(acc => `
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700">${acc.name}</span>
+                                        <span class="font-medium">${formatPHP(acc.ATB_CR)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            <h4 class="font-bold text-lg border-b pb-1 pt-4 text-purple-700">OWNER'S EQUITY</h4>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-700">A, Capital, Dec 31, 2024</span>
+                                <span class="font-medium">${formatPHP(worksheetData.endingCapital)}</span>
+                            </div>
+
+                            <div class="flex justify-between items-center font-extrabold border-t-2 border-red-500 pt-3 bg-red-50 p-2 rounded">
+                                <label for="bs_total_liab_equity" class="text-md text-red-800">TOTAL LIA. & EQUITY:</label>
+                                <input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs', 'total_liab_equity', this.value)" class="table-input w-2/5 text-red-800" placeholder="Input Total">
+                                <span id="bs_total_liab_equity_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
-            document.getElementById('next-step-btn').innerText = "Validate PCTB & Print Step 5";
-            renderMessageBox("List all permanent accounts and their post-closing balances.");
+            document.getElementById('next-step-btn').innerText = "Validate BS & Complete Task";
+            renderMessageBox("Enter the final totals for Total Assets and Total Liabilities & Owner's Equity.");
         };
 
-        /** Step 6: Reversing Entries */
-        const renderReversingEntries = () => {
-            document.getElementById('task-container').innerHTML = `
-                <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700">STEP 6: Journalizing Reversing Entries</h3>
-
-                    <div class="bg-teal-50 p-4 rounded-lg border border-teal-200">
-                        <h4 class="font-bold text-lg text-teal-700 mb-2">Instructions:</h4>
-                        <p class="text-sm text-gray-600">Journalize the *optional* reversing entries for appropriate accruals and deferrals.</p>
-                        <p class="text-sm text-gray-600 mt-2">Identify which of your adjusting entries qualify for reversing.</p>
-                    </div>
-
-                    <div id="journal-entries-container" class="space-y-4">
-                        ${[...Array(3).keys()].map(i => renderJournalEntryInput('REV', i)).join('')}
-                    </div>
-                    <button onclick="addJournalEntryInput('REV')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium no-print">
-                        + Add Another Entry (if needed)
-                    </button>
-                </div>
-            `;
-            document.getElementById('next-step-btn').innerText = "Validate Reversing Entries & Complete Task";
-            renderMessageBox("Journalize the necessary reversing entries.");
-        };
-
-        /** Final Step: Completion */
+        /** Final Step 5: Task Completion */
         const renderCompletion = () => {
+            const studentInfo = state.studentInfo || {};
             document.getElementById('task-container').innerHTML = `
                 <div class="text-center py-16 px-4 bg-indigo-50 rounded-lg shadow-2xl border-4 border-indigo-600">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 mx-auto text-indigo-600 mb-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
                     <h3 class="text-3xl font-bold text-indigo-800 mb-3">CONGRATULATIONS!</h3>
-                    <p class="text-xl text-gray-700 mb-6">You have successfully completed the Accounting Cycle Performance Task for A & M Cleaning Services.</p>
+                    <p class="text-xl text-gray-700 mb-6">You have successfully completed the Accounting Cycle Performance Task (Worksheet and Financial Statements).</p>
 
                     <div class="inline-block text-left bg-white p-6 rounded-lg shadow-md border border-gray-200">
                         <h4 class="font-semibold text-lg text-gray-800 border-b pb-2 mb-2">Student Submission Details:</h4>
-                        <p><strong>Name:</strong> ${state.studentInfo.fullName}</p>
-                        <p><strong>ID:</strong> ${state.studentInfo.idNumber}</p>
-                        <p><strong>Class:</strong> ${state.studentInfo.classNumber}</p>
-                        <p><strong>Section:</strong> ${state.studentInfo.gradeSection}</p>
+                        <p><strong>Name:</strong> ${studentInfo.fullName || 'N/A'}</p>
+                        <p><strong>ID:</strong> ${studentInfo.idNumber || 'N/A'}</p>
+                        <p><strong>Class:</strong> ${studentInfo.classNumber || 'N/A'}</p>
+                        <p><strong>Section:</strong> ${studentInfo.gradeSection || 'N/A'}</p>
                     </div>
 
                     <p class="mt-6 text-sm text-gray-600">Please click the button below to generate the final PDF report for submission.</p>
@@ -529,132 +875,17 @@
             renderMessageBox("Task completed! Print your final submission.");
         };
 
-        // --- COMMON JOURNAL ENTRY RENDERING ---
-        const renderJournalEntryInput = (type, index) => {
-            const baseId = `${type}_${index}`;
-            return `
-                <div class="journal-entry bg-white p-4 rounded-lg shadow-md border border-gray-200">
-                    <h4 class="font-semibold text-gray-700 mb-3">Entry ${index + 1} (${type === 'ADJ' ? 'Adjusting' : type === 'CLS' ? 'Closing' : 'Reversing'})</h4>
-                    <div class="grid grid-cols-6 gap-2 items-center text-sm">
-                        <div class="col-span-1 font-medium text-gray-500">Date:</div>
-                        <div class="col-span-5"><input type="text" id="${baseId}_date" oninput="saveJournalInput('${type}', ${index}, 'date', this.value)" class="text-input" value="Dec 31, 2024" placeholder="Date"></div>
-
-                        <!-- DEBIT Row -->
-                        <div class="col-span-1 font-medium text-red-600">Debit:</div>
-                        <div class="col-span-3"><input type="text" id="${baseId}_dr_acc" oninput="saveJournalInput('${type}', ${index}, 'dr_acc', this.value)" class="text-input" placeholder="Account Debited"></div>
-                        <div class="col-span-2"><input type="number" id="${baseId}_dr_amt" oninput="saveJournalInput('${type}', ${index}, 'dr_amt', this.value)" class="table-input" placeholder="Amount"></div>
-
-                        <!-- CREDIT Row -->
-                        <div class="col-span-1 font-medium text-green-600">Credit:</div>
-                        <div class="col-span-3 pl-4"><input type="text" id="${baseId}_cr_acc" oninput="saveJournalInput('${type}', ${index}, 'cr_acc', this.value)" class="text-input" placeholder="Account Credited"></div>
-                        <div class="col-span-2"><input type="number" id="${baseId}_cr_amt" oninput="saveJournalInput('${type}', ${index}, 'cr_amt', this.value)" class="table-input" placeholder="Amount"></div>
-                    </div>
-                </div>
-            `;
-        };
-
-        const addJournalEntryInput = (type) => {
-            const container = document.getElementById('journal-entries-container');
-            const currentIndex = container.children.length;
-            const entryHtml = renderJournalEntryInput(type, currentIndex);
-            container.insertAdjacentHTML('beforeend', entryHtml);
-            // Initialize state for the new entry
-            if (!state.journalEntries[type]) state.journalEntries[type] = [];
-            state.journalEntries[type][currentIndex] = { date: 'Dec 31, 2024' };
-        }
-
         // --- VALIDATION AND STATE HANDLERS ---
-
-        /** Calculates the final ATB, Net Income, and Ending Capital (The key answers) */
-        const calculateFSFromWorksheet = () => {
-            const accounts = [...state.initialTB.slice(0, -1)];
-
-            // Consolidate all accounts (initial + new)
-            state.newAccounts.forEach(newAcc => {
-                if (!accounts.some(acc => acc.name === newAcc.name)) {
-                    accounts.push({ ...newAcc, TB_DR: 0, TB_CR: 0 });
-                }
-            });
-
-            const accountMap = new Map();
-            accounts.forEach(acc => accountMap.set(acc.name, { ...acc, ATB_DR: acc.TB_DR, ATB_CR: acc.TB_CR }));
-
-            // Apply Adjustments to generate ATB
-            state.adjustments.forEach(adj => {
-                const drAcc = accountMap.get(adj.dr);
-                const crAcc = accountMap.get(adj.cr);
-
-                if (drAcc) drAcc.ATB_DR += adj.amount;
-                if (crAcc) crAcc.ATB_CR += adj.amount;
-            });
-
-            let totalRevenue = 0;
-            let totalExpenses = 0;
-            let BSAccounts = [];
-
-            // Calculate IS components and identify BS accounts
-            accountMap.forEach(acc => {
-                if (acc.isFS === 'IS') {
-                    if (acc.type === 'revenue') {
-                        totalRevenue += (acc.ATB_CR - acc.ATB_DR);
-                    } else if (acc.type === 'expense') {
-                        totalExpenses += (acc.ATB_DR - acc.ATB_CR);
-                    }
-                } else if (acc.isFS === 'BS') {
-                    // Filter out zero-balance items only if they were newly created and unused
-                    if (acc.name === 'A, Withdrawals' || acc.ATB_DR !== 0 || acc.ATB_CR !== 0) {
-                        BSAccounts.push(acc);
-                    }
-                }
-            });
-
-            const netIncome = totalRevenue - totalExpenses;
-            let endingCapital = accountMap.get('A, Capital').ATB_CR;
-            let withdrawals = accountMap.get('A, Withdrawals').ATB_DR;
-
-            endingCapital += netIncome;
-            endingCapital -= withdrawals;
-
-            return {
-                netIncome: netIncome,
-                totalRevenue: totalRevenue,
-                totalExpenses: totalExpenses,
-                endingCapital: endingCapital,
-                accountMap: accountMap,
-                BSAccounts: BSAccounts
-            };
-        };
-
-        /** Handles input for the PCTB (Step 5) */
-        const savePCTBInput = (index, type, value) => {
-            const accounts = calculateFSFromWorksheet().BSAccounts;
-            const accountName = accounts[index].name;
-            if (!state.pctbInputs) state.pctbInputs = {};
-            if (!state.pctbInputs[accountName]) state.pctbInputs[accountName] = { DR: 0, CR: 0 };
-            state.pctbInputs[accountName][type] = Number(value) || 0;
-
-            // Recalculate totals for display
-            let totalDR = 0;
-            let totalCR = 0;
-            Object.values(state.pctbInputs).forEach(input => {
-                totalDR += input.DR;
-                totalCR += input.CR;
-            });
-
-            document.getElementById('pctb_total_dr').value = totalDR.toFixed(2);
-            document.getElementById('pctb_total_cr').value = totalCR.toFixed(2);
-        };
-
-        /** Handles input for the Journal Entries (Steps 3, 4, 6) */
-        const saveJournalInput = (type, index, field, value) => {
-            if (!state.journalEntries[type]) state.journalEntries[type] = [];
-            if (!state.journalEntries[type][index]) state.journalEntries[type][index] = {};
+        
+        // Helper function for visual feedback
+        const renderValidation = (id, isCorrect) => {
+            const span = document.getElementById(id + '_val');
+            if (!span) return;
             
-            // Convert amount fields to numbers, others to strings
-            if (field.includes('amt')) {
-                state.journalEntries[type][index][field] = Number(value) || 0;
+            if (isCorrect) {
+                span.innerHTML = '<span class="text-green-600">✔</span>';
             } else {
-                state.journalEntries[type][index][field] = value;
+                span.innerHTML = `<span class="text-red-600">❌</span>`;
             }
         };
 
@@ -662,51 +893,74 @@
         const saveWorksheetInput = (id, value) => {
             state.worksheetInputs[id] = Number(value) || 0;
         };
-
-        /** Handles the main navigation button logic */
+        
+        /** Handles the main navigation button logic (REVISED for attempt tracking) */
         const handleNextStep = () => {
             let isValid = false;
             let message = "";
-
+            const maxAttempts = 3;
+            let override = false;
+            
+            // Step 0: Student Info (No validation attempts needed)
             if (state.currentStep === 0) {
                 isValid = validateStudentInfo();
                 message = isValid ? "Information recorded. Preparing Step 1..." : "Please fill in ALL student information fields.";
-            } else if (state.currentStep === 1) {
-                isValid = validateWorksheet();
-                message = isValid ? "Worksheet validated! Proceeding to Step 2..." : "Worksheet validation failed. Check your totals and column balances.";
-            } else if (state.currentStep === 2) {
-                // FS step is print-only simulation
+            } 
+            // Steps 1, 2, 3, 4: Steps requiring validation
+            else if (state.currentStep >= 1 && state.currentStep <= 4) {
+                const currentValidator = 
+                    state.currentStep === 1 ? validateWorksheet :
+                    state.currentStep === 2 ? validateIncomeStatement :
+                    state.currentStep === 3 ? validateStatementOfChangesInEquity :
+                    validateBalanceSheet; // Step 4
+                
+                // Run validation
+                isValid = currentValidator();
+                let attempts = state.validationAttempts[state.currentStep];
+
+                if (!isValid) {
+                    state.validationAttempts[state.currentStep]++;
+                    attempts++; // Update attempts for message/logic consistency
+                    
+                    if (attempts >= maxAttempts) {
+                        // Override: Allow proceed and print
+                        isValid = true;
+                        override = true;
+                        message = `Validation attempts exceeded (${maxAttempts}). Your answers have been recorded for printing. Proceeding to the next step...`;
+                    } else {
+                        // Not yet overridden: Display error and remaining attempts
+                        const remaining = maxAttempts - attempts;
+                        message = `Validation failed (Attempt ${attempts} of ${maxAttempts}). Please correct the marked errors (❌) manually. You have ${remaining} attempts remaining before override.`;
+                    }
+                } else {
+                    // Truly valid
+                    state.validationAttempts[state.currentStep] = 0; // Reset attempts on success
+                    message = `${getStepTitle(state.currentStep)} validated successfully! Proceeding to Step ${state.currentStep + 1}...`;
+                }
+            }
+            // Step 5: Final completion
+            else if (state.currentStep === 5) {
                 isValid = true;
-                message = "Financial Statements prepared. Proceeding to Step 3...";
-            } else if (state.currentStep === 3) {
-                isValid = validateJournalEntries('ADJ');
-                message = isValid ? "Adjusting Entries validated! Proceeding to Step 4..." : "Adjusting Entries validation failed. Check DR/CR balance and accuracy.";
-            } else if (state.currentStep === 4) {
-                isValid = validateJournalEntries('CLS');
-                message = isValid ? "Closing Entries validated! Proceeding to Step 5..." : "Closing Entries validation failed. Check the 4 required entries and amounts.";
-            } else if (state.currentStep === 5) {
-                isValid = validatePCTB();
-                message = isValid ? "Post-Closing TB validated! Proceeding to Step 6..." : "Post-Closing TB validation failed. Check account balances and the final total.";
-            } else if (state.currentStep === 6) {
-                isValid = validateJournalEntries('REV');
-                message = isValid ? "Reversing Entries validated! Task is complete!" : "Reversing Entries validation failed. Check only for entries that meet the reversing criteria.";
+                message = "Generating Final Report...";
             }
 
             if (isValid) {
-                renderMessageBox(message);
-                // Trigger print ONLY for steps 1 through 6
-                if (state.currentStep > 0 && state.currentStep < 7) {
+                renderMessageBox(message, override); // Show success/override message
+                
+                // Trigger print ONLY for steps 1 through 4 (the steps where the output document is complete)
+                if (state.currentStep >= 1 && state.currentStep <= 4) {
                     window.print();
                 }
                 state.currentStep++;
                 renderStep();
             } else {
+                // Failed validation and no override
                 renderMessageBox(message, true);
             }
         };
 
         // --- VALIDATION FUNCTIONS ---
-
+        
         const validateStudentInfo = () => {
             const idNumber = document.getElementById('idNumber').value.trim();
             const classNumber = document.getElementById('classNumber').value.trim();
@@ -722,220 +976,163 @@
         };
 
         const validateWorksheet = () => {
-            const accountData = calculateFSFromWorksheet();
-            const accounts = Array.from(accountData.accountMap.values());
-            const acceptableError = 0.01; // Allow for slight floating point error if calculations were complex
+            const worksheetData = calculateWorksheetAnswers();
+            const accounts = worksheetData.accounts;
+            const acceptableError = 0.01;
+            let overallValid = true;
 
-            let valid = true;
-            let ATB_DR_Total = 0;
-            let ATB_CR_Total = 0;
-            let IS_DR_Total = 0;
-            let IS_CR_Total = 0;
-            let BS_DR_Total = 0;
-            let BS_CR_Total = 0;
-            let ADJ_DR_Total = 0;
-            let ADJ_CR_Total = 0;
-
-            // 1. Check Adjustment Totals
-            state.adjustments.forEach(adj => {
-                ADJ_DR_Total += adj.amount;
-                ADJ_CR_Total += adj.amount;
-            });
-            const inputADJ_DR_Total = accounts.reduce((sum, acc, i) => sum + (state.worksheetInputs[`wks_${i}_ADJ_DR`] || 0), 0);
-            const inputADJ_CR_Total = accounts.reduce((sum, acc, i) => sum + (state.worksheetInputs[`wks_${i}_ADJ_CR`] || 0), 0);
-            if (Math.abs(inputADJ_DR_Total - ADJ_DR_Total) > acceptableError || Math.abs(inputADJ_CR_Total - ADJ_CR_Total) > acceptableError) {
-                console.error("Adjustment totals error");
-                valid = false;
-            }
-
-            // 2. Check ATB, IS, and BS accuracy
+            // 1. Check Adjustment, ATB, IS, and BS for each account row (Only validate inputs, not totals)
             accounts.forEach((acc, i) => {
                 const baseId = `wks_${i}_`;
-                const ATB_DR = acc.ATB_DR;
-                const ATB_CR = acc.ATB_CR;
-                const input_ATB_DR = state.worksheetInputs[baseId + 'ATB_DR'] || 0;
-                const input_ATB_CR = state.worksheetInputs[baseId + 'ATB_CR'] || 0;
+                
+                // Fields to check: [Column Prefix, Correct DR Value, Correct CR Value]
+                const checks = [
+                    ['ADJ', acc.ADJ_DR, acc.ADJ_CR],
+                    ['ATB', acc.ATB_DR, acc.ATB_CR],
+                    ['IS', acc.IS_DR, acc.IS_CR],
+                    ['BS', acc.BS_DR, acc.BS_CR]
+                ];
 
-                // ATB Check
-                if (Math.abs(input_ATB_DR - ATB_DR) > acceptableError || Math.abs(input_ATB_CR - ATB_CR) > acceptableError) {
-                    console.error(`ATB error for ${acc.name}`);
-                    valid = false;
-                }
-
-                ATB_DR_Total += input_ATB_DR;
-                ATB_CR_Total += input_ATB_CR;
-
-                // IS/BS Check
-                if (acc.isFS === 'IS') {
-                    const IS_DR = acc.type === 'expense' ? (ATB_DR - ATB_CR) : 0;
-                    const IS_CR = acc.type === 'revenue' ? (ATB_CR - ATB_DR) : 0;
-                    IS_DR_Total += state.worksheetInputs[baseId + 'IS_DR'] || 0;
-                    IS_CR_Total += state.worksheetInputs[baseId + 'IS_CR'] || 0;
-                    if (Math.abs(IS_DR - (state.worksheetInputs[baseId + 'IS_DR'] || 0)) > acceptableError || Math.abs(IS_CR - (state.worksheetInputs[baseId + 'IS_CR'] || 0)) > acceptableError) {
-                        console.error(`IS error for ${acc.name}`);
-                        valid = false;
+                checks.forEach(([prefix, correctDR, correctCR]) => {
+                    const inputDR = state.worksheetInputs[baseId + prefix + '_DR'] || 0;
+                    const inputCR = state.worksheetInputs[baseId + prefix + '_CR'] || 0;
+                    
+                    let drCorrect = Math.abs(inputDR - correctDR) < acceptableError;
+                    let crCorrect = Math.abs(inputCR - correctCR) < acceptableError;
+                    
+                    // Render validation icon/value only for enabled inputs
+                    if (document.getElementById(baseId + prefix + '_DR') && !document.getElementById(baseId + prefix + '_DR').disabled) {
+                        renderValidation(baseId + prefix + '_DR', drCorrect);
+                        if (!drCorrect) overallValid = false;
                     }
-                } else if (acc.isFS === 'BS') {
-                    const BS_DR = ATB_DR > ATB_CR ? (ATB_DR - ATB_CR) : 0;
-                    const BS_CR = ATB_CR > ATB_DR ? (ATB_CR - ATB_DR) : 0;
-                    BS_DR_Total += state.worksheetInputs[baseId + 'BS_DR'] || 0;
-                    BS_CR_Total += state.worksheetInputs[baseId + 'BS_CR'] || 0;
-                    if (Math.abs(BS_DR - (state.worksheetInputs[baseId + 'BS_DR'] || 0)) > acceptableError || Math.abs(BS_CR - (state.worksheetInputs[baseId + 'BS_CR'] || 0)) > acceptableError) {
-                         console.error(`BS error for ${acc.name}`);
-                         valid = false;
+                    if (document.getElementById(baseId + prefix + '_CR') && !document.getElementById(baseId + prefix + '_CR').disabled) {
+                        renderValidation(baseId + prefix + '_CR', crCorrect);
+                        if (!crCorrect) overallValid = false;
                     }
+                });
+            });
+
+            // 2. Check Subtotals row (TB, ADJ, ATB, IS, BS - sums of all rows above Net Income)
+            const checksSubtotal = [
+                ['wks_SUBTOTAL_TB_DR', worksheetData.TB_DR_SUB],
+                ['wks_SUBTOTAL_TB_CR', worksheetData.TB_CR_SUB],
+                ['wks_SUBTOTAL_ADJ_DR', worksheetData.ADJ_DR_SUB],
+                ['wks_SUBTOTAL_ADJ_CR', worksheetData.ADJ_CR_SUB],
+                ['wks_SUBTOTAL_ATB_DR', worksheetData.ATB_DR_SUB],
+                ['wks_SUBTOTAL_ATB_CR', worksheetData.ATB_CR_SUB],
+                ['wks_SUBTOTAL_IS_DR', worksheetData.IS_SUB_DR],
+                ['wks_SUBTOTAL_IS_CR', worksheetData.IS_SUB_CR],
+                ['wks_SUBTOTAL_BS_DR', worksheetData.BS_SUB_DR], // Balance Sheet Subtotal DR
+                ['wks_SUBTOTAL_BS_CR', worksheetData.BS_SUB_CR]  // Balance Sheet Subtotal CR
+            ];
+
+            checksSubtotal.forEach(([id, correctVal]) => {
+                const inputVal = state.worksheetInputs[id] || 0;
+                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                if (document.getElementById(id)) {
+                    renderValidation(id, isCorrect);
+                    if (!isCorrect) overallValid = false;
                 }
             });
 
-            // 3. Check Final Balances and Net Income
-            if (Math.abs(ATB_DR_Total - ATB_CR_Total) > acceptableError) {
-                console.error("Final ATB totals do not match.");
-                valid = false;
-            }
+            // 3. Check Net Income/Loss row
+            const netIncome = worksheetData.netIncome;
+            
+            const checksNI = [
+                ['wks_NI_IS_DR', netIncome < 0 ? Math.abs(netIncome) : 0],
+                ['wks_NI_IS_CR', netIncome > 0 ? netIncome : 0],
+                ['wks_NI_BS_DR', netIncome > 0 ? netIncome : 0],
+                ['wks_NI_BS_CR', netIncome < 0 ? Math.abs(netIncome) : 0]
+            ];
+            
+            checksNI.forEach(([id, correctVal]) => {
+                const inputVal = state.worksheetInputs[id] || 0;
+                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                renderValidation(id, isCorrect);
+                if (!isCorrect) overallValid = false;
+            });
+            
+            // 4. Check Final Total row (TB, ADJ, ATB, IS, BS - MUST BE CORRECT to proceed)
+            const checksFinal = [
+                ['wks_FINAL_TB_DR', worksheetData.TB_DR_Total], 
+                ['wks_FINAL_TB_CR', worksheetData.TB_CR_Total],
+                ['wks_FINAL_ADJ_DR', worksheetData.ADJ_DR_Total], 
+                ['wks_FINAL_ADJ_CR', worksheetData.ADJ_CR_Total],
+                ['wks_FINAL_ATB_DR', worksheetData.ATB_DR_Total],
+                ['wks_FINAL_ATB_CR', worksheetData.ATB_CR_Total],
+                ['wks_FINAL_IS_DR', worksheetData.IS_DR_Total], // Grand Total IS DR
+                ['wks_FINAL_IS_CR', worksheetData.IS_CR_Total], // Grand Total IS CR
+                ['wks_FINAL_BS_DR', worksheetData.BS_DR_Total], // Grand Total BS DR
+                ['wks_FINAL_BS_CR', worksheetData.BS_CR_Total]  // Grand Total BS CR
+            ];
+            
+            checksFinal.forEach(([id, correctVal]) => {
+                const inputVal = state.worksheetInputs[id] || 0;
+                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                renderValidation(id, isCorrect);
+                if (!isCorrect) overallValid = false;
+            });
 
-            const NetIncome = accountData.netIncome;
-            const IS_DR_Bal = IS_DR_Total - IS_CR_Total;
-            const BS_CR_Bal = BS_CR_Total - BS_DR_Total;
-
-            // Check if student calculated Net Income/Loss correctly
-            if (Math.abs(NetIncome - IS_DR_Bal) > acceptableError || Math.abs(NetIncome - BS_CR_Bal) > acceptableError) {
-                 console.error("Net Income/Loss calculation is wrong.");
-                 // This is a common error, so we allow it to pass if all individual ATB/IS/BS entries are correct, and only flag the final totals check, but for a simple task, we use the final total check.
-            }
-
-            // Check the final row input for the ATB totals
-            const totalIndex = accounts.length;
-            const inputTotalATB_DR = state.worksheetInputs[`wks_${totalIndex}_ATB_DR`] || 0;
-            const inputTotalATB_CR = state.worksheetInputs[`wks_${totalIndex}_ATB_CR`] || 0;
-
-            if (Math.abs(inputTotalATB_DR - ATB_DR_Total) > acceptableError || Math.abs(inputTotalATB_CR - ATB_CR_Total) > acceptableError) {
-                console.error("Student did not enter correct ATB totals in the final row.");
-                valid = false;
-            }
-
-            // Check final IS/BS column equality (after adding the Net Income/Loss row)
-            if (Math.abs((IS_CR_Total + NetIncome) - IS_DR_Total) > acceptableError || Math.abs((BS_DR_Total + NetIncome) - BS_CR_Total) > acceptableError) {
-                // If Net Income is not added to the correct side, this will fail.
-            }
-
-            return valid;
+            return overallValid;
         };
 
-        const validateJournalEntries = (type) => {
-            let valid = true;
-            let correctEntries = [];
-
-            if (type === 'ADJ') {
-                correctEntries = state.adjustments.map(adj => ({
-                    dr_acc: adj.dr,
-                    cr_acc: adj.cr,
-                    dr_amt: adj.amount,
-                    cr_amt: adj.amount,
-                }));
-            } else if (type === 'CLS') {
-                const data = calculateFSFromWorksheet();
-                const totalRevenue = data.totalRevenue;
-                const totalExpenses = data.totalExpenses;
-                const netIncome = data.netIncome;
-                const withdrawals = data.accountMap.get('A, Withdrawals').ATB_DR;
-
-                // 1. Close Revenue
-                correctEntries.push({ dr_acc: 'Service Revenue', cr_acc: 'Income Summary', dr_amt: totalRevenue, cr_amt: totalRevenue });
-                // 2. Close Expenses
-                correctEntries.push({ dr_acc: 'Income Summary', cr_acc: 'Various Expenses', dr_amt: totalExpenses, cr_amt: totalExpenses }); // Use 'Various Expenses' or specific ones
-                // 3. Close Income Summary
-                correctEntries.push({ dr_acc: netIncome > 0 ? 'Income Summary' : 'A, Capital', cr_acc: netIncome > 0 ? 'A, Capital' : 'Income Summary', dr_amt: Math.abs(netIncome), cr_amt: Math.abs(netIncome) });
-                // 4. Close Withdrawals
-                correctEntries.push({ dr_acc: 'A, Capital', cr_acc: 'A, Withdrawals', dr_amt: withdrawals, cr_amt: withdrawals });
-            } else if (type === 'REV') {
-                // Identify reversing entries: Accruals and deferrals recorded using the Income Statement method (P&L method)
-                // A. Prepaid Rent (Deferral/Asset method) - Reversing is appropriate
-                // B. Salaries Payable (Accrual) - Reversing is appropriate
-                // C. Accrued Service Revenue (Accrual) - Reversing is appropriate
-                const adjMap = new Map(state.adjustments.map(adj => [adj.desc, adj]));
-
-                // Reverse B (Prepaid Rent: Rent Exp DR / Prepaid Rent CR) -> Prepaid Rent DR / Rent Exp CR
-                const adjB = adjMap.get("B. One month of rent has expired. (Prepaid Rent was for 6 months, dated Dec 1)");
-                correctEntries.push({ dr_acc: adjB.cr, cr_acc: adjB.dr, dr_amt: adjB.amount, cr_amt: adjB.amount });
-                // Reverse D (Accrued Salaries: Salaries Exp DR / Salaries Payable CR) -> Salaries Payable DR / Salaries Exp CR
-                const adjD = adjMap.get("D. Accrued salaries not yet paid, ₱ 8,000.");
-                correctEntries.push({ dr_acc: adjD.cr, cr_acc: adjD.dr, dr_amt: adjD.amount, cr_amt: adjD.amount });
-                // Reverse F (Accrued Revenue: Accrued Service Revenue DR / Service Revenue CR) -> Service Revenue DR / Accrued Service Revenue CR
-                const adjF = adjMap.get("F. Services rendered but unbilled/uncollected (Accrued Revenue), ₱ 4,000. (Using Accrued Service Revenue account for clarity)");
-                correctEntries.push({ dr_acc: adjF.cr, cr_acc: adjF.dr, dr_amt: adjF.amount, cr_amt: adjF.amount });
-
-                // Set minimum required to pass to 2-3 (as the student might miss one)
-                if (state.journalEntries[type].length < 2) {
-                    renderMessageBox("There must be at least 2 reversing entries.", true);
-                    return false;
-                }
-            }
-
-
-            const studentEntries = state.journalEntries[type].filter(e => e && e.dr_acc && e.cr_acc && e.dr_amt === e.cr_amt && e.dr_amt > 0);
-
-            if (type === 'ADJ' && studentEntries.length !== correctEntries.length) {
-                renderMessageBox(`Expected ${correctEntries.length} adjusting entries, found ${studentEntries.length} valid entries.`, true);
-                return false;
-            }
-
-            if (type === 'CLS' && studentEntries.length !== correctEntries.length) {
-                renderMessageBox(`Expected ${correctEntries.length} closing entries, found ${studentEntries.length} valid entries.`, true);
-                return false;
-            }
-
-            // Simple validation: check if total DR/CR is correct
-            let studentTotalDR = studentEntries.reduce((sum, e) => sum + e.dr_amt, 0);
-            let correctTotalDR = correctEntries.reduce((sum, e) => sum + e.dr_amt, 0);
-
-            if (Math.abs(studentTotalDR - correctTotalDR) > 5) { // Allow slight buffer for minor rounding if needed, but for whole numbers, it should match.
-                renderMessageBox(`The total value of your ${type} entries (₱ ${studentTotalDR.toLocaleString()}) does not match the expected total (₱ ${correctTotalDR.toLocaleString()}).`, true);
-                return false;
-            }
-
-            return valid;
-        };
-
-        const validatePCTB = () => {
-            const data = calculateFSFromWorksheet();
-            const accounts = data.BSAccounts;
-            const endingCapital = data.endingCapital;
+        const validateIncomeStatement = () => {
+            const data = calculateWorksheetAnswers();
             const acceptableError = 0.01;
+            let overallValid = true;
 
-            let valid = true;
-            let inputDRTotal = 0;
-            let inputCRTotal = 0;
+            const checks = [
+                ['is_total_revenue', data.totalRevenue],
+                ['is_total_expense', data.totalExpenses],
+                ['is_net_income', Math.abs(data.netIncome)]
+            ];
 
-            accounts.forEach(acc => {
-                const input = state.pctbInputs[acc.name] || { DR: 0, CR: 0 };
-                let correctBalance = 0;
-                let isCredit = false;
-
-                if (acc.name === 'A, Capital') {
-                    correctBalance = endingCapital;
-                    isCredit = true;
-                } else {
-                    correctBalance = Math.abs(acc.ATB_DR - acc.ATB_CR);
-                    isCredit = acc.ATB_CR > acc.ATB_DR;
-                }
-
-                const inputBalance = input.DR - input.CR;
-
-                if (Math.abs(inputBalance - (isCredit ? -correctBalance : correctBalance)) > acceptableError) {
-                    console.error(`PCTB error for ${acc.name}. Expected: ${correctBalance} ${isCredit ? 'CR' : 'DR'} / Input: ${inputBalance}`);
-                    valid = false;
-                }
-
-                inputDRTotal += input.DR;
-                inputCRTotal += input.CR;
+            checks.forEach(([id, correctVal]) => {
+                const inputVal = state.fsInputs.is[id] || 0;
+                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                
+                renderValidation(id, isCorrect);
+                if (!isCorrect) overallValid = false;
             });
+            
+            return overallValid;
+        };
+        
+        const validateStatementOfChangesInEquity = () => {
+            const data = calculateWorksheetAnswers();
+            const acceptableError = 0.01;
+            let overallValid = true;
 
-            if (Math.abs(inputDRTotal - inputCRTotal) > acceptableError || inputDRTotal === 0) {
-                 console.error(`PCTB final totals do not match. DR: ${inputDRTotal}, CR: ${inputCRTotal}`);
-                 valid = false;
-            }
+            const correctVal = data.endingCapital;
+            const inputVal = state.fsInputs.sce.ending_capital || 0;
+            
+            let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+            
+            renderValidation('sce_ending_capital', isCorrect);
+            if (!isCorrect) overallValid = false;
+            
+            return overallValid;
+        };
+        
+        const validateBalanceSheet = () => {
+            const data = calculateWorksheetAnswers();
+            const acceptableError = 0.01;
+            let overallValid = true;
 
-            return valid;
+            const checks = [
+                ['bs_total_assets', data.BS_DR_Total],
+                ['bs_total_liab_equity', data.BS_CR_Total]
+            ];
+
+            checks.forEach(([id, correctVal]) => {
+                const inputVal = state.fsInputs.bs[id] || 0;
+                let isCorrect = Math.abs(inputVal - correctVal) < acceptableError;
+                
+                renderValidation(id, isCorrect);
+                if (!isCorrect) overallValid = false;
+            });
+            
+            return overallValid;
         };
 
         // --- MAIN RENDERER ---
@@ -944,12 +1141,10 @@
             const stepTitles = [
                 renderStudentInfo,
                 renderWorksheet,
-                renderFinancialStatements,
-                renderAdjustingEntries,
-                renderClosingEntries,
-                renderPCTB,
-                renderReversingEntries,
-                renderCompletion
+                renderIncomeStatement, // Step 2
+                renderStatementOfChangesInEquity, // Step 3
+                renderBalanceSheet, // Step 4
+                renderCompletion // Final Step 5
             ];
 
             const currentStepFunction = stepTitles[state.currentStep];
@@ -960,15 +1155,11 @@
                 document.getElementById('task-container').innerHTML = `<div class="text-center py-10 text-xl text-red-600">Error: Task step not found.</div>`;
             }
 
-             // Disable the next button until input is provided for journal/pctb steps
-             const btn = document.getElementById('next-step-btn');
-             if (state.currentStep >= 3 && state.currentStep <= 6) {
-                 btn.disabled = false; // Trusting the validation to catch empty inputs
-             } else if (state.currentStep === 0) {
-                 btn.disabled = false;
-             } else if (state.currentStep === 1 || state.currentStep === 2) {
-                 btn.disabled = false;
-             }
+            // Button state management
+            const btn = document.getElementById('next-step-btn');
+            if (state.currentStep >= 0) {
+                btn.disabled = false;
+            }
         };
 
         // Initialize the app on load
@@ -979,9 +1170,7 @@
         // Expose functions to the global scope for use in HTML attributes
         window.handleNextStep = handleNextStep;
         window.saveWorksheetInput = saveWorksheetInput;
-        window.saveJournalInput = saveJournalInput;
-        window.savePCTBInput = savePCTBInput;
-        window.addJournalEntryInput = addJournalEntryInput;
+        window.saveFSInput = saveFSInput;
     </script>
 </body>
 </html>
