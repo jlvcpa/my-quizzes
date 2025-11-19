@@ -222,6 +222,7 @@
                         <p class="text-xs text-blue-200 font-serif" id="student-display-name">Student Name</p>
                     </div>
                     <div class="text-right">
+                        <!-- MODIFIED: Directly calls finishAndPreview() which now handles auto-submit flow -->
                         <button onclick="window.finishAndPreview()" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 px-4 rounded shadow font-serif">
                             Submit & Print Results
                         </button>
@@ -282,15 +283,13 @@
         </div>
     </div>
 
-    <!-- Print Preview Modal -->
+    <!-- Print Preview Modal (Buttons are dynamic now) -->
     <div id="print-preview-modal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-95 z-[70] flex justify-center items-start overflow-y-auto pt-10 pb-10">
         <div class="bg-white w-full max-w-4xl rounded-lg shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
                 <h2 class="text-xl font-bold text-gray-800 font-serif">Result Preview</h2>
-                <div class="space-x-2" id="preview-actions">
-                    <button onclick="window.closePreview()" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-serif">Keep Answering</button>
-                    <button onclick="window.finalSubmitAndDownload()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold font-serif">Submit & Download PDF</button>
-                </div>
+                <!-- Dynamic Buttons Injected Here -->
+                <div class="space-x-2" id="preview-actions"></div>
             </div>
             <div id="print-content" class="p-8 overflow-y-auto print-layout">
                 <!-- Report injected here -->
@@ -710,7 +709,8 @@
                 if (timeRemaining <= 0) {
                     clearInterval(timerInterval);
                     alert("Time is up! Submitting your answers.");
-                    window.finishAndPreview(true); // true = isAutoSubmit
+                    // AUTO SUBMIT UPON EXPIRATION
+                    window.finishAndPreview(true);
                 }
             }, 1000);
         }
@@ -843,48 +843,53 @@
             renderQuestionUI();
         }
 
-        // --- GRADING & PRINTING LOGIC ---
+        // --- GRADING, SUBMISSION & PRINTING LOGIC ---
 
-        window.finishAndPreview = function(isAutoSubmit = false) {
+        // NEW LOGIC: Submit first, then preview/download
+        window.finishAndPreview = async function(isAutoSubmit = false) {
             if(!isAutoSubmit) {
-                if(!confirm("Are you sure you want to finish the exam?")) return;
-            }
-            clearInterval(timerInterval); // Stop timer
-            document.getElementById('timer-bar').classList.add('hidden'); // Hide timer
-            document.getElementById('print-preview-modal').classList.remove('hidden');
-            
-            if(isAutoSubmit) {
-                // Disable 'Keep Answering' if time ran out
-                document.querySelector('#preview-actions button:first-child').classList.add('hidden');
+                if(!confirm("Are you sure you want to submit your exam? You cannot change answers after this.")) return;
             }
 
-            generateReportHTML();
-        }
+            // Stop Timer
+            clearInterval(timerInterval);
+            document.getElementById('timer-bar').classList.add('hidden');
 
-        window.closePreview = function() {
-            document.getElementById('print-preview-modal').classList.add('hidden');
-            document.getElementById('timer-bar').classList.remove('hidden');
-            startTimer(); // Resume? Or logic dictates timer continues in bg usually. Here we just reshow.
-            // Note: simple setInterval logic here might behave oddly if paused/resumed without tracking start time. 
-            // For simplicity in this prompt context, we assume user just peeked.
-        }
-        
-        window.finalSubmitAndDownload = async function() {
+            // Prepare Data
             const fullData = {
                 studentInfo: studentInfo,
                 answers: studentAnswers,
-                questions: activeTestParts, // Save questions so we know what they faced
+                questions: activeTestParts,
                 timestamp: new Date().toISOString(),
                 scoreData: calculateScores()
             };
 
-            // 1. Save to Firebase
+            // 1. SUBMIT TO FIREBASE
             const saved = await window.saveResultsToFirebase(fullData);
 
-            // 2. If saved, download PDF
-            if(saved) {
+            if (saved) {
+                // 2. GENERATE REPORT AND SHOW MODAL
+                generateReportHTML();
+                document.getElementById('print-preview-modal').classList.remove('hidden');
+                
+                // 3. UPDATE BUTTONS (No "Keep Answering", Only "Download PDF")
+                const actionsDiv = document.getElementById('preview-actions');
+                actionsDiv.innerHTML = `
+                    <button onclick="window.downloadPDF()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold font-serif shadow-md">
+                        Download PDF Result
+                    </button>
+                `;
+                
+                // Hide the overlay (it was shown by saveResultsToFirebase)
                 document.getElementById('submission-overlay').classList.add('hidden');
-                window.downloadPDF();
+            } else {
+                // If failed, remove overlay so they can try again.
+                document.getElementById('submission-overlay').classList.add('hidden');
+                // Re-enable manual submit if it wasn't auto (auto failed = stuck, but user can see error and try refreshing or manual)
+                if (!isAutoSubmit) {
+                     document.getElementById('timer-bar').classList.remove('hidden');
+                     startTimer();
+                }
             }
         }
 
