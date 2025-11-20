@@ -226,6 +226,9 @@
                 const cleanData = JSON.parse(JSON.stringify(resultData, (k, v) => v === undefined ? null : v));
                 
                 await setDoc(doc(db, collectionName, docName), cleanData);
+                await setDoc(doc(db, "results_list", collectionName), { 
+                    created: new Date().toISOString() 
+                            });
                 return true;
             } catch (error) {
                 console.error("Save Error:", error);
