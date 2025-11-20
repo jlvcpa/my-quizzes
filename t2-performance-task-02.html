@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Accounting Cycle Performance Task</title>
+    <title id="page-title">T2 Performance Task 02</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -112,7 +112,7 @@
 
         <header class="text-center mb-8 pb-4 border-b-4 border-indigo-600 header-bg rounded-t-lg p-4">
             <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-300">
-                Accounting Cycle Performance Task
+                T2 Performance Task 02
             </h1>
             <h2 id="company-name" class="text-xl md:text-2xl font-semibold text-gray-200 mt-1">
                 [Company Name] - Year End
@@ -645,8 +645,8 @@
         const getStepTitle = (step) => {
             const titles = [
                 "Student Login",
-                "Task 1: 10-Column Worksheet",
-                "Task 2: Financial Statements (IS, SCE, BS)",
+                "TASK 1: Create the 10-Column Worksheet Preparation",
+                "Task 2: Create the Financial Statements (IS, SCE, BS)",
                 "Task Complete!"
             ];
             return titles[step] || "Unknown Task";
@@ -654,7 +654,7 @@
         
         const getTask2SubTitle = (subStep) => {
             const subtitles = ["Income Statement (IS)", "Statement of Changes in Equity (SCE)", "Balance Sheet (BS)"];
-            return `Task 2: Financial Statements (Step ${subStep + 1} of 3 - ${subtitles[subStep]})`;
+            return `Task 2: Create the Financial Statements (Step ${subStep + 1} of 3 - ${subtitles[subStep]})`;
         };
 
         const renderMessageBox = (message, isError = false) => {
@@ -838,14 +838,14 @@
             if (taskNum === 1) {
                 competency = "To create 10-column worksheet by accurately determining and applying necessary adjustments, then integrating these with unadjusted amounts to complete the worksheet with correct financial data.";
             } else if (taskNum === 2) {
-                competency = "To prepare the income statement, statement of changes in equity, and balance sheet by accurately transferring the adjusted figures from the 10-column worksheet into the prescribed financial statement formats.";
+                competency = "To create the income statement, statement of changes in equity, and balance sheet by accurately transferring the adjusted figures from the 10-column worksheet into the prescribed financial statement formats.";
             } else {
                 return '';
             }
 
             // Grading Criteria Descriptions
-            const advancedCriteria = "Excellent performance. All worksheet/financial statement entries are accurate and professionally formatted. Demonstrated complete mastery of the accounting cycle, including complex adjustments and financial reporting standards. (95-100%)";
-            const proficientCriteria = "Good performance. Most worksheet/financial statement entries are accurate with minor errors (e.g., small transposition errors or minor calculation mistakes). Demonstrated a solid understanding of the accounting cycle. (85-94.9%)";
+            const advancedCriteria = "Excellent performance. Worksheet and/or financial statement entries are all accurate and professionally formatted. Demonstrated complete mastery of the accounting cycle, including complex adjustments and financial reporting standards. (95-100%)";
+            const proficientCriteria = "Good performance. Worksheet and/or financial statement entries are mostly accurate with minor errors (e.g., small transposition errors or minor calculation mistakes). Demonstrated a solid understanding of the accounting cycle. (85-94.9%)";
             const developingCriteria = "Acceptable performance. Several errors are present in entries and/or totals. Demonstrates a basic understanding of the accounting cycle steps but needs improvement in accuracy and detail. (75-84.9%)";
             const interventionCriteria = "Unacceptable performance. Significant errors are present in all major sections of the worksheet and/or financial statements. Demonstrates a lack of basic understanding of the accounting cycle. (<75%)";
 
@@ -1069,7 +1069,7 @@
 
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700">TASK 1: 10-Column Worksheet Preparation</h3>
+                    <h3 class="text-2xl font-bold text-indigo-700">TASK 1: Create the 10-Column Worksheet Preparation</h3>
                     ${renderRubric(1)} <!-- Rubric for Task 1 -->
                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <h4 class="font-bold text-lg text-blue-700 mb-2">Required Adjustments:</h4>
@@ -1277,7 +1277,7 @@
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
                     <h3 class="text-3xl font-bold text-indigo-800 mb-3">CONGRATULATIONS!</h3>
-                    <p class="text-xl text-gray-700 mb-6">You have successfully completed the Accounting Cycle Performance Task.</p>
+                    <p class="text-xl text-gray-700 mb-6">You have successfully completed the T2 Performance Task 02.</p>
                     <p class="text-md text-green-600 font-bold mb-6">✓ Your results have been saved to the database.</p>
 
                     <!-- NEW: Score Summary Display -->
@@ -1285,12 +1285,12 @@
                         <h4 class="font-semibold text-xl text-indigo-800 border-b pb-2 mb-4">Task Performance Summary:</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-1 border-r pr-4">
-                                <h5 class="font-bold text-lg text-indigo-600">Task 1: 10-Column Worksheet</h5>
+                                <h5 class="font-bold text-lg text-indigo-600">TASK 1: Create the 10-Column Worksheet Preparation</h5>
                                 <p class="text-sm">Correct Checks: <strong>${score1.score} / ${score1.total}</strong></p>
                                 <p class="text-xl mt-1">Grade: <span class="font-extrabold p-1 rounded-md ${score1.grade === 'A' ? 'bg-green-200 text-green-800' : score1.grade === 'P' ? 'bg-blue-200 text-blue-800' : score1.grade === 'D' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'}">${score1.grade}</span> (${score1.percentage}%)</p>
                             </div>
                             <div class="col-span-1 pl-4">
-                                <h5 class="font-bold text-lg text-indigo-600">Task 2: Financial Statements</h5>
+                                <h5 class="font-bold text-lg text-indigo-600">Task 2: Create the Financial Statements</h5>
                                 <p class="text-sm">Correct Checks: <strong>${score2.score} / ${score2.total}</strong></p>
                                 <p class="text-xl mt-1">Grade: <span class="font-extrabold p-1 rounded-md ${score2.grade === 'A' ? 'bg-green-200 text-green-800' : score2.grade === 'P' ? 'bg-blue-200 text-blue-800' : score2.grade === 'D' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'}">${score2.grade}</span> (${score2.percentage}%)</p>
                             </div>
@@ -1587,7 +1587,7 @@
                 }
                 return; 
             }
-            else if (state.currentStep === 2) { // Task 2: Financial Statements (IS, SCE, BS)
+            else if (state.currentStep === 2) { // Task 2: Create the Financial Statements (IS, SCE, BS)
 
                 let currentSubStepName = ['Income Statement (IS)', 'Statement of Changes in Equity (SCE)', 'Balance Sheet (BS)'][state.task2SubStep];
                 let subStepValidator;
