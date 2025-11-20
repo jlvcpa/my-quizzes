@@ -632,7 +632,6 @@
             { id: 167, type: 'Theory', topic: 'Step 9', q: 'If the Post-Closing Trial Balance does *not* balance, what is the most likely error?', options: ['An error was made in posting the adjusting entries.', 'An error was made in posting the closing entries.', 'An error was made in preparing the Income Statement.', 'An error was made in journalizing daily transactions.'], a: 'An error was made in posting the closing entries.', s: 'This is the most common reason, as the ATB (which comes before closing) is assumed to have balanced.' },
             { id: 168, type: 'Theory', topic: 'Step 9', q: 'The accounts on the Post-Closing Trial Balance are identical to the accounts on which financial statement?', options: ['The Income Statement.', 'The Balance Sheet.', 'The Statement of Changes in Equity.', 'The Statement of Cash Flows.'], a: 'The Balance Sheet.', s: 'The PCTB is essentially a trial balance of the Balance Sheet accounts.' },
             { id: 169, type: 'Problem', topic: 'Step 9', q: 'ATB shows: Cash ₱10k, Accounts Receivable ₱5k, Supplies ₱1k, Accounts Payable ₱3k, Capital ₱13k. (Revenues/Expenses/Drawings balanced). What are total debits on the PCTB?', options: ['₱13,000', '₱15,000', '₱16,000', '₱29,000'], a: '₱16,000', s: 'The permanent debit accounts are Cash (₱10k) + A/R (₱5k) + Supplies (₱1k) = ₱16,000.' },
-            { id: 170, type: 'Problem', topic: 'Step 9', q: 'Using Q169 data, what are the total credits on the PCTB?', options: ['₱3,000', '₱13,000', '₱16,000', '₱29,000'], a: '₱16,000', s: 'The permanent credit accounts are A/P (₱3k) + Capital (₱13k) = ₱16,000. Debits equal credits.' },
             
             // Reversing Entries - 30 Questions
             { id: 171, type: 'Theory', topic: 'Step 10', q: 'When are reversing entries prepared?', options: ['On the last day of the accounting period.', 'On the first day of the new accounting period.', 'After preparing the income statement.', 'Before preparing closing entries.'], a: 'On the first day of the new accounting period.', s: 'They are dated the day after the previous period ends (e.g., January 1).' },
@@ -924,13 +923,6 @@
 
             let html = `
             <div class="text-center border-b-2 border-gray-800 pb-4 mb-6 font-serif">
-              <div class="flex justify-center mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-16 w-16 text-blue-900">
-                        <path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 001.402 10.06a.75.75 0 01-.231-1.337A60.653 60.653 0 0111.7 2.805z" />
-                        <path d="M13.06 15.473a48.45 48.45 0 017.666-3.282c.134 1.414.22 2.843.255 4.286a.75.75 0 01-.46.71 47.878 47.878 0 00-8.105 4.342.75.75 0 01-.832 0 47.877 47.877 0 00-8.104-4.342.75.75 0 01-.461-.71c.035-1.442.121-2.87.255-4.286A48.4 48.4 0 0110.94 15.473a.75.75 0 001.06 0z" />
-                        <path d="M4.75 17.25a.75.75 0 01.75.75v2.25c0 .138.112.25.25.25h2.5a.75.75 0 010 1.5h-2.5a1.75 1.75 0 01-1.75-1.75v-2.25a.75.75 0 01.75-.75z" />
-                    </svg>
-              </div>
               <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" />
               <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
               <h1 class="text-xl font-bold uppercase mt-2">T2 Summative Test 01</h1>
