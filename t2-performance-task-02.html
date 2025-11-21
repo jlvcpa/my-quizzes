@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">T2 Performance Task 02</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        /* HIDE SPINNERS (Arrow up/down) in inputs */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+
+        /* Style for inputs in tables */
+        .table-input {
+            width: 100%;
+            padding: 4px 20px 4px 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: right;
+            font-size: 0.85rem;
+            background-color: #f0f9ff;
+        }
+        .text-input {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background-color: #f0f9ff;
+        }
+        .fs-input {
+            border: 1px solid #9ca3af;
+            background-color: #f9fafb;
+            padding: 4px 20px 4px 8px;
+            text-align: right;
+            border-radius: 6px;
+            font-weight: 500;
+            width: 100%; /* changed to full width of container */
+            font-size: 0.85rem;
+        }
+        .header-bg { background-color: #0f172a; color: white; }
+        .footer-bg { background-color: #334155; color: white; }
+        .validation-icon {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-left: 5px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .rubric-box p, .rubric-box table {
+            line-height: 1.4;
+        }
+
+        /* Sticky Header Logic */
+        .sticky-task-header {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* Negative margins to span full width of container padding */
+            margin-left: -1rem; 
+            margin-right: -1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .sticky-task-header {
+                margin-left: -2.5rem;
+                margin-right: -2.5rem;
+                padding-left: 2.5rem;
+                padding-right: 2.5rem;
+            }
+        }
+
+        /* Stacking context for sticky headers */
+        #task1-header-container { z-index: 40; }
+        #task2-header-container { z-index: 50; } /* Higher Z-index to replace Task 1 */
+
+        /* Print-specific styles */
+        @media print {
+            .no-print { display: none !important; }
+            
+            .printable-area { 
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            body { background-color: white; color: black; margin: 0; } 
+            .header-bg, .footer-bg { background-color: #fff !important; color: #000 !important; }
+            
+            /* Remove blue line in header for print */
+            #main-header {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                margin-bottom: 5px !important;
+            }
+
+            /* Inputs in print */
+            .table-input, .text-input, .fs-input {
+                border: none !important; 
+                border-bottom: 1px solid #ccc !important;
+                background-color: white !important;
+                color: black !important;
+                font-size: 8pt !important; 
+                padding: 2px 15px 2px 2px !important;
+                white-space: nowrap; 
+                overflow: visible !important;
+            }
+
+            /* Remove sticky behavior on print */
+            .sticky-task-header {
+                position: static !important;
+                background-color: white !important;
+                border-bottom: none !important;
+            }
+            /* Hide buttons in print */
+            .sticky-btn-area { display: none !important; }
+
+            /* FORCE Validation Icons to Show */
+            .validation-icon { display: block !important; position: absolute; right: 0; top: 2px; }
+
+            /* Rubric styling for print */
+            .rubric-box {
+                background-color: white !important;
+                border: 1px solid black !important;
+                page-break-inside: avoid;
+            }
+            .rubric-box th, .rubric-box td {
+                border: 1px solid black !important;
+                color: black !important;
+                font-size: 7pt !important;
+            }
+            
+            /* Force Horizontal Alignment for Task 2 Parts */
+            .print-flex-row {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                gap: 10px !important;
+            }
+            .print-w-third {
+                width: 32% !important;
+            }
+
+            #student-print-info { display: block !important; margin-bottom: 10px; }
+            
+            /* Increase Instruction Font Size */
+            #print-instructions { 
+                font-size: 0.875rem !important; /* Equivalent to text-sm */
+                line-height: 1.25rem !important;
+            }
+
+            #task-header-title { display: block !important; color: black !important; }
+            
+            /* Footer Layout for Print - Fixed at bottom */
+            #print-footer {
+                display: block !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                background: white;
+                padding: 5px 20px 10px 20px;
+                font-size: 10pt;
+                z-index: 9999;
+            }
+            
+            /* Content padding to prevent overlap with footer */
+            #task-container {
+                margin-bottom: 80px; /* Space for fixed footer */
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Timer Display -->
+    <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold">
+        Task Time Remaining: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app" class="max-w-7xl mx-auto printable-area bg-white shadow-xl rounded-xl p-6 md:p-10 border border-gray-200 relative">
+
+        <header id="main-header" class="text-center mb-8 pb-4 border-b-4 border-indigo-600 header-bg rounded-t-lg p-4">
+            <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" onerror="this.style.display='none'"/>
+            <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-300">
+                T2 Performance Task 02
+            </h1>
+            <h2 id="company-name" class="text-xl md:text-2xl font-semibold text-gray-200 mt-1 hidden">[Company Name]</h2>
+            <p class="text-sm font-light text-gray-400 mt-2 hidden">Sole Proprietorship Service Business | For the Year Ended December 31, 2024</p>
+            <h3 id="task-header-title" class="text-xl font-bold text-white mt-4 hidden print:block"></h3>
+        </header>
+        
+        <!-- Student Info for Print -->
+        <div id="student-print-info" class="hidden mb-4 rounded print:block print:w-full"></div>
+
+        <!-- Instructions Container (Hidden by default, moved here for print) -->
+        <div id="print-instructions" class="hidden mb-4 text-sm italic border p-2"></div>
+
+        <!-- Dynamic Content Area -->
+        <div id="task-container">
+            <!-- Content rendered here -->
+        </div>
+
+        <!-- Bottom Message Area (Button moved to top headers) -->
+        <div id="action-area" class="mt-8 pt-6 border-t border-gray-300 no-print flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div id="message-box" class="text-lg font-medium text-gray-700 min-h-8 w-full text-center md:text-left"></div>
+            <!-- The 'Start Login' button will live here for step 0, then disappear -->
+            <button id="login-step-btn" onclick="window.handleNextStep()" class="hidden px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Login to Start Task
+            </button>
+        </div>
+
+        <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg rounded-b-lg p-4 text-center no-print">
+            <p id="footer-instructions-text" class="text-sm text-gray-400">
+                Instruction: Complete all required fields. <br>
+                Enter amounts with two decimal places but without commas. <br>
+                Round off centavos to the nearest peso. <br>
+                After validating each task or sub-step, proceed to the next. <br>
+                Version 2025.11.22 031619
+            </p>
+        </footer>
+
+        <!-- Print Specific Footer -->
+        <div id="print-footer" class="hidden">
+            <div class="flex justify-between font-bold mb-1 text-black text-sm">
+                <span class="text-left">FABM 1</span>
+                <span class="text-right">Page 1 of 1</span> 
+            </div>
+            <div class="border border-black p-1 text-center text-xs text-black mx-auto w-2/3">
+                <p class="font-bold m-0">4Cs: Christ-centeredness, Competence, Character, Compassion</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK and Main Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        // 1. Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+            authDomain: "jlvcpa-quizzes.firebaseapp.com",
+            projectId: "jlvcpa-quizzes",
+            storageBucket: "jlvcpa-quizzes.appspot.com",
+            messagingSenderId: "629158256557",
+            appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Validation Logic (Unchanged) ---
+        async function validateStudentLogin(attendanceId, studentId) {
+            if (!attendanceId || !studentId) return { success: false, message: "Missing Attendance ID or Student ID." };
+            try {
+                const docRef = doc(db, "attendance", attendanceId);
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists()) return { success: false, message: "Attendance Record not found (Invalid Link/ID)." };
+                const data = docSnap.data();
+                const studentsArray = data.students;
+                if (!Array.isArray(studentsArray)) return { success: false, message: "Data error." };
+                const student = studentsArray.find(s => String(s.Idnumber) === String(studentId));
+                if (!student) return { success: false, message: "ID Number not found." };
+                const status = student.status || "";
+                const isPresent = status.includes("✔") || status.includes("✓") || status.includes("✔️");
+                if (isPresent) {
+                    return {
+                        success: true, message: "Student Verified",
+                        data: { cn: student.CN || "", fullName: student.fullName || "", section: data.section || "", idNumber: studentId }
+                    };
+                } else {
+                    return { success: false, message: `Student is marked absent (Status: ${status}). Login denied.` };
+                }
+            } catch (error) {
+                console.error("Firebase Validation Error:", error);
+                return { success: false, message: "Connection Error: " + error.message };
+            }
+        }
+
+        async function saveExamResults(attendanceId, resultData) {
+            const activityName = "T2 Performance Task 02";
+            const collectionName = `results_${activityName}_${attendanceId}`;
+            const info = resultData.studentInfo;
+            const docName = `students.${info.classNumber}-students.${info.idNumber}-${info.fullName}`;
+            try {
+                const cleanData = JSON.parse(JSON.stringify(resultData, (k, v) => v === undefined ? null : v));
+                await setDoc(doc(db, collectionName, docName), cleanData);
+                await setDoc(doc(db, "results_list", collectionName), { created: new Date().toISOString() });
+                
+                // Clear local storage on successful save to prevent re-entry if refreshed after submit
+                localStorage.removeItem(`exam_end_time_${attendanceId}`);
+                return true;
+            } catch (error) {
+                console.error("Save Error:", error);
+                throw error;
+            }
+        }
+
+        // --- Grading ---
+        const gradingCriteria = { A: { min: 95, max: 100 }, P: { min: 85, max: 94.9 }, D: { min: 75, max: 84.9 }, IR: { min: 0, max: 74.9 } };
+        const calculateScoreAndGrade = (correct, total) => {
+            if (total === 0) return { score: 0, total: 0, percentage: 0, grade: 'N/A' };
+            const percentage = (correct / total) * 100;
+            let grade = 'IR';
+            if (percentage >= gradingCriteria.A.min) grade = 'A';
+            else if (percentage >= gradingCriteria.P.min) grade = 'P';
+            else if (percentage >= gradingCriteria.D.min) grade = 'D';
+            return { score: correct, total: total, percentage: Math.round(percentage * 10) / 10, grade: grade };
+        };
+
+        // --- State ---
+        let state = {
+            currentStep: 0, 
+            examSubStep: 0, // 0 = Task 1 (Worksheet), 1 = Task 2 (FS)
+            attendanceId: "", studentInfo: null,
+            initialTB: [], adjustments: [], newAccounts: [], // Added newAccounts to state
+            worksheetInputs: {}, fsInputs: { is: {}, sce: {}, bs: {} },
+            validationAttempts: { 1: 0, 2: 0 }, generatedAnswers: null, task1Score: null, task2Score: null,
+            isTask1Locked: false, isTask2Locked: false
+        };
+
+        // --- Robust Timer Logic ---
+        window.examDurationMins = 0;
+        let timerInterval = null;
+
+        window.disableAllInputs = () => {
+            document.querySelectorAll('input, button').forEach(el => {
+                if(el.id !== 'login-step-btn' && el.id !== 'login-btn' && !el.classList.contains('validate-btn')) {
+                    el.disabled = true;
+                    el.classList.add('cursor-not-allowed', 'opacity-75');
+                }
+            });
+            // Disable valid buttons
+            document.querySelectorAll('.validate-btn').forEach(btn => {
+                if (btn.innerText !== "Print Final Report to PDF") {
+                    btn.disabled = true;
+                    btn.innerText = "TASK TIMEOUT.";
+                }
+            });
+        };
+
+        function updateTimerDisplay() {
+            const displayElement = document.getElementById('countdown');
+            const boxElement = document.getElementById('timer-box');
+            
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            const endTime = localStorage.getItem(storageKey);
+            
+            if (!endTime || !displayElement) return;
+
+            const now = Date.now();
+            const distance = parseInt(endTime) - now;
+            
+            if (distance < 0) {
+                displayElement.textContent = "00:00:00";
+                stopTimer();
+                window.disableAllInputs();
+                // Auto submit if time is up
+                if (state.currentStep === 1) { // Only auto submit if in the task phase
+                      window.finishAndPreview(true);
+                }
+                return;
+            }
+
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            displayElement.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            
+            if (distance < 300000) { // Less than 5 mins
+                boxElement?.classList.remove('bg-red-800'); boxElement?.classList.add('animate-pulse', 'bg-red-600');
+            } else {
+                boxElement?.classList.remove('animate-pulse', 'bg-red-600'); boxElement?.classList.add('bg-red-800');
+            }
+        }
+        
+        function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+        
+        function startTimer() {
+            if (timerInterval) stopTimer();
+            
+            // Robust Timer: Store target End Time in LocalStorage
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            let endTime = localStorage.getItem(storageKey);
+            
+            if (!endTime) {
+                // If no end time exists, calculate it: Current Time + Duration
+                const now = Date.now();
+                const durationMs = window.examDurationMins * 60 * 1000;
+                endTime = now + durationMs;
+                localStorage.setItem(storageKey, endTime);
+            }
+            
+            updateTimerDisplay(); // Initial call
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        const checkUrlParametersAndInit = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const attId = urlParams.get('att');
+            const duration = urlParams.get('dur'); 
+            const expiration = urlParams.get('exp'); // Get Expiration Timestamp
+
+            const isValidDuration = duration && !isNaN(parseInt(duration)) && parseInt(duration) > 0;
+            const isValidExpiration = expiration && !isNaN(parseInt(expiration));
+
+            // Check for missing parameters
+            if (!attId || !isValidDuration || !isValidExpiration) {
+                document.getElementById('task-container').innerHTML = `<div class="text-center py-16 bg-red-100 border border-red-400 rounded-xl"><h3 class="text-2xl font-bold text-red-700 mb-4">ACCESS DENIED</h3><p>Missing parameters in the link.</p></div>`;
+                const btn = document.getElementById('login-step-btn');
+                if(btn) btn.disabled = true;
+                return;
+            }
+
+            // Check for Expiration
+            const now = Date.now();
+            if (now > parseInt(expiration)) {
+                document.getElementById('task-container').innerHTML = `<div class="text-center py-16 bg-red-100 border border-red-400 rounded-xl"><h3 class="text-2xl font-bold text-red-700 mb-4">LINK EXPIRED</h3><p>This activity link has expired and is no longer valid.</p></div>`;
+                const btn = document.getElementById('login-step-btn');
+                if(btn) btn.disabled = true;
+                return;
+            }
+
+            state.attendanceId = attId;
+            window.examDurationMins = parseInt(duration);
+            
+            // Check if timer is already running (reloaded page)
+            const storageKey = `exam_end_time_${attId}`;
+            if(localStorage.getItem(storageKey)) {
+                 // Ideally we would also save/load state.initialTB here to allow full reload support.
+                 // For now, we stick to the prompt: timer logic. 
+                 startTimer(); 
+            }
+            
+            renderStep();
+        };
+
+        // --- Global Submission ---
+        window.finishAndPreview = async (isAutoSubmit = false) => {
+            if (!state.studentInfo) return;
+            
+            // Ensure scores are captured if forced finish
+            if (!state.task2Score) {
+                const finalTask2Result = aggregateFinancialStatementScores();
+                state.task2Score = finalTask2Result.scoreData;
+            }
+            if (!state.task1Score) {
+                const task1Result = validateWorksheet(false);
+                state.task1Score = task1Result.scoreData;
+            }
+            
+            renderMessageBox("Task complete. Saving results...", false);
+            stopTimer();
+            try {
+                const fullResultData = {
+                    studentInfo: state.studentInfo, 
+                    initialTB: state.initialTB, 
+                    adjustments: state.adjustments,
+                    newAccounts: state.newAccounts, // Added newAccounts to saved data for print reconstruction
+                    worksheetInputs: state.worksheetInputs, 
+                    fsInputs: state.fsInputs,
+                    validationAttempts: { task1: state.validationAttempts[1] || 0, task2: state.validationAttempts[2] || 0 },
+                    task1Score: state.task1Score, 
+                    task2Score: state.task2Score, 
+                    timestamp: new Date().toISOString()
+                };
+                await saveExamResults(state.attendanceId, fullResultData);
+                state.currentStep = 2; // Move to Summary/Print view
+                renderStep(); 
+            } catch (e) {
+                renderMessageBox("Error saving results: " + e.message, true);
+                state.currentStep = 2; renderStep();
+            }
+        };
+
+        // --- Data Generation (Same logic as before) ---
+        const rand = (min, max) => Math.round((Math.random() * (max - min) + min) / 1000) * 1000;
+        const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const generateDynamicData = () => {
+            const familyName = getFamilyName();
+            const CAPITAL_ACCOUNT = `${familyName}, Capital`;
+            const WITHDRAWALS_ACCOUNT = `${familyName}, Withdrawals`;
+            let totalDR = 0; let totalCR = 0;
+            const generatedTB = [
+                { name: 'Cash', type: 'asset', isFS: 'BS', isClosing: false, amount: rand(80000, 150000) },
+                { name: 'Accounts Receivable', type: 'asset', isFS: 'BS', isClosing: false, amount: rand(20000, 50000) },
+                { name: 'Supplies', type: 'asset', isFS: 'BS', isClosing: false, amount: rand(10000, 30000) },
+                { name: 'Prepaid Rent', type: 'asset', isFS: 'BS', isClosing: false, amount: rand(40000, 80000) },
+                { name: 'Equipment', type: 'asset', isFS: 'BS', isClosing: false, amount: rand(180000, 250000) },
+                { name: 'Accumulated Depreciation-Equip.', type: 'contra-asset', isFS: 'BS', isClosing: false, amount: rand(10000, 40000) },
+                { name: 'Accounts Payable', type: 'liability', isFS: 'BS', isClosing: false, amount: rand(10000, 20000) },
+                { name: 'Unearned Service Revenue', type: 'liability', isFS: 'BS', isClosing: false, amount: rand(5000, 15000) },
+                { name: WITHDRAWALS_ACCOUNT, type: 'equity', isFS: 'BS', isClosing: true, amount: rand(40000, 60000) },
+                { name: 'Service Revenue', type: 'revenue', isFS: 'IS', isClosing: true, amount: rand(150000, 250000) },
+                { name: 'Salaries Expense', type: 'expense', isFS: 'IS', isClosing: true, amount: rand(25000, 45000) },
+                { name: 'Utilities Expense', type: 'expense', isFS: 'IS', isClosing: true, amount: rand(8000, 12000) },
+            ];
+            generatedTB.forEach(acc => {
+                const isWithdrawal = acc.name === WITHDRAWALS_ACCOUNT;
+                if (acc.type === 'asset' || isWithdrawal || acc.type === 'expense') totalDR += acc.amount; else totalCR += acc.amount;
+            });
+            let capitalAmount = totalDR - totalCR;
+            if (capitalAmount < 100000) { 
+                const revAcc = generatedTB.find(a => a.name === 'Service Revenue');
+                revAcc.amount += 150000;
+                capitalAmount = totalDR - (totalCR + 150000); 
+            }
+            const strictTBAccounts = [
+                'Cash', 'Accounts Receivable', 'Supplies', 'Prepaid Rent', 'Equipment',
+                'Accumulated Depreciation-Equip.', 'Accounts Payable', 'Unearned Service Revenue',
+                CAPITAL_ACCOUNT, WITHDRAWALS_ACCOUNT, 'Service Revenue', 'Salaries Expense', 'Utilities Expense'
+            ];
+            let finalTB = [];
+            let currentDRTotal = 0; let currentCRTotal = 0;
+            strictTBAccounts.forEach(name => {
+                let acc;
+                if (name === CAPITAL_ACCOUNT) acc = { name: CAPITAL_ACCOUNT, type: 'equity', isFS: 'BS', isClosing: false, amount: capitalAmount };
+                else acc = generatedTB.find(a => a.name === name);
+                if (acc) {
+                    const isWithdrawal = acc.name === WITHDRAWALS_ACCOUNT;
+                    const isDR = (acc.type === 'asset' || isWithdrawal || acc.type === 'expense');
+                    const TB_DR = isDR ? acc.amount : 0;
+                    const TB_CR = isDR ? 0 : acc.amount;
+                    finalTB.push({ name: acc.name, type: acc.type, isFS: acc.isFS, isClosing: acc.isClosing, TB_DR: TB_DR, TB_CR: TB_CR });
+                    currentDRTotal += TB_DR; currentCRTotal += TB_CR;
+                }
+            });
+            finalTB.push({ name: 'Totals', TB_DR: currentDRTotal, TB_CR: currentCRTotal });
+            state.initialTB = finalTB;
+            const initialSupplies = finalTB.find(a => a.name === 'Supplies').TB_DR;
+            const initialPrepaidRent = finalTB.find(a => a.name === 'Prepaid Rent').TB_DR;
+            const initialUnearnedRev = finalTB.find(a => a.name === 'Unearned Service Revenue').TB_CR;
+            const prepaidMonths = randInt(6, 12);
+            const adjAmountA = rand(Math.floor(initialSupplies * 0.4), Math.floor(initialSupplies * 0.7));
+            const adjAmountB = Math.round(initialPrepaidRent / prepaidMonths);
+            const adjAmountC = rand(10000, 20000);
+            const adjAmountD = rand(5000, 10000);
+            const adjAmountE = rand(Math.floor(initialUnearnedRev * 0.5), Math.floor(initialUnearnedRev * 0.8));
+            const adjAmountF = rand(3000, 7000);
+            state.adjustments = [
+                { desc: `A. Supplies on hand, counted on Dec 31, ₱ ${formatPHP(initialSupplies - adjAmountA)}. (Initial Supplies ₱ ${formatPHP(initialSupplies)})`, dr: 'Supplies Expense', cr: 'Supplies', amount: adjAmountA },
+                { desc: `B. One month of rent has expired. (Prepaid Rent of ₱ ${formatPHP(initialPrepaidRent)} was for ${prepaidMonths} months)`, dr: 'Rent Expense', cr: 'Prepaid Rent', amount: adjAmountB },
+                { desc: `C. Depreciation of equipment for the year, ₱ ${formatPHP(adjAmountC)}.`, dr: 'Depreciation Expense', cr: 'Accumulated Depreciation-Equip.', amount: adjAmountC },
+                { desc: `D. Accrued salaries not yet paid, ₱ ${formatPHP(adjAmountD)}.`, dr: 'Salaries Expense', cr: 'Salaries Payable', amount: adjAmountD },
+                { desc: `E. Unearned Service Revenue earned during the period, ₱ ${formatPHP(adjAmountE)}.`, dr: 'Unearned Service Revenue', cr: 'Service Revenue', amount: adjAmountE },
+                { desc: `F. Services rendered but unbilled/uncollected, ₱ ${formatPHP(adjAmountF)}.`, dr: 'Accrued Service Revenue', cr: 'Service Revenue', amount: adjAmountF },
+            ];
+            state.newAccounts = [
+                { name: 'Accrued Service Revenue', type: 'asset', isFS: 'BS', isClosing: false },
+                { name: 'Salaries Payable', type: 'liability', isFS: 'BS', isClosing: false },
+                { name: 'Supplies Expense', type: 'expense', isFS: 'IS', isClosing: true },
+                { name: 'Rent Expense', type: 'expense', isFS: 'IS', isClosing: true },
+                { name: 'Depreciation Expense', type: 'expense', isFS: 'IS', isClosing: true },
+            ];
+        };
+
+        const getFamilyName = () => {
+            if (!state.studentInfo || !state.studentInfo.fullName) return 'A';
+            return state.studentInfo.fullName.split(',')[0].trim() || 'A'; 
+        };
+        const formatPHP = (num) => (typeof num !== 'number' || isNaN(num) || num === 0) ? '' : (Math.round(num * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const getAccountId = (name) => name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        const getStepTitle = (step) => ["Student Login", "Accounting Tasks", "Task Complete!"][step] || "";
+        const renderMessageBox = (message, isError = false) => {
+            const box = document.getElementById('message-box');
+            box.className = `text-lg font-medium min-h-8 w-full text-center md:text-left ${isError ? 'text-red-600' : 'text-green-600'}`;
+            box.innerHTML = message;
+        };
+        const updateCompanyName = (fullName) => {
+            const header = document.getElementById('company-name');
+            const parts = fullName.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            header.innerText = parts.length >= 1 ? `${parts[0]} Accounting Services` : `Sole Proprietor Accounting Services`;
+        };
+
+        // --- Calculations ---
+        const calculateWorksheetAnswers = () => {
+            const familyName = getFamilyName();
+            const CAPITAL_ACCOUNT = `${familyName}, Capital`;
+            const WITHDRAWALS_ACCOUNT = `${familyName}, Withdrawals`;
+            const accountMap = new Map();
+            state.initialTB.filter(a => a.name !== 'Totals').forEach(acc => accountMap.set(acc.name, { ...acc, ADJ_DR: 0, ADJ_CR: 0, ATB_DR: acc.TB_DR, ATB_CR: acc.TB_CR }));
+            state.newAccounts.forEach(newAcc => { if (!accountMap.has(newAcc.name)) accountMap.set(newAcc.name, { ...newAcc, TB_DR: 0, TB_CR: 0, ADJ_DR: 0, ADJ_CR: 0, ATB_DR: 0, ATB_CR: 0 }); });
+            accountMap.get('Accrued Service Revenue').type = 'asset'; accountMap.get('Accrued Service Revenue').isFS = 'BS';
+            accountMap.get('Salaries Payable').type = 'liability'; accountMap.get('Salaries Payable').isFS = 'BS';
+            accountMap.get('Supplies Expense').type = 'expense'; accountMap.get('Supplies Expense').isFS = 'IS';
+            accountMap.get('Rent Expense').type = 'expense'; accountMap.get('Rent Expense').isFS = 'IS';
+            accountMap.get('Depreciation Expense').type = 'expense'; accountMap.get('Depreciation Expense').isFS = 'IS';
+            const capitalAccInMap = accountMap.get(CAPITAL_ACCOUNT); if(capitalAccInMap) capitalAccInMap.isFS = 'BS';
+            const withdrawalsAccInMap = accountMap.get(WITHDRAWALS_ACCOUNT); if(withdrawalsAccInMap) withdrawalsAccInMap.isFS = 'BS';
+
+            let totalADJ_DR = 0; let totalADJ_CR = 0;
+            state.adjustments.forEach(adj => {
+                const drAcc = accountMap.get(adj.dr); const crAcc = accountMap.get(adj.cr);
+                if (drAcc) drAcc.ADJ_DR += adj.amount; if (crAcc) crAcc.ADJ_CR += adj.amount;
+                totalADJ_DR += adj.amount; totalADJ_CR += adj.amount;
+            });
+            
+            let totalTB_DR = state.initialTB.at(-1).TB_DR; let totalTB_CR = state.initialTB.at(-1).TB_CR; 
+            let totalATB_DR = 0; let totalATB_CR = 0; let totalIS_DR = 0; let totalIS_CR = 0; let totalBS_DR = 0; let totalBS_CR = 0;
+            const finalAccounts = [];
+            const ALL_ACCOUNTS_ORDER = ['Cash', 'Accounts Receivable', 'Supplies', 'Prepaid Rent', 'Accrued Service Revenue', 'Equipment', 'Accumulated Depreciation-Equip.', 'Accounts Payable', 'Unearned Service Revenue', 'Salaries Payable', CAPITAL_ACCOUNT, WITHDRAWALS_ACCOUNT, 'Service Revenue', 'Salaries Expense', 'Utilities Expense', 'Supplies Expense', 'Rent Expense', 'Depreciation Expense'];
+            
+            ALL_ACCOUNTS_ORDER.forEach(name => {
+                const acc = accountMap.get(name);
+                if (acc) {
+                    const result = { ...acc };
+                    const ATB_DR_Net = result.TB_DR + result.ADJ_DR; const ATB_CR_Net = result.TB_CR + result.ADJ_CR;
+                    const balance = ATB_DR_Net - ATB_CR_Net;
+                    if (balance > 0) { result.ATB_DR = balance; result.ATB_CR = 0; } else if (balance < 0) { result.ATB_DR = 0; result.ATB_CR = Math.abs(balance); } else { result.ATB_DR = 0; result.ATB_CR = 0; }
+                    result.IS_DR = 0; result.IS_CR = 0; result.BS_DR = 0; result.BS_CR = 0;
+                    if (result.isFS === 'IS') { result.IS_DR = result.ATB_DR; result.IS_CR = result.ATB_CR; totalIS_DR += result.IS_DR; totalIS_CR += result.IS_CR; }
+                    else if (result.isFS === 'BS') { result.BS_DR = result.ATB_DR; result.BS_CR = result.ATB_CR; totalBS_DR += result.BS_DR; totalBS_CR += result.BS_CR; }
+                    totalATB_DR += result.ATB_DR; totalATB_CR += result.ATB_CR;
+                    finalAccounts.push(result);
+                }
+            });
+            const netIncome = totalIS_CR - totalIS_DR;
+            const IS_Final_DR = totalIS_DR + (netIncome > 0 ? netIncome : 0); const IS_Final_CR = totalIS_CR + (netIncome < 0 ? Math.abs(netIncome) : 0);
+            const BS_Final_DR = totalBS_DR + (netIncome < 0 ? Math.abs(netIncome) : 0); const BS_Final_CR = totalBS_CR + (netIncome > 0 ? netIncome : 0);
+            let startingCapital = accountMap.get(CAPITAL_ACCOUNT)?.ATB_CR || 0;
+            let withdrawals = accountMap.get(WITHDRAWALS_ACCOUNT)?.ATB_DR || 0;
+            let endingCapital = startingCapital + netIncome - withdrawals;
+            const bsAccountsForFS = finalAccounts.filter(acc => acc.isFS === 'BS');
+            const assets = bsAccountsForFS.filter(acc => acc.type === 'asset' || acc.type === 'contra-asset');
+            const liabilities = bsAccountsForFS.filter(acc => acc.type === 'liability');
+            let correctTotalAssetsNet = 0;
+            assets.forEach(acc => { if (acc.type === 'asset') correctTotalAssetsNet += acc.ATB_DR; else if (acc.type === 'contra-asset') correctTotalAssetsNet -= acc.ATB_CR; });
+            let totalLiab = 0; liabilities.forEach(acc => totalLiab += acc.ATB_CR);
+            const correctTotalLiabilitiesAndEquityNet = totalLiab + endingCapital;
+
+            return {
+                netIncome, totalRevenue: totalIS_CR, totalExpenses: totalIS_DR, startingCapital, withdrawals, endingCapital,
+                accounts: finalAccounts,
+                TB_DR_Total: totalTB_DR, TB_CR_Total: totalTB_CR, ADJ_DR_Total: totalADJ_DR, ADJ_CR_Total: totalADJ_CR,
+                ATB_DR_Total: totalATB_DR, ATB_CR_Total: totalATB_CR, IS_DR_Total: IS_Final_DR, IS_CR_Total: IS_Final_CR, BS_DR_Total: BS_Final_DR, BS_CR_Total: BS_Final_CR,
+                BS_SUB_DR: totalBS_DR, BS_SUB_CR: totalBS_CR, IS_SUB_DR: totalIS_DR, IS_SUB_CR: totalIS_CR, 
+                ATB_DR_SUB: totalATB_DR, ATB_CR_SUB: totalATB_CR, TB_DR_SUB: totalTB_DR, TB_CR_SUB: totalTB_CR, ADJ_DR_SUB: totalADJ_DR, ADJ_CR_SUB: totalADJ_CR,
+                correctTotalAssetsNet, correctTotalLiabilitiesAndEquityNet, IS_accounts: finalAccounts.filter(acc => acc.isFS === 'IS'), Assets: assets, Liabilities: liabilities
+            };
+        };
+
+        // --- HTML Generators ---
+        const renderRubricHTML = (taskNum) => {
+            let competency = taskNum === 1 
+                ? "To create 10-column worksheet by accurately determining and applying necessary adjustments, then integrating these with unadjusted amounts to complete the worksheet with correct financial data." 
+                : "To prepare the income statement, statement of changes in equity, and balance sheet by accurately transferring the adjusted figures from the 10-column worksheet into the prescribed financial statement formats.";
+            
+            let scoreInfo = '';
+            
+            if (taskNum === 1 && state.task1Score) {
+                scoreInfo = `<div class="text-right font-bold text-sm mb-1">Correct: ${state.task1Score.score}/${state.task1Score.total} | Grade: <span class="text-lg border px-1">${state.task1Score.grade}</span></div>`;
+            } else if (taskNum === 2 && state.task2Score) {
+                scoreInfo = `<div class="text-right font-bold text-sm mb-1">Correct: ${state.task2Score.score}/${state.task2Score.total} | Grade: <span class="text-lg border px-1">${state.task2Score.grade}</span></div>`;
+            }
+
+            return `
+                <div class="rubric-box bg-white p-4 rounded-lg border-2 border-indigo-300 shadow-md mb-6 print:border-black print:shadow-none">
+                    <div class="flex justify-between items-end mb-2 border-b-2 pb-1">
+                        <h4 class="font-extrabold text-indigo-700 text-lg print:text-black">TASK ${taskNum} RUBRIC</h4>
+                        ${scoreInfo}
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs border-collapse border border-gray-400">
+                            <thead><tr class="header-bg text-center text-white print:bg-white print:text-black"><th class="p-2 border border-gray-300 w-1/5">Competency</th><th class="p-2 border border-gray-300 bg-green-600/90">Advanced (A)</th><th class="p-2 border border-gray-300 bg-blue-600/90">Proficient (P)</th><th class="p-2 border border-gray-300 bg-yellow-600/90">Developing (D)</th><th class="p-2 border border-gray-300 bg-red-600/90">Intervention Required (IR)</th></tr></thead>
+                            <tbody><tr class="align-top"><td class="p-2 border border-gray-300 italic">${competency}</td><td class="p-2 border border-gray-300 text-green-800">Excellent performance. Worksheet/financial statement entries are all accurate and professionally formatted. Demonstrated complete mastery of the accounting cycle, including complex adjustments and financial reporting standards. (95-100%)</td><td class="p-2 border border-gray-300 text-blue-800">Good performance. Worksheet/financial statement entries are mostly accurate with minor errors (e.g., small transposition errors or minor calculation mistakes). Demonstrated a solid understanding of the accounting cycle. (85-94.9%)</td><td class="p-2 border border-gray-300 text-yellow-800">Acceptable performance. Several errors are present in entries and/or totals. Demonstrates a basic understanding of the accounting cycle steps but needs improvement in accuracy and detail. (75-84.9%)</td><td class="p-2 border border-gray-300 text-red-800">Unacceptable performance. Significant errors are present in all major sections of the worksheet and/or financial statements. Demonstrates a lack of basic understanding of the accounting cycle. (<75%)</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>`;
+        };
+
+        const renderWorksheetHTML = () => {
+            const worksheetData = calculateWorksheetAnswers();
+            let rowsHtml = '';
+            const disabledAttr = state.isTask1Locked ? 'disabled' : '';
+            const bgClass = state.isTask1Locked ? 'bg-gray-100 text-gray-600' : 'bg-f0f9ff';
+
+            // Dynamic Company Name
+            const companyName = state.studentInfo ? (state.studentInfo.fullName.split(',')[0].trim() + ' Accounting Services') : 'Sole Proprietor Accounting Services';
+
+            worksheetData.accounts.forEach((acc, i) => {
+                const baseId = `wks_${i}_`;
+                const isNewAccount = acc.TB_DR === 0 && acc.TB_CR === 0 && acc.name.indexOf('Capital') === -1;
+                rowsHtml += `<tr class="${isNewAccount ? 'bg-yellow-50/50' : 'hover:bg-gray-50'}">
+                    <td class="p-2 border border-gray-300 text-left whitespace-nowrap ${isNewAccount ? 'font-semibold text-yellow-800' : ''}">${acc.name}</td>
+                    <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_DR)}</td><td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_CR)}</td>
+                    ${['ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'].map(f => 
+                        `<td class="p-0 border border-gray-300 relative"><input type="number" id="${baseId}${f}" oninput="window.saveWorksheetInput('${baseId}${f}', this.value)" class="table-input ${bgClass}" value="${state.worksheetInputs[baseId + f] || ''}" ${disabledAttr}><span id="${baseId}${f}_val" class="validation-icon"></span></td>`
+                    ).join('')}</tr>`;
+                if (acc.name === 'Depreciation Expense') {
+                     // CHANGED: Removed .slice(2) to include TB_DR and TB_CR in the column totals row
+                     rowsHtml += `<tr class="font-bold bg-purple-100 text-purple-800 border-t-2 border-purple-500"><td class="p-2 border text-left">COLUMN TOTALS</td>
+                     ${['TB_DR','TB_CR','ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_SUBTOTAL_${f}" oninput="window.saveWorksheetInput('wks_SUBTOTAL_${f}', this.value)" class="table-input ${bgClass}" value="${state.worksheetInputs['wks_SUBTOTAL_' + f] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_${f}_val" class="validation-icon"></span></td>`).join('')}</tr>`;
+                }
+            });
+            rowsHtml += `<tr class="font-bold bg-green-50/50 text-green-700"><td class="p-2 border text-left">${worksheetData.netIncome > 0 ? 'Net Income' : 'Net Loss'}</td><td colspan="6"></td>${['IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_NI_${f}" oninput="window.saveWorksheetInput('wks_NI_${f}', this.value)" class="table-input ${bgClass}" value="${state.worksheetInputs['wks_NI_' + f] || ''}" ${disabledAttr}><span id="wks_NI_${f}_val" class="validation-icon"></span></td>`).join('')}</tr>`;
+            rowsHtml += `<tr class="font-bold bg-indigo-50/50 border-t-2 border-indigo-700"><td class="p-2 border text-center">FINAL TOTALS</td>${['TB_DR','TB_CR','ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_FINAL_${f}" oninput="window.saveWorksheetInput('wks_FINAL_${f}', this.value)" class="table-input ${bgClass}" value="${state.worksheetInputs['wks_FINAL_' + f] || ''}" ${disabledAttr}><span id="wks_FINAL_${f}_val" class="validation-icon"></span></td>`).join('')}</tr>`;
+
+            return `<div class="overflow-x-auto">
+                <div class="text-center font-bold mb-4 text-black">
+                    <div class="uppercase tracking-wide text-lg">${companyName}</div>
+                    <div class="text-base">Worksheet</div>
+                    <div class="text-sm font-normal">December 31, 2024</div>
+                </div>
+                <table class="min-w-full text-xs border-collapse border border-gray-400">
+                <thead><tr class="header-bg text-center"><th rowspan="2" class="p-2 border border-gray-300 w-[150px]">Account Titles</th><th colspan="2" class="p-2 border">Trial Balance</th><th colspan="2" class="p-2 border">Adjustments</th><th colspan="2" class="p-2 border">Adj. Trial Balance</th><th colspan="2" class="p-2 border">Income Statement</th><th colspan="2" class="p-2 border">Balance Sheet</th></tr><tr class="bg-indigo-100 text-indigo-900 text-center"><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+        };
+
+        const renderFSInput = (type, id, value, placeholder="Amount", label="") => {
+            const disabledAttr = state.isTask2Locked ? 'disabled' : '';
+            const bgClass = state.isTask2Locked ? 'bg-gray-100 text-gray-600' : 'bg-f9fafb';
+            return `<div class="flex justify-between items-center text-sm ${label ? 'mb-1' : ''}">${label ? `<span class="text-gray-700 w-1/3 pr-2">${label}</span>` : ''}<div class="relative w-${label ? '2/3' : 'full'}"><input type="number" id="${id}" oninput="window.saveFSInput('${type}', '${id}', this.value)" class="fs-input ${bgClass}" placeholder="${placeholder}" value="${state.fsInputs[type][id] || ''}" ${disabledAttr}><span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>`;
+        };
+
+        const getISHTML = () => {
+            const data = calculateWorksheetAnswers();
+            // Dynamic Company Name
+            const companyName = state.studentInfo ? (state.studentInfo.fullName.split(',')[0].trim() + ' Accounting Services') : 'Sole Proprietor Accounting Services';
+
+            return `<div class="p-4 bg-white rounded shadow border border-green-200 print:border print:shadow-none h-full">
+                <div class="text-center font-bold mb-4 text-black">
+                    <div class="uppercase text-sm">${companyName}</div>
+                    <div class="text-sm">Income Statement</div>
+                    <div class="text-xs font-normal italic">For the Year Ended December 31, 2024</div>
+                </div>
+                ${data.IS_accounts.filter(acc => acc.type === 'revenue').map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
+                <div class="flex justify-between font-bold border-t pt-1"><label class="text-green-700 w-1/3">TOTAL REV:</label><div class="relative w-2/3"><input type="number" id="is_total_revenue" oninput="saveFSInput('is', 'is_total_revenue', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_revenue || ''}"><span id="is_total_revenue_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                <h5 class="font-bold text-red-700 mt-2">Expenses</h5>
+                ${data.IS_accounts.filter(acc => acc.type === 'expense').map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
+                <div class="flex justify-between font-bold border-t pt-1"><label class="text-red-700 w-1/3">TOTAL EXP:</label><div class="relative w-2/3"><input type="number" id="is_total_expense" oninput="saveFSInput('is', 'is_total_expense', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_expense || ''}"><span id="is_total_expense_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                <div class="flex justify-between font-extrabold border-t-2 border-indigo-500 pt-2 mt-2"><label class="text-indigo-800 w-1/3">${data.netIncome > 0 ? 'NET INCOME' : 'NET LOSS'}:</label><div class="relative w-2/3"><input type="number" id="is_net_income" oninput="saveFSInput('is', 'is_net_income', this.value)" class="fs-input" value="${state.fsInputs.is.is_net_income || ''}"><span id="is_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div></div>`;
+        };
+
+        const getSCEHTML = () => {
+             const familyName = getFamilyName();
+             // Dynamic Company Name
+             const companyName = state.studentInfo ? (state.studentInfo.fullName.split(',')[0].trim() + ' Accounting Services') : 'Sole Proprietor Accounting Services';
+
+             return `<div class="p-4 bg-white rounded shadow border border-purple-200 print:border print:shadow-none h-full">
+                <div class="text-center font-bold mb-4 text-black">
+                    <div class="uppercase text-sm">${companyName}</div>
+                    <div class="text-sm">Statement of Changes in Equity</div>
+                    <div class="text-xs font-normal italic">For the Year Ended December 31, 2024</div>
+                </div>
+                ${renderFSInput('sce', 'sce_starting_capital', state.fsInputs.sce.sce_starting_capital, '', `${familyName}, Capital, Jan 1`)}
+                ${renderFSInput('sce', 'sce_net_income', state.fsInputs.sce.sce_net_income, '', 'Add/Less: Net Income/Loss')}
+                ${renderFSInput('sce', 'sce_withdrawals', state.fsInputs.sce.sce_withdrawals, '', `Less: Withdrawals`)}
+                <div class="flex justify-between font-extrabold border-t-2 border-indigo-500 pt-2 mt-2"><label class="text-indigo-800 w-1/3">Capital, Dec 31:</label><div class="relative w-2/3"><input type="number" id="sce_ending_capital" oninput="saveFSInput('sce', 'sce_ending_capital', this.value)" class="fs-input" value="${state.fsInputs.sce.sce_ending_capital || ''}"><span id="sce_ending_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div></div>`;
+        };
+
+        const getBSHTML = () => {
+             const data = calculateWorksheetAnswers();
+             // Dynamic Company Name
+             const companyName = state.studentInfo ? (state.studentInfo.fullName.split(',')[0].trim() + ' Accounting Services') : 'Sole Proprietor Accounting Services';
+
+             return `<div class="p-4 bg-white rounded shadow border border-red-200 print:border print:shadow-none h-full">
+                <div class="text-center font-bold mb-4 text-black">
+                    <div class="uppercase text-sm">${companyName}</div>
+                    <div class="text-sm">Balance Sheet</div>
+                    <div class="text-xs font-normal italic">As of December 31, 2024</div>
+                </div>
+                <h5 class="font-bold text-blue-700">ASSETS</h5>
+                ${data.Assets.map(acc => renderFSInput('bs', getAccountId(acc.name)+'_bs_li', state.fsInputs.bs[getAccountId(acc.name)+'_bs_li'], '', acc.name)).join('')}
+                <div class="flex justify-between font-bold border-t pt-1 mb-2"><label class="text-blue-800 w-1/3">TOTAL ASSETS:</label><div class="relative w-2/3"><input type="number" id="bs_total_assets" oninput="saveFSInput('bs', 'bs_total_assets', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_assets || ''}"><span id="bs_total_assets_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                <h5 class="font-bold text-red-700">LIABILITIES & EQUITY</h5>
+                ${data.Liabilities.map(acc => renderFSInput('bs', getAccountId(acc.name)+'_bs_li', state.fsInputs.bs[getAccountId(acc.name)+'_bs_li'], '', acc.name)).join('')}
+                ${renderFSInput('bs', 'bs_ending_capital_bs', state.fsInputs.bs.bs_ending_capital_bs, '', `Capital, Dec 31`)}
+                <div class="flex justify-between font-bold border-t pt-1"><label class="text-red-800 w-1/3">TOTAL L&E:</label><div class="relative w-2/3"><input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs', 'bs_total_liab_equity', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_liab_equity || ''}"><span id="bs_total_liab_equity_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div></div>`;
+        };
+
+        const renderStudentInfo = () => {
+            const attendanceInputHtml = state.attendanceId ? `<input type="text" id="attendanceId" class="text-input bg-gray-200 cursor-not-allowed" value="${state.attendanceId}" readonly>` : `<input type="text" id="attendanceId" class="text-input" value="">`;
+            document.getElementById('task-container').innerHTML = `
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
+                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm">Attendance ID</label>${attendanceInputHtml}</div><div><label class="block text-sm">Student ID</label><input type="text" id="studentId" class="text-input"></div></div>
+                        <div class="flex justify-end"><button id="login-btn" onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 text-white font-bold rounded">Verify & Login</button></div>
+                        <div class="border-t pt-4">
+                            <p class="text-xs uppercase font-bold mb-2">Student Details (Auto-Populated)</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="col-span-2"><label class="text-xs text-gray-500">Full Name</label><input type="text" id="fullName" class="text-input bg-white font-bold" disabled value="${state.studentInfo?.fullName || ''}"></div>
+                                <div><label class="text-xs text-gray-500">Class Number</label><input type="text" id="classNumber" class="text-input bg-white font-bold" disabled value="${state.studentInfo?.classNumber || ''}"></div>
+                                <div><label class="text-xs text-gray-500">Grade & Section</label><input type="text" id="gradeSection" class="text-input bg-white font-bold" disabled value="${state.studentInfo?.gradeSection || ''}"></div>
+                            </div>
+                        </div>
+                        <!-- Start Task Button (Initially Hidden) -->
+                        <div id="start-task-container" class="hidden text-center pt-4 border-t border-gray-200">
+                            <p class="mb-2 text-sm text-gray-600">Verification Successful. Click below to begin the exam.</p>
+                            <button onclick="window.startTask()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transform transition hover:scale-105">
+                                Start the Task
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            
+            // Hide generic login btn in action area, specific login btn used above
+            document.getElementById('login-step-btn').classList.add('hidden');
+        };
+
+        // --- Main Renderers ---
+        window.saveWorksheetInput = (id, value) => { state.worksheetInputs[id] = Number(value) || 0; };
+        window.saveFSInput = (type, id, value) => { state.fsInputs[type][id] = Number(value) || 0; };
+
+        // Render Unified Exam Page (Task 1 and Task 2)
+        const renderMainTaskPage = () => {
+            // Define buttons based on state
+            // Button for Task 1 Header
+            const task1Btn = state.examSubStep === 0 
+                ? `<button onclick="window.handleNextStep()" class="validate-btn px-4 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow transition disabled:opacity-50">Validate Task 1 (Worksheet)</button>`
+                : `<span class="text-green-600 font-bold text-sm bg-green-100 px-2 py-1 rounded border border-green-200">✔ Task 1 Completed</span>`;
+            
+            // Button for Task 2 Header
+            const task2Btn = state.examSubStep === 1
+                ? `<button onclick="window.handleNextStep()" class="validate-btn px-4 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow transition disabled:opacity-50">Validate Task 2 (Financial Statements)</button>`
+                : ``;
+
+            let content = `
+                <div class="space-y-8">
+                    <!-- TASK 1 SECTION -->
+                    <div>
+                        <!-- Sticky Header for Task 1 -->
+                        <div id="task1-header-container" class="sticky-task-header">
+                            <h3 class="text-xl font-bold text-indigo-800">TASK 1: 10-Column Worksheet</h3>
+                            <div class="sticky-btn-area">${task1Btn}</div>
+                        </div>
+
+                        ${renderRubricHTML(1)}
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4"><h4 class="font-bold text-blue-700">Adjustments:</h4><ul class="list-disc list-inside text-sm">${state.adjustments.map(adj => `<li>${adj.desc}</li>`).join('')}</ul></div>
+                        ${renderWorksheetHTML()}
+                    </div>
+
+                    <!-- TASK 2 SECTION -->
+                    <div>
+                        <!-- Sticky Header for Task 2 -->
+                        <div id="task2-header-container" class="sticky-task-header">
+                            <h3 class="text-xl font-bold text-indigo-800">TASK 2: Financial Statements</h3>
+                            <div class="sticky-btn-area">${task2Btn}</div>
+                        </div>
+
+                        ${renderRubricHTML(2)}
+                        
+                        <!-- Flex Container for Task 2 Parts: Stack on Mobile, Row on Desktop -->
+                        <div class="flex flex-col md:flex-row gap-4 w-full print-flex-row">
+                            <div class="w-full md:w-1/3 print-w-third">${getISHTML()}</div>
+                            <div class="w-full md:w-1/3 print-w-third">${getSCEHTML()}</div>
+                            <div class="w-full md:w-1/3 print-w-third">${getBSHTML()}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('task-container').innerHTML = content;
+            
+            // Ensure bottom button is hidden as we moved it to header
+            document.getElementById('login-step-btn').classList.add('hidden');
+        };
+
+        // --- FINAL COMPLETION VIEW (All Steps for Print) ---
+        const renderCompletion = () => {
+            const info = state.studentInfo || {};
+            
+            // Force re-render with locked inputs and icons
+            state.isTask1Locked = true;
+            state.isTask2Locked = true;
+
+            // CHANGED: Set Print Info with new formatting
+            const now = new Date().toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const infoHTML = `
+            <div class="w-full mb-2 text-sm text-black font-bold font-mono border-b-2 border-black pb-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-left">CN: ${info.classNumber}</span>
+                    <span class="text-right">Section: ${info.gradeSection}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-left">Name: ${info.fullName}</span>
+                    <span class="text-right">Date: ${now}</span>
+                </div>
+            </div>`;
+            
+            document.getElementById('student-print-info').innerHTML = infoHTML;
+            document.getElementById('print-instructions').innerHTML = document.getElementById('footer-instructions-text').innerHTML;
+            document.getElementById('print-instructions').classList.remove('hidden');
+
+            // Render the Unified layout but unlocked/static
+            renderMainTaskPage();
+            
+            // Change header button for completion view
+            const printBtn = document.getElementById('login-step-btn');
+            printBtn.innerText = "Print Final Report to PDF";
+            printBtn.onclick = () => { window.print(); };
+            printBtn.classList.remove('hidden');
+            printBtn.className = "validate-btn px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-200 no-print mx-auto block";
+            
+            const headerBtnArea = document.querySelector('#task1-header-container .sticky-btn-area');
+            if(headerBtnArea) {
+                headerBtnArea.innerHTML = `<button onclick="window.print()" class="validate-btn px-4 py-2 bg-green-600 text-white text-sm font-bold rounded shadow no-print">Print Report</button>`;
+            }
+
+            // Append End Marker
+            document.getElementById('task-container').insertAdjacentHTML('beforeend', `<div class="text-center font-bold text-xl py-6 border-t-2 border-dashed border-gray-400 mt-8">*** END OF TASK ***</div>`);
+
+            // Hide standard UI elements
+            document.getElementById('main-header').querySelector('h1').innerText = "Performance Task Results"; 
+            document.getElementById('timer-box').style.display = 'none';
+
+            // Inject Validation Icons by running logic again
+            validateWorksheet(true);
+            validateIncomeStatement(true);
+            validateStatementOfChangesInEquity(true);
+            validateBalanceSheet(true);
+            
+            renderMessageBox("Task completed! Scroll down to review and click 'Print Report'.");
+        };
+
+        // --- Validation Logic Wrappers ---
+        const validateWorksheet = (doRenderIcons) => { 
+            const worksheetData = calculateWorksheetAnswers();
+            const accounts = worksheetData.accounts;
+            const acceptableError = 0.01; let correctCount = 0; let totalChecks = 0;
+            const render = (id, correct) => { if(doRenderIcons) { const s=document.getElementById(id+'_val'); if(s) s.innerHTML=correct?'<span class="text-green-600">✔</span>':'<span class="text-red-600">❌</span>'; } };
+            
+            accounts.forEach((acc, i) => {
+                const baseId = `wks_${i}_`;
+                [['ADJ',acc.ADJ_DR,acc.ADJ_CR],['ATB',acc.ATB_DR,acc.ATB_CR],['IS',acc.IS_DR,acc.IS_CR],['BS',acc.BS_DR,acc.BS_CR]].forEach(([p, dr, cr]) => {
+                    if(document.getElementById(baseId+p+'_DR')) { const v=state.worksheetInputs[baseId+p+'_DR']||0; const c=Math.abs(v-dr)<acceptableError; render(baseId+p+'_DR',c); if(c) correctCount++; totalChecks++; }
+                    if(document.getElementById(baseId+p+'_CR')) { const v=state.worksheetInputs[baseId+p+'_CR']||0; const c=Math.abs(v-cr)<acceptableError; render(baseId+p+'_CR',c); if(c) correctCount++; totalChecks++; }
+                });
+            });
+            const checks = [
+                ['wks_SUBTOTAL_TB_DR', worksheetData.TB_DR_SUB], ['wks_SUBTOTAL_TB_CR', worksheetData.TB_CR_SUB],
+                ['wks_SUBTOTAL_ADJ_DR', worksheetData.ADJ_DR_SUB], ['wks_SUBTOTAL_ADJ_CR', worksheetData.ADJ_CR_SUB],
+                ['wks_SUBTOTAL_ATB_DR', worksheetData.ATB_DR_SUB], ['wks_SUBTOTAL_ATB_CR', worksheetData.ATB_CR_SUB],
+                ['wks_SUBTOTAL_IS_DR', worksheetData.IS_SUB_DR], ['wks_SUBTOTAL_IS_CR', worksheetData.IS_SUB_CR],
+                ['wks_SUBTOTAL_BS_DR', worksheetData.BS_SUB_DR], ['wks_SUBTOTAL_BS_CR', worksheetData.BS_SUB_CR],
+                ['wks_NI_IS_DR', worksheetData.netIncome>0?worksheetData.netIncome:0], ['wks_NI_IS_CR', worksheetData.netIncome<0?Math.abs(worksheetData.netIncome):0],
+                ['wks_NI_BS_DR', worksheetData.netIncome<0?Math.abs(worksheetData.netIncome):0], ['wks_NI_BS_CR', worksheetData.netIncome>0?worksheetData.netIncome:0],
+                ['wks_FINAL_TB_DR', worksheetData.TB_DR_Total], ['wks_FINAL_TB_CR', worksheetData.TB_CR_Total],
+                ['wks_FINAL_ADJ_DR', worksheetData.ADJ_DR_Total], ['wks_FINAL_ADJ_CR', worksheetData.ADJ_CR_Total],
+                ['wks_FINAL_ATB_DR', worksheetData.ATB_DR_Total], ['wks_FINAL_ATB_CR', worksheetData.ATB_CR_Total],
+                ['wks_FINAL_IS_DR', worksheetData.IS_DR_Total], ['wks_FINAL_IS_CR', worksheetData.IS_CR_Total],
+                ['wks_FINAL_BS_DR', worksheetData.BS_DR_Total], ['wks_FINAL_BS_CR', worksheetData.BS_CR_Total]
+            ];
+            checks.forEach(([id,val]) => { if(document.getElementById(id)) { const c=Math.abs((state.worksheetInputs[id]||0)-val)<acceptableError; render(id,c); if(c) correctCount++; totalChecks++; } });
+            return { correct: correctCount, total: totalChecks, isPerfect: correctCount === totalChecks, scoreData: calculateScoreAndGrade(correctCount, totalChecks) };
+        };
+
+        const validateIncomeStatement = (doRenderIcons) => {
+            const data = calculateWorksheetAnswers();
+            const render = (id, correct) => { if(doRenderIcons) { const s=document.getElementById(id+'_val'); if(s) s.innerHTML=correct?'<span class="text-green-600">✔</span>':'<span class="text-red-600">❌</span>'; } };
+            let correctCount = 0; let totalChecks = 0;
+            data.IS_accounts.forEach(acc => {
+                const id = getAccountId(acc.name) + '_is_li';
+                const correctVal = acc.type === 'revenue' ? acc.ATB_CR : acc.ATB_DR;
+                const isCorrect = Math.abs((state.fsInputs.is[id] || 0) - correctVal) < 0.01;
+                render(id, isCorrect); if(isCorrect) correctCount++; totalChecks++;
+            });
+            [['is_total_revenue', data.totalRevenue], ['is_total_expense', data.totalExpenses], ['is_net_income', Math.abs(data.netIncome)]].forEach(([id,val]) => {
+                const isCorrect = Math.abs((state.fsInputs.is[id] || 0) - val) < 0.01; render(id, isCorrect); if(isCorrect) correctCount++; totalChecks++;
+            });
+            return { correct: correctCount, total: totalChecks, isPerfect: correctCount === totalChecks };
+        };
+        const validateStatementOfChangesInEquity = (doRenderIcons) => {
+            const data = calculateWorksheetAnswers();
+            const render = (id, correct) => { if(doRenderIcons) { const s=document.getElementById(id+'_val'); if(s) s.innerHTML=correct?'<span class="text-green-600">✔</span>':'<span class="text-red-600">❌</span>'; } };
+            let correctCount = 0; let totalChecks = 0;
+            [['sce_starting_capital', data.startingCapital], ['sce_net_income', Math.abs(data.netIncome)], ['sce_withdrawals', data.withdrawals], ['sce_ending_capital', data.endingCapital]].forEach(([id,val]) => {
+                const isCorrect = Math.abs((state.fsInputs.sce[id] || 0) - val) < 0.01; render(id, isCorrect); if(isCorrect) correctCount++; totalChecks++;
+            });
+            return { correct: correctCount, total: totalChecks, isPerfect: correctCount === totalChecks };
+        };
+        const validateBalanceSheet = (doRenderIcons) => {
+            const data = calculateWorksheetAnswers();
+            const render = (id, correct) => { if(doRenderIcons) { const s=document.getElementById(id+'_val'); if(s) s.innerHTML=correct?'<span class="text-green-600">✔</span>':'<span class="text-red-600">❌</span>'; } };
+            let correctCount = 0; let totalChecks = 0;
+            [...data.Assets, ...data.Liabilities].forEach(acc => {
+                const id = getAccountId(acc.name) + '_bs_li';
+                const correctVal = (acc.type === 'contra-asset' || acc.type === 'liability') ? acc.ATB_CR : acc.ATB_DR; 
+                const isCorrect = Math.abs((state.fsInputs.bs[id] || 0) - correctVal) < 0.01;
+                render(id, isCorrect); if(isCorrect) correctCount++; totalChecks++;
+            });
+            const endCapCorrect = Math.abs((state.fsInputs.bs.bs_ending_capital_bs || 0) - data.endingCapital) < 0.01; render('bs_ending_capital_bs', endCapCorrect); if(endCapCorrect) correctCount++; totalChecks++;
+            [['bs_total_assets', data.correctTotalAssetsNet], ['bs_total_liab_equity', data.correctTotalLiabilitiesAndEquityNet]].forEach(([id,val]) => {
+                const isCorrect = Math.abs((state.fsInputs.bs[id] || 0) - val) < 0.01; render(id, isCorrect); if(isCorrect) correctCount++; totalChecks++;
+            });
+            return { correct: correctCount, total: totalChecks, isPerfect: correctCount === totalChecks };
+        };
+        const aggregateFinancialStatementScores = () => {
+            const s1 = validateIncomeStatement(false); const s2 = validateStatementOfChangesInEquity(false); const s3 = validateBalanceSheet(false);
+            const c = s1.correct + s2.correct + s3.correct; const t = s1.total + s2.total + s3.total;
+            return { correct: c, total: t, scoreData: calculateScoreAndGrade(c, t) };
+        };
+
+        // --- Steps & Event Handlers ---
+        window.handleLogin = async () => {
+            const attId = document.getElementById('attendanceId').value.trim();
+            const stuId = document.getElementById('studentId').value.trim();
+            if(!attId || !stuId) { renderMessageBox("Enter IDs.", true); return; }
+            
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true; btn.innerText = "Verifying...";
+
+            const result = await validateStudentLogin(attId, stuId);
+            if (result.success) {
+                state.attendanceId = attId;
+                state.studentInfo = { idNumber: result.data.idNumber, classNumber: result.data.cn, fullName: result.data.fullName, gradeSection: result.data.section };
+                
+                // Auto-populate fields (DOM manipulation for visual feedback)
+                document.getElementById('fullName').value = result.data.fullName;
+                document.getElementById('classNumber').value = result.data.cn;
+                document.getElementById('gradeSection').value = result.data.section;
+                
+                // Disable verification interactions
+                btn.style.display = 'none';
+                document.getElementById('studentId').disabled = true;
+                document.getElementById('studentId').classList.add('bg-gray-100');
+                
+                // Generate data (backend prep), update UI but DON'T start timer or show task yet
+                generateDynamicData(); 
+                updateCompanyName(state.studentInfo.fullName);
+                
+                renderMessageBox("Verification Successful. Please click Start Task.");
+                
+                // Show the Start Task button
+                document.getElementById('start-task-container').classList.remove('hidden');
+                
+            } else { 
+                renderMessageBox(result.message, true); 
+                btn.disabled = false; btn.innerText = "Verify & Login";
+            }
+        };
+
+        window.startTask = () => {
+            // Move to step 1 (Task View)
+            state.currentStep = 1; 
+            startTimer(); // Start the timer now
+            renderStep();
+        };
+
+        window.handleNextStep = async () => {
+            let isValid = false; let override = false; let message = "";
+            const maxAttempts = 3;
+            
+            if (state.currentStep === 0) { 
+                // Should not be reached via this function anymore as login handles transition
+                state.currentStep = 1; 
+                renderStep(); 
+                return; 
+            }
+            
+            if (state.currentStep === 1) {
+                // WE ARE ON THE UNIFIED PAGE
+                
+                if (state.examSubStep === 0) { 
+                    // Validating Task 1 (Worksheet)
+                    const res = validateWorksheet(true);
+                    isValid = res.isPerfect;
+                    state.task1Score = res.scoreData;
+                    
+                    if (!isValid) {
+                        state.validationAttempts[1]++;
+                        if (state.validationAttempts[1] >= maxAttempts) { isValid = true; override = true; message = "Max attempts reached. Proceeding to Task 2."; }
+                        else message = `Task 1 Validation failed (${state.validationAttempts[1]}/${maxAttempts}).`;
+                    } else message = "Task 1 Validated!";
+                    
+                    renderMessageBox(message, !isValid && !override);
+                    
+                    if (isValid) {
+                        state.isTask1Locked = true; // Lock Task 1 inputs
+                        state.examSubStep = 1; // Move logic to Task 2
+                        state.validationAttempts[1] = 0; // Reset counter for internal logic (not saved attempt count)
+                        renderStep(); // Re-render to update button text and lock inputs
+                    }
+                } 
+                else if (state.examSubStep === 1) {
+                    // Validating Task 2 (All Financial Statements)
+                    const s1 = validateIncomeStatement(true);
+                    const s2 = validateStatementOfChangesInEquity(true);
+                    const s3 = validateBalanceSheet(true);
+                    
+                    isValid = s1.isPerfect && s2.isPerfect && s3.isPerfect;
+                    
+                    if (!isValid) {
+                        state.validationAttempts[2]++;
+                        if (state.validationAttempts[2] >= maxAttempts) { isValid = true; override = true; message = "Max attempts reached for Task 2."; }
+                        else message = `Task 2 Validation failed (${state.validationAttempts[2]}/${maxAttempts}). Check all statements.`;
+                    } else message = "Task 2 Validated!";
+                    
+                    renderMessageBox(message, !isValid && !override);
+                    
+                    if (isValid) {
+                        state.isTask2Locked = true;
+                        await window.finishAndPreview(false);
+                    }
+                }
+            }
+        };
+
+        const renderStep = () => {
+            const renderers = [renderStudentInfo, renderMainTaskPage, renderCompletion];
+            if (renderers[state.currentStep]) renderers[state.currentStep]();
+            document.getElementById('page-title').innerText = `Accounting Task - Step ${state.currentStep}`;
+        };
+
+        window.onload = () => {
+            document.getElementById('company-name').innerText = "Sole Proprietor Accounting Services";
+            checkUrlParametersAndInit();
+        };
+    </script>
+</body>
+</html>
