@@ -749,7 +749,7 @@
             return `<div class="p-4 bg-white rounded shadow border border-green-200 print:border print:shadow-none h-full">
                 <div class="text-center font-bold mb-4 text-black">
                     <div class="uppercase text-sm">${companyName}</div>
-                    <div class="text-sm">Income Statement</div>
+                    <div class="text-sm">Income Statement - Practice Version</div>
                     <div class="text-xs font-normal italic">For the Year Ended December 31, 2024</div>
                 </div>
                 ${data.IS_accounts.filter(acc => acc.type === 'revenue').map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
@@ -768,7 +768,7 @@
              return `<div class="p-4 bg-white rounded shadow border border-purple-200 print:border print:shadow-none h-full">
                 <div class="text-center font-bold mb-4 text-black">
                     <div class="uppercase text-sm">${companyName}</div>
-                    <div class="text-sm">Statement of Changes in Equity</div>
+                    <div class="text-sm">Statement of Changes in Equity - Practice Version</div>
                     <div class="text-xs font-normal italic">For the Year Ended December 31, 2024</div>
                 </div>
                 ${renderFSInput('sce', 'sce_starting_capital', state.fsInputs.sce.sce_starting_capital, '', `${familyName}, Capital, Jan 1`)}
@@ -785,7 +785,7 @@
              return `<div class="p-4 bg-white rounded shadow border border-red-200 print:border print:shadow-none h-full">
                 <div class="text-center font-bold mb-4 text-black">
                     <div class="uppercase text-sm">${companyName}</div>
-                    <div class="text-sm">Balance Sheet</div>
+                    <div class="text-sm">Balance Sheet - Practice Version</div>
                     <div class="text-xs font-normal italic">As of December 31, 2024</div>
                 </div>
                 <h5 class="font-bold text-blue-700">ASSETS</h5>
@@ -929,7 +929,7 @@
             document.getElementById('task-container').insertAdjacentHTML('beforeend', `<div class="text-center font-bold text-xl py-6 border-t-2 border-dashed border-gray-400 mt-8">*** END OF TASK ***</div>`);
 
             // Hide standard UI elements
-            document.getElementById('main-header').querySelector('h1').innerText = "Performance Task Results"; 
+            document.getElementById('main-header').querySelector('h1').innerText = "Performance Task Practice Results"; 
             document.getElementById('timer-box').style.display = 'none';
 
             // Inject Validation Icons by running logic again
