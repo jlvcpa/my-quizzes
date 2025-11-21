@@ -10,22 +10,23 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
-        /* Hide Arrows/Spinners in Input type number */
+        /* REMOVE UP/DOWN ARROWS (SPINNERS) */
         /* Chrome, Safari, Edge, Opera */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+          -webkit-appearance: none;
+          margin: 0;
         }
         /* Firefox */
         input[type=number] {
-            -moz-appearance: textfield;
+          -moz-appearance: textfield;
         }
 
         /* Style for inputs in tables */
         .table-input {
             width: 100%;
-            padding: 4px 20px 4px 4px; /* Added right padding so icon doesn't overlap text */
+            padding: 4px;
+            padding-right: 22px; /* Make space for the icon so it doesn't cover digits */
             border: 1px solid #ccc;
             border-radius: 4px;
             text-align: right; /* Right-align amounts */
@@ -43,102 +44,112 @@
         .fs-input {
             border: 1px solid #9ca3af;
             background-color: #f9fafb;
-            padding: 4px 20px 4px 8px; /* Added right padding */
+            padding: 4px 8px;
+            padding-right: 22px; /* Make space for the icon */
             text-align: right;
             border-radius: 6px;
             font-weight: 500;
-            width: 100%; /* Changed to full width of container */
+            width: 100%; /* Adjusted to fill container */
             font-size: 0.85rem; /* Base font size */
         }
         .header-bg { background-color: #0f172a; color: white; }
         .footer-bg { background-color: #334155; color: white; }
+        
         .validation-icon {
             font-weight: bold;
-            font-size: 1.1rem;
-            margin-left: 0;
-            pointer-events: none; 
+            font-size: 1rem;
+            pointer-events: none; /* Allows clicks to go through to the input */
+            background-color: rgba(255,255,255,0.7); /* Slight backing to ensure visibility */
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        
         /* Style the rubric for better visibility */
         .rubric-box p, .rubric-box table {
             line-height: 1.4;
         }
-        .score-display {
-            text-align: right;
-            margin-bottom: 10px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: #4338ca; /* Indigo */
-        }
+
+        /* Custom Print Footer Styling */
+        #print-footer-content { display: none; }
 
         /* Print-specific styles */
         @media print {
-            @page { margin: 0.5in; size: auto; } /* Reset margins */
-            
             .no-print { display: none !important; }
-            
+            /* Set margin to 0.25in and center horizontally */
             .printable-area { 
-                width: 100% !important;
-                margin: 0 !important;
+                width: 100% !important; 
+                max-width: 100% !important;
+                margin: 0 !important; 
                 padding: 0 !important;
-                border: none !important;
                 box-shadow: none !important;
+                border: none !important;
             }
-            body { background-color: white; color: black; }
             
-            /* Header adjustments */
+            /* Layout for Task 2 Horizontal Alignment in Print */
+            .task2-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: 10px !important;
+            }
+
+            body { background-color: white; color: black; margin-bottom: 2cm; } /* Margin bottom for fixed footer */
+            .shadow-xl, .rounded-xl, .border { border: none !important; box-shadow: none !important; }
             .header-bg { background-color: #fff !important; color: #000 !important; border-bottom: 2px solid black !important; }
-            .text-yellow-300 { color: #000 !important; }
-            .text-gray-200 { color: #333 !important; }
+            .footer-bg { display: none !important; } /* Hide screen footer, show print footer */
             
-            /* Force inputs to look like plain text */
+            /* Force inputs to look like text */
             .table-input, .text-input, .fs-input {
                 border: none !important;
-                border-bottom: 1px solid #ccc !important; /* Light underline for readability */
-                background-color: transparent !important;
+                border-bottom: 1px solid #ccc !important; /* Keep underline for clarity */
+                background-color: white !important;
                 color: black !important;
-                font-size: 8pt !important; 
-                padding: 2px !important;
-                white-space: nowrap; 
-                overflow: visible !important;
-                appearance: none;
+                font-size: 7pt !important; 
+                padding: 0 !important;
+                padding-right: 15px !important;
             }
             
             /* Rubric specific print styles */
             .rubric-box {
                 background-color: white !important;
                 border: 1px solid black !important;
-                box-shadow: none !important;
                 page-break-inside: avoid;
             }
             .rubric-box table { border-color: black !important; }
             .rubric-box th, .rubric-box td { border-color: black !important; color: black !important; }
-            
-            /* Validation Icons - REQUESTED TO BE VISIBLE */
-            .validation-icon { display: inline-block !important; position: absolute; right: 0; }
-            
-            /* Layout forces */
-            .md\:flex-row { display: flex !important; flex-direction: row !important; }
-            .md\:w-1\/3 { width: 33.33% !important; }
-            .grid-cols-2 { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 
-            /* Student info & Header */
+            /* Validation icons visible in print based on request */
+            .validation-icon { display: block !important; position: absolute; right: 0; top: 2px; }
+
+            /* Student info box */
             #student-print-info { display: block !important; border: 1px solid #000 !important; margin-bottom: 10px; }
-            #task-header-title { display: none !important; } /* Hide the dynamic step title in print, we rely on section headers */
+            .print-text-sm { font-size: 9pt; }
             
-            /* Explicit Footer */
-            #print-footer-fixed {
+            /* Instructions */
+            #print-instructions { display: block !important; font-size: 8pt; margin-bottom: 10px; font-style: italic; }
+
+            /* Score display above rubric */
+            .score-display { display: block !important; text-align: right; font-weight: bold; margin-bottom: 5px; }
+
+            /* Footer Logic */
+            #print-footer-content {
                 display: block !important;
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 width: 100%;
+                height: 1.5cm;
                 background: white;
-                padding-top: 10px;
-                font-size: 10pt;
+                border-top: 1px solid #ccc;
+                padding-top: 5px;
             }
             
-            /* Instruction block in print */
-            #print-instructions { display: block !important; font-size: 9pt; font-style: italic; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;}
+            /* Ensure Task 1 and Task 2 are visible if we are in the final report mode */
+            #final-report-container { display: block !important; }
+            .page-break { page-break-before: always; }
         }
     </style>
 </head>
@@ -150,35 +161,30 @@
     </div>
 
     <!-- Main Application Container -->
-    <div id="app" class="max-w-[90rem] mx-auto printable-area bg-white shadow-xl rounded-xl p-6 md:p-10 border border-gray-200">
+    <div id="app" class="max-w-7xl mx-auto printable-area bg-white shadow-xl rounded-xl p-6 md:p-10 border border-gray-200">
 
-        <header class="text-center mb-6 pb-4 border-b-4 border-indigo-600 header-bg rounded-t-lg p-4">
-            <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" onerror="this.style.display='none'" />
+        <header class="text-center mb-4 pb-4 border-b-4 border-indigo-600 header-bg rounded-t-lg p-4">
+            <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" onerror="this.style.display='none'"/>
             <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
-            <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-300">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-300 print:text-black">
                 T2 Performance Task 02
             </h1>
-            <h2 id="company-name" class="text-xl md:text-2xl font-semibold text-gray-200 mt-1 hidden">[Company Name]</h2>
-            <p class="text-sm font-light text-gray-400 mt-2 hidden">Sole Proprietorship Service Business | For the Year Ended December 31, 2024</p>
-            <h3 id="task-header-title" class="text-xl font-bold text-white mt-4 hidden print:block"></h3>
+            <h2 id="company-name" class="text-xl md:text-2xl font-semibold text-gray-200 mt-1 hidden print:block print:text-gray-800">[Company Name]</h2>
+            <p class="text-sm font-light text-gray-400 mt-2 hidden print:block print:text-black">Sole Proprietorship Service Business | For the Year Ended December 31, 2024</p>
+            <h3 id="task-header-title" class="text-xl font-bold text-white mt-4 hidden print:block print:text-black"></h3>
         </header>
         
         <!-- Student Info for Print -->
-        <div id="student-print-info" class="no-print hidden mb-4 text-xs p-2 rounded print:block print:w-full"></div>
+        <div id="student-print-info" class="no-print hidden mb-4 text-xs p-2 rounded w-full"></div>
         
         <!-- Instructions for Print -->
-        <div id="print-instructions" class="hidden">
-            <strong>Instructions:</strong> Complete all required fields. Enter amounts with two decimal places. Round off centavos to the nearest peso.
+        <div id="print-instructions" class="hidden no-print text-gray-600">
+             Instruction: Complete all required fields. Enter amounts with two decimal places but without commas. Round off centavos to the nearest peso.
         </div>
 
         <!-- Dynamic Content Area -->
         <div id="task-container">
-            <!-- Content will be rendered here by JavaScript -->
-        </div>
-        
-        <!-- End of Task Marker (Print Only) -->
-        <div id="end-of-task-marker" class="hidden print:block text-center font-bold text-xl mt-8 border-t-2 border-black pt-4">
-            *** END OF TASK ***
+            <!-- Javascript renders here -->
         </div>
 
         <!-- Feedback and Actions Area -->
@@ -190,25 +196,25 @@
         </div>
 
         <footer class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg rounded-b-lg p-4 text-center no-print">
-            <p class="text-sm text-gray-400" id="footer-instructions">
+            <p class="text-sm text-gray-400">
                 Instruction: Complete all required fields. <br>
                 Enter amounts with two decimal places but without commas. <br>
                 Round off centavos to the nearest peso. <br>
-                After validating each task or sub-step, use the 'Print to PDF' option. <br>
-                Version 2025.11.21 0315
+                After validating each task, use the 'Print to PDF' option. <br>
+                Version 2025.11.21 163650
             </p>
         </footer>
-        
-        <!-- Print Specific Footer (Fixed on all pages) -->
-        <div id="print-footer-fixed" class="hidden">
-            <div class="flex justify-between items-end w-full mb-2 px-2">
-                <div class="text-left font-bold">FABM 1</div>
-                <div class="text-right">Page <span class="pageNumber"></span></div> <!-- Browser auto-fills actual page # usually -->
-            </div>
-            <div class="w-full text-center">
-                <div class="border border-black px-6 py-1 inline-block font-semibold rounded">
-                    4Cs: Christ-centeredness, Competence, Character, Compassion
+
+        <!-- PRINT FOOTER (Fixed on all pages in PDF) -->
+        <div id="print-footer-content">
+            <div class="flex justify-between items-end px-8 text-xs font-bold">
+                <div class="text-left w-1/3">FABM 1</div>
+                <div class="text-center w-1/3">
+                    <div class="border border-black px-4 py-1 inline-block">
+                        4Cs: Christ-centeredness, Competence, Character, Compassion
+                    </div>
                 </div>
+                <div class="text-right w-1/3">Page <span class="page-number"></span></div>
             </div>
         </div>
     </div>
@@ -218,8 +224,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
+        // 1. Configuration
         const firebaseConfig = {
-            apiKey: "", // Exec environment provides key
+            apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
             authDomain: "jlvcpa-quizzes.firebaseapp.com",
             projectId: "jlvcpa-quizzes",
             storageBucket: "jlvcpa-quizzes.appspot.com",
@@ -230,35 +237,28 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- VALIDATION HELPERS ---
+        // --- VALIDATION LOGIC FOR LOGIN ---
         async function validateStudentLogin(attendanceId, studentId) {
             if (!attendanceId || !studentId) return { success: false, message: "Missing Attendance ID or Student ID." };
             try {
                 const docRef = doc(db, "attendance", attendanceId);
                 const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) return { success: false, message: "Attendance Record not found (Invalid Link/ID)." };
-
+                if (!docSnap.exists()) return { success: false, message: "Attendance Record not found." };
                 const data = docSnap.data();
-                const studentsArray = data.students;
-                if (!Array.isArray(studentsArray)) return { success: false, message: "Data error: 'students' field is not an array." };
-
-                const student = studentsArray.find(s => String(s.Idnumber) === String(studentId));
-                if (!student) return { success: false, message: "ID Number not found in this attendance record." };
-
+                const student = data.students.find(s => String(s.Idnumber) === String(studentId));
+                if (!student) return { success: false, message: "ID Number not found." };
+                
                 const status = student.status || "";
                 const isPresent = status.includes("✔") || status.includes("✓") || status.includes("✔️");
-
                 if (isPresent) {
                     return {
-                        success: true,
-                        message: "Student Verified",
+                        success: true, message: "Student Verified",
                         data: { cn: student.CN || "", fullName: student.fullName || "", section: data.section || "", idNumber: studentId }
                     };
                 } else {
-                    return { success: false, message: `Student is marked absent (Status: ${status}). Login denied.` };
+                    return { success: false, message: "Student marked absent." };
                 }
             } catch (error) {
-                console.error("Firebase Validation Error:", error);
                 return { success: false, message: "Connection Error: " + error.message };
             }
         }
@@ -268,41 +268,39 @@
             const collectionName = `results_${activityName}_${attendanceId}`;
             const info = resultData.studentInfo;
             const docName = `students.${info.classNumber}-students.${info.idNumber}-${info.fullName}`;
+            const cleanData = JSON.parse(JSON.stringify(resultData, (k, v) => v === undefined ? null : v));
             try {
-                const cleanData = JSON.parse(JSON.stringify(resultData, (k, v) => v === undefined ? null : v));
                 await setDoc(doc(db, collectionName, docName), cleanData);
                 await setDoc(doc(db, "results_list", collectionName), { created: new Date().toISOString() });
                 return true;
-            } catch (error) {
-                console.error("Save Error:", error);
-                throw error;
-            }
+            } catch (error) { throw error; }
         }
 
-        // --- SCORING LOGIC ---
-        const gradingCriteria = { A: { min: 95, max: 100 }, P: { min: 85, max: 94.9 }, D: { min: 75, max: 84.9 }, IR: { min: 0, max: 74.9 } };
+        // --- GRADING LOGIC ---
+        const gradingCriteria = { A: {min:95}, P: {min:85}, D: {min:75}, IR: {min:0} };
         const calculateScoreAndGrade = (correct, total) => {
             if (total === 0) return { score: 0, total: 0, percentage: 0, grade: 'N/A' };
             const percentage = (correct / total) * 100;
             let grade = 'IR';
-            if (percentage >= gradingCriteria.A.min) grade = 'A';
-            else if (percentage >= gradingCriteria.P.min) grade = 'P';
-            else if (percentage >= gradingCriteria.D.min) grade = 'D';
+            if (percentage >= 95) grade = 'A';
+            else if (percentage >= 85) grade = 'P';
+            else if (percentage >= 75) grade = 'D';
             return { score: correct, total: total, percentage: Math.round(percentage * 10) / 10, grade: grade };
         };
 
-        // --- APP STATE ---
+        // --- STATE ---
         let state = {
-            currentStep: 0, // 0:Login, 1:Worksheet, 2:Task2(Full), 3:Complete/Print
+            currentStep: 0, // 0: Login, 1: Task 1, 2: Task 2 (Full), 3: Complete
             attendanceId: "",
             studentInfo: null,
             initialTB: [],
             adjustments: [],
             worksheetInputs: {},
             fsInputs: { is: {}, sce: {}, bs: {} },
-            validationAttempts: { 1: 0, 2: 0 },
+            validationAttempts: { 1: 0, 2: 0 }, // 1 for Task 1, 2 for Task 2 (Combined)
             task1Score: null,
             task2Score: null,
+            newAccounts: []
         };
 
         // --- TIMER LOGIC ---
@@ -311,34 +309,35 @@
         let timeRemainingSeconds = 0;
 
         window.disableAllInputs = () => {
-            document.querySelectorAll('input, button').forEach(el => {
-                if(el.id !== 'next-step-btn' && el.id !== 'login-btn') { el.disabled = true; el.classList.add('cursor-not-allowed', 'opacity-75'); }
+            document.querySelectorAll('input, button, select').forEach(el => {
+                if(el.id !== 'next-step-btn' && el.id !== 'login-btn') {
+                    el.disabled = true;
+                    el.classList.add('cursor-not-allowed', 'opacity-75');
+                }
             });
         };
 
         function updateTimerDisplay() {
-            const displayElement = document.getElementById('countdown');
-            const boxElement = document.getElementById('timer-box');
-            if (!displayElement) return;
-
+            const display = document.getElementById('countdown');
+            const box = document.getElementById('timer-box');
+            if (!display || timeRemainingSeconds === null) return;
             const h = Math.floor(timeRemainingSeconds / 3600);
             const m = Math.floor((timeRemainingSeconds % 3600) / 60);
             const s = timeRemainingSeconds % 60;
-            displayElement.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-
-            if (timeRemainingSeconds < 300) { boxElement?.classList.add('animate-pulse', 'bg-red-600'); boxElement?.classList.remove('bg-red-800'); }
+            display.textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
             
+            if (timeRemainingSeconds < 300) {
+                box?.classList.remove('bg-red-800'); box?.classList.add('bg-red-600', 'animate-pulse');
+            }
             if (timeRemainingSeconds <= 0) {
                 stopTimer();
-                displayElement.textContent = "00:00:00";
+                display.textContent = "00:00:00";
                 window.disableAllInputs();
-                if (typeof window.finishAndPreview === 'function') window.finishAndPreview(true);
-                boxElement.classList.remove('bg-red-600', 'animate-pulse');
-                boxElement.classList.add('bg-gray-500');
+                window.finishAndPreview(true);
             }
         }
 
-        function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+        function stopTimer() { if (timerInterval) clearInterval(timerInterval); }
         function startTimer() {
             if (timerInterval) stopTimer();
             timeRemainingSeconds = window.examDurationMins * 60;
@@ -346,15 +345,14 @@
             timerInterval = setInterval(() => { timeRemainingSeconds--; updateTimerDisplay(); }, 1000);
         }
 
-        // --- INITIALIZATION ---
         const checkUrlParametersAndInit = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const attId = urlParams.get('att');
             const duration = urlParams.get('dur');
             if (!attId || !duration) {
-                document.getElementById('task-container').innerHTML = `<div class="text-center py-16 bg-red-100"><h3 class="text-2xl font-bold text-red-700">ACCESS DENIED</h3><p>Missing Link Parameters</p></div>`;
-                document.getElementById('next-step-btn').disabled = true;
-                return;
+                 document.getElementById('task-container').innerHTML = `<div class="text-center text-red-600 font-bold py-10">Missing Link Parameters.</div>`;
+                 document.getElementById('next-step-btn').disabled = true;
+                 return;
             }
             state.attendanceId = attId;
             window.examDurationMins = parseInt(duration);
@@ -362,514 +360,593 @@
             renderStep();
         };
 
-        // --- SUBMISSION ---
         window.finishAndPreview = async (isAutoSubmit = false) => {
             if (!state.studentInfo) return;
             
-            // Calculate scores if not present
+            // Calculate scores if not done
             if (!state.task1Score) state.task1Score = validateWorksheet(false).scoreData;
-            if (!state.task2Score) state.task2Score = aggregateFinancialStatementScores().scoreData;
+            if (!state.task2Score) state.task2Score = validateTask2Full(false).scoreData;
 
-            renderMessageBox("Task complete. Saving results...", false);
+            renderMessageBox("Saving results...", false);
             stopTimer();
 
             try {
-                const fullResultData = {
+                await saveExamResults(state.attendanceId, {
                     studentInfo: state.studentInfo,
                     initialTB: state.initialTB,
                     adjustments: state.adjustments,
                     worksheetInputs: state.worksheetInputs,
                     fsInputs: state.fsInputs,
-                    validationAttempts: state.validationAttempts,
                     task1Score: state.task1Score,
                     task2Score: state.task2Score,
                     timestamp: new Date().toISOString()
-                };
-                await saveExamResults(state.attendanceId, fullResultData);
+                });
                 state.currentStep = 3;
                 renderStep();
             } catch (e) {
                 renderMessageBox("Error saving: " + e.message, true);
-                state.currentStep = 3;
+                state.currentStep = 3; // Move anyway so they can print
                 renderStep();
             }
         };
 
         // --- DATA GENERATION ---
         const rand = (min, max) => Math.round((Math.random() * (max - min) + min) / 1000) * 1000;
+        const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
         const generateDynamicData = () => {
-            const familyName = state.studentInfo.fullName.split(',')[0] || 'A';
-            const CAPITAL = `${familyName}, Capital`;
-            const WITHDRAWALS = `${familyName}, Withdrawals`;
+            const name = getFamilyName();
+            const cap = `${name}, Capital`;
+            const withdr = `${name}, Withdrawals`;
+            let tDr = 0, tCr = 0;
             
-            // Simplified generation logic for brevity, matches original structure
-            let tb = [
-                { name: 'Cash', type: 'asset', isFS: 'BS', amount: rand(80000, 150000) },
-                { name: 'Accounts Receivable', type: 'asset', isFS: 'BS', amount: rand(20000, 50000) },
-                { name: 'Supplies', type: 'asset', isFS: 'BS', amount: rand(10000, 30000) },
-                { name: 'Prepaid Rent', type: 'asset', isFS: 'BS', amount: rand(40000, 80000) },
-                { name: 'Equipment', type: 'asset', isFS: 'BS', amount: rand(180000, 250000) },
-                { name: 'Accumulated Depreciation-Equip.', type: 'contra-asset', isFS: 'BS', amount: rand(10000, 40000) },
-                { name: 'Accounts Payable', type: 'liability', isFS: 'BS', amount: rand(10000, 20000) },
-                { name: 'Unearned Service Revenue', type: 'liability', isFS: 'BS', amount: rand(5000, 15000) },
-                { name: WITHDRAWALS, type: 'equity', isFS: 'BS', amount: rand(40000, 60000) },
-                { name: 'Service Revenue', type: 'revenue', isFS: 'IS', amount: rand(150000, 250000) },
-                { name: 'Salaries Expense', type: 'expense', isFS: 'IS', amount: rand(25000, 45000) },
-                { name: 'Utilities Expense', type: 'expense', isFS: 'IS', amount: rand(8000, 12000) }
+            const gen = [
+                {name:'Cash',type:'asset',isFS:'BS',amount:rand(80000,150000)},
+                {name:'Accounts Receivable',type:'asset',isFS:'BS',amount:rand(20000,50000)},
+                {name:'Supplies',type:'asset',isFS:'BS',amount:rand(10000,30000)},
+                {name:'Prepaid Rent',type:'asset',isFS:'BS',amount:rand(40000,80000)},
+                {name:'Equipment',type:'asset',isFS:'BS',amount:rand(180000,250000)},
+                {name:'Accumulated Depreciation-Equip.',type:'contra-asset',isFS:'BS',amount:rand(10000,40000)},
+                {name:'Accounts Payable',type:'liability',isFS:'BS',amount:rand(10000,20000)},
+                {name:'Unearned Service Revenue',type:'liability',isFS:'BS',amount:rand(5000,15000)},
+                {name:withdr,type:'equity',isFS:'BS',amount:rand(40000,60000)},
+                {name:'Service Revenue',type:'revenue',isFS:'IS',amount:rand(150000,250000)},
+                {name:'Salaries Expense',type:'expense',isFS:'IS',amount:rand(25000,45000)},
+                {name:'Utilities Expense',type:'expense',isFS:'IS',amount:rand(8000,12000)}
             ];
 
-            let dr = 0, cr = 0;
-            tb.forEach(a => (a.type==='asset'||a.type==='expense'||a.name===WITHDRAWALS) ? dr+=a.amount : cr+=a.amount);
-            let capitalAmt = dr - cr;
-            if(capitalAmt < 100000) { tb.find(a=>a.name==='Service Revenue').amount += 150000; capitalAmt = dr - (cr+150000); }
-
-            // Rebuild final TB
-            let finalTB = [];
-            let totDr = 0, totCr = 0;
-            const order = ['Cash','Accounts Receivable','Supplies','Prepaid Rent','Equipment','Accumulated Depreciation-Equip.','Accounts Payable','Unearned Service Revenue',CAPITAL,WITHDRAWALS,'Service Revenue','Salaries Expense','Utilities Expense'];
-            
-            order.forEach(n => {
-                let acc;
-                if(n === CAPITAL) acc = { name: n, type: 'equity', isFS: 'BS', amount: capitalAmt };
-                else acc = tb.find(a => a.name === n);
-                
-                const isDr = (acc.type==='asset'||acc.name===WITHDRAWALS||acc.type==='expense');
-                const vDr = isDr ? acc.amount : 0; 
-                const vCr = isDr ? 0 : acc.amount;
-                finalTB.push({ name: n, type: acc.type, isFS: acc.isFS, TB_DR: vDr, TB_CR: vCr });
-                totDr += vDr; totCr += vCr;
+            gen.forEach(a => {
+                if (['asset','expense'].includes(a.type) || a.name === withdr) tDr += a.amount;
+                else tCr += a.amount;
             });
-            finalTB.push({ name: 'Totals', TB_DR: totDr, TB_CR: totCr });
-            state.initialTB = finalTB;
+            
+            let capAmt = tDr - tCr;
+            if (capAmt < 100000) {
+                gen.find(x=>x.name==='Service Revenue').amount += 150000;
+                capAmt = tDr - (tCr + 150000);
+            }
+
+            const strict = ['Cash','Accounts Receivable','Supplies','Prepaid Rent','Equipment','Accumulated Depreciation-Equip.','Accounts Payable','Unearned Service Revenue',cap,withdr,'Service Revenue','Salaries Expense','Utilities Expense'];
+            
+            let final = [];
+            strict.forEach(n => {
+                let amt = 0;
+                let type = ''; let isFS = '';
+                if(n===cap) { amt = capAmt; type='equity'; isFS='BS'; }
+                else {
+                   let f = gen.find(x=>x.name===n);
+                   amt = f.amount; type=f.type; isFS=f.isFS;
+                }
+                const isDr = ['asset','expense'].includes(type) || n===withdr;
+                final.push({ name: n, type: type, isFS: isFS, TB_DR: isDr?amt:0, TB_CR: isDr?0:amt });
+            });
+
+            let drT=0, crT=0;
+            final.forEach(x=>{drT+=x.TB_DR; crT+=x.TB_CR;});
+            final.push({name:'Totals', TB_DR: drT, TB_CR: crT});
+            state.initialTB = final;
 
             // Adjustments
-            const supplies = finalTB.find(a=>a.name==='Supplies').TB_DR;
-            const rent = finalTB.find(a=>a.name==='Prepaid Rent').TB_DR;
-            const unearn = finalTB.find(a=>a.name==='Unearned Service Revenue').TB_CR;
+            const sup = final.find(x=>x.name==='Supplies').TB_DR;
+            const pre = final.find(x=>x.name==='Prepaid Rent').TB_DR;
+            const un = final.find(x=>x.name==='Unearned Service Revenue').TB_CR;
             
+            const aa = rand(Math.floor(sup*0.4), Math.floor(sup*0.7));
+            const ab = Math.round(pre/randInt(6,12));
+            const ac = rand(10000,20000);
+            const ad = rand(5000,10000);
+            const ae = rand(Math.floor(un*0.5), Math.floor(un*0.8));
+            const af = rand(3000,7000);
+
             state.adjustments = [
-                { desc: `A. Supplies on hand: ₱ ${formatPHP(supplies*0.3)}.`, dr: 'Supplies Expense', cr: 'Supplies', amount: Math.round(supplies*0.7) },
-                { desc: `B. Rent expired: ₱ ${Math.round(rent/12)}.`, dr: 'Rent Expense', cr: 'Prepaid Rent', amount: Math.round(rent/12) },
-                { desc: `C. Depreciation: ₱ 10,000.`, dr: 'Depreciation Expense', cr: 'Accumulated Depreciation-Equip.', amount: 10000 },
-                { desc: `D. Accrued Salaries: ₱ 5,000.`, dr: 'Salaries Expense', cr: 'Salaries Payable', amount: 5000 },
-                { desc: `E. Unearned Rev earned: ₱ ${Math.round(unearn*0.5)}.`, dr: 'Unearned Service Revenue', cr: 'Service Revenue', amount: Math.round(unearn*0.5) },
-                { desc: `F. Accrued Revenue: ₱ 4,000.`, dr: 'Accrued Service Revenue', cr: 'Service Revenue', amount: 4000 }
+                {desc:`A. Supplies on hand, Dec 31, ₱${formatPHP(sup-aa)}.`, dr:'Supplies Expense', cr:'Supplies', amount:aa},
+                {desc:`B. One month rent expired.`, dr:'Rent Expense', cr:'Prepaid Rent', amount:ab},
+                {desc:`C. Depreciation: ₱${formatPHP(ac)}.`, dr:'Depreciation Expense', cr:'Accumulated Depreciation-Equip.', amount:ac},
+                {desc:`D. Accrued salaries: ₱${formatPHP(ad)}.`, dr:'Salaries Expense', cr:'Salaries Payable', amount:ad},
+                {desc:`E. Unearned revenue earned: ₱${formatPHP(ae)}.`, dr:'Unearned Service Revenue', cr:'Service Revenue', amount:ae},
+                {desc:`F. Accrued revenue: ₱${formatPHP(af)}.`, dr:'Accrued Service Revenue', cr:'Service Revenue', amount:af}
             ];
-            
+
             state.newAccounts = [
-                { name: 'Accrued Service Revenue', type: 'asset', isFS: 'BS' },
-                { name: 'Salaries Payable', type: 'liability', isFS: 'BS' },
-                { name: 'Supplies Expense', type: 'expense', isFS: 'IS' },
-                { name: 'Rent Expense', type: 'expense', isFS: 'IS' },
-                { name: 'Depreciation Expense', type: 'expense', isFS: 'IS' }
+                {name:'Accrued Service Revenue', type:'asset', isFS:'BS'},
+                {name:'Salaries Payable', type:'liability', isFS:'BS'},
+                {name:'Supplies Expense', type:'expense', isFS:'IS'},
+                {name:'Rent Expense', type:'expense', isFS:'IS'},
+                {name:'Depreciation Expense', type:'expense', isFS:'IS'}
             ];
         };
 
-        const formatPHP = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const getFamilyName = () => state.studentInfo.fullName.split(',')[0] || 'A';
-        const getAccountId = (n) => n.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-
-        // --- DOM UPDATE HELPERS ---
-        const renderMessageBox = (msg, isError = false) => {
-            const box = document.getElementById('message-box');
-            box.className = `text-lg font-medium min-h-8 ${isError ? 'text-red-600' : 'text-green-600'}`;
-            box.innerHTML = msg;
-        };
+        const getFamilyName = () => state.studentInfo?.fullName?.split(',')[0]?.trim() || 'A';
+        const formatPHP = (num) => (Math.round(num * 100) / 100).toLocaleString('en-US', {minimumFractionDigits: 2});
+        const getAccountId = (name) => name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
         
-        const updateStudentPrintInfo = () => {
-            const info = state.studentInfo || {};
-            const container = document.getElementById('student-print-info');
-            if(container && info.fullName) {
-                container.innerHTML = `
-                    <div class="flex justify-between"><span><strong>Name:</strong> ${info.fullName}</span><span><strong>Section:</strong> ${info.gradeSection}</span></div>
-                    <div class="flex justify-between"><span><strong>CN:</strong> ${info.classNumber}</span><span><strong>Date:</strong> ${new Date().toLocaleDateString()}</span></div>
-                `;
-            }
-        };
+        // --- RENDERERS ---
 
-        const renderScoreDisplay = (scoreObj) => {
-            if(!scoreObj) return '';
-            const color = scoreObj.grade === 'A' ? 'text-green-600' : scoreObj.grade === 'P' ? 'text-blue-600' : scoreObj.grade === 'D' ? 'text-yellow-600' : 'text-red-600';
-            return `<div class="score-display">Score: ${scoreObj.score} / ${scoreObj.total} | Grade: <span class="${color}">${scoreObj.grade}</span></div>`;
+        const renderMessageBox = (msg, isErr) => {
+            const box = document.getElementById('message-box');
+            box.className = `text-lg font-medium min-h-8 ${isErr ? 'text-red-600' : 'text-green-600'}`;
+            box.innerHTML = msg;
         };
 
         const renderRubric = (taskNum) => {
-             let competency = taskNum === 1 ? "Create 10-column worksheet..." : "Create financial statements...";
-             const scoreHtml = taskNum === 1 ? renderScoreDisplay(state.task1Score) : renderScoreDisplay(state.task2Score);
-             return `
+            let competency = taskNum === 1 ? "Create 10-column worksheet." : "Create IS, SCE, and BS.";
+            let scoreHtml = "";
+            
+            // Add score display above rubric if available
+            let scoreData = taskNum === 1 ? state.task1Score : state.task2Score;
+            if (scoreData) {
+                scoreHtml = `
+                    <div class="score-display text-indigo-800">
+                        Score: ${scoreData.score}/${scoreData.total} | 
+                        Percentage: ${scoreData.percentage}% | 
+                        Grade: <span class="text-xl font-extrabold">${scoreData.grade}</span>
+                    </div>
+                `;
+            }
+
+            return `
                 ${scoreHtml}
-                <div class="rubric-box bg-white p-4 rounded-lg border-2 border-indigo-300 shadow-md mb-6 print:border-black print:shadow-none">
-                    <h4 class="font-extrabold text-indigo-700 text-lg mb-2 border-b-2 pb-1 print:text-black">TASK ${taskNum} RUBRIC</h4>
+                <div class="rubric-box bg-white p-4 rounded-lg border-2 border-indigo-300 shadow-md mb-6">
+                    <h4 class="font-extrabold text-indigo-700 text-lg mb-2 border-b-2 pb-1">
+                        TASK ${taskNum} RUBRIC
+                    </h4>
                     <table class="min-w-full text-xs border-collapse border border-gray-400">
-                        <thead><tr class="header-bg text-center"><th class="p-1 border">Competency</th><th class="p-1 border">A (95-100)</th><th class="p-1 border">P (85-94)</th><th class="p-1 border">D (75-84)</th><th class="p-1 border">IR (<75)</th></tr></thead>
-                        <tbody><tr><td class="p-2 border">${competency}</td><td class="p-2 border">Excellent</td><td class="p-2 border">Good</td><td class="p-2 border">Acceptable</td><td class="p-2 border">Unacceptable</td></tr></tbody>
+                        <thead>
+                            <tr class="header-bg text-center text-white">
+                                <th class="p-2 border w-1/5">Competency</th>
+                                <th class="p-2 border bg-green-600/90 w-1/5">Advanced (A)</th>
+                                <th class="p-2 border bg-blue-600/90 w-1/5">Proficient (P)</th>
+                                <th class="p-2 border bg-yellow-600/90 w-1/5">Developing (D)</th>
+                                <th class="p-2 border bg-red-600/90 w-1/5">Intervention (IR)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="p-2 border font-semibold italic">${competency}</td>
+                                <td class="p-2 border bg-green-50/50">Excellent (95-100%)</td>
+                                <td class="p-2 border bg-blue-50/50">Good (85-94.9%)</td>
+                                <td class="p-2 border bg-yellow-50/50">Acceptable (75-84.9%)</td>
+                                <td class="p-2 border bg-red-50/50">Unacceptable (<75%)</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
-             `;
+            `;
         };
 
-        // --- CALCULATION LOGIC (Simulated/Simplified for brevity, reusing original logic structure) ---
+        // Login Step
+        const renderStudentInfo = () => {
+             document.getElementById('task-container').innerHTML = `
+                <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
+                <div class="bg-gray-50 p-6 rounded-lg shadow-inner space-y-4">
+                    <input type="text" id="attendanceId" class="text-input" placeholder="Attendance ID" value="${state.attendanceId}">
+                    <input type="text" id="studentId" class="text-input" placeholder="Student ID">
+                    <button id="login-btn" onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 text-white rounded">Verify</button>
+                    
+                    <div class="mt-4 border-t pt-2">
+                        <label>Name</label> <input id="fullName" class="text-input bg-gray-200" disabled value="${state.studentInfo?.fullName||''}">
+                    </div>
+                </div>
+             `;
+             document.getElementById('next-step-btn').innerText = "Submit Info & Proceed to Task 1";
+             document.getElementById('next-step-btn').disabled = true;
+        };
+
         const calculateWorksheetAnswers = () => {
-            // This function reconstructs the entire accounting cycle in memory to validate against
-            // NOTE: This duplicates logic from the original prompt to ensure accuracy.
-            const familyName = getFamilyName();
-            const CAPITAL = `${familyName}, Capital`;
-            const WITHDRAWALS = `${familyName}, Withdrawals`;
-            
-            // Map accounts
-            let accountsMap = new Map();
-            [...state.initialTB.filter(x=>x.name!=='Totals'), ...state.newAccounts].forEach(acc => {
-                accountsMap.set(acc.name, { 
-                    ...acc, TB_DR: acc.TB_DR||0, TB_CR: acc.TB_CR||0, ADJ_DR: 0, ADJ_CR: 0 
-                });
-            });
+            const map = new Map();
+            state.initialTB.filter(a=>a.name!=='Totals').forEach(a => map.set(a.name, {...a, ADJ_DR:0, ADJ_CR:0, ATB_DR:a.TB_DR, ATB_CR:a.TB_CR}));
+            state.newAccounts.forEach(n => { if(!map.has(n.name)) map.set(n.name, {...n, TB_DR:0,TB_CR:0,ADJ_DR:0,ADJ_CR:0,ATB_DR:0,ATB_CR:0}); });
 
-            // Apply adjustments
+            // Specific overrides
+            map.get('Accrued Service Revenue').type='asset'; map.get('Accrued Service Revenue').isFS='BS';
+            map.get('Salaries Payable').type='liability'; map.get('Salaries Payable').isFS='BS';
+            map.get('Supplies Expense').type='expense'; map.get('Supplies Expense').isFS='IS';
+            map.get('Rent Expense').type='expense'; map.get('Rent Expense').isFS='IS';
+            map.get('Depreciation Expense').type='expense'; map.get('Depreciation Expense').isFS='IS';
+
             state.adjustments.forEach(adj => {
-                if(accountsMap.has(adj.dr)) accountsMap.get(adj.dr).ADJ_DR += adj.amount;
-                if(accountsMap.has(adj.cr)) accountsMap.get(adj.cr).ADJ_CR += adj.amount;
+                if(map.has(adj.dr)) map.get(adj.dr).ADJ_DR += adj.amount;
+                if(map.has(adj.cr)) map.get(adj.cr).ADJ_CR += adj.amount;
             });
 
-            let finals = [];
-            let sum = { tb_dr:0, tb_cr:0, adj_dr:0, adj_cr:0, atb_dr:0, atb_cr:0, is_dr:0, is_cr:0, bs_dr:0, bs_cr:0 };
-
-            // Calculate lines
-            const order = ['Cash','Accounts Receivable','Supplies','Prepaid Rent','Accrued Service Revenue','Equipment','Accumulated Depreciation-Equip.','Accounts Payable','Unearned Service Revenue','Salaries Payable',CAPITAL,WITHDRAWALS,'Service Revenue','Salaries Expense','Utilities Expense','Supplies Expense','Rent Expense','Depreciation Expense'];
+            let allAcc = [];
+            const order = ['Cash','Accounts Receivable','Supplies','Prepaid Rent','Accrued Service Revenue','Equipment','Accumulated Depreciation-Equip.','Accounts Payable','Unearned Service Revenue','Salaries Payable', `${getFamilyName()}, Capital`, `${getFamilyName()}, Withdrawals`, 'Service Revenue','Salaries Expense','Utilities Expense','Supplies Expense','Rent Expense','Depreciation Expense'];
             
             order.forEach(name => {
-                const acc = accountsMap.get(name);
-                if(acc) {
-                    let atb_dr = acc.TB_DR + acc.ADJ_DR;
-                    let atb_cr = acc.TB_CR + acc.ADJ_CR;
-                    let net = atb_dr - atb_cr;
-                    acc.ATB_DR = net > 0 ? net : 0;
-                    acc.ATB_CR = net < 0 ? Math.abs(net) : 0;
-                    acc.IS_DR = acc.isFS === 'IS' ? acc.ATB_DR : 0;
-                    acc.IS_CR = acc.isFS === 'IS' ? acc.ATB_CR : 0;
-                    acc.BS_DR = acc.isFS === 'BS' ? acc.ATB_DR : 0;
-                    acc.BS_CR = acc.isFS === 'BS' ? acc.ATB_CR : 0;
+                if(map.has(name)) {
+                    let acc = map.get(name);
+                    let bal = (acc.TB_DR + acc.ADJ_DR) - (acc.TB_CR + acc.ADJ_CR);
+                    acc.ATB_DR = bal > 0 ? bal : 0; acc.ATB_CR = bal < 0 ? Math.abs(bal) : 0;
                     
-                    finals.push(acc);
-                    sum.tb_dr+=acc.TB_DR; sum.tb_cr+=acc.TB_CR;
-                    sum.adj_dr+=acc.ADJ_DR; sum.adj_cr+=acc.ADJ_CR;
-                    sum.atb_dr+=acc.ATB_DR; sum.atb_cr+=acc.ATB_CR;
-                    sum.is_dr+=acc.IS_DR; sum.is_cr+=acc.IS_CR;
-                    sum.bs_dr+=acc.BS_DR; sum.bs_cr+=acc.BS_CR;
+                    acc.IS_DR=0; acc.IS_CR=0; acc.BS_DR=0; acc.BS_CR=0;
+                    if(acc.isFS==='IS') { acc.IS_DR=acc.ATB_DR; acc.IS_CR=acc.ATB_CR; }
+                    else { acc.BS_DR=acc.ATB_DR; acc.BS_CR=acc.ATB_CR; }
+                    allAcc.push(acc);
                 }
             });
 
-            const netIncome = sum.is_cr - sum.is_dr;
-            // Capital calc
-            const startCap = accountsMap.get(CAPITAL).ATB_CR;
-            const wdraw = accountsMap.get(WITHDRAWALS).ATB_DR;
-            const endCap = startCap + netIncome - wdraw;
+            let sums = { TB_DR:0,TB_CR:0, ADJ_DR:0,ADJ_CR:0, ATB_DR:0,ATB_CR:0, IS_DR:0,IS_CR:0, BS_DR:0,BS_CR:0 };
+            allAcc.forEach(a => {
+                sums.TB_DR+=a.TB_DR; sums.TB_CR+=a.TB_CR;
+                sums.ADJ_DR+=a.ADJ_DR; sums.ADJ_CR+=a.ADJ_CR;
+                sums.ATB_DR+=a.ATB_DR; sums.ATB_CR+=a.ATB_CR;
+                sums.IS_DR+=a.IS_DR; sums.IS_CR+=a.IS_CR;
+                sums.BS_DR+=a.BS_DR; sums.BS_CR+=a.BS_CR;
+            });
+
+            const ni = sums.IS_CR - sums.IS_DR;
+            const capName = `${getFamilyName()}, Capital`;
+            const withName = `${getFamilyName()}, Withdrawals`;
+            const startCap = map.get(capName)?.ATB_CR || 0;
+            const withdr = map.get(withName)?.ATB_DR || 0;
+            const endCap = startCap + ni - withdr;
 
             return {
-                accounts: finals,
-                sums: sum,
-                netIncome,
-                startCap, wdraw, endCap,
-                totalRev: sum.is_cr, totalExp: sum.is_dr,
-                assets: finals.filter(a=>a.isFS==='BS' && (a.type.includes('asset'))),
-                liabs: finals.filter(a=>a.type==='liability'),
-                totAsset: finals.filter(a=>a.isFS==='BS' && a.type==='asset').reduce((s,a)=>s+a.ATB_DR,0) - finals.filter(a=>a.type==='contra-asset').reduce((s,a)=>s+a.ATB_CR,0),
-                totLiabEq: finals.filter(a=>a.type==='liability').reduce((s,a)=>s+a.ATB_CR,0) + endCap
+                accounts: allAcc,
+                sums: sums,
+                netIncome: ni,
+                endingCapital: endCap,
+                totalRevenue: sums.IS_CR,
+                totalExpenses: sums.IS_DR,
+                assets: allAcc.filter(x=>x.isFS==='BS' && (x.type==='asset'||x.type==='contra-asset')),
+                liabilities: allAcc.filter(x=>x.type==='liability'),
+                isAccounts: allAcc.filter(x=>x.isFS==='IS'),
+                startingCapital: startCap, withdrawals: withdr,
+                correctBS_Total: sums.BS_CR + (ni > 0 ? ni : 0) // Simplification for check
             };
         };
 
-        // --- RENDERERS ---
-
-        const renderStudentInfo = () => {
-            document.getElementById('task-container').innerHTML = `
-                <div class="space-y-4 max-w-2xl mx-auto">
-                    <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
-                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-gray-700">Attendance ID</label>
-                            <input type="text" id="attendanceId" class="text-input" value="${state.attendanceId}" readonly></div>
-                            <div><label class="block text-sm font-medium text-gray-700">Student ID</label>
-                            <input type="text" id="studentId" class="text-input"></div>
-                        </div>
-                        <button id="login-btn" onclick="window.handleLogin()" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded">Verify & Login</button>
-                        <div class="border-t pt-4 mt-2">
-                            <div class="grid grid-cols-2 gap-4 opacity-75">
-                                <div class="col-span-2"><label class="text-xs">Name</label><input id="fullName" class="text-input" disabled value="${state.studentInfo?.fullName||''}"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            document.getElementById('next-step-btn').innerText = "Proceed to Task 1";
-            document.getElementById('next-step-btn').disabled = true; 
-        };
-
-        const renderWorksheet = (isReadOnly = false) => {
+        // Task 1 Renderer
+        const renderWorksheet = (readOnly = false) => {
             const data = calculateWorksheetAnswers();
-            const disabled = isReadOnly ? 'disabled' : '';
+            const subAfter = 'Depreciation Expense';
+            let rows = '';
             
-            let rows = data.accounts.map((acc, i) => {
-                const id = `wks_${i}_`;
-                const val = (k) => state.worksheetInputs[id+k] || '';
-                // Validation icon markup
-                const v = (k) => `<span id="${id}${k}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>`;
-                
-                return `<tr>
-                    <td class="p-2 border text-left text-xs">${acc.name}</td>
-                    <td class="p-2 border text-right text-xs">${formatPHP(acc.TB_DR)}</td>
-                    <td class="p-2 border text-right text-xs">${formatPHP(acc.TB_CR)}</td>
-                    <td class="p-0 border relative"><input type="number" id="${id}ADJ_DR" oninput="window.saveWks('${id}ADJ_DR',this.value)" class="table-input" value="${val('ADJ_DR')}" ${disabled}>${v('ADJ_DR')}</td>
-                    <td class="p-0 border relative"><input type="number" id="${id}ADJ_CR" oninput="window.saveWks('${id}ADJ_CR',this.value)" class="table-input" value="${val('ADJ_CR')}" ${disabled}>${v('ADJ_CR')}</td>
-                    <td class="p-0 border relative"><input type="number" id="${id}ATB_DR" oninput="window.saveWks('${id}ATB_DR',this.value)" class="table-input" value="${val('ATB_DR')}" ${disabled}>${v('ATB_DR')}</td>
-                    <td class="p-0 border relative"><input type="number" id="${id}ATB_CR" oninput="window.saveWks('${id}ATB_CR',this.value)" class="table-input" value="${val('ATB_CR')}" ${disabled}>${v('ATB_CR')}</td>
-                    <td class="p-0 border relative bg-${acc.isFS!=='IS'?'gray-100':'white'}"><input type="number" id="${id}IS_DR" oninput="window.saveWks('${id}IS_DR',this.value)" class="table-input" value="${val('IS_DR')}" ${acc.isFS!=='IS'||isReadOnly?'disabled':''}>${v('IS_DR')}</td>
-                    <td class="p-0 border relative bg-${acc.isFS!=='IS'?'gray-100':'white'}"><input type="number" id="${id}IS_CR" oninput="window.saveWks('${id}IS_CR',this.value)" class="table-input" value="${val('IS_CR')}" ${acc.isFS!=='IS'||isReadOnly?'disabled':''}>${v('IS_CR')}</td>
-                    <td class="p-0 border relative bg-${acc.isFS!=='BS'?'gray-100':'white'}"><input type="number" id="${id}BS_DR" oninput="window.saveWks('${id}BS_DR',this.value)" class="table-input" value="${val('BS_DR')}" ${acc.isFS!=='BS'||isReadOnly?'disabled':''}>${v('BS_DR')}</td>
-                    <td class="p-0 border relative bg-${acc.isFS!=='BS'?'gray-100':'white'}"><input type="number" id="${id}BS_CR" oninput="window.saveWks('${id}BS_CR',this.value)" class="table-input" value="${val('BS_CR')}" ${acc.isFS!=='BS'||isReadOnly?'disabled':''}>${v('BS_CR')}</td>
-                </tr>`;
+            data.accounts.forEach((acc, i) => {
+                const bid = `wks_${i}_`;
+                const cols = ['ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'];
+                let inputs = cols.map(c => {
+                    const disabled = (c.includes('IS') && acc.isFS!=='IS') || (c.includes('BS') && acc.isFS!=='BS') || readOnly;
+                    return `<td class="p-0 border relative"><input type="number" id="${bid}${c}" oninput="window.saveWorksheetInput('${bid}${c}', this.value)" class="table-input" value="${state.worksheetInputs[bid+c]||''}" ${disabled?'disabled':''}><span id="${bid}${c}_val" class="validation-icon"></span></td>`;
+                }).join('');
+                rows += `<tr><td class="p-2 border text-left whitespace-nowrap">${acc.name}</td><td class="p-2 border text-right">${formatPHP(acc.TB_DR)}</td><td class="p-2 border text-right">${formatPHP(acc.TB_CR)}</td>${inputs}</tr>`;
+            });
+
+            // Totals Row (Simplified for brevity in renderer, full logic in validation)
+            const totalsCols = ['TB_DR','TB_CR','ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'];
+            let totInputs = totalsCols.map((c, idx) => {
+                const id = `wks_FINAL_${c}`;
+                return `<td class="p-0 border relative"><input type="number" id="${id}" oninput="window.saveWorksheetInput('${id}', this.value)" class="table-input font-bold" value="${state.worksheetInputs[id]||''}" ${readOnly?'disabled':''}><span id="${id}_val" class="validation-icon"></span></td>`;
             }).join('');
 
-            // NI Row
-            const niRow = `<tr class="bg-green-50 font-bold"><td class="p-2 border">Net Income</td><td colspan="6"></td>
-                <td class="relative border p-0"><input type="number" id="wks_NI_IS_DR" oninput="saveWks('wks_NI_IS_DR',this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_IS_DR']||''}" ${disabled}><span id="wks_NI_IS_DR_val" class="validation-icon absolute right-1"></span></td>
-                <td class="relative border p-0"><input type="number" id="wks_NI_IS_CR" oninput="saveWks('wks_NI_IS_CR',this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_IS_CR']||''}" ${disabled}><span id="wks_NI_IS_CR_val" class="validation-icon absolute right-1"></span></td>
-                <td class="relative border p-0"><input type="number" id="wks_NI_BS_DR" oninput="saveWks('wks_NI_BS_DR',this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_BS_DR']||''}" ${disabled}><span id="wks_NI_BS_DR_val" class="validation-icon absolute right-1"></span></td>
-                <td class="relative border p-0"><input type="number" id="wks_NI_BS_CR" oninput="saveWks('wks_NI_BS_CR',this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_BS_CR']||''}" ${disabled}><span id="wks_NI_BS_CR_val" class="validation-icon absolute right-1"></span></td>
-            </tr>`;
-
-            // Totals Row (Simplified HTML generation)
-            const cols = ['TB_DR','TB_CR','ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'];
-            const totalsRow = `<tr class="bg-indigo-50 font-bold border-t-2 border-indigo-700"><td class="p-2 border text-center">TOTALS</td>` + 
-                cols.map(c => `<td class="relative border p-0"><input type="number" id="wks_FINAL_${c}" oninput="saveWks('wks_FINAL_${c}',this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_'+c]||''}" ${disabled}><span id="wks_FINAL_${c}_val" class="validation-icon absolute right-1"></span></td>`).join('') + `</tr>`;
-
-            const html = `
-                <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700 print:hidden">TASK 1: 10-Column Worksheet</h3>
-                    ${!isReadOnly ? renderRubric(1) : ''}
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 print:hidden">
-                        <h4 class="font-bold text-blue-700">Adjustments Data:</h4>
-                        <ul class="list-disc list-inside text-sm">${state.adjustments.map(a=>`<li>${a.desc}</li>`).join('')}</ul>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-xs border-collapse border border-gray-400">
-                            <thead>
-                                <tr class="header-bg text-center"><th rowspan="2" class="p-2 border w-32">Account Titles</th><th colspan="2" class="p-1 border">Trial Balance</th><th colspan="2" class="p-1 border">Adjustments</th><th colspan="2" class="p-1 border">Adj. Trial Balance</th><th colspan="2" class="p-1 border">Income Statement</th><th colspan="2" class="p-1 border">Balance Sheet</th></tr>
-                                <tr class="bg-indigo-100 text-indigo-900 text-center"><th class="border">Dr</th><th class="border">Cr</th><th class="border">Dr</th><th class="border">Cr</th><th class="border">Dr</th><th class="border">Cr</th><th class="border">Dr</th><th class="border">Cr</th><th class="border">Dr</th><th class="border">Cr</th></tr>
-                            </thead>
-                            <tbody>${rows}${niRow}${totalsRow}</tbody>
-                        </table>
-                    </div>
-                </div>`;
-            
-            if(!isReadOnly) {
-                document.getElementById('task-container').innerHTML = html;
-                document.getElementById('next-step-btn').innerText = "Validate Task 1";
-            }
-            return html;
+            return `
+                ${renderRubric(1)}
+                <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                    <h4 class="font-bold text-blue-700">Required Adjustments:</h4>
+                    <ul class="list-disc list-inside text-sm">${state.adjustments.map(a=>`<li>${a.desc}</li>`).join('')}</ul>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-xs border-collapse border border-gray-400">
+                        <thead>
+                             <tr class="header-bg text-center"><th rowspan="2" class="p-2 border">Account Titles</th><th colspan="2" class="p-2 border">Trial Balance</th><th colspan="2" class="p-2 border">Adjustments</th><th colspan="2" class="p-2 border">Adj. Trial Balance</th><th colspan="2" class="p-2 border">Income Statement</th><th colspan="2" class="p-2 border">Balance Sheet</th></tr>
+                             <tr class="bg-indigo-100 text-center text-indigo-900"><th class="p-1 border">DR</th><th class="p-1 border">CR</th><th class="p-1 border">DR</th><th class="p-1 border">CR</th><th class="p-1 border">DR</th><th class="p-1 border">CR</th><th class="p-1 border">DR</th><th class="p-1 border">CR</th><th class="p-1 border">DR</th><th class="p-1 border">CR</th></tr>
+                        </thead>
+                        <tbody>${rows}<tr class="font-bold bg-indigo-50 border-t-2 border-indigo-700"><td class="p-2 border text-center">TOTALS</td>${totInputs}</tr></tbody>
+                    </table>
+                </div>
+            `;
         };
 
-        const renderTask2 = (isReadOnly = false) => {
+        // Combined Task 2 Renderer
+        const renderTask2Full = (readOnly = false) => {
             const data = calculateWorksheetAnswers();
-            const familyName = getFamilyName();
-            const disabled = isReadOnly ? 'disabled' : '';
-            const v = (id) => `<span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>`;
+            const isNI = data.netIncome > 0;
+            const compName = document.getElementById('company-name').innerText.replace(' - Year End', '');
 
-            // Helpers for inputs
-            const inp = (type, id, ph="Amount") => `<div class="relative w-full"><input type="number" id="${id}" oninput="window.saveFS('${type}','${id}',this.value)" class="fs-input" placeholder="${ph}" value="${state.fsInputs[type][id]||''}" ${disabled}>${v(id)}</div>`;
-            
-            // 1. IS HTML
-            const rev = data.accounts.filter(a=>a.type==='revenue').map(a=> `<div class="flex justify-between mb-1"><span>${a.name}</span><div class="w-1/3">${inp('is', getAccountId(a.name)+'_is')}</div></div>`).join('');
-            const exp = data.accounts.filter(a=>a.type==='expense').map(a=> `<div class="flex justify-between mb-1"><span>${a.name}</span><div class="w-1/3">${inp('is', getAccountId(a.name)+'_is')}</div></div>`).join('');
-            const isHtml = `
-                <div class="flex-1 border p-4 rounded shadow bg-white">
-                    <h4 class="font-bold text-center mb-2 text-indigo-700 border-b">Income Statement</h4>
-                    <div class="text-xs mb-4 font-bold text-green-700">Revenues</div>${rev}
-                    <div class="flex justify-between font-bold border-t pt-1 mb-2"><span>Total Rev:</span><div class="w-1/3">${inp('is','is_total_rev')}</div></div>
-                    <div class="text-xs mb-4 font-bold text-red-700">Expenses</div>${exp}
-                    <div class="flex justify-between font-bold border-t pt-1 mb-2"><span>Total Exp:</span><div class="w-1/3">${inp('is','is_total_exp')}</div></div>
-                    <div class="flex justify-between font-extrabold border-t-2 border-indigo-500 pt-2 bg-indigo-50 p-1"><span>NET INCOME:</span><div class="w-1/3">${inp('is','is_net_income')}</div></div>
-                </div>`;
-
-            // 2. SCE HTML
-            const sceHtml = `
-                <div class="flex-1 border p-4 rounded shadow bg-white">
-                    <h4 class="font-bold text-center mb-2 text-purple-700 border-b">Changes in Equity</h4>
-                    <div class="flex justify-between mb-2"><span>${familyName}, Capital (Beg)</span><div class="w-1/3">${inp('sce','sce_beg')}</div></div>
-                    <div class="flex justify-between mb-2"><span>Add: Net Income</span><div class="w-1/3">${inp('sce','sce_ni')}</div></div>
-                    <div class="flex justify-between mb-2"><span>Less: Withdrawals</span><div class="w-1/3">${inp('sce','sce_wd')}</div></div>
-                    <div class="flex justify-between font-extrabold border-t-2 border-purple-500 pt-2 bg-purple-50 p-1"><span>Capital (End):</span><div class="w-1/3">${inp('sce','sce_end')}</div></div>
-                </div>`;
-
-            // 3. BS HTML
-            const assets = data.assets.map(a=> `<div class="flex justify-between mb-1"><span>${a.type==='contra-asset'?'Less: ':''}${a.name}</span><div class="w-1/3">${inp('bs', getAccountId(a.name)+'_bs')}</div></div>`).join('');
-            const liabs = data.liabs.map(a=> `<div class="flex justify-between mb-1"><span>${a.name}</span><div class="w-1/3">${inp('bs', getAccountId(a.name)+'_bs')}</div></div>`).join('');
-            const bsHtml = `
-                <div class="flex-1 border p-4 rounded shadow bg-white">
-                    <h4 class="font-bold text-center mb-2 text-blue-700 border-b">Balance Sheet</h4>
-                    <div class="text-xs font-bold text-blue-700">ASSETS</div>${assets}
-                    <div class="flex justify-between font-extrabold border-t pt-1 mb-2"><span>TOTAL ASSETS:</span><div class="w-1/3">${inp('bs','bs_tot_asset')}</div></div>
-                    <div class="text-xs font-bold text-red-700 mt-2">LIABILITIES</div>${liabs}
-                    <div class="text-xs font-bold text-purple-700 mt-2">EQUITY</div>
-                    <div class="flex justify-between mb-1"><span>${familyName}, Capital (End)</span><div class="w-1/3">${inp('bs','bs_cap_end')}</div></div>
-                    <div class="flex justify-between font-extrabold border-t-2 border-red-500 pt-2 bg-red-50 p-1 text-xs"><span>TOT LIAB & EQ:</span><div class="w-1/3">${inp('bs','bs_tot_le')}</div></div>
-                </div>`;
-
-            const containerHtml = `
-                <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700 print:hidden">TASK 2: Financial Statements</h3>
-                    ${!isReadOnly ? renderRubric(2) : ''}
-                    <!-- Flex container for 3 parts: vertical on mobile, horizontal on md and print -->
-                    <div class="flex flex-col md:flex-row print:flex-row gap-4 items-stretch">
-                        ${isHtml}${sceHtml}${bsHtml}
+            // Helper for IS
+            const renderISPart = () => {
+                const rev = data.isAccounts.filter(a=>a.type==='revenue');
+                const exp = data.isAccounts.filter(a=>a.type==='expense');
+                const renderRow = (acc) => {
+                     const id = getAccountId(acc.name)+'_is_li';
+                     return `<div class="relative mb-1"><div class="flex justify-between text-sm"><span class="mr-2">${acc.name}</span><div class="relative w-1/2"><input type="number" id="${id}" oninput="saveFSInput('is','${id}',this.value)" class="fs-input" value="${state.fsInputs.is[id]||''}" ${readOnly?'disabled':''}><span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div></div>`;
+                };
+                return `
+                    <div class="border p-2 rounded bg-white h-full">
+                        <div class="text-center font-bold text-sm mb-2 border-b">${compName}<br>Income Statement</div>
+                        <div class="text-xs font-bold text-green-700 mb-1">Revenues</div>
+                        ${rev.map(renderRow).join('')}
+                        <div class="flex justify-between font-bold text-sm mt-1 border-t pt-1"><span class="text-green-700">Total Rev:</span><div class="relative w-1/2"><input type="number" id="is_total_revenue" oninput="saveFSInput('is','is_total_revenue',this.value)" class="fs-input" value="${state.fsInputs.is.is_total_revenue||''}" ${readOnly?'disabled':''}><span id="is_total_revenue_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                        <div class="text-xs font-bold text-red-700 mt-2 mb-1">Expenses</div>
+                        ${exp.map(renderRow).join('')}
+                        <div class="flex justify-between font-bold text-sm mt-1 border-t pt-1"><span class="text-red-700">Total Exp:</span><div class="relative w-1/2"><input type="number" id="is_total_expense" oninput="saveFSInput('is','is_total_expense',this.value)" class="fs-input" value="${state.fsInputs.is.is_total_expense||''}" ${readOnly?'disabled':''}><span id="is_total_expense_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                        <div class="flex justify-between font-extrabold text-sm mt-2 border-t-2 pt-1 bg-indigo-50"><span class="text-indigo-800">${isNI?'Net Income':'Net Loss'}:</span><div class="relative w-1/2"><input type="number" id="is_net_income" oninput="saveFSInput('is','is_net_income',this.value)" class="fs-input" value="${state.fsInputs.is.is_net_income||''}" ${readOnly?'disabled':''}><span id="is_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
                     </div>
-                </div>
-            `;
-
-            if(!isReadOnly) {
-                document.getElementById('task-container').innerHTML = containerHtml;
-                document.getElementById('next-step-btn').innerText = "Validate Task 2";
-            }
-            return containerHtml;
-        };
-
-        const renderFinalReport = () => {
-            // Construct the full view
-            const task1 = renderWorksheet(true);
-            const task2 = renderTask2(true);
-            
-            document.getElementById('task-container').innerHTML = `
-                <div class="space-y-8">
-                    <div id="task1-final">${task1}</div>
-                    <div id="task2-final">${task2}</div>
-                </div>
-            `;
-            
-            document.getElementById('next-step-btn').innerText = "Print Final Report to PDF";
-            document.getElementById('next-step-btn').onclick = () => window.print();
-            renderMessageBox("Task Complete. Click below to Print.");
-            
-            // Show Print Footer
-            document.getElementById('end-of-task-marker').classList.remove('hidden');
-        };
-
-        // --- EVENTS ---
-        window.saveWks = (id, val) => state.worksheetInputs[id] = Number(val);
-        window.saveFS = (type, id, val) => state.fsInputs[type][id] = Number(val);
-
-        window.handleLogin = async () => {
-            const btn = document.getElementById('login-btn');
-            btn.disabled = true; btn.innerText = "Verifying...";
-            const res = await validateStudentLogin(state.attendanceId, document.getElementById('studentId').value);
-            if(res.success) {
-                state.studentInfo = res.data;
-                document.getElementById('company-name').innerText = `${res.data.fullName.split(',')[0]} Accounting Services`;
-                generateDynamicData();
-                renderMessageBox("Verified!");
-                document.getElementById('next-step-btn').disabled = false;
-                btn.innerText = "Verified";
-            } else {
-                renderMessageBox(res.message, true);
-                btn.disabled = false; btn.innerText = "Verify & Login";
-            }
-        };
-
-        window.handleNextStep = async () => {
-            if(state.currentStep === 0) {
-                state.currentStep = 1;
-                renderStep();
-            } else if(state.currentStep === 1) {
-                const res = validateWorksheet(true);
-                state.task1Score = res.scoreData;
-                if(res.isPerfect || ++state.validationAttempts[1] >= 3) {
-                    state.currentStep = 2;
-                    renderMessageBox(res.isPerfect ? "Task 1 Perfect!" : "Task 1 Done (Max attempts). Proceeding...");
-                    renderStep();
-                } else {
-                    renderMessageBox(`Incorrect. Attempt ${state.validationAttempts[1]}/3`, true);
-                }
-            } else if(state.currentStep === 2) {
-                // Validate All Task 2
-                const r1 = validateIS(true);
-                const r2 = validateSCE(true);
-                const r3 = validateBS(true);
-                const correct = r1.c + r2.c + r3.c;
-                const total = r1.t + r2.t + r3.t;
-                const isPerfect = correct === total;
-                
-                if(isPerfect || ++state.validationAttempts[2] >= 3) {
-                    state.task2Score = calculateScoreAndGrade(correct, total);
-                    await finishAndPreview(); // Submit to Firebase
-                    renderFinalReport(); // Render readonly view
-                } else {
-                    renderMessageBox(`Incorrect entries in FS. Attempt ${state.validationAttempts[2]}/3`, true);
-                }
-            }
-        };
-
-        // --- VALIDATION LOGIC ---
-        const validateWorksheet = (render) => {
-            const d = calculateWorksheetAnswers();
-            const ac = d.accounts;
-            let c=0, t=0;
-            const check = (id, corr) => {
-                t++; const ok = Math.abs((state.worksheetInputs[id]||0) - corr) < 0.01;
-                if(ok) c++;
-                if(render) document.getElementById(id+'_val').innerHTML = ok ? '<span class="text-green-600">✔</span>' : '<span class="text-red-600">❌</span>';
+                `;
             };
-            
-            ac.forEach((a,i) => {
-                const p=`wks_${i}_`;
-                check(p+'ADJ_DR', a.ADJ_DR); check(p+'ADJ_CR', a.ADJ_CR);
-                check(p+'ATB_DR', a.ATB_DR); check(p+'ATB_CR', a.ATB_CR);
-                if(a.isFS==='IS') { check(p+'IS_DR', a.IS_DR); check(p+'IS_CR', a.IS_CR); }
-                if(a.isFS==='BS') { check(p+'BS_DR', a.BS_DR); check(p+'BS_CR', a.BS_CR); }
+
+            // Helper for SCE
+            const renderSCEPart = () => {
+                const capName = `${getFamilyName()}, Capital`;
+                const withName = `${getFamilyName()}, Withdrawals`;
+                return `
+                    <div class="border p-2 rounded bg-white h-full">
+                        <div class="text-center font-bold text-sm mb-2 border-b">${compName}<br>Changes in Equity</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between items-center"><span>${capName}, Jan 1</span><div class="relative w-1/2"><input type="number" id="sce_starting_capital" oninput="saveFSInput('sce','sce_starting_capital',this.value)" class="fs-input" value="${state.fsInputs.sce.sce_starting_capital||''}" ${readOnly?'disabled':''}><span id="sce_starting_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                            <div class="flex justify-between items-center text-green-700"><span>Add: Net Income</span><div class="relative w-1/2"><input type="number" id="sce_net_income" oninput="saveFSInput('sce','sce_net_income',this.value)" class="fs-input" value="${state.fsInputs.sce.sce_net_income||''}" ${readOnly?'disabled':''}><span id="sce_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                            <div class="flex justify-between items-center text-red-700"><span>Less: Withdrawals</span><div class="relative w-1/2"><input type="number" id="sce_withdrawals" oninput="saveFSInput('sce','sce_withdrawals',this.value)" class="fs-input" value="${state.fsInputs.sce.sce_withdrawals||''}" ${readOnly?'disabled':''}><span id="sce_withdrawals_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                            <div class="flex justify-between items-center font-bold bg-indigo-50 border-t-2 pt-1"><span>${capName}, Dec 31</span><div class="relative w-1/2"><input type="number" id="sce_ending_capital" oninput="saveFSInput('sce','sce_ending_capital',this.value)" class="fs-input" value="${state.fsInputs.sce.sce_ending_capital||''}" ${readOnly?'disabled':''}><span id="sce_ending_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            // Helper for BS
+            const renderBSPart = () => {
+                 const renderRow = (acc, type) => {
+                     const id = getAccountId(acc.name)+'_bs_li';
+                     const lbl = acc.type==='contra-asset' ? `Less: ${acc.name}` : acc.name;
+                     return `<div class="flex justify-between text-sm mb-1"><span class="w-1/2 truncate mr-1" title="${lbl}">${lbl}</span><div class="relative w-1/2"><input type="number" id="${id}" oninput="saveFSInput('bs','${id}',this.value)" class="fs-input" value="${state.fsInputs.bs[id]||''}" ${readOnly?'disabled':''}><span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>`;
+                };
+                return `
+                    <div class="border p-2 rounded bg-white h-full">
+                        <div class="text-center font-bold text-sm mb-2 border-b">${compName}<br>Balance Sheet</div>
+                        <div class="text-xs font-bold text-blue-700">ASSETS</div>
+                        ${data.assets.map(a=>renderRow(a)).join('')}
+                        <div class="flex justify-between font-bold text-sm border-t pt-1 bg-blue-50 mb-2"><span>Total Assets:</span><div class="relative w-1/2"><input type="number" id="bs_total_assets" oninput="saveFSInput('bs','bs_total_assets',this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_assets||''}" ${readOnly?'disabled':''}><span id="bs_total_assets_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                        
+                        <div class="text-xs font-bold text-red-700">LIABILITIES</div>
+                        ${data.liabilities.map(a=>renderRow(a)).join('')}
+                        
+                        <div class="text-xs font-bold text-purple-700 mt-1">EQUITY</div>
+                        <div class="flex justify-between text-sm mb-1"><span>Capital Dec 31</span><div class="relative w-1/2"><input type="number" id="bs_ending_capital_bs" oninput="saveFSInput('bs','bs_ending_capital_bs',this.value)" class="fs-input" value="${state.fsInputs.bs.bs_ending_capital_bs||''}" ${readOnly?'disabled':''}><span id="bs_ending_capital_bs_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                        
+                        <div class="flex justify-between font-bold text-sm border-t-2 border-red-500 pt-1 bg-red-50"><span>Total L&E:</span><div class="relative w-1/2"><input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs','bs_total_liab_equity',this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_liab_equity||''}" ${readOnly?'disabled':''}><span id="bs_total_liab_equity_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                    </div>
+                `;
+            };
+
+            return `
+                ${renderRubric(2)}
+                <!-- Grid Container: Stack on Mobile, 3 Columns on Desktop AND Print -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 task2-grid">
+                    <div class="w-full">${renderISPart()}</div>
+                    <div class="w-full">${renderSCEPart()}</div>
+                    <div class="w-full">${renderBSPart()}</div>
+                </div>
+            `;
+        };
+
+        // --- VALIDATION ---
+        const renderValidationIcon = (id, isCorrect) => {
+            const span = document.getElementById(id + '_val');
+            if(span) span.innerHTML = isCorrect ? '<span class="text-green-600">✔</span>' : '<span class="text-red-600">❌</span>';
+        };
+
+        const validateWorksheet = (doIcons) => {
+            const d = calculateWorksheetAnswers();
+            let c=0, t=0;
+            const check = (id, val) => { 
+                t++; const ok = Math.abs((state.worksheetInputs[id]||0)-val)<0.01; 
+                if(ok) c++; 
+                if(doIcons) renderValidationIcon(id, ok); 
+            };
+
+            d.accounts.forEach((acc, i) => {
+                const bid = `wks_${i}_`;
+                check(bid+'ADJ_DR', acc.ADJ_DR); check(bid+'ADJ_CR', acc.ADJ_CR);
+                check(bid+'ATB_DR', acc.ATB_DR); check(bid+'ATB_CR', acc.ATB_CR);
+                if(acc.isFS==='IS'){ check(bid+'IS_DR', acc.IS_DR); check(bid+'IS_CR', acc.IS_CR); }
+                if(acc.isFS==='BS'){ check(bid+'BS_DR', acc.BS_DR); check(bid+'BS_CR', acc.BS_CR); }
             });
-            
-            // Check NI and Totals
-            const sums = d.sums;
-            check('wks_NI_IS_DR', d.netIncome>0?d.netIncome:0); check('wks_NI_IS_CR', d.netIncome<0?Math.abs(d.netIncome):0);
-            check('wks_FINAL_ADJ_DR', sums.adj_dr); check('wks_FINAL_ATB_DR', sums.atb_dr); // ... simplified for brevity, normally check all
+            // Finals
+            check('wks_FINAL_TB_DR', d.sums.TB_DR); check('wks_FINAL_TB_CR', d.sums.TB_CR);
+            check('wks_FINAL_ADJ_DR', d.sums.ADJ_DR); check('wks_FINAL_ADJ_CR', d.sums.ADJ_CR);
+            check('wks_FINAL_ATB_DR', d.sums.ATB_DR); check('wks_FINAL_ATB_CR', d.sums.ATB_CR);
+            check('wks_FINAL_IS_DR', d.sums.IS_DR); check('wks_FINAL_IS_CR', d.sums.IS_CR);
+            check('wks_FINAL_BS_DR', d.sums.BS_DR); check('wks_FINAL_BS_CR', d.sums.BS_CR);
             
             return { isPerfect: c===t, scoreData: calculateScoreAndGrade(c,t) };
         };
 
-        const validateIS = (render) => {
+        const validateTask2Full = (doIcons) => {
             const d = calculateWorksheetAnswers();
             let c=0, t=0;
-            const check = (id, corr) => { t++; const ok=Math.abs((state.fsInputs.is[id]||0)-corr)<0.01; if(ok)c++; if(render) document.getElementById(id+'_val').innerHTML = ok ? '<span class="text-green-600">✔</span>':'<span class="text-red-600">❌</span>'; };
-            
-            d.accounts.filter(a=>a.isFS==='IS').forEach(a => check(getAccountId(a.name)+'_is', a.type==='revenue'?a.ATB_CR:a.ATB_DR));
-            check('is_total_rev', d.totalRev); check('is_total_exp', d.totalExp); check('is_net_income', d.netIncome);
-            return {c,t};
+            const check = (valObj, id, correctVal) => {
+                t++; const ok = Math.abs((valObj[id]||0)-correctVal)<0.01;
+                if(ok) c++;
+                if(doIcons) renderValidationIcon(id, ok);
+            };
+
+            // IS
+            d.isAccounts.forEach(a => {
+                 const val = a.type==='revenue'?a.ATB_CR:a.ATB_DR;
+                 check(state.fsInputs.is, getAccountId(a.name)+'_is_li', val);
+            });
+            check(state.fsInputs.is, 'is_total_revenue', d.totalRevenue);
+            check(state.fsInputs.is, 'is_total_expense', d.totalExpenses);
+            check(state.fsInputs.is, 'is_net_income', Math.abs(d.netIncome));
+
+            // SCE
+            check(state.fsInputs.sce, 'sce_starting_capital', d.startingCapital);
+            check(state.fsInputs.sce, 'sce_net_income', Math.abs(d.netIncome));
+            check(state.fsInputs.sce, 'sce_withdrawals', d.withdrawals);
+            check(state.fsInputs.sce, 'sce_ending_capital', d.endingCapital);
+
+            // BS
+            d.assets.forEach(a => check(state.fsInputs.bs, getAccountId(a.name)+'_bs_li', a.ATB_DR || a.ATB_CR)); // ATB_CR for contra
+            d.liabilities.forEach(a => check(state.fsInputs.bs, getAccountId(a.name)+'_bs_li', a.ATB_CR));
+            check(state.fsInputs.bs, 'bs_total_assets', d.sums.BS_DR - (d.netIncome<0?Math.abs(d.netIncome):0)); // Simplified asset total logic
+            check(state.fsInputs.bs, 'bs_ending_capital_bs', d.endingCapital);
+            check(state.fsInputs.bs, 'bs_total_liab_equity', d.correctBS_Total);
+
+            return { isPerfect: c===t, scoreData: calculateScoreAndGrade(c,t) };
         };
 
-        const validateSCE = (render) => {
-            const d = calculateWorksheetAnswers();
-            let c=0, t=0;
-            const check = (id, corr) => { t++; const ok=Math.abs((state.fsInputs.sce[id]||0)-corr)<0.01; if(ok)c++; if(render) document.getElementById(id+'_val').innerHTML = ok ? '<span class="text-green-600">✔</span>':'<span class="text-red-600">❌</span>'; };
-            
-            check('sce_beg', d.startCap); check('sce_ni', d.netIncome); check('sce_wd', d.wdraw); check('sce_end', d.endCap);
-            return {c,t};
+        window.saveWorksheetInput = (id, v) => state.worksheetInputs[id] = Number(v)||0;
+        window.saveFSInput = (type, id, v) => state.fsInputs[type][id] = Number(v)||0;
+
+        window.handleLogin = async () => {
+            const btn = document.getElementById('login-btn');
+            btn.innerText = "Verifying..."; btn.disabled = true;
+            const r = await validateStudentLogin(document.getElementById('attendanceId').value, document.getElementById('studentId').value);
+            if(r.success) {
+                state.studentInfo = { ...r.data, gradeSection: r.data.section, classNumber: r.data.cn };
+                generateDynamicData();
+                document.getElementById('company-name').innerText = `${getFamilyName()} Accounting Services - Year End`;
+                renderMessageBox("Success!");
+                document.getElementById('next-step-btn').disabled = false;
+                btn.innerText = "Verified";
+            } else {
+                renderMessageBox(r.message, true);
+                btn.innerText = "Verify"; btn.disabled = false;
+            }
         };
 
-        const validateBS = (render) => {
-            const d = calculateWorksheetAnswers();
-            let c=0, t=0;
-            const check = (id, corr) => { t++; const ok=Math.abs((state.fsInputs.bs[id]||0)-corr)<0.01; if(ok)c++; if(render) document.getElementById(id+'_val').innerHTML = ok ? '<span class="text-green-600">✔</span>':'<span class="text-red-600">❌</span>'; };
+        window.handleNextStep = async () => {
+            const max = 3;
+            let valid = false; let override = false; let msg = "";
+
+            if(state.currentStep === 0) { // Login
+                state.currentStep = 1;
+                renderStep();
+                return;
+            }
+
+            if(state.currentStep === 1) { // Task 1
+                const r = validateWorksheet(true);
+                state.task1Score = r.scoreData;
+                if(!r.isPerfect) {
+                    state.validationAttempts[1]++;
+                    if(state.validationAttempts[1] >= max) { valid = true; override = true; msg = "Max attempts used. Printing & Proceeding."; }
+                    else msg = `Errors found. Attempt ${state.validationAttempts[1]}/${max}.`;
+                } else { valid = true; msg = "Task 1 Perfect!"; }
+                
+                if(valid) {
+                    renderMessageBox(msg, override);
+                    window.print();
+                    state.currentStep = 2;
+                    renderStep();
+                } else renderMessageBox(msg, true);
+            }
+            else if(state.currentStep === 2) { // Task 2 Combined
+                const r = validateTask2Full(true);
+                state.task2Score = r.scoreData;
+                if(!r.isPerfect) {
+                    state.validationAttempts[2]++;
+                    if(state.validationAttempts[2] >= max) { valid = true; override = true; msg = "Max attempts used. Submitting."; }
+                    else msg = `Errors found. Attempt ${state.validationAttempts[2]}/${max}.`;
+                } else { valid = true; msg = "Task 2 Perfect! Submitting."; }
+
+                if(valid) {
+                    renderMessageBox(msg, override);
+                    await window.finishAndPreview(false);
+                } else renderMessageBox(msg, true);
+            }
+        };
+
+        // --- STEP RENDERING ---
+        const renderCompletion = () => {
+            document.getElementById('task-container').innerHTML = `
+                <div id="final-report-container">
+                    <div class="no-print text-center py-10">
+                        <h3 class="text-3xl font-bold text-indigo-800">Task Complete!</h3>
+                        <p class="mb-4">Data saved.</p>
+                        <div class="grid grid-cols-2 gap-4 max-w-lg mx-auto mb-6">
+                             <div class="border p-4 rounded bg-blue-50">
+                                <strong>Task 1:</strong> ${state.task1Score.grade} (${state.task1Score.score}/${state.task1Score.total})
+                             </div>
+                             <div class="border p-4 rounded bg-green-50">
+                                <strong>Task 2:</strong> ${state.task2Score.grade} (${state.task2Score.score}/${state.task2Score.total})
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- INJECTED TASK 1 & TASK 2 FOR PRINTING -->
+                    <div class="print:block">
+                        <h3 class="text-2xl font-bold border-b-2 border-black mb-4 print:mt-0">TASK 1: Worksheet</h3>
+                        ${renderWorksheet(true)}
+                        
+                        <div class="page-break"></div>
+                        
+                        <h3 class="text-2xl font-bold border-b-2 border-black mb-4 mt-8">TASK 2: Financial Statements</h3>
+                        ${renderTask2Full(true)}
+
+                        <div class="text-center font-bold text-xl mt-12 border-t-2 border-black pt-4 w-1/2 mx-auto">
+                            *** END OF TASK ***
+                        </div>
+                    </div>
+                </div>
+            `;
+            const btn = document.getElementById('next-step-btn');
+            btn.innerText = "Print Final Report to PDF";
+            btn.onclick = () => window.print();
             
-            d.assets.forEach(a => check(getAccountId(a.name)+'_bs', a.type==='contra-asset'?a.ATB_CR:a.ATB_DR));
-            d.liabs.forEach(a => check(getAccountId(a.name)+'_bs', a.ATB_CR));
-            check('bs_tot_asset', d.totAsset); check('bs_cap_end', d.endCap); check('bs_tot_le', d.totLiabEq);
-            return {c,t};
+            // Update Student Print Info Header
+            const info = state.studentInfo;
+            document.getElementById('student-print-info').innerHTML = `
+                <div class="flex justify-between border-b border-black pb-1 mb-1">
+                    <span><strong>CN:</strong> ${info.classNumber}</span>
+                    <span><strong>Section:</strong> ${info.gradeSection}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span><strong>Name:</strong> ${info.fullName}</span>
+                    <span><strong>ID:</strong> ${info.idNumber}</span>
+                </div>
+            `;
         };
 
         const renderStep = () => {
-            if(state.currentStep === 0) renderStudentInfo();
-            else if(state.currentStep === 1) renderWorksheet();
-            else if(state.currentStep === 2) renderTask2();
-            updateStudentPrintInfo();
+            const steps = [renderStudentInfo, () => document.getElementById('task-container').innerHTML = renderWorksheet(), () => document.getElementById('task-container').innerHTML = renderTask2Full(), renderCompletion];
+            steps[state.currentStep]();
+            
+            // Update Header Context
+            const titles = ["Login", "Task 1: 10-Column Worksheet", "Task 2: Financial Statements", "Final Report"];
+            document.getElementById('task-header-title').innerText = titles[state.currentStep];
+            
+            // Update Print Info Block if not in final step (final step handles it differently)
+            if(state.currentStep > 0 && state.currentStep < 3 && state.studentInfo) {
+                const info = state.studentInfo;
+                document.getElementById('student-print-info').innerHTML = `
+                    <div class="flex justify-between border-b border-black pb-1 mb-1">
+                        <span><strong>CN:</strong> ${info.classNumber}</span>
+                        <span><strong>Section:</strong> ${info.gradeSection}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span><strong>Name:</strong> ${info.fullName}</span>
+                        <span><strong>ID:</strong> ${info.idNumber}</span>
+                    </div>
+                `;
+            }
+            
+            // Button State
+            const btn = document.getElementById('next-step-btn');
+            if (state.currentStep === 1) btn.innerText = "Validate Worksheet & Print Task 1";
+            else if (state.currentStep === 2) btn.innerText = "Validate Task 2 & Submit";
         };
         
-        window.onload = () => checkUrlParametersAndInit();
-
+        window.onload = () => { checkUrlParametersAndInit(); };
     </script>
 </body>
 </html>
