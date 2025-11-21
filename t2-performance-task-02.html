@@ -122,7 +122,8 @@
                 border: 1px solid #000 !important;
                 color: black !important; /* Ensures the injected text is black */
             }
-            .print-text-sm { font-size: 9pt; color: black !important; }
+            /* FIX: Explicitly ensure inner elements override text-gray-700 for print visibility */
+            .print-text-sm, .print-text-sm p { font-size: 9pt; color: black !important; }
             /* Ensure the header title is correctly displayed in the context of Task 2 sub-steps */
             #task-header-title { display: block !important; }
         }
@@ -173,9 +174,10 @@
             <p class="text-sm text-gray-400 leading-relaxed">
              <strong>Instruction:</strong><br>
              Complete all required fields.<br>
-             Enter amounts with two decimal places but without commas 925<br>
+             Enter amounts with two decimal places but without commas.<br>
              Round off centavos to the nearest peso.<br>
-             After validating each task or sub-step, use the 'Print to PDF' option.
+             After validating each task or sub-step, use the 'Print to PDF' option.<br>
+             v.940
             </p>
 
         </footer>
@@ -522,7 +524,7 @@
                 state.currentStep = 3; // Move to Complete
                 renderStep();
             } catch (e) {
-                console.error(e);
+                console.error("Save Error:", e);
                 renderMessageBox("Error saving results: " + e.message, true);
                 // Still move to the completion screen if saving fails, but show the error
                 state.currentStep = 3; 
@@ -1353,11 +1355,10 @@
                     <h3 class="text-2xl font-bold text-indigo-700">TASK 2: Create the Financial Statements (IS, SCE, BS)</h3>
                     ${renderRubric(2)} <!-- Rubric for Task 2 -->
                     
-                    <div class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+                    <!-- FIX: Consolidated all three statements into a single, responsive flex container -->
+                    <div class="flex flex-col lg:flex-row lg:space-x-6 space-y-6 lg:space-y-0">
                         ${isContent}
                         ${sceContent}
-                    </div>
-                    <div class="flex justify-center mt-6">
                         ${bsContent}
                     </div>
                 </div>
