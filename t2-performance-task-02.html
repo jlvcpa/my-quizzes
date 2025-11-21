@@ -669,7 +669,8 @@
 
         // --- HTML Generators ---
         const renderRubricHTML = (taskNum) => {
-            let competency = taskNum === 1 ? "To create 10-column worksheet..." : "To create the income statement, SCE, and balance sheet...";
+            let competency = taskNum === 1 ? "To create 10-column worksheet by accurately determining and applying necessary adjustments, then integrating these with unadjusted amounts to complete the worksheet with correct financial data.
+" : "                competency = "To prepare the income statement, statement of changes in equity, and balance sheet by accurately transferring the adjusted figures from the 10-column worksheet into the prescribed financial statement formats.";
             let scoreInfo = '';
             
             if (taskNum === 1 && state.task1Score) {
@@ -686,8 +687,8 @@
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-xs border-collapse border border-gray-400">
-                            <thead><tr class="header-bg text-center text-white print:bg-white print:text-black"><th class="p-2 border border-gray-300 w-1/5">Competency</th><th class="p-2 border border-gray-300 bg-green-600/90">Advanced (A)</th><th class="p-2 border border-gray-300 bg-blue-600/90">Proficient (P)</th><th class="p-2 border border-gray-300 bg-yellow-600/90">Developing (D)</th><th class="p-2 border border-gray-300 bg-red-600/90">Intervention (IR)</th></tr></thead>
-                            <tbody><tr class="align-top"><td class="p-2 border border-gray-300 italic">${competency}</td><td class="p-2 border border-gray-300 text-green-800">Excellent (95-100%)</td><td class="p-2 border border-gray-300 text-blue-800">Good (85-94.9%)</td><td class="p-2 border border-gray-300 text-yellow-800">Acceptable (75-84.9%)</td><td class="p-2 border border-gray-300 text-red-800">Unacceptable (<75%)</td></tr></tbody>
+                            <thead><tr class="header-bg text-center text-white print:bg-white print:text-black"><th class="p-2 border border-gray-300 w-1/5">Competency</th><th class="p-2 border border-gray-300 bg-green-600/90">Advanced (A)</th><th class="p-2 border border-gray-300 bg-blue-600/90">Proficient (P)</th><th class="p-2 border border-gray-300 bg-yellow-600/90">Developing (D)</th><th class="p-2 border border-gray-300 bg-red-600/90">Intervention Required (IR)</th></tr></thead>
+                            <tbody><tr class="align-top"><td class="p-2 border border-gray-300 italic">${competency}</td><td class="p-2 border border-gray-300 text-green-800">Excellent performance. Worksheet/financial statement entries are all accurate and professionally formatted. Demonstrated complete mastery of the accounting cycle, including complex adjustments and financial reporting standards. (95-100%)</td><td class="p-2 border border-gray-300 text-blue-800">Good performance. Worksheet/financial statement entries are mostly accurate with minor errors (e.g., small transposition errors or minor calculation mistakes). Demonstrated a solid understanding of the accounting cycle. (85-94.9%)</td><td class="p-2 border border-gray-300 text-yellow-800">Acceptable performance. Several errors are present in entries and/or totals. Demonstrates a basic understanding of the accounting cycle steps but needs improvement in accuracy and detail. (75-84.9%)</td><td class="p-2 border border-gray-300 text-red-800">Unacceptable performance. Significant errors are present in all major sections of the worksheet and/or financial statements. Demonstrates a lack of basic understanding of the accounting cycle. (<75%)</td></tr></tbody>
                         </table>
                     </div>
                 </div>`;
