@@ -10,26 +10,26 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
-        /* 1. Remove arrow up and down options in amount input boxes */
-        .table-input, .fs-input {
+        /* 1. REMOVE SPINNER ARROWS from number inputs (Request 1) */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+
+        /* Style for inputs in tables */
+        .table-input {
             width: 100%;
             padding: 4px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            text-align: right; 
-            font-size: 0.85rem; 
-            background-color: #f0f9ff; 
-            /* Hide spin buttons for number inputs */
-            -moz-appearance: textfield; /* Firefox */
+            text-align: right; /* Right-align amounts */
+            font-size: 0.85rem; /* Base font size */
+            background-color: #f0f9ff; /* light blue background for input areas */
         }
-        .table-input::-webkit-inner-spin-button, 
-        .table-input::-webkit-outer-spin-button,
-        .fs-input::-webkit-inner-spin-button,
-        .fs-input::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
         .text-input {
             width: 100%;
             padding: 4px;
@@ -42,99 +42,52 @@
             border: 1px solid #9ca3af;
             background-color: #f9fafb;
             padding: 4px 8px;
+            text-align: right;
+            border-radius: 6px;
             font-weight: 500;
-            width: 100%; /* Auto-width */
-            min-width: 100px; 
-            font-size: 0.85rem; 
+            width: 100px; /* Standard width for line items */
+            font-size: 0.85rem; /* Base font size */
         }
         .header-bg { background-color: #0f172a; color: white; }
         .footer-bg { background-color: #334155; color: white; }
         
-        /* 2. Validation Icon placement refinement */
+        /* 2. REVISED VALIDATION ICON POSITIONING (Request 2) */
         .validation-icon {
             font-weight: bold;
             font-size: 1.1rem;
-            position: absolute;
-            /* Position icon to the right, slightly inset */
-            right: 2px; 
+            /* Move slightly right to not cover the last digit */
+            right: 3px; 
             top: 50%;
             transform: translateY(-50%);
             pointer-events: none; 
             z-index: 10;
         }
         
+        /* Style the rubric for better visibility */
         .rubric-box p, .rubric-box table {
             line-height: 1.4;
         }
 
-        /* 5. PDF Printing Structure and Footer */
+        /* Print-specific styles (Request 9, 10) */
         @media print {
             .no-print { display: none !important; }
-            
-            /* Define print margins and default page footer */
-            @page {
-                size: A4;
-                margin: 0.75in 0.5in 1.2in 0.5in; /* Top/Bottom/Left/Right */
-
-                @bottom-left {
-                    content: "FABM 1";
-                    font-size: 9pt;
-                    font-family: 'Inter', sans-serif;
-                    white-space: pre;
-                }
-
-                @bottom-right {
-                    content: "Page " counter(page) " of " counter(pages);
-                    font-size: 9pt;
-                    font-family: 'Inter', sans-serif;
-                    white-space: pre;
-                }
-            }
-
-            /* Custom footer wrapper for the 4Cs text */
-            .page-footer-4cs {
-                position: fixed;
-                bottom: 0.7in; /* Position below FABM/Page counter */
-                left: 0.5in;
-                right: 0.5in;
-                height: 0.5in;
-                text-align: center;
-                border-top: 1px solid black;
-                padding-top: 5px;
-                font-size: 8pt;
-                font-family: 'Inter', sans-serif;
-                color: black;
-                content: "4Cs: Christ-centeredness, Competence, Character, Compassion";
-            }
-            
-            /* Since we cannot use ::after content for the 4Cs in all browsers, we'll use a hidden element and force it to print below the main footer. */
-            /* This is a common workaround for complex footers. */
-            .page-footer-4cs-print {
-                display: block;
-                position: fixed;
-                bottom: 0.8in;
-                left: 0;
-                right: 0;
-                text-align: center;
-                font-size: 8pt;
-                color: black;
-                z-index: 1000;
-            }
-            
-            /* Hide the browser-default footer */
-            #app, .printable-area {
-                margin: 0 auto !important; 
-                padding: 0 0.5in !important; 
+            /* Set margin to 0.25in and center horizontally, ensuring content fits */
+            .printable-area { 
                 width: 100% !important; 
-                box-shadow: none !important;
-                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important; 
             }
-
-            body { background-color: white; color: black; }
-            .shadow-xl, .rounded-xl, .border, .border-gray-200 { border: none !important; box-shadow: none !important; }
+            body { 
+                background-color: white; 
+                color: black; 
+                margin: 0; 
+                padding: 0;
+            }
+            .shadow-xl, .rounded-xl, .border { border: none !important; box-shadow: none !important; }
             .header-bg, .footer-bg { background-color: #fff !important; color: #000 !important; }
             
-            .table-input, .fs-input {
+            /* Force table inputs and FS inputs to be black text on white background when printing */
+            .table-input, .text-input, .fs-input {
                 border-color: #000 !important;
                 background-color: white !important;
                 color: black !important;
@@ -143,37 +96,50 @@
                 white-space: nowrap; 
                 overflow: visible !important;
             }
-            
-            /* Task 2 layout printing: horizontal alignment is handled by the combination of display: block and wide container */
-            .task-2-parts-print {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                gap: 1rem;
+            /* Rubric specific print styles */
+            .rubric-box {
+                background-color: white !important;
+                border: 1px solid black !important;
+                box-shadow: none !important;
             }
-            .task-2-part-print {
-                width: calc(33% - 1rem); /* Divide the space for horizontal print */
-                page-break-inside: avoid; /* Prevent breaking inside an FS item */
+            .rubric-box th, .rubric-box td {
+                border-color: black !important;
+                color: black !important;
             }
-
-            .rubric-box { border: 1px solid black !important; box-shadow: none !important; }
-            .rubric-box th, .rubric-box td { border-color: black !important; color: black !important; }
-            
-            /* Hide validation icons and score block in the print view if the task is not complete/validated */
-            .validation-icon { display: none !important; }
-            .score-block { display: block !important; }
-            
+            /* Show student info box in print */
             #student-print-info { display: block !important; border: 1px solid #000 !important; }
             .print-text-sm { font-size: 9pt; }
-            #task-header-title { display: block !important; }
-
-            /* Ensure the content is printed sequentially as requested */
-            #print-content-container > div {
-                display: block;
+            
+            /* Print Footer Simulation using fixed positioning (Request 10) 
+               Note: Page X of Y relies on browser print functionality/settings. 
+               This attempts a fixed position footer for the requested layout. 
+            */
+            @page {
+                size: letter; /* or A4 */
+                margin: 0.75in; /* Adjusted margin to make space for custom footer */
+                @bottom-center {
+                    content: element(page-footer);
+                }
             }
-            #worksheet-section { order: 3; }
-            #financial-statements-section { order: 4; }
-            #task-end-marker { order: 5; text-align: center; }
+            
+            #pdf-footer-template {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                font-size: 8pt;
+                color: black;
+                padding: 0.25in 0.75in;
+                box-sizing: border-box;
+                display: block; /* Ensure it is visible in print */
+            }
+
+            .print-task-title {
+                margin-top: 1.5rem;
+                padding-top: 0.5rem;
+                border-top: 2px solid #000;
+            }
         }
     </style>
 </head>
@@ -188,14 +154,12 @@
     <div id="app" class="max-w-7xl mx-auto printable-area bg-white shadow-xl rounded-xl p-6 md:p-10 border border-gray-200">
 
         <header class="text-center mb-8 pb-4 border-b-4 border-indigo-600 header-bg rounded-t-lg p-4">
-            <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" />
-            <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
+            <!-- Placeholder for actual company name/title -->
             <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-300">
                 T2 Performance Task 02
             </h1>
             <h2 id="company-name" class="text-xl md:text-2xl font-semibold text-gray-200 mt-1 hidden">[Company Name]</h2>
             <p class="text-sm font-light text-gray-400 mt-2 hidden">Sole Proprietorship Service Business | For the Year Ended December 31, 2024</p>
-            <h3 id="task-header-title" class="text-xl font-bold text-white mt-4 hidden print:block"></h3>
         </header>
         
         <!-- Student Info for Print (Hidden by default, shown in print media query) -->
@@ -203,42 +167,61 @@
             <!-- Content injected by JS on render for printing -->
         </div>
 
-        <!-- Dynamic Content Area -->
-        <div id="task-container" class="space-y-8">
+        <!-- Dynamic Content Area (Tasks, Login, or Completion) -->
+        <div id="task-container">
             <!-- Content will be rendered here by JavaScript -->
         </div>
-
-        <!-- Task End Marker (Only visible in Print) -->
-        <div id="task-end-marker" class="no-print hidden print:block text-center font-bold text-lg mt-8 pt-4 border-t border-black">
-            END OF TASK
+        
+        <!-- Print-only container for reconstructed final report (Request 9) -->
+        <div id="print-output" class="hidden print:block p-8">
+            <!-- Final printed content (Worksheet + Financial Statements) will be injected here on finish. -->
         </div>
+
 
         <!-- Feedback and Actions Area -->
         <div id="action-area" class="mt-8 pt-6 border-t border-gray-300 no-print flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div id="message-box" class="text-lg font-medium text-gray-700 min-h-8">
                 <!-- Validation messages go here -->
             </div>
-            <button id="next-step-btn" onclick="window.handleNextStep()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            
+            <!-- Dynamic button for Login/Final Submission -->
+            <button id="next-step-btn" onclick="window.handleNextStep(null)" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Login to Start Task
             </button>
+
+            <!-- Task-specific validation buttons (Hidden by default, shown in the combined tasks view) -->
+            <div id="task-validation-buttons" class="hidden flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                <button id="validate-task1-btn" onclick="window.handleValidation(1)" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Validate Task 1 & Print Worksheet
+                </button>
+                <button id="validate-task2-btn" onclick="window.handleValidation(2)" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Validate Task 2 & Print FS
+                </button>
+            </div>
         </div>
 
         <footer class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg rounded-b-lg p-4 text-center">
-            <!-- Instructions moved here to serve as the Print Instruction source -->
-            <div id="print-instructions-source" class="text-sm text-gray-400">
+            <!-- This footer content is used as "Instructions" in the PDF (Request 9) -->
+            <p id="instructions-text" class="text-sm text-gray-400">
                 Instruction: Complete all required fields. <br>
                 Enter amounts with two decimal places but without commas. <br>
                 Round off centavos to the nearest peso. <br>
-                After validating each task or sub-step, use the 'Print to PDF' option. <br>
-                Version 2025.11.21 160135
-            </div>
+                After validating each task, use the 'Print to PDF' option. <br>
+                Version 2025.11.21 0406
+            </p>
         </footer>
     </div>
     
-    <!-- Print-only 4Cs Footer. Uses the print media query rule for positioning. -->
-    <div class="page-footer-4cs-print no-print hidden">
-        <div class="w-full max-w-lg mx-auto border border-black p-1">
-            4Cs: Christ-centeredness, Competence, Character, Compassion
+    <!-- PDF Footer Template (Print-only, hidden by default) (Request 10) -->
+    <div id="pdf-footer-template" class="no-print hidden print:block">
+        <div class="border-t border-black pt-1">
+            <div class="flex justify-between text-[8pt]">
+                <span>FABM 1</span>
+                <span>Page <span class="page-number">x</span> of <span class="total-pages">y</span></span>
+            </div>
+            <div class="text-center border border-black mt-1 py-0.5 text-[7pt]">
+                4Cs: Christ-centeredness, Competence, Character, Compassion
+            </div>
         </div>
     </div>
 
@@ -248,7 +231,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
-        // 1. Configuration (Original configuration kept)
+        // 1. Configuration (Original Firebase Config)
         const firebaseConfig = {
             apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
             authDomain: "jlvcpa-quizzes.firebaseapp.com",
@@ -262,9 +245,30 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- GLOBAL STATE ---
+        let state = {
+            currentStep: 0, // 0: Login, 1: Tasks Combined Page, 2: Complete
+            attendanceId: "", 
+            studentInfo: null,
+            initialTB: [], 
+            adjustments: [], 
+            worksheetInputs: {}, 
+            fsInputs: { is: {}, sce: {}, bs: {} },
+            // Validation attempts are now tracked per Task (1 or 2)
+            validationAttempts: { 1: 0, 2: 0 }, 
+            task1Score: null, 
+            task2Score: null,
+            task1Complete: false, // NEW: Track task completion
+            task2Complete: false, // NEW: Track task completion
+            generatedAnswers: null, // Will store calculated answers for saving
+        };
+        const MAX_ATTEMPTS = 3;
+
+        // --- FIREBASE AND UTILITY FUNCTIONS (Kept as original, only added to state) ---
+
         /**
         * Validates a student against a specific attendance record in Firestore.
-        * (Logic remains unchanged)
+        * (Logic kept identical to original)
         */
         async function validateStudentLogin(attendanceId, studentId) {
             if (!attendanceId || !studentId) {
@@ -286,12 +290,14 @@
                     return { success: false, message: "Data error: 'students' field is not an array." };
                 }
 
+                // Find student loosely (converting to String to be safe)
                 const student = studentsArray.find(s => String(s.Idnumber) === String(studentId));
 
                 if (!student) {
                     return { success: false, message: "ID Number not found in this attendance record." };
                 }
 
+                // Check Status (looking for checkmarks)
                 const status = student.status || "";
                 const isPresent = status.includes("✔") || status.includes("✓") || status.includes("✔️");
 
@@ -302,7 +308,7 @@
                         data: {
                             cn: student.CN || "",
                             fullName: student.fullName || "",
-                            section: data.section || "", 
+                            section: data.section || "", // Section usually sits on the main doc
                             idNumber: studentId
                         }
                     };
@@ -321,16 +327,16 @@
 
         /**
         * Saves the exam results to Firestore.
-        * (Logic remains unchanged)
+        * (Logic kept identical to original)
         */
         async function saveExamResults(attendanceId, resultData) {
             const activityName = "T2 Performance Task 02";
             const collectionName = `results_${activityName}_${attendanceId}`;
-            
             const info = resultData.studentInfo;
             const docName = `students.${info.classNumber}-students.${info.idNumber}-${info.fullName}`;
-            
+
             try {
+                // Sanitize data: Firebase rejects 'undefined' values
                 const cleanData = JSON.parse(JSON.stringify(resultData, (k, v) => v === undefined ? null : v));
                 
                 await setDoc(doc(db, collectionName, docName), cleanData);
@@ -340,11 +346,10 @@
                 return true;
             } catch (error) {
                 console.error("Save Error:", error);
-                throw error; 
+                throw error; // Throw error to be caught by UI handler
             }
         }
 
-        // --- SCORING AND GRADING LOGIC (Unchanged) ---
         const gradingCriteria = {
             A: { min: 95, max: 100 },
             P: { min: 85, max: 94.9 },
@@ -368,236 +373,10 @@
             };
         };
 
-        // --- APP LOGIC ---
-
-        // Global State (Task 2 sub-step removed)
-        let state = {
-            currentStep: 0, // 0: Login, 1: Tasks Combined, 3: Complete
-            attendanceId: "", 
-            studentInfo: null,
-            initialTB: [], 
-            adjustments: [], 
-            worksheetInputs: {}, 
-            fsInputs: { is: {}, sce: {}, bs: {} },
-            validationAttempts: { 1: 0, 2: 0 }, // Task 1 and Task 2 (FS combined) attempts
-            generatedAnswers: null, 
-            task1Score: null, 
-            task2Score: null,
-            isTask1Validated: false, // New flag for disabling Task 1 inputs
-            isTask2Validated: false, // New flag for disabling Task 2 inputs
-        };
-
-        // Global variables for the new timer module interface
-        window.examDurationMins = 0;
-        let timerInterval = null;
-        let timeRemainingSeconds = 0;
-
-        /**
-         * Renders the right-aligned score and letter grade block.
-         */
-        const renderScoreBlock = (scoreData, taskId) => {
-            if (!scoreData) return '';
-
-            const { score, total, percentage, grade } = scoreData;
-            const colorClass = grade === 'A' ? 'bg-green-100 text-green-800' : 
-                               grade === 'P' ? 'bg-blue-100 text-blue-800' : 
-                               grade === 'D' ? 'bg-yellow-100 text-yellow-800' : 
-                               'bg-red-100 text-red-800';
-
-            return `
-                <div id="score_block_${taskId}" class="score-block text-right mb-2 print:text-xs">
-                    <p class="text-sm font-semibold text-gray-700">Score: ${score} / ${total}</p>
-                    <p class="text-lg font-extrabold p-1 rounded-md inline-block ${colorClass}">
-                        ${grade} (${percentage}%)
-                    </p>
-                </div>
-            `;
-        };
-
-        /**
-         * Disables all interactive elements for a given task.
-         */
-        const disableTaskInputs = (taskId, disable = true) => {
-            const container = document.getElementById(`task-${taskId}-section`);
-            if (!container) return;
-
-            container.querySelectorAll('input, button, select, textarea').forEach(el => {
-                if(el.id !== 'next-step-btn' && el.id !== 'login-btn') {
-                    el.disabled = disable;
-                    el.classList.toggle('cursor-not-allowed', disable);
-                    el.classList.toggle('opacity-75', disable);
-                }
-            });
-        };
-
-
-        window.disableAllInputs = () => {
-             // Disable all inputs in the application that aren't the main buttons
-            document.querySelectorAll('input:not(#next-step-btn):not(#login-btn), button:not(#next-step-btn):not(#login-btn), select, textarea').forEach(el => {
-                el.disabled = true;
-                el.classList.add('cursor-not-allowed', 'opacity-75');
-            });
-
-            // Ensure the main button is disabled or set to print if not already done
-            const nextBtn = document.getElementById('next-step-btn');
-            if (nextBtn && nextBtn.innerText !== "Print Final Report to PDF") {
-                nextBtn.disabled = true;
-                nextBtn.innerText = "TASK TIMEOUT. CONTACT INSTRUCTOR.";
-            }
-            const loginBtn = document.getElementById('login-btn');
-            if (loginBtn) {
-                loginBtn.disabled = true;
-            }
-        };
-
-        // --- TIMER/LINK VALIDATION FUNCTIONS (ADAPTED) ---
-        // (updateTimerDisplay, stopTimer, startTimer, checkUrlParametersAndInit are largely kept)
-
-        function updateTimerDisplay() {
-            const displayElement = document.getElementById('countdown');
-            const boxElement = document.getElementById('timer-box');
-
-            if (!displayElement || timeRemainingSeconds === null) return;
-
-            const h = Math.floor(timeRemainingSeconds / 3600);
-            const m = Math.floor((timeRemainingSeconds % 3600) / 60);
-            const s = timeRemainingSeconds % 60;
-
-            displayElement.textContent =
-                `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-
-            if (timeRemainingSeconds < 300) {
-                boxElement?.classList.add('animate-pulse');
-                boxElement?.classList.remove('bg-red-800');
-                boxElement?.classList.add('bg-red-600');
-            } else {
-                boxElement?.classList.remove('animate-pulse', 'bg-red-600');
-                boxElement?.classList.add('bg-red-800');
-            }
-
-            if (timeRemainingSeconds <= 0) {
-                stopTimer();
-                displayElement.textContent = "00:00:00";
-                window.disableAllInputs(); 
-                if (typeof window.finishAndPreview === 'function') {
-                    console.log("Time is up! Auto-submitting answers.");
-                    window.finishAndPreview(true); 
-                }
-                boxElement.classList.remove('bg-red-600', 'animate-pulse');
-                boxElement.classList.add('bg-gray-500');
-            }
-        }
-        
-        function stopTimer() {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                console.log("Timer stopped.");
-            }
-        }
-
-        function startTimer() {
-            if (timerInterval) stopTimer();
-
-            timeRemainingSeconds = window.examDurationMins * 60;
-            updateTimerDisplay();
-
-            timerInterval = setInterval(() => {
-                timeRemainingSeconds--;
-                updateTimerDisplay();
-            }, 1000);
-        }
-
-        const checkUrlParametersAndInit = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const attId = urlParams.get('att');
-            const duration = urlParams.get('dur');
-            const isValidDuration = duration && !isNaN(parseInt(duration)) && parseInt(duration) > 0;
-
-            if (!attId || !isValidDuration) {
-                document.getElementById('task-container').innerHTML = `
-                    <div class="text-center py-16 bg-red-100 border border-red-400 rounded-xl">
-                        <h3 class="text-2xl font-bold text-red-700 mb-4">ACCESS DENIED</h3>
-                        <p class="text-lg text-gray-700">Missing or invalid link parameters (Attendance ID or Duration).</p>
-                        <p class="text-sm text-gray-500 mt-2">The task cannot be accessed without the required link parameters. Please contact your instructor.</p>
-                    </div>
-                `;
-                document.getElementById('next-step-btn').disabled = true;
-                document.getElementById('next-step-btn').innerText = "Access Denied";
-                document.getElementById('timer-box').classList.add('hidden');
-                renderMessageBox("Link is incomplete or invalid.", true);
-                return;
-            }
-
-            state.attendanceId = attId;
-            window.examDurationMins = parseInt(duration);
-            
-            startTimer();
-
-            renderStep();
-        };
-
-        /**
-         * Global submission function called by the timer on expiration or manually at the end of Task 2.
-         * @param {boolean} isAutoSubmit - True if called by the timer due to expiration.
-         */
-        window.finishAndPreview = async (isAutoSubmit = false) => {
-            if (!state.studentInfo) {
-                renderMessageBox("Cannot submit: Student not logged in.", true);
-                if (isAutoSubmit) window.disableAllInputs();
-                return;
-            }
-
-            // 1. Ensure all scores are calculated (in case of timer expiration before validation)
-            if (!state.task1Score) {
-                const task1Result = validateWorksheet(false); 
-                state.task1Score = task1Result.scoreData;
-            }
-            if (!state.task2Score) {
-                const finalTask2Result = aggregateFinancialStatementScores();
-                state.task2Score = finalTask2Result.scoreData;
-            }
-
-
-            renderMessageBox("Task complete. Saving results to database...", false);
-            stopTimer();
-            window.disableAllInputs();
-
-            // Store submission date/time in student info for printing
-            state.studentInfo.submissionDateTime = new Date().toLocaleString();
-
-            // 2. Save results
-            try {
-                const fullResultData = {
-                    studentInfo: state.studentInfo,
-                    initialTB: state.initialTB,
-                    adjustments: state.adjustments,
-                    worksheetInputs: state.worksheetInputs,
-                    fsInputs: state.fsInputs,
-                    validationAttempts: {
-                        task1: state.validationAttempts[1] || 0,
-                        task2: state.validationAttempts[2] || 0,
-                    },
-                    task1Score: state.task1Score,
-                    task2Score: state.task2Score,
-                    timestamp: new Date().toISOString()
-                };
-
-                await saveExamResults(state.attendanceId, fullResultData);
-                state.currentStep = 3; // Move to Complete
-                renderStep();
-            } catch (e) {
-                renderMessageBox("Error saving results: " + e.message, true);
-                state.currentStep = 3; 
-                renderStep();
-            }
-        };
-
-
-        // --- DYNAMIC DATA GENERATION LOGIC (Unchanged) ---
         const rand = (min, max) => Math.round((Math.random() * (max - min) + min) / 1000) * 1000;
         const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
+        
+        // (generateDynamicData and calculateWorksheetAnswers logic kept identical to original for correctness)
         const generateDynamicData = () => {
             const familyName = getFamilyName();
             const CAPITAL_ACCOUNT = `${familyName}, Capital`;
@@ -709,102 +488,7 @@
             ];
         };
         
-        // --- UTILITY FUNCTIONS (Unchanged) ---
-        const getFamilyName = () => {
-            if (!state.studentInfo || !state.studentInfo.fullName) return 'A';
-            const parts = state.studentInfo.fullName.split(',').map(s => s.trim());
-            return parts[0] || 'A'; 
-        };
-
-        const formatPHP = (num) => {
-            if (typeof num !== 'number' || isNaN(num) || num === 0) return '';
-            const roundedNum = Math.round(num * 100) / 100;
-            return roundedNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        };
-        
-        const getAccountId = (name) => {
-            return name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        };
-        
-        const getStepTitle = (step) => {
-            const titles = [
-                "Student Login",
-                "TASK 1 & 2: Full Accounting Cycle Performance",
-                "Task 2: Create the Financial Statements (IS, SCE, BS)",
-                "Task Complete!"
-            ];
-            return titles[step] || "Unknown Task";
-        };
-        
-        const renderMessageBox = (message, isError = false) => {
-            const box = document.getElementById('message-box');
-            box.className = `text-lg font-medium min-h-8 ${isError ? 'text-red-600' : 'text-green-600'}`;
-            box.innerHTML = message;
-        };
-
-        const updateStudentPrintInfo = (stepTitle) => {
-            const info = state.studentInfo || {};
-            const container = document.getElementById('student-print-info');
-            const headerTitle = document.getElementById('task-header-title');
-            const instructions = document.getElementById('print-instructions-source').innerHTML;
-
-            if (!container || !headerTitle) return;
-
-            headerTitle.innerText = stepTitle;
-            
-            if (state.currentStep > 0 && info.fullName) {
-                container.innerHTML = `
-                    <div class="print-text-sm space-y-1">
-                        <!-- First row: CN left, Section right -->
-                        <div class="flex justify-between items-center">
-                            <p class="text-left text-gray-700">
-                                <strong>CN:</strong> ${info.classNumber}
-                            </p>
-                            <p class="text-right text-gray-700">
-                                <strong>Section:</strong> ${info.gradeSection}
-                            </p>
-                        </div>
-
-                        <!-- Second row: Name left, Submission DateTime right -->
-                        <div class="flex justify-between items-center">
-                            <p class="text-left text-gray-700">
-                                <strong>Name:</strong> ${info.fullName}
-                            </p>
-                            <p class="text-right text-gray-700">
-                                <strong>Submitted:</strong> ${info.submissionDateTime || 'Not yet submitted'}
-                            </p>
-                        </div>
-                        <div class="print:block pt-3 border-t border-gray-300">
-                            <h4 class="font-bold">INSTRUCTIONS:</h4>
-                            <div class="text-xs text-gray-700">${instructions}</div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = '';
-            }
-        };
-        
-        const updateCompanyName = (fullName) => {
-            const header = document.getElementById('company-name');
-            const parts = fullName.split(',').map(s => s.trim()).filter(s => s.length > 0);
-            
-            if (!header) return; 
-
-            if (parts.length === 2) {
-                header.innerText = `${parts[0]} ${parts[1]} Accounting Services`;
-            } else if (parts.length === 1) {
-                header.innerText = `${parts[0]} Accounting Services`;
-            } else {
-                header.innerText = `Sole Proprietor Accounting Services`;
-            }
-            header.classList.remove('hidden');
-            document.querySelector('.text-sm.font-light.text-gray-400.mt-2').classList.remove('hidden');
-        };
-
-        // --- CALCULATION LOGIC (Unchanged) ---
         const calculateWorksheetAnswers = () => {
-            // ... (Calculation logic remains identical to original provided code) ...
             const familyName = getFamilyName();
             const CAPITAL_ACCOUNT = `${familyName}, Capital`;
             const WITHDRAWALS_ACCOUNT = `${familyName}, Withdrawals`;
@@ -931,10 +615,121 @@
             };
         };
 
+        const getFamilyName = () => {
+            if (!state.studentInfo || !state.studentInfo.fullName) return 'A';
+            const parts = state.studentInfo.fullName.split(',').map(s => s.trim());
+            return parts[0] || 'A'; 
+        };
 
-        // --- RUBRIC GENERATION FUNCTION (REVISED) ---
-        const renderRubric = (taskNum) => {
+        const formatPHP = (num) => {
+            if (typeof num !== 'number' || isNaN(num) || num === 0) return '';
+            const roundedNum = Math.round(num * 100) / 100;
+            return roundedNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        
+        const getAccountId = (name) => {
+            return name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        };
+        
+        const getStepTitle = (step) => {
+            const titles = [
+                "Student Login",
+                "TASK 1 & 2: Accounting Cycle Application",
+                "Task Complete!"
+            ];
+            return titles[step] || "Unknown Task";
+        };
+        
+        // Removed original getTask2SubTitle function (Request 4)
+
+        const renderMessageBox = (message, isError = false) => {
+            const box = document.getElementById('message-box');
+            box.className = `text-lg font-medium min-h-8 ${isError ? 'text-red-600' : 'text-green-600'}`;
+            box.innerHTML = message;
+        };
+
+        const updateStudentPrintInfo = (stepTitle) => {
+            const info = state.studentInfo || {};
+            const container = document.getElementById('student-print-info');
+            
+            if (!container) return;
+
+            // In the combined view, we always show the overall task title.
+            const currentTitle = getStepTitle(state.currentStep);
+            
+            if (state.currentStep > 0 && info.fullName) {
+                // If the user has finished the task, include submission time
+                const submissionTime = info.submissionDateTime || 'N/A (In Progress)';
+                
+                container.innerHTML = `
+                    <h3 class="font-bold text-center text-lg uppercase mb-2 print:hidden">${currentTitle}</h3>
+                    <div class="print-text-sm space-y-1">
+                        <!-- First row: CN left, Section right -->
+                        <div class="flex justify-between items-center">
+                            <p class="text-left text-gray-700">
+                                <strong>CN:</strong> ${info.classNumber}
+                            </p>
+                            <p class="text-right text-gray-700">
+                                <strong>Section:</strong> ${info.gradeSection}
+                            </p>
+                        </div>
+
+                        <!-- Second row: Name left, Submission DateTime right -->
+                        <div class="flex justify-between items-center">
+                            <p class="text-left text-gray-700">
+                                <strong>Name:</strong> ${info.fullName}
+                            </p>
+                            <p class="text-right text-gray-700">
+                                <strong>Submitted:</strong> ${submissionTime}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '';
+            }
+        };
+
+        const updateCompanyName = (fullName) => {
+            const header = document.getElementById('company-name');
+            const parts = fullName.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            
+            if (!header) return; 
+
+            if (parts.length === 2) {
+                header.innerText = `${parts[0]} ${parts[1]} Accounting Services`;
+            } else if (parts.length === 1) {
+                header.innerText = `${parts[0]} Accounting Services`;
+            } else {
+                header.innerText = `Sole Proprietor Accounting Services`;
+            }
+            header.classList.remove('hidden');
+        };
+
+        // --- VALIDATION AND SCORING RENDERING ---
+        
+        /** * Renders the check/X icon next to the input. 
+         * (Request 2) 
+         */
+        const renderValidation = (id, isCorrect) => {
+            const span = document.getElementById(id + '_val');
+            if (!span) return;
+            // Only render icons if explicitly asked (i.e., when a validation button is clicked)
+            if (isCorrect !== null) {
+                span.innerHTML = isCorrect ? '<span class="text-green-600">✔</span>' : '<span class="text-red-600">❌</span>';
+            } else {
+                span.innerHTML = '';
+            }
+        };
+        
+        /**
+         * Renders the Score and Rubric.
+         * (Request 11)
+         */
+        const renderRubric = (taskNum, scoreData = null) => {
             let competency = "";
+            let scoreHtml = '';
+            
             if (taskNum === 1) {
                 competency = "To create 10-column worksheet by accurately determining and applying necessary adjustments, then integrating these with unadjusted amounts to complete the worksheet with correct financial data.";
             } else if (taskNum === 2) {
@@ -942,131 +737,198 @@
             } else {
                 return '';
             }
+            
+            if (scoreData) {
+                const gradeClass = scoreData.grade === 'A' ? 'bg-green-200 text-green-800' : 
+                                   scoreData.grade === 'P' ? 'bg-blue-200 text-blue-800' : 
+                                   scoreData.grade === 'D' ? 'bg-yellow-200 text-yellow-800' : 
+                                   'bg-red-200 text-red-800';
+                
+                scoreHtml = `
+                    <div class="flex justify-end items-center mb-2">
+                        <p class="text-sm font-semibold text-gray-700">
+                            SCORE: ${scoreData.score} / ${scoreData.total} | 
+                            GRADE: <span class="font-extrabold px-1 py-0.5 rounded-md ${gradeClass}">${scoreData.grade}</span> (${scoreData.percentage}%)
+                        </p>
+                    </div>
+                `;
+            }
 
+            // Grading Criteria Descriptions (Kept identical to original)
             const advancedCriteria = "Excellent performance. Worksheet and/or financial statement entries are all accurate and professionally formatted. Demonstrated complete mastery of the accounting cycle, including complex adjustments and financial reporting standards. (95-100%)";
             const proficientCriteria = "Good performance. Worksheet and/or financial statement entries are mostly accurate with minor errors (e.g., small transposition errors or minor calculation mistakes). Demonstrated a solid understanding of the accounting cycle. (85-94.9%)";
             const developingCriteria = "Acceptable performance. Several errors are present in entries and/or totals. Demonstrates a basic understanding of the accounting cycle steps but needs improvement in accuracy and detail. (75-84.9%)";
             const interventionCriteria = "Unacceptable performance. Significant errors are present in all major sections of the worksheet and/or financial statements. Demonstrates a lack of basic understanding of the accounting cycle. (<75%)";
 
             return `
-                <div class="rubric-box bg-white p-4 rounded-lg border-2 border-indigo-300 shadow-md mb-6 print:border-black print:shadow-none">
-                    <h4 class="font-extrabold text-indigo-700 text-lg mb-2 border-b-2 pb-1 print:text-black">
-                        TASK ${taskNum} - COMPETENCY & GRADING RUBRIC
-                    </h4>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-xs border-collapse border border-gray-400">
-                            <thead>
-                                <tr class="header-bg text-center text-white print:bg-white print:text-black">
-                                    <th class="p-2 border border-gray-300 w-1/5">Competency</th>
-                                    <th class="p-2 border border-gray-300 bg-green-600/90 w-1/5">Advanced (A)</th>
-                                    <th class="p-2 border border-gray-300 bg-blue-600/90 w-1/5">Proficient (P)</th>
-                                    <th class="p-2 border border-gray-300 bg-yellow-600/90 w-1/5">Developing (D)</th>
-                                    <th class="p-2 border border-gray-300 bg-red-600/90 w-1/5">Intervention Required (IR)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="align-top">
-                                    <td class="p-2 border border-gray-300 text-gray-700 font-semibold italic print:text-xs">
-                                        ${competency}
-                                    </td>
-                                    <td class="p-2 border border-gray-300 text-green-800 bg-green-50/50 print:text-xs">
-                                        ${advancedCriteria}
-                                    </td>
-                                    <td class="p-2 border border-gray-300 text-blue-800 bg-blue-50/50 print:text-xs">
-                                        ${proficientCriteria}
-                                    </td>
-                                    <td class="p-2 border border-gray-300 text-yellow-800 bg-yellow-50/50 print:text-xs">
-                                        ${developingCriteria}
-                                    </td>
-                                    <td class="p-2 border border-gray-300 text-red-800 bg-red-50/50 print:text-xs">
-                                        ${interventionCriteria}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div class="rubric-container">
+                    ${scoreHtml}
+                    <div class="rubric-box bg-white p-4 rounded-lg border-2 border-indigo-300 shadow-md mb-6 print:border-black print:shadow-none">
+                        <h4 class="font-extrabold text-indigo-700 text-lg mb-2 border-b-2 pb-1 print:text-black">
+                            TASK ${taskNum} - COMPETENCY & GRADING RUBRIC
+                        </h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-xs border-collapse border border-gray-400">
+                                <thead>
+                                    <tr class="header-bg text-center text-white print:bg-white print:text-black">
+                                        <th class="p-2 border border-gray-300 w-1/5">Competency</th>
+                                        <th class="p-2 border border-gray-300 bg-green-600/90 w-1/5">Advanced (A)</th>
+                                        <th class="p-2 border border-gray-300 bg-blue-600/90 w-1/5">Proficient (P)</th>
+                                        <th class="p-2 border border-gray-300 bg-yellow-600/90 w-1/5">Developing (D)</th>
+                                        <th class="p-2 border border-gray-300 bg-red-600/90 w-1/5">Intervention Required (IR)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="align-top">
+                                        <td class="p-2 border border-gray-300 text-gray-700 font-semibold italic print:text-xs">
+                                            ${competency}
+                                        </td>
+                                        <td class="p-2 border border-gray-300 text-green-800 bg-green-50/50 print:text-xs">
+                                            ${advancedCriteria}
+                                        </td>
+                                        <td class="p-2 border border-gray-300 text-blue-800 bg-blue-50/50 print:text-xs">
+                                            ${proficientCriteria}
+                                        </td>
+                                        <td class="p-2 border border-gray-300 text-yellow-800 bg-yellow-50/50 print:text-xs">
+                                            ${developingCriteria}
+                                        </td>
+                                        <td class="p-2 border border-gray-300 text-red-800 bg-red-50/50 print:text-xs">
+                                            ${interventionCriteria}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             `;
         };
-        // --- END RUBRIC GENERATION FUNCTION ---
 
-
-        // --- RENDER TASK 1 (Worksheet) ---
-        const saveWorksheetInput = (id, value) => {
-            state.worksheetInputs[id] = Number(value) || 0;
-        };
-        window.saveWorksheetInput = saveWorksheetInput;
-
-
-        const renderWorksheet = () => {
-            const worksheetData = calculateWorksheetAnswers();
+        // --- TASK 1 RENDERING (Worksheet Table - Extracted from old renderWorksheet) ---
+        const renderWorksheetTable = (worksheetData) => {
             const accounts = worksheetData.accounts;
-            const isTaskComplete = state.isTask1Validated || (state.validationAttempts[1] >= 3);
             
-            const renderRow = (acc, index) => {
+            const renderRow = (acc, index, forPrint = false) => {
                 const baseId = `wks_${index}_`;
                 const isIncomeStatement = acc.isFS === 'IS';
                 const isBalanceSheet = acc.isFS === 'BS';
                 const isNewAccount = acc.TB_DR === 0 && acc.TB_CR === 0 && acc.name.indexOf('Capital') === -1;
+                
+                const getCellValue = (col, printVal) => {
+                    if (forPrint) return formatPHP(printVal);
+                    
+                    const id = baseId + col;
+                    const value = state.worksheetInputs[id] || '';
+                    const disabled = (col.includes('IS_') && !isIncomeStatement) || (col.includes('BS_') && !isBalanceSheet);
+                    
+                    return `
+                        <td class="p-0 border border-gray-300 ${disabled ? 'bg-gray-100' : ''} relative">
+                            <input type="number" id="${id}" oninput="window.saveWorksheetInput('${id}', this.value)" class="table-input" ${disabled ? 'disabled' : ''} value="${value}">
+                            <span id="${id}_val" class="validation-icon absolute"></span>
+                        </td>
+                    `;
+                };
 
-                // Determine if input should be disabled
-                const disabledAttr = isTaskComplete ? 'disabled' : '';
-
+                const cellClass = `p-2 border border-gray-300 text-right whitespace-nowrap`;
+                
                 return `
                     <tr class="${isNewAccount ? 'bg-yellow-50/50 hover:bg-yellow-100' : 'hover:bg-gray-50'}" id="row_${index}">
                         <td class="p-2 border border-gray-300 text-left whitespace-nowrap ${isNewAccount ? 'font-semibold text-yellow-800' : ''}">${acc.name}</td>
-                        <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_DR)}</td>
-                        <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_CR)}</td>
-                        <td class="p-0 border border-gray-300 relative">
-                            <input type="number" id="${baseId}ADJ_DR" oninput="window.saveWorksheetInput('${baseId}ADJ_DR', this.value)" class="table-input" value="${state.worksheetInputs[baseId + 'ADJ_DR'] || ''}" ${disabledAttr}>
-                            <span id="${baseId}ADJ_DR_val" class="validation-icon"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 relative">
-                            <input type="number" id="${baseId}ADJ_CR" oninput="window.saveWorksheetInput('${baseId}ADJ_CR', this.value)" class="table-input" value="${state.worksheetInputs[baseId + 'ADJ_CR'] || ''}" ${disabledAttr}>
-                            <span id="${baseId}ADJ_CR_val" class="validation-icon"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 relative">
-                            <input type="number" id="${baseId}ATB_DR" oninput="window.saveWorksheetInput('${baseId}ATB_DR', this.value)" class="table-input" value="${state.worksheetInputs[baseId + 'ATB_DR'] || ''}" ${disabledAttr}>
-                            <span id="${baseId}ATB_DR_val" class="validation-icon"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 relative">
-                            <input type="number" id="${baseId}ATB_CR" oninput="window.saveWorksheetInput('${baseId}ATB_CR', this.value)" class="table-input" value="${state.worksheetInputs[baseId + 'ATB_CR'] || ''}" ${disabledAttr}>
-                            <span id="${baseId}ATB_CR_val" class="validation-icon"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 ${!isIncomeStatement ? 'bg-gray-100' : ''} relative">
-                            <input type="number" id="${baseId}IS_DR" oninput="window.saveWorksheetInput('${baseId}IS_DR', this.value)" class="table-input" ${!isIncomeStatement ? 'disabled' : disabledAttr} value="${state.worksheetInputs[baseId + 'IS_DR'] || ''}">
-                            <span id="${baseId}IS_DR_val" class="validation-icon"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 ${!isIncomeStatement ? 'bg-gray-100' : ''} relative">
-                            <input type="number" id="${baseId}IS_CR" oninput="window.saveWorksheetInput('${baseId}IS_CR', this.value)" class="table-input" ${!isIncomeStatement ? 'disabled' : disabledAttr} value="${state.worksheetInputs[baseId + 'IS_CR'] || ''}">
-                            <span id="${baseId}IS_CR_val" class="validation-icon"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 ${!isBalanceSheet ? 'bg-gray-100' : ''} relative">
-                            <input type="number" id="${baseId}BS_DR" oninput="window.saveWorksheetInput('${baseId}BS_DR', this.value)" class="table-input" ${!isBalanceSheet ? 'disabled' : disabledAttr} value="${state.worksheetInputs[baseId + 'BS_DR'] || ''}">
-                            <span id="${baseId}BS_DR_val" class="validation-icon"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 ${!isBalanceSheet ? 'bg-gray-100' : ''} relative">
-                            <input type="number" id="${baseId}BS_CR" oninput="window.saveWorksheetInput('${baseId}BS_CR', this.value)" class="table-input" ${!isBalanceSheet ? 'disabled' : disabledAttr} value="${state.worksheetInputs[baseId + 'BS_CR'] || ''}">
-                            <span id="${baseId}BS_CR_val" class="validation-icon"></span>
-                        </td>
+                        <td class="${cellClass}">${formatPHP(acc.TB_DR)}</td>
+                        <td class="${cellClass}">${formatPHP(acc.TB_CR)}</td>
+                        ${getCellValue('ADJ_DR', acc.ADJ_DR)}
+                        ${getCellValue('ADJ_CR', acc.ADJ_CR)}
+                        ${getCellValue('ATB_DR', acc.ATB_DR)}
+                        ${getCellValue('ATB_CR', acc.ATB_CR)}
+                        ${getCellValue('IS_DR', acc.IS_DR)}
+                        ${getCellValue('IS_CR', acc.IS_CR)}
+                        ${getCellValue('BS_DR', acc.BS_DR)}
+                        ${getCellValue('BS_CR', acc.BS_CR)}
                     </tr>
                 `;
             };
 
-            const subTotalRow = () => {
+            const subTotalRow = (forPrint = false) => {
+                const prefix = 'wks_SUBTOTAL_';
+                const data = worksheetData;
+                
+                const getSubTotalCell = (col, printVal) => {
+                    if (forPrint) return `<td class="p-2 border border-gray-300 text-right">${formatPHP(printVal)}</td>`;
+                    
+                    const id = prefix + col;
+                    return `
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="${id}" oninput="window.saveWorksheetInput('${id}', this.value)" class="table-input" value="${state.worksheetInputs[id] || ''}">
+                            <span id="${id}_val" class="validation-icon absolute"></span>
+                        </td>
+                    `;
+                };
+
                 return `
                     <tr class="font-bold bg-purple-100 text-purple-800 border-t-2 border-purple-500" id="row_SUBTOTAL">
                         <td class="p-2 border border-gray-300 text-left">COLUMN TOTALS (Before NI/NL)</td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_TB_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_TB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_TB_DR'] || ''}" disabled></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_TB_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_TB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_TB_CR'] || ''}" disabled></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_ADJ_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ADJ_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ADJ_DR'] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_ADJ_DR_val" class="validation-icon"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_ADJ_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ADJ_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ADJ_CR'] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_ADJ_CR_val" class="validation-icon"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_ATB_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ATB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ATB_DR'] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_ATB_DR_val" class="validation-icon"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_ATB_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ATB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ATB_CR'] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_ATB_CR_val" class="validation-icon"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_IS_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_IS_DR'] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_IS_DR_val" class="validation-icon"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_IS_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_IS_CR'] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_IS_CR_val" class="validation-icon"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_BS_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_BS_DR'] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_BS_DR_val" class="validation-icon"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_BS_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_BS_CR'] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_BS_CR_val" class="validation-icon"></span></td>
+                        ${getSubTotalCell('TB_DR', data.TB_DR_SUB)}${getSubTotalCell('TB_CR', data.TB_CR_SUB)}
+                        ${getSubTotalCell('ADJ_DR', data.ADJ_DR_SUB)}${getSubTotalCell('ADJ_CR', data.ADJ_CR_SUB)}
+                        ${getSubTotalCell('ATB_DR', data.ATB_DR_SUB)}${getSubTotalCell('ATB_CR', data.ATB_CR_SUB)}
+                        ${getSubTotalCell('IS_DR', data.IS_SUB_DR)}${getSubTotalCell('IS_CR', data.IS_SUB_CR)}
+                        ${getSubTotalCell('BS_DR', data.BS_SUB_DR)}${getSubTotalCell('BS_CR', data.BS_SUB_CR)}
+                    </tr>
+                `;
+            };
+
+            const netIncomeRow = (forPrint = false) => {
+                const data = worksheetData;
+                const netIncome = data.netIncome;
+                const niDr = netIncome > 0 ? netIncome : 0;
+                const niCr = netIncome < 0 ? Math.abs(netIncome) : 0;
+                
+                const getNICell = (id, val) => {
+                    if (forPrint) return `<td class="p-2 border border-gray-300 text-right">${formatPHP(val)}</td>`;
+                    
+                    return `
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="${id}" oninput="window.saveWorksheetInput('${id}', this.value)" class="table-input" value="${state.worksheetInputs[id] || ''}">
+                            <span id="${id}_val" class="validation-icon absolute"></span>
+                        </td>
+                    `;
+                };
+
+                return `
+                    <tr class="font-bold bg-green-50/50 text-green-700">
+                        <td class="p-2 border border-gray-300 text-left">${netIncome > 0 ? 'Net Income' : 'Net Loss'}</td>
+                        <td colspan="6" class="p-2 border border-gray-300 text-center"></td>
+                        ${getNICell('wks_NI_IS_DR', netIncome < 0 ? Math.abs(netIncome) : 0)} 
+                        ${getNICell('wks_NI_IS_CR', netIncome > 0 ? netIncome : 0)}
+                        ${getNICell('wks_NI_BS_DR', netIncome < 0 ? Math.abs(netIncome) : 0)}
+                        ${getNICell('wks_NI_BS_CR', netIncome > 0 ? netIncome : 0)}
+                    </tr>
+                `;
+            };
+
+            const finalTotalRow = (forPrint = false) => {
+                const prefix = 'wks_FINAL_';
+                const data = worksheetData;
+                
+                const getFinalCell = (col, printVal) => {
+                    if (forPrint) return `<td class="p-2 border border-gray-300 text-right font-extrabold border-double border-b-4 border-t-2 border-black">${formatPHP(printVal)}</td>`;
+                    
+                    const id = prefix + col;
+                    return `
+                        <td class="p-0 border border-gray-300 relative">
+                            <input type="number" id="${id}" oninput="window.saveWorksheetInput('${id}', this.value)" class="table-input" value="${state.worksheetInputs[id] || ''}">
+                            <span id="${id}_val" class="validation-icon absolute"></span>
+                        </td>
+                    `;
+                };
+
+                return `
+                    <tr class="font-bold bg-indigo-50/50 border-t-2 border-indigo-700">
+                        <td class="p-2 border border-gray-300 text-center">FINAL TOTALS</td>
+                        ${getFinalCell('TB_DR', data.TB_DR_Total)}${getFinalCell('TB_CR', data.TB_CR_Total)}
+                        ${getFinalCell('ADJ_DR', data.ADJ_DR_Total)}${getFinalCell('ADJ_CR', data.ADJ_CR_Total)}
+                        ${getFinalCell('ATB_DR', data.ATB_DR_Total)}${getFinalCell('ATB_CR', data.ATB_CR_Total)}
+                        ${getFinalCell('IS_DR', data.IS_DR_Total)}${getFinalCell('IS_CR', data.IS_CR_Total)}
+                        ${getFinalCell('BS_DR', data.BS_DR_Total)}${getFinalCell('BS_CR', data.BS_CR_Total)}
                     </tr>
                 `;
             };
@@ -1074,318 +936,260 @@
             let rowsHtml = '';
             const insertSubtotalAfter = 'Depreciation Expense';
             
-            worksheetData.accounts.forEach((acc, i) => {
-                rowsHtml += renderRow(acc, i);
+            accounts.forEach((acc, i) => {
+                rowsHtml += renderRow(acc, i, forPrint);
                 if (acc.name === insertSubtotalAfter) {
-                    rowsHtml += subTotalRow();
+                    rowsHtml += subTotalRow(forPrint);
                 }
             });
 
-            const netIncomeRow = `
-                <tr class="font-bold bg-green-50/50 text-green-700">
-                    <td class="p-2 border border-gray-300 text-left">${worksheetData.netIncome > 0 ? 'Net Income' : 'Net Loss'}</td>
-                    <td colspan="6" class="p-2 border border-gray-300 text-center"></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_NI_IS_DR" oninput="window.saveWorksheetInput('wks_NI_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_IS_DR'] || ''}" ${disabledAttr}><span id="wks_NI_IS_DR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_NI_IS_CR" oninput="window.saveWorksheetInput('wks_NI_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_IS_CR'] || ''}" ${disabledAttr}><span id="wks_NI_IS_CR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_NI_BS_DR" oninput="window.saveWorksheetInput('wks_NI_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_BS_DR'] || ''}" ${disabledAttr}><span id="wks_NI_BS_DR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_NI_BS_CR" oninput="window.saveWorksheetInput('wks_NI_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_BS_CR'] || ''}" ${disabledAttr}><span id="wks_NI_BS_CR_val" class="validation-icon"></span></td>
-                </tr>
-            `;
-
-            const finalTotalRow = `
-                <tr class="font-bold bg-indigo-50/50 border-t-2 border-indigo-700">
-                    <td class="p-2 border border-gray-300 text-center">FINAL TOTALS</td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_TB_DR" oninput="window.saveWorksheetInput('wks_FINAL_TB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_TB_DR'] || ''}" disabled></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_TB_CR" oninput="window.saveWorksheetInput('wks_FINAL_TB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_TB_CR'] || ''}" disabled></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_ADJ_DR" oninput="window.saveWorksheetInput('wks_FINAL_ADJ_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ADJ_DR'] || ''}" ${disabledAttr}><span id="wks_FINAL_ADJ_DR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_ADJ_CR" oninput="window.saveWorksheetInput('wks_FINAL_ADJ_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ADJ_CR'] || ''}" ${disabledAttr}><span id="wks_FINAL_ADJ_CR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_ATB_DR" oninput="window.saveWorksheetInput('wks_FINAL_ATB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ATB_DR'] || ''}" ${disabledAttr}><span id="wks_FINAL_ATB_DR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_ATB_CR" oninput="window.saveWorksheetInput('wks_FINAL_ATB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ATB_CR'] || ''}" ${disabledAttr}><span id="wks_FINAL_ATB_CR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_IS_DR" oninput="window.saveWorksheetInput('wks_FINAL_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_IS_DR'] || ''}" ${disabledAttr}><span id="wks_FINAL_IS_DR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_IS_CR" oninput="window.saveWorksheetInput('wks_FINAL_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_IS_CR'] || ''}" ${disabledAttr}><span id="wks_FINAL_IS_CR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_BS_DR" oninput="window.saveWorksheetInput('wks_FINAL_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_BS_DR'] || ''}" ${disabledAttr}><span id="wks_FINAL_BS_DR_val" class="validation-icon"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_BS_CR" oninput="window.saveWorksheetInput('wks_FINAL_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_BS_CR'] || ''}" ${disabledAttr}><span id="wks_FINAL_BS_CR_val" class="validation-icon"></span></td>
-                </tr>
-            `;
-
             return `
-                <div id="task-1-section" class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700">TASK 1: Create the 10-Column Worksheet Preparation</h3>
-                    ${renderScoreBlock(state.task1Score, 1)}
-                    ${renderRubric(1)} 
+                <div class="overflow-x-auto">
+                    <table id="worksheet-table" class="min-w-full text-xs border-collapse border border-gray-400">
+                        <thead>
+                            <tr class="header-bg text-center print:bg-gray-100 print:text-black print:text-xs">
+                                <th rowspan="2" class="p-2 border border-gray-300 w-[150px]">Account Titles</th>
+                                <th colspan="2" class="p-2 border border-gray-300">Trial Balance</th>
+                                <th colspan="2" class="p-2 border border-gray-300">Adjustments</th>
+                                <th colspan="2" class="p-2 border border-gray-300">Adjusted Trial Balance</th>
+                                <th colspan="2" class="p-2 border border-gray-300">Income Statement</th>
+                                <th colspan="2" class="p-2 border border-gray-300">Balance Sheet</th>
+                            </tr>
+                            <tr class="bg-indigo-100 text-indigo-900 text-center print:bg-gray-50 print:text-black">
+                                <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
+                                <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
+                                <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
+                                <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
+                                <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}${netIncomeRow(forPrint)}${finalTotalRow(forPrint)}</tbody>
+                    </table>
+                </div>
+            `;
+        };
+        
+        const renderFSInput = (type, id, value, placeholder="Amount", label="", forPrint = false, correctVal = null) => {
+            const hasError = forPrint && (state.fsInputs[type][id] !== correctVal);
+            
+            const inputHtml = forPrint 
+                ? `<span class="font-bold ${hasError ? 'text-red-700' : 'text-black'}">${formatPHP(state.fsInputs[type][id])}</span>`
+                : `<input type="number" id="${id}" oninput="window.saveFSInput('${type}', '${id}', this.value)" class="fs-input auto-w" placeholder="${placeholder}" value="${value}">
+                   <span id="${id}_val" class="validation-icon absolute"></span>`;
+            
+            return `
+                <div class="flex justify-between items-center text-sm ${label ? 'mb-1' : ''} ${forPrint ? 'print:text-[8pt]' : ''}">
+                    ${label ? `<span class="text-gray-700 ${forPrint ? 'text-black' : ''}">${label}</span>` : ''}
+                    <div class="relative w-1/3 min-w-[100px] ${forPrint ? 'text-right' : ''}">
+                        ${inputHtml}
+                    </div>
+                </div>
+            `;
+        };
+        
+        /** * Combines IS, SCE, and BS into a single responsive structure. 
+         * (Request 3, 4, 5) 
+         */
+        const renderTask2Combined = (forPrint = false) => {
+            const familyName = getFamilyName();
+            const CAPITAL_ACCOUNT = `${familyName}, Capital`;
+            const WITHDRAWALS_ACCOUNT = `${familyName}, Withdrawals`;
+            const worksheetData = calculateWorksheetAnswers();
+
+            // --- 1. Income Statement (IS) ---
+            const revenue = worksheetData.IS_accounts.filter(acc => acc.type === 'revenue');
+            const expenses = worksheetData.IS_accounts.filter(acc => acc.type === 'expense');
+            const isNetIncome = worksheetData.netIncome > 0;
+            const isScore = state.task2Score ? validateIncomeStatement(false) : null;
+            const isTotalRevenueVal = worksheetData.totalRevenue;
+            const isTotalExpenseVal = worksheetData.totalExpenses;
+            const isNetIncomeVal = Math.abs(worksheetData.netIncome);
+
+            const isHtml = `
+                <div class="task2-part w-full md:w-1/3 p-4 bg-white rounded-xl shadow-lg border border-green-200">
+                    <header class="text-center">
+                        <p class="text-base font-semibold text-gray-600 print:text-sm">${document.getElementById('company-name').innerText.replace(' - Year End', '')}</p>
+                        <h4 class="text-sm font-semibold text-gray-500">Income Statement (IS)</h4>
+                        <p class="text-sm text-gray-500">For the Year Ended December 31, 2024</p>
+                        ${forPrint ? `<p class="text-xs text-gray-400 mt-2">Correct: ${isScore.correct}/${isScore.total}</p>` : ''}
+                    </header>
+                    <div class="space-y-4 mt-4">
+                        <h5 class="font-bold text-lg border-b pb-1 text-green-700">Service Revenue</h5>
+                        ${revenue.map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name, forPrint, acc.ATB_CR)).join('')}
+                        <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
+                            <label class="text-md text-green-700">TOTAL SERVICE REVENUE:</label>
+                            ${renderFSInput('is', 'is_total_revenue', state.fsInputs.is.is_total_revenue, 'Amount', '', forPrint, isTotalRevenueVal)}
+                        </div>
+                        <h5 class="font-bold text-lg border-b pb-1 pt-4 text-red-700">Expenses</h5>
+                        ${expenses.map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name, forPrint, acc.ATB_DR)).join('')}
+                        <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
+                            <label class="text-md text-red-700">TOTAL EXPENSES:</label>
+                            ${renderFSInput('is', 'is_total_expense', state.fsInputs.is.is_total_expense, 'Amount', '', forPrint, isTotalExpenseVal)}
+                        </div>
+                        <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
+                            <label class="text-xl text-indigo-800">${isNetIncome ? 'NET INCOME' : 'NET LOSS'}:</label>
+                            ${renderFSInput('is', 'is_net_income', state.fsInputs.is.is_net_income, 'Amount', '', forPrint, isNetIncomeVal)}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // --- 2. Statement of Changes in Equity (SCE) ---
+            const sceScore = state.task2Score ? validateStatementOfChangesInEquity(false) : null;
+            const sceStartingCapitalVal = worksheetData.startingCapital;
+            const sceNetIncomeVal = Math.abs(worksheetData.netIncome);
+            const sceWithdrawalsVal = worksheetData.withdrawals;
+            const sceEndingCapitalVal = worksheetData.endingCapital;
+
+            const sceHtml = `
+                <div class="task2-part w-full md:w-1/3 p-4 bg-white rounded-xl shadow-lg border border-purple-200">
+                    <header class="text-center">
+                        <p class="text-base font-semibold text-gray-600 print:text-sm">${document.getElementById('company-name').innerText.replace(' - Year End', '')}</p>
+                        <h4 class="text-sm font-semibold text-gray-500">Statement of Changes in Equity</h4>
+                        <p class="text-sm text-gray-500">For the Year Ended December 31, 2024</p>
+                        ${forPrint ? `<p class="text-xs text-gray-400 mt-2">Correct: ${sceScore.correct}/${sceScore.total}</p>` : ''}
+                    </header>
+                    <div class="space-y-3 mt-4">
+                        <div class="flex justify-between items-center text-base font-medium border-b border-gray-300 pb-1">
+                            <label class="text-gray-700">${CAPITAL_ACCOUNT}, January 1, 2024</label>
+                            ${renderFSInput('sce', 'sce_starting_capital', state.fsInputs.sce.sce_starting_capital, 'Amount', '', forPrint, sceStartingCapitalVal)}
+                        </div>
+                        <div class="flex justify-between items-center text-sm ${isNetIncome ? 'text-green-600' : 'text-red-600'}">
+                            <label>${isNetIncome ? 'Add: Net Income' : 'Less: Net Loss'}</label>
+                            ${renderFSInput('sce', 'sce_net_income', state.fsInputs.sce.sce_net_income, 'Amount', '', forPrint, sceNetIncomeVal)}
+                        </div>
+                        <div class="flex justify-between items-center text-sm text-red-600">
+                            <label>Less: ${WITHDRAWALS_ACCOUNT}</label>
+                            ${renderFSInput('sce', 'sce_withdrawals', state.fsInputs.sce.sce_withdrawals, 'Amount', '', forPrint, sceWithdrawalsVal)}
+                        </div>
+                        <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
+                            <label class="text-xl text-indigo-800">${CAPITAL_ACCOUNT}, December 31, 2024</label>
+                            ${renderFSInput('sce', 'sce_ending_capital', state.fsInputs.sce.sce_ending_capital, 'Amount', '', forPrint, sceEndingCapitalVal)}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // --- 3. Balance Sheet (BS) ---
+            const bsScore = state.task2Score ? validateBalanceSheet(false) : null;
+            const assets = worksheetData.Assets;
+            const liabilities = worksheetData.Liabilities;
+            const bsTotalAssetsVal = worksheetData.correctTotalAssetsNet;
+            const bsTotalLiabEquityVal = worksheetData.correctTotalLiabilitiesAndEquityNet;
+            const bsEndingCapitalVal = worksheetData.endingCapital;
+
+            const bsHtml = `
+                <div class="task2-part w-full md:w-1/3 p-4 bg-white rounded-xl shadow-lg border border-red-200">
+                    <header class="text-center">
+                        <p class="text-base font-semibold text-gray-600 print:text-sm">${document.getElementById('company-name').innerText.replace(' - Year End', '')}</p>
+                        <h4 class="text-sm font-semibold text-gray-500">Balance Sheet (BS)</h4>
+                        <p class="text-sm text-gray-500">As of December 31, 2024</p>
+                        ${forPrint ? `<p class="text-xs text-gray-400 mt-2">Correct: ${bsScore.correct}/${bsScore.total}</p>` : ''}
+                    </header>
+                    <div class="space-y-3 mt-4">
+                        <h5 class="font-bold text-lg border-b pb-1 text-blue-700">ASSETS</h5>
+                        <div class="space-y-1 text-sm">
+                            ${assets.map(acc => {
+                                const id = getAccountId(acc.name) + '_bs_li';
+                                const isContra = acc.type === 'contra-asset';
+                                const correctVal = isContra ? acc.ATB_CR : acc.ATB_DR; 
+                                return renderFSInput('bs', id, state.fsInputs.bs[id], 'Amount', isContra ? `Less: ${acc.name}` : acc.name, forPrint, correctVal);
+                            }).join('')}
+                        </div>
+                        <div class="flex justify-between items-center font-extrabold border-t-2 border-blue-500 pt-3 bg-blue-50 p-2 rounded">
+                            <label class="text-md text-blue-800">TOTAL ASSETS:</label>
+                            ${renderFSInput('bs', 'bs_total_assets', state.fsInputs.bs.bs_total_assets, 'Amount', '', forPrint, bsTotalAssetsVal)}
+                        </div>
+                        <h5 class="font-bold text-lg border-b pb-1 pt-4 text-red-700">LIABILITIES</h5>
+                        <div class="space-y-1 text-sm">
+                            ${liabilities.map(acc => {
+                                const id = getAccountId(acc.name) + '_bs_li';
+                                return renderFSInput('bs', id, state.fsInputs.bs[id], 'Amount', acc.name, forPrint, acc.ATB_CR);
+                            }).join('')}
+                        </div>
+                        <h5 class="font-bold text-lg border-b pb-1 pt-4 text-purple-700">OWNER'S EQUITY</h5>
+                        <div class="flex justify-between items-center text-sm">
+                            <label class="text-gray-700">${CAPITAL_ACCOUNT}, Dec 31, 2024</label>
+                            ${renderFSInput('bs', 'bs_ending_capital_bs', state.fsInputs.bs.bs_ending_capital_bs, 'Amount', '', forPrint, bsEndingCapitalVal)}
+                        </div>
+                        <div class="flex justify-between items-center font-extrabold border-t-2 border-red-500 pt-3 bg-red-50 p-2 rounded">
+                            <label class="text-md text-red-800">TOTAL LIA. & EQUITY:</label>
+                            ${renderFSInput('bs', 'bs_total_liab_equity', state.fsInputs.bs.bs_total_liab_equity, 'Amount', '', forPrint, bsTotalLiabEquityVal)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Combine all three parts, applying horizontal alignment for wide screens (Request 5)
+            return `
+                <h3 class="text-2xl font-bold text-indigo-700 mt-8 mb-4 print-task-title">TASK 2: Create the Financial Statements</h3>
+                ${renderRubric(2, state.task2Score)}
+                <div id="task2-statements" class="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 print:flex print:flex-row print:space-x-4 print:space-y-0">
+                    ${isHtml}
+                    ${sceHtml}
+                    ${bsHtml}
+                </div>
+            `;
+        };
+        
+        // --- Task 1 and Task 2 Combined Renderer ---
+        const renderTasksCombinedPage = () => {
+            const worksheetData = calculateWorksheetAnswers();
+            const task1Status = state.task1Complete ? ' (Completed)' : ' (In Progress)';
+            
+            const task1Html = `
+                <div id="task1-section" class="space-y-6">
+                    <h3 class="text-2xl font-bold text-indigo-700">TASK 1: Create the 10-Column Worksheet Preparation ${task1Status}</h3>
+                    ${renderRubric(1, state.task1Score)}
                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <h4 class="font-bold text-lg text-blue-700 mb-2">Required Adjustments:</h4>
                         <ul class="list-disc list-inside text-sm space-y-1">
                             ${state.adjustments.map(adj => `<li>${adj.desc}</li>`).join('')}
                         </ul>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table id="worksheet-table" class="min-w-full text-xs border-collapse border border-gray-400">
-                            <thead>
-                                <tr class="header-bg text-center">
-                                    <th rowspan="2" class="p-2 border border-gray-300 w-[150px]">Account Titles</th>
-                                    <th colspan="2" class="p-2 border border-gray-300">Trial Balance</th>
-                                    <th colspan="2" class="p-2 border border-gray-300">Adjustments</th>
-                                    <th colspan="2" class="p-2 border border-gray-300">Adjusted Trial Balance</th>
-                                    <th colspan="2" class="p-2 border border-gray-300">Income Statement</th>
-                                    <th colspan="2" class="p-2 border border-gray-300">Balance Sheet</th>
-                                </tr>
-                                <tr class="bg-indigo-100 text-indigo-900 text-center">
-                                    <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
-                                    <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
-                                    <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
-                                    <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
-                                    <th class="p-1 border border-gray-300">Debit</th><th class="p-1 border border-gray-300">Credit</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rowsHtml}${netIncomeRow}${finalTotalRow}</tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        };
-
-        // --- RENDER TASK 2 SUB-STEPS (Helper functions now return HTML) ---
-        const saveFSInput = (type, id, value) => {
-            state.fsInputs[type][id] = Number(value) || 0;
-        };
-        window.saveFSInput = saveFSInput;
-        
-        const renderFSInput = (type, id, value, placeholder="Amount", label="", isTaskComplete) => {
-            const disabledAttr = isTaskComplete ? 'disabled' : '';
-            return `
-                <div class="flex justify-between items-center text-sm ${label ? 'mb-1' : ''}">
-                    ${label ? `<span class="text-gray-700">${label}</span>` : ''}
-                    <div class="relative w-1/3 md:w-full">
-                        <input type="number" id="${id}" oninput="window.saveFSInput('${type}', '${id}', this.value)" class="fs-input" placeholder="${placeholder}" value="${state.fsInputs[type][id] || ''}" ${disabledAttr}>
-                        <span id="${id}_val" class="validation-icon"></span>
-                    </div>
-                </div>
-            `;
-        };
-
-        const renderIncomeStatement = (isTaskComplete) => {
-            const worksheetData = calculateWorksheetAnswers();
-            const revenue = worksheetData.IS_accounts.filter(acc => acc.type === 'revenue');
-            const expenses = worksheetData.IS_accounts.filter(acc => acc.type === 'expense');
-            const isNetIncome = worksheetData.netIncome > 0;
-            const disabledAttr = isTaskComplete ? 'disabled' : '';
-
-            return `
-                <div id="is-part" class="task-2-part-print bg-white rounded-xl shadow-lg border border-green-200 p-4 space-y-3 print:border print:border-black">
-                    <header class="text-center">
-                        <h4 class="font-bold text-lg text-green-700">Income Statement (IS)</h4>
-                        <p class="text-sm text-gray-500">For the Year Ended December 31, 2024</p>
-                    </header>
-                    <h5 class="font-bold text-md border-b pb-1 text-green-700">Service Revenue</h5>
-                    ${revenue.map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name, isTaskComplete)).join('')}
-                    <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
-                        <label class="text-md text-green-700">TOTAL SERVICE REVENUE:</label>
-                        <div class="relative w-1/3 md:w-full"><input type="number" id="is_total_revenue" oninput="saveFSInput('is', 'is_total_revenue', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_revenue || ''}" ${disabledAttr}><span id="is_total_revenue_val" class="validation-icon"></span></div>
-                    </div>
-                    <h5 class="font-bold text-md border-b pb-1 pt-4 text-red-700">Expenses</h5>
-                    ${expenses.map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name, isTaskComplete)).join('')}
-                    <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
-                        <label class="text-md text-red-700">TOTAL EXPENSES:</label>
-                        <div class="relative w-1/3 md:w-full"><input type="number" id="is_total_expense" oninput="saveFSInput('is', 'is_total_expense', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_expense || ''}" ${disabledAttr}><span id="is_total_expense_val" class="validation-icon"></span></div>
-                    </div>
-                    <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
-                        <label class="text-xl text-indigo-800">${isNetIncome ? 'NET INCOME' : 'NET LOSS'}:</label>
-                        <div class="relative w-1/3 md:w-full"><input type="number" id="is_net_income" oninput="saveFSInput('is', 'is_net_income', this.value)" class="fs-input text-indigo-800" value="${state.fsInputs.is.is_net_income || ''}" ${disabledAttr}><span id="is_net_income_val" class="validation-icon"></span></div>
-                    </div>
-                </div>
-            `;
-        };
-
-        const renderStatementOfChangesInEquity = (isTaskComplete) => {
-            const familyName = getFamilyName();
-            const CAPITAL_ACCOUNT = `${familyName}, Capital`;
-            const WITHDRAWALS_ACCOUNT = `${familyName}, Withdrawals`;
-            const worksheetData = calculateWorksheetAnswers();
-            const isNetIncome = worksheetData.netIncome > 0;
-            const disabledAttr = isTaskComplete ? 'disabled' : '';
-
-            return `
-                <div id="sce-part" class="task-2-part-print bg-white rounded-xl shadow-lg border border-purple-200 p-4 space-y-3 print:border print:border-black">
-                    <header class="text-center">
-                        <h4 class="font-bold text-lg text-purple-700">Statement of Changes in Equity (SCE)</h4>
-                        <p class="text-sm text-gray-500">For the Year Ended December 31, 2024</p>
-                    </header>
-                    <div class="flex justify-between items-center text-base font-medium border-b border-gray-300 pb-1">
-                        <label class="text-gray-700">${CAPITAL_ACCOUNT}, January 1, 2024</label>
-                        <div class="relative w-1/3 md:w-full"><input type="number" id="sce_starting_capital" oninput="saveFSInput('sce', 'sce_starting_capital', this.value)" class="fs-input font-bold" value="${state.fsInputs.sce.sce_starting_capital || ''}" ${disabledAttr}><span id="sce_starting_capital_val" class="validation-icon"></span></div>
-                    </div>
-                    <div class="flex justify-between items-center text-sm ${isNetIncome ? 'text-green-600' : 'text-red-600'}">
-                        <label>${isNetIncome ? 'Add: Net Income' : 'Less: Net Loss'}</label>
-                        <div class="relative w-1/3 md:w-full"><input type="number" id="sce_net_income" oninput="saveFSInput('sce', 'sce_net_income', this.value)" class="fs-input" value="${state.fsInputs.sce.sce_net_income || ''}" ${disabledAttr}><span id="sce_net_income_val" class="validation-icon"></span></div>
-                    </div>
-                    <div class="flex justify-between items-center text-sm text-red-600">
-                        <label>Less: ${WITHDRAWALS_ACCOUNT}</label>
-                        <div class="relative w-1/3 md:w-full"><input type="number" id="sce_withdrawals" oninput="saveFSInput('sce', 'sce_withdrawals', this.value)" class="fs-input" value="${state.fsInputs.sce.sce_withdrawals || ''}" ${disabledAttr}><span id="sce_withdrawals_val" class="validation-icon"></span></div>
-                    </div>
-                    <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
-                        <label class="text-xl text-indigo-800">${CAPITAL_ACCOUNT}, December 31, 2024</label>
-                        <div class="relative w-1/3 md:w-full"><input type="number" id="sce_ending_capital" oninput="saveFSInput('sce', 'sce_ending_capital', this.value)" class="fs-input text-indigo-800" value="${state.fsInputs.sce.sce_ending_capital || ''}" ${disabledAttr}><span id="sce_ending_capital_val" class="validation-icon"></span></div>
-                    </div>
-                </div>
-            `;
-        };
-
-        const renderBalanceSheet = (isTaskComplete) => {
-            const familyName = getFamilyName();
-            const CAPITAL_ACCOUNT = `${familyName}, Capital`;
-            const worksheetData = calculateWorksheetAnswers();
-            const assets = worksheetData.Assets;
-            const liabilities = worksheetData.Liabilities;
-            const disabledAttr = isTaskComplete ? 'disabled' : '';
-
-            return `
-                <div id="bs-part" class="task-2-part-print bg-white rounded-xl shadow-lg border border-red-200 p-4 print:border print:border-black">
-                    <header class="text-center">
-                        <h4 class="font-bold text-lg text-red-700">Balance Sheet (BS)</h4>
-                        <p class="text-sm text-gray-500">As of December 31, 2024</p>
-                    </header>
-                    <div class="space-y-3">
-                        <h5 class="font-bold text-md border-b pb-1 text-blue-700">ASSETS</h5>
-                        <div class="space-y-1 text-sm">
-                            ${assets.map(acc => {
-                                const id = getAccountId(acc.name) + '_bs_li';
-                                const isContra = acc.type === 'contra-asset';
-                                return renderFSInput('bs', id, state.fsInputs.bs[id], 'Amount', isContra ? `Less: ${acc.name}` : acc.name, isTaskComplete);
-                            }).join('')}
-                        </div>
-                        <div class="flex justify-between items-center font-extrabold border-t-2 border-blue-500 pt-3 bg-blue-50 p-2 rounded">
-                            <label class="text-md text-blue-800">TOTAL ASSETS:</label>
-                            <div class="relative w-1/3 md:w-full"><input type="number" id="bs_total_assets" oninput="saveFSInput('bs', 'bs_total_assets', this.value)" class="fs-input text-blue-800" value="${state.fsInputs.bs.bs_total_assets || ''}" ${disabledAttr}><span id="bs_total_assets_val" class="validation-icon"></span></div>
-                        </div>
-
-                        <h5 class="font-bold text-md border-b pb-1 pt-4 text-red-700">LIABILITIES</h5>
-                        <div class="space-y-1 text-sm">
-                            ${liabilities.map(acc => renderFSInput('bs', getAccountId(acc.name) + '_bs_li', state.fsInputs.bs[getAccountId(acc.name) + '_bs_li'], 'Amount', acc.name, isTaskComplete)).join('')}
-                        </div>
-                        <h5 class="font-bold text-md border-b pb-1 pt-4 text-purple-700">OWNER'S EQUITY</h5>
-                        <div class="flex justify-between items-center text-sm">
-                            <label class="text-gray-700">${CAPITAL_ACCOUNT}, Dec 31, 2024</label>
-                            <div class="relative w-1/3 md:w-full"><input type="number" id="bs_ending_capital_bs" oninput="saveFSInput('bs', 'bs_ending_capital_bs', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_ending_capital_bs || ''}" ${disabledAttr}><span id="bs_ending_capital_bs_val" class="validation-icon"></span></div>
-                        </div>
-                        <div class="flex justify-between items-center font-extrabold border-t-2 border-red-500 pt-3 bg-red-50 p-2 rounded">
-                            <label class="text-md text-red-800">TOTAL LIA. & EQUITY:</label>
-                            <div class="relative w-1/3 md:w-full"><input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs', 'bs_total_liab_equity', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_liab_equity || ''}" ${disabledAttr}><span id="bs_total_liab_equity_val" class="validation-icon"></span></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        };
-
-        // --- COMBINED TASK VIEW (New) ---
-        const renderCombinedTaskView = () => {
-            const isTask1Complete = state.isTask1Validated || (state.validationAttempts[1] >= 3);
-            const isTask2Complete = state.isTask2Validated || (state.validationAttempts[2] >= 3);
-            
-            // Generate Task 1 content
-            const task1Html = renderWorksheet();
-
-            // Generate Task 2 content
-            const task2Html = `
-                <div id="financial-statements-section" class="space-y-6 pt-10 border-t-4 border-dashed border-gray-300">
-                    <h3 class="text-2xl font-bold text-indigo-700">TASK 2: Create the Financial Statements</h3>
-                    ${renderScoreBlock(state.task2Score, 2)}
-                    ${renderRubric(2)} 
-                    
-                    <div class="task-2-parts-print flex flex-col md:flex-row md:space-x-8 space-y-8 md:space-y-0 text-xs">
-                        <!-- Part 1: Income Statement -->
-                        ${renderIncomeStatement(isTask2Complete)}
-                        
-                        <!-- Part 2: SCE -->
-                        ${renderStatementOfChangesInEquity(isTask2Complete)}
-                        
-                        <!-- Part 3: Balance Sheet -->
-                        ${renderBalanceSheet(isTask2Complete)}
-                    </div>
+                    ${renderWorksheetTable(worksheetData)}
                 </div>
             `;
             
+            const task2Html = renderTask2Combined(false); // Render interactive Task 2
+
             document.getElementById('task-container').innerHTML = task1Html + task2Html;
             
-            // Set initial button state
-            if (!isTask1Complete) {
-                document.getElementById('next-step-btn').innerText = `Validate Task 1 (Attempt ${state.validationAttempts[1] + 1} of 3)`;
-            } else if (!isTask2Complete) {
-                // Disable T1 inputs and set button for T2
-                disableTaskInputs(1, true);
-                document.getElementById('next-step-btn').innerText = `Validate Task 2 (Attempt ${state.validationAttempts[2] + 1} of 3)`;
+            // Update validation buttons visibility and state
+            document.getElementById('task-validation-buttons').classList.remove('hidden');
+            document.getElementById('next-step-btn').classList.add('hidden');
+            
+            const task1Btn = document.getElementById('validate-task1-btn');
+            const task2Btn = document.getElementById('validate-task2-btn');
+
+            if (state.task1Complete) {
+                task1Btn.disabled = true;
+                task1Btn.innerText = "Task 1: Completed";
             } else {
-                // Both complete/expired
-                disableTaskInputs(1, true);
-                disableTaskInputs(2, true);
-                window.finishAndPreview(false); // Immediate save/preview
-                return;
+                task1Btn.disabled = false;
+                task1Btn.innerText = `Validate Task 1 (${state.validationAttempts[1]}/${MAX_ATTEMPTS})`;
             }
-            
-            renderMessageBox("Complete both tasks. Validate Task 1 first.");
-            document.getElementById('next-step-btn').disabled = false;
+
+            if (state.task2Complete) {
+                task2Btn.disabled = true;
+                task2Btn.innerText = "Task 2: Completed";
+                // Show final submission button now
+                document.getElementById('next-step-btn').classList.remove('hidden');
+                document.getElementById('next-step-btn').innerText = "Final Submission & Print Full Report";
+                document.getElementById('next-step-btn').disabled = false;
+            } else {
+                task2Btn.disabled = false;
+                task2Btn.innerText = `Validate Task 2 (${state.validationAttempts[2]}/${MAX_ATTEMPTS})`;
+                document.getElementById('next-step-btn').classList.add('hidden'); // Hide final submission button until both complete
+            }
+
             if (timeRemainingSeconds <= 0) window.disableAllInputs();
-        };
-
-        /** Final Step 3: Completion */
-        const renderCompletion = () => {
-            const studentInfo = state.studentInfo || {};
-            const score1 = state.task1Score || { percentage: 0, grade: 'N/A', score: 0, total: 0 };
-            const score2 = state.task2Score || { percentage: 0, grade: 'N/A', score: 0, total: 0 };
-
-            document.getElementById('task-container').innerHTML = `
-                <div class="text-center py-16 px-4 bg-indigo-50 rounded-lg shadow-2xl border-4 border-indigo-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 mx-auto text-indigo-600 mb-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                    <h3 class="text-3xl font-bold text-indigo-800 mb-3">CONGRATULATIONS!</h3>
-                    <p class="text-xl text-gray-700 mb-6">You have successfully completed the T2 Performance Task 02.</p>
-                    <p class="text-md text-green-600 font-bold mb-6">✓ Your results have been saved to the database.</p>
-
-                    <!-- NEW: Score Summary Display -->
-                    <div class="inline-block text-left bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-6 mb-6">
-                        <h4 class="font-semibold text-xl text-indigo-800 border-b pb-2 mb-4">Task Performance Summary:</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-1 border-r pr-4">
-                                <h5 class="font-bold text-lg text-indigo-600">TASK 1: Worksheet</h5>
-                                <p class="text-sm">Correct Checks: <strong>${score1.score} / ${score1.total}</strong></p>
-                                <p class="text-xl mt-1">Grade: <span class="font-extrabold p-1 rounded-md ${score1.grade === 'A' ? 'bg-green-200 text-green-800' : score1.grade === 'P' ? 'bg-blue-200 text-blue-800' : score1.grade === 'D' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'}">${score1.grade}</span> (${score1.percentage}%)</p>
-                            </div>
-                            <div class="col-span-1 pl-4">
-                                <h5 class="font-bold text-lg text-indigo-600">Task 2: Financial Statements</h5>
-                                <p class="text-sm">Correct Checks: <strong>${score2.score} / ${score2.total}</strong></p>
-                                <p class="text-xl mt-1">Grade: <span class="font-extrabold p-1 rounded-md ${score2.grade === 'A' ? 'bg-green-200 text-green-800' : score2.grade === 'P' ? 'bg-blue-200 text-blue-800' : score2.grade === 'D' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'}">${score2.grade}</span> (${score2.percentage}%)</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <p class="mt-6 text-sm text-gray-600">Please click the button below to generate the final PDF report for your records.</p>
-                </div>
-            `;
-            document.getElementById('next-step-btn').innerText = "Print Final Report to PDF";
-            document.getElementById('next-step-btn').onclick = () => {
-                window.print();
-                renderMessageBox("Final report printed. Great job!");
-            };
-            renderMessageBox("Task completed & Data Saved!");
             
-            const timerBox = document.getElementById('timer-box');
-            if (timerBox) {
-                timerBox.classList.remove('bg-red-800', 'bg-red-600', 'animate-pulse');
-                timerBox.classList.add('bg-green-600');
-                document.getElementById('countdown').textContent = "DONE";
-            }
+            renderMessageBox("Complete both Task 1 (Worksheet) and Task 2 (Financial Statements) and validate each one.");
         };
 
-        // --- VALIDATION AND SCORING ---
-        
-        const renderValidation = (id, isCorrect) => {
-            const span = document.getElementById(id + '_val');
-            if (!span) return;
-            // Display check/X icon 
-            span.innerHTML = isCorrect ? '<span class="text-green-600">✔</span>' : '<span class="text-red-600">❌</span>';
-        };
-
+        // --- VALIDATION LOGIC ---
+        // (Worksheet validation logic kept identical to original)
         const validateWorksheet = (doRenderIcons = true) => {
             const worksheetData = calculateWorksheetAnswers();
             state.generatedAnswers = worksheetData; 
@@ -1398,33 +1202,35 @@
                 const baseId = `wks_${i}_`;
                 const checks = [['ADJ', acc.ADJ_DR, acc.ADJ_CR], ['ATB', acc.ATB_DR, acc.ATB_CR], ['IS', acc.IS_DR, acc.IS_CR], ['BS', acc.BS_DR, acc.BS_CR]];
                 checks.forEach(([prefix, correctDR, correctCR]) => {
-                    // Debit check
-                    if (document.getElementById(baseId + prefix + '_DR') && !document.getElementById(baseId + prefix + '_DR').disabled) {
-                        const isCorrect = Math.abs((state.worksheetInputs[baseId + prefix + '_DR'] || 0) - correctDR) < acceptableError;
-                        if (doRenderIcons) renderValidation(baseId + prefix + '_DR', isCorrect);
+                    const drId = baseId + prefix + '_DR';
+                    const crId = baseId + prefix + '_CR';
+                    
+                    if (document.getElementById(drId) && !document.getElementById(drId).disabled) {
+                        const isCorrect = Math.abs((state.worksheetInputs[drId] || 0) - correctDR) < acceptableError;
+                        if (doRenderIcons) renderValidation(drId, isCorrect);
                         if (isCorrect) correctCount++;
                         totalChecks++;
                     }
-                    // Credit check
-                    if (document.getElementById(baseId + prefix + '_CR') && !document.getElementById(baseId + prefix + '_CR').disabled) {
-                        const isCorrect = Math.abs((state.worksheetInputs[baseId + prefix + '_CR'] || 0) - correctCR) < acceptableError;
-                        if (doRenderIcons) renderValidation(baseId + prefix + '_CR', isCorrect);
+                    if (document.getElementById(crId) && !document.getElementById(crId).disabled) {
+                        const isCorrect = Math.abs((state.worksheetInputs[crId] || 0) - correctCR) < acceptableError;
+                        if (doRenderIcons) renderValidation(crId, isCorrect);
                         if (isCorrect) correctCount++;
                         totalChecks++;
                     }
                 });
             });
 
-            // Totals, NI/NL, and Finals
             const checksList = [
+                ['wks_SUBTOTAL_TB_DR', worksheetData.TB_DR_SUB], ['wks_SUBTOTAL_TB_CR', worksheetData.TB_CR_SUB],
                 ['wks_SUBTOTAL_ADJ_DR', worksheetData.ADJ_DR_SUB], ['wks_SUBTOTAL_ADJ_CR', worksheetData.ADJ_CR_SUB],
                 ['wks_SUBTOTAL_ATB_DR', worksheetData.ATB_DR_SUB], ['wks_SUBTOTAL_ATB_CR', worksheetData.ATB_CR_SUB],
                 ['wks_SUBTOTAL_IS_DR', worksheetData.IS_SUB_DR], ['wks_SUBTOTAL_IS_CR', worksheetData.IS_SUB_CR],
                 ['wks_SUBTOTAL_BS_DR', worksheetData.BS_SUB_DR], ['wks_SUBTOTAL_BS_CR', worksheetData.BS_SUB_CR],
-                ['wks_NI_IS_DR', worksheetData.netIncome > 0 ? worksheetData.netIncome : 0], 
-                ['wks_NI_IS_CR', worksheetData.netIncome < 0 ? Math.abs(worksheetData.netIncome) : 0], 
+                ['wks_NI_IS_DR', worksheetData.netIncome < 0 ? Math.abs(worksheetData.netIncome) : 0], 
+                ['wks_NI_IS_CR', worksheetData.netIncome > 0 ? worksheetData.netIncome : 0], 
                 ['wks_NI_BS_DR', worksheetData.netIncome < 0 ? Math.abs(worksheetData.netIncome) : 0], 
                 ['wks_NI_BS_CR', worksheetData.netIncome > 0 ? worksheetData.netIncome : 0],
+                ['wks_FINAL_TB_DR', worksheetData.TB_DR_Total], ['wks_FINAL_TB_CR', worksheetData.TB_CR_Total],
                 ['wks_FINAL_ADJ_DR', worksheetData.ADJ_DR_Total], ['wks_FINAL_ADJ_CR', worksheetData.ADJ_CR_Total],
                 ['wks_FINAL_ATB_DR', worksheetData.ATB_DR_Total], ['wks_FINAL_ATB_CR', worksheetData.ATB_CR_Total],
                 ['wks_FINAL_IS_DR', worksheetData.IS_DR_Total], ['wks_FINAL_IS_CR', worksheetData.IS_CR_Total],
@@ -1432,18 +1238,18 @@
             ];
             
             checksList.forEach(([id, val]) => {
-                if (document.getElementById(id) && !document.getElementById(id).disabled) {
+                if (document.getElementById(id)) {
                     const isCorrect = Math.abs((state.worksheetInputs[id] || 0) - val) < acceptableError;
                     if (doRenderIcons) renderValidation(id, isCorrect);
                     if (isCorrect) correctCount++;
                     totalChecks++;
                 }
             });
-            // Total checks for the disabled TB columns should be excluded from the score count if not relevant.
-            
+
             return { correct: correctCount, total: totalChecks, isPerfect: correctCount === totalChecks, scoreData: calculateScoreAndGrade(correctCount, totalChecks) };
         };
-
+        
+        // (Individual FS validation functions kept identical to original, adapted for the combined flow)
         const validateIncomeStatement = (doRenderIcons = true) => {
             const data = calculateWorksheetAnswers();
             const acceptableError = 0.01;
@@ -1516,25 +1322,94 @@
 
         /** Aggregates all Financial Statement scores for the final Task 2 score. */
         const aggregateFinancialStatementScores = (doRenderIcons = true) => {
-            let correctCount = 0;
-            let totalChecks = 0;
-            
+            // Run validations with or without rendering icons
             const isScore = validateIncomeStatement(doRenderIcons);
             const sceScore = validateStatementOfChangesInEquity(doRenderIcons);
             const bsScore = validateBalanceSheet(doRenderIcons);
             
-            correctCount = isScore.correct + sceScore.correct + bsScore.correct;
-            totalChecks = isScore.total + sceScore.total + bsScore.total;
+            const correctCount = isScore.correct + sceScore.correct + bsScore.correct;
+            const totalChecks = isScore.total + sceScore.total + bsScore.total;
+            const isPerfect = isScore.isPerfect && sceScore.isPerfect && bsScore.isPerfect;
             
-            return { correct: correctCount, total: totalChecks, isPerfect: correctCount === totalChecks, scoreData: calculateScoreAndGrade(correctCount, totalChecks) };
+            return { correct: correctCount, total: totalChecks, isPerfect: isPerfect, scoreData: calculateScoreAndGrade(correctCount, totalChecks) };
         };
+        
+        // --- EVENT HANDLERS (New/Refactored) ---
 
-        // --- EVENT HANDLERS (Attached to Window) ---
+        /**
+         * Generic validation handler for Tasks 1 and 2.
+         * (Request 6, 7)
+         */
+        window.handleValidation = async (taskNum) => {
+            if (timeRemainingSeconds <= 0) {
+                renderMessageBox("Task time expired. Cannot validate.", true);
+                window.disableAllInputs();
+                return;
+            }
+            if (taskNum === 1 && state.task1Complete) return;
+            if (taskNum === 2 && state.task2Complete) return;
+
+            const btn = document.getElementById(`validate-task${taskNum}-btn`);
+            btn.disabled = true;
+            btn.innerText = "Validating...";
+
+            let result;
+            if (taskNum === 1) {
+                result = validateWorksheet(true);
+                state.task1Score = result.scoreData;
+            } else if (taskNum === 2) {
+                result = aggregateFinancialStatementScores(true);
+                state.task2Score = result.scoreData;
+            }
+
+            let message = "";
+            let override = false;
+
+            if (!result.isPerfect) {
+                state.validationAttempts[taskNum]++;
+                const attempts = state.validationAttempts[taskNum];
+                
+                if (attempts >= MAX_ATTEMPTS) {
+                    override = true;
+                    message = `Max validation attempts (${MAX_ATTEMPTS}) reached for Task ${taskNum}. Data saved and locked. Proceed to the next task/final submission.`;
+                } else {
+                    message = `Validation failed (${attempts}/${MAX_ATTEMPTS}) on Task ${taskNum}. Please check your work.`;
+                }
+            } else {
+                state.validationAttempts[taskNum] = 0; // Reset attempts on perfect score
+                message = `Task ${taskNum} validated successfully! Data accepted.`;
+            }
+
+            renderMessageBox(message, override || !result.isPerfect);
+            
+            if (result.isPerfect || override) {
+                if (taskNum === 1) {
+                    state.task1Complete = true;
+                } else if (taskNum === 2) {
+                    state.task2Complete = true;
+                }
+                
+                // Immediately print the current task, then re-render the buttons
+                window.print();
+                
+                // If both tasks are now complete, trigger final submission
+                if (state.task1Complete && state.task2Complete) {
+                    await window.finishAndPreview(false);
+                } else {
+                    // Re-render the combined page to update button status/scores
+                    renderStep(); 
+                }
+            } else {
+                btn.disabled = false;
+                btn.innerText = `Validate Task ${taskNum} (${state.validationAttempts[taskNum]}/${MAX_ATTEMPTS})`;
+                renderStep(); // Re-render to show updated score/grade if needed
+            }
+        };
 
         window.handleLogin = async () => {
             const attId = document.getElementById('attendanceId').value.trim();
             const stuId = document.getElementById('studentId').value.trim();
-            const btn = document.getElementById('login-btn');
+            const btn = document.getElementById('next-step-btn'); // Use main button for login
             
             if(timeRemainingSeconds <= 0) {
                 renderMessageBox("Task is expired. Cannot log in.", true);
@@ -1557,149 +1432,243 @@
                     idNumber: result.data.idNumber,
                     classNumber: result.data.cn,
                     fullName: result.data.fullName,
-                    gradeSection: result.data.section
+                    gradeSection: result.data.section,
+                    submissionDateTime: new Date().toLocaleString()
                 };
 
+                // Update UI fields
                 document.getElementById('fullName').value = state.studentInfo.fullName;
                 document.getElementById('classNumber').value = state.studentInfo.classNumber;
                 document.getElementById('gradeSection').value = state.studentInfo.gradeSection;
                 
+                // Trigger data generation
                 generateDynamicData();
                 updateCompanyName(state.studentInfo.fullName);
 
-                renderMessageBox("Login Successful! You may proceed.");
-                document.getElementById('next-step-btn').disabled = false;
-                btn.innerText = "Verified ✔";
-                btn.classList.remove('bg-green-600', 'hover:bg-green-700');
-                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                renderMessageBox("Login Successful! You may proceed to the task page.");
+                
+                // Proceed to next step (Combined Task Page)
+                state.currentStep = 1; 
+                renderStep();
             } else {
                 renderMessageBox(result.message, true);
                 btn.disabled = false;
-                btn.innerText = "Verify & Login";
+                btn.innerText = "Submit Info & Proceed to Task";
             }
         };
 
-        window.handleNextStep = async () => {
-            const maxAttempts = 3;
-
-            if (state.currentStep === 0) { // Login Step
-                if (state.studentInfo) {
-                    state.currentStep = 1; 
+        /** * Main step handler (Only used for Login -> Tasks, and Final Submission)
+         */
+        window.handleNextStep = async (taskNum) => {
+            if (state.currentStep === 0) {
+                // Login button is now handled by window.handleLogin which calls renderStep after success
+                if(state.studentInfo) {
+                    state.currentStep = 1;
                     renderStep();
                 } else {
-                    renderMessageBox("Please verify your login first.", true);
+                    window.handleLogin();
                 }
+            } else if (state.currentStep === 1) {
+                // Final Submission button is enabled when both tasks are completed
+                if (state.task1Complete && state.task2Complete) {
+                    await window.finishAndPreview(false); // Manual final submit
+                } else {
+                    renderMessageBox("Please complete and validate both Task 1 and Task 2 first.", true);
+                }
+            } else if (state.currentStep === 2) {
+                // Final print button for completion screen
+                window.print();
+                renderMessageBox("Final report printed. Great job!");
+            }
+        };
+
+        /**
+        * Global submission function called by the timer on expiration or manually at the end of Task 2.
+        * (Request 8)
+        */
+        window.finishAndPreview = async (isAutoSubmit = false) => {
+            if (!state.studentInfo) {
+                renderMessageBox("Cannot submit: Student not logged in.", true);
+                if (isAutoSubmit) window.disableAllInputs();
                 return;
             }
-            
-            if (state.currentStep === 1) { // Tasks Combined View
 
-                // --- 1. Validate Task 1 (Worksheet) ---
-                if (!state.isTask1Validated) {
-                    const result = validateWorksheet(true);
-                    state.task1Score = result.scoreData;
-                    
-                    if (!result.isPerfect) {
-                        state.validationAttempts[1]++;
-                        const attempts = state.validationAttempts[1];
-                        
-                        if (attempts >= maxAttempts) {
-                            state.isTask1Validated = true; 
-                            renderMessageBox(`Max validation attempts (${maxAttempts}) reached for Task 1. Moving to Task 2 validation.`, true);
-                            disableTaskInputs(1, true);
-                        } else {
-                            renderMessageBox(`Validation failed (${attempts}/${maxAttempts}) on Task 1. Please check your work.`, true);
-                            renderStep(); // Re-render to update attempt count on button
-                            return; 
-                        }
-                    } else {
-                        state.isTask1Validated = true;
-                        state.validationAttempts[1] = 0; // Reset attempts for T2
-                        renderMessageBox("Task 1 (Worksheet) validated successfully! Proceeding to Task 2 validation.");
-                        disableTaskInputs(1, true); // Lock Task 1 inputs
-                    }
+            // Recalculate and set scores if not already done (for timeout)
+            if (!state.task1Score) state.task1Score = validateWorksheet(false).scoreData;
+            if (!state.task2Score) state.task2Score = aggregateFinancialStatementScores(false).scoreData;
 
-                    // Re-render score block for T1 
-                    document.getElementById('score_block_1').outerHTML = renderScoreBlock(state.task1Score, 1);
-                    
-                    // If T1 just passed/expired, immediately check/update T2 status
-                    if (state.isTask1Validated) {
-                        if (!state.isTask2Validated) {
-                            renderStep(); // Update button text for Task 2 validation
-                            return;
-                        } else {
-                            // If T2 was also completed/expired, proceed to final step
-                            await window.finishAndPreview(false);
-                            return;
-                        }
-                    }
-                }
-                
-                // --- 2. Validate Task 2 (Financial Statements) ---
-                if (!state.isTask2Validated && state.isTask1Validated) {
-                    const result = aggregateFinancialStatementScores(true);
-                    state.task2Score = result.scoreData;
-                    
-                    if (!result.isPerfect) {
-                        state.validationAttempts[2]++;
-                        const attempts = state.validationAttempts[2];
+            renderMessageBox("Task complete. Saving results to database...", false);
+            stopTimer(); 
 
-                        if (attempts >= maxAttempts) {
-                            state.isTask2Validated = true; 
-                            renderMessageBox(`Max validation attempts (${maxAttempts}) reached for Task 2. Submitting all tasks.`, true);
-                            disableTaskInputs(2, true);
-                        } else {
-                            renderMessageBox(`Validation failed (${attempts}/${maxAttempts}) on Task 2. Please check your work.`, true);
-                            renderStep(); // Re-render to update attempt count on button
-                            return; 
-                        }
-                    } else {
-                        state.isTask2Validated = true;
-                        renderMessageBox("Task 2 (Financial Statements) validated successfully! Submitting all tasks.");
-                        disableTaskInputs(2, true); // Lock Task 2 inputs
-                    }
-                    
-                    // Re-render score block for T2
-                    document.getElementById('score_block_2').outerHTML = renderScoreBlock(state.task2Score, 2);
-                    
-                    if (state.isTask2Validated) {
-                        // Both tasks complete/expired - proceed to final step
-                        await window.finishAndPreview(false);
-                        return;
-                    }
-                }
+            // 3. Save results
+            try {
+                const fullResultData = {
+                    studentInfo: state.studentInfo,
+                    initialTB: state.initialTB,
+                    adjustments: state.adjustments,
+                    worksheetInputs: state.worksheetInputs,
+                    fsInputs: state.fsInputs,
+                    validationAttempts: {
+                        task1: state.validationAttempts[1] || 0,
+                        task2: state.validationAttempts[2] || 0,
+                    },
+                    task1Score: state.task1Score,
+                    task2Score: state.task2Score,
+                    timestamp: new Date().toISOString()
+                };
+
+                await saveExamResults(state.attendanceId, fullResultData);
+                state.currentStep = 2; // Move to Completion
+                renderFinalPrintOutput(); // Prepare PDF content
+                renderStep();
+            } catch (e) {
+                console.error(e);
+                renderMessageBox("Error saving results: " + e.message, true);
+                // Still move to the completion screen if saving fails, but show the error
+                state.currentStep = 2; 
+                renderFinalPrintOutput(); // Prepare PDF content
+                renderStep();
             }
-
-            // Fallback: This should only be hit if logic above fails, but ensures non-login steps keep the button enabled.
-            if (state.currentStep > 0 && state.currentStep !== 3) document.getElementById('next-step-btn').disabled = false;
         };
         
-        const renderStep = () => {
-            const renderers = [renderStudentInfo, renderCombinedTaskView, null, renderCompletion];
-            let stepIndex = state.currentStep;
+        /**
+         * Renders the complete, reconstructed, print-only report into a hidden div.
+         * (Request 9)
+         */
+        const renderFinalPrintOutput = () => {
+            const headerHtml = document.querySelector('header').outerHTML;
+            const studentInfoHtml = document.getElementById('student-print-info').outerHTML;
+            const instructionsHtml = `<div class="mt-4 mb-8 border-b pb-2 print-text-sm">${document.getElementById('instructions-text').innerHTML}</div>`;
             
-            if (renderers[stepIndex]) {
-                renderers[stepIndex]();
-                
-                const title = getStepTitle(state.currentStep);
-                updateStudentPrintInfo(title);
-                document.getElementById('page-title').innerText = `Accounting Cycle Task - ${title}`;
-            }
+            const task1Title = `<h2 class="text-xl font-bold text-indigo-700 mt-4 mb-2">TASK 1: 10-Column Worksheet (Score: ${state.task1Score.score}/${state.task1Score.total}, Grade: ${state.task1Score.grade})</h2>`;
+            const task1Content = renderWorksheetTable(state.generatedAnswers, true); // True for print mode (no inputs)
             
-            // Update button text in the combined view
-            if (state.currentStep === 1) {
-                if (!state.isTask1Validated) {
-                     document.getElementById('next-step-btn').innerText = `Validate Task 1 (Attempt ${state.validationAttempts[1] + 1} of ${3})`;
-                } else if (!state.isTask2Validated) {
-                    document.getElementById('next-step-btn').innerText = `Validate Task 2 (Attempt ${state.validationAttempts[2] + 1} of ${3})`;
-                }
-            }
+            const task2Title = `<h2 class="text-xl font-bold text-indigo-700 mt-8 mb-2 border-t pt-4">TASK 2: Financial Statements (Score: ${state.task2Score.score}/${state.task2Score.total}, Grade: ${state.task2Score.grade})</h2>`;
+            const task2Content = renderTask2Combined(true); // True for print mode (no inputs)
 
-
-            if (timeRemainingSeconds <= 0 && state.currentStep !== 3) window.disableAllInputs();
+            const endOfTaskHtml = `<p class="text-center font-bold text-lg mt-12 mb-20">END OF TASK</p>`;
+            
+            // Generate the complete PDF content (hidden until print media query)
+            document.getElementById('print-output').innerHTML = `
+                ${headerHtml}
+                ${studentInfoHtml}
+                ${instructionsHtml}
+                <div class="printable-content">
+                    ${task1Title}
+                    ${task1Content}
+                    ${task2Title}
+                    ${task2Content}
+                    ${endOfTaskHtml}
+                </div>
+            `;
+            
+            // Append the print footer at the end of the printable area content for print CSS
+            document.getElementById('print-output').insertAdjacentHTML('beforeend', document.getElementById('pdf-footer-template').outerHTML);
         };
 
-        // --- Step 0: Student Login via Firebase (Unchanged from original structure) ---
+        // --- TIMER LOGIC (Kept identical to original) ---
+        window.examDurationMins = 0;
+        let timerInterval = null;
+        let timeRemainingSeconds = 0;
+
+        window.disableAllInputs = () => {
+            document.querySelectorAll('input, button, select, textarea').forEach(el => {
+                if(el.id !== 'next-step-btn' && el.id !== 'login-btn' && el.id !== 'validate-task1-btn' && el.id !== 'validate-task2-btn') {
+                    el.disabled = true;
+                    el.classList.add('cursor-not-allowed', 'opacity-75');
+                }
+            });
+            const nextBtn = document.getElementById('next-step-btn');
+            if (nextBtn && nextBtn.innerText !== "Print Final Report to PDF") {
+                nextBtn.disabled = true;
+                nextBtn.innerText = "TASK TIMEOUT. CONTACT INSTRUCTOR.";
+            }
+        };
+
+        function updateTimerDisplay() {
+            const displayElement = document.getElementById('countdown');
+            const boxElement = document.getElementById('timer-box');
+
+            if (!displayElement || timeRemainingSeconds === null) return;
+
+            const h = Math.floor(timeRemainingSeconds / 3600);
+            const m = Math.floor((timeRemainingSeconds % 3600) / 60);
+            const s = timeRemainingSeconds % 60;
+
+            displayElement.textContent =
+                `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+            if (timeRemainingSeconds < 300) {
+                boxElement?.classList.add('animate-pulse');
+                boxElement?.classList.remove('bg-red-800');
+                boxElement?.classList.add('bg-red-600');
+            } else {
+                boxElement?.classList.remove('animate-pulse', 'bg-red-600');
+                boxElement?.classList.add('bg-red-800');
+            }
+
+            if (timeRemainingSeconds <= 0) {
+                stopTimer();
+                displayElement.textContent = "00:00:00";
+                window.disableAllInputs(); 
+                if (typeof window.finishAndPreview === 'function') {
+                    console.log("Time is up! Auto-submitting answers.");
+                    window.finishAndPreview(true);  
+                }
+                boxElement.classList.remove('bg-red-600', 'animate-pulse');
+                boxElement.classList.add('bg-gray-500');
+            }
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                console.log("Timer stopped.");
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) stopTimer();
+
+            timeRemainingSeconds = window.examDurationMins * 60;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timeRemainingSeconds--;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        const checkUrlParametersAndInit = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const attId = urlParams.get('att');
+            const duration = urlParams.get('dur'); 
+            const isValidDuration = duration && !isNaN(parseInt(duration)) && parseInt(duration) > 0;
+
+            if (!attId || !isValidDuration) {
+                document.getElementById('task-container').innerHTML = `
+                    <div class="text-center py-16 bg-red-100 border border-red-400 rounded-xl">
+                        <h3 class="text-2xl font-bold text-red-700 mb-4">ACCESS DENIED</h3>
+                        <p class="text-lg text-gray-700">Missing or invalid link parameters (Attendance ID or Duration).</p>
+                        <p class="text-sm text-gray-500 mt-2">The task cannot be accessed without the required link parameters. Please contact your instructor.</p>
+                    </div>
+                `;
+                document.getElementById('next-step-btn').disabled = true;
+                document.getElementById('next-step-btn').innerText = "Access Denied";
+                document.getElementById('timer-box').classList.add('hidden');
+                renderMessageBox("Link is incomplete or invalid.", true);
+                return;
+            }
+
+            state.attendanceId = attId;
+            window.examDurationMins = parseInt(duration);
+            
+            startTimer();
+            renderStep();
+        };
+
+        /** Step 0: Student Login via Firebase */
         const renderStudentInfo = () => {
             const attendanceInputHtml = state.attendanceId 
                 ? `<input type="text" id="attendanceId" class="text-input border-indigo-300 bg-gray-200 cursor-not-allowed" placeholder="Paste ID here" value="${state.attendanceId}" readonly>`
@@ -1722,12 +1691,6 @@
                             </div>
                         </div>
                         
-                        <div class="flex justify-end">
-                            <button id="login-btn" onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow">
-                                Verify & Login
-                            </button>
-                        </div>
-                        
                         <div class="border-t border-gray-300 pt-4 mt-2">
                             <p class="text-xs text-gray-400 mb-2 uppercase font-bold">Student Details (Auto-filled)</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-75">
@@ -1748,8 +1711,9 @@
                     </div>
                 </div>
             `;
-            document.getElementById('next-step-btn').innerText = "Submit Info & Proceed to Task 1";
-            document.getElementById('next-step-btn').disabled = true;
+            document.getElementById('next-step-btn').innerText = "Submit Info & Proceed to Task";
+            document.getElementById('next-step-btn').disabled = false; 
+            document.getElementById('task-validation-buttons').classList.add('hidden');
             if(timeRemainingSeconds <= 0 && window.examDurationMins > 0) {
                 renderMessageBox("Task is expired. Login is disabled.", true);
                 window.disableAllInputs();
@@ -1757,6 +1721,93 @@
                 renderMessageBox("Please log in to verify your attendance.");
             }
         };
+
+        /** Final Step 2: Completion */
+        const renderCompletion = () => {
+            const studentInfo = state.studentInfo || {};
+            const score1 = state.task1Score || { percentage: 0, grade: 'N/A', score: 0, total: 0 };
+            const score2 = state.task2Score || { percentage: 0, grade: 'N/A', score: 0, total: 0 };
+
+            // Hide the live task container and show the completion message
+            document.getElementById('task-container').innerHTML = `
+                <div class="text-center py-16 px-4 bg-indigo-50 rounded-lg shadow-2xl border-4 border-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 mx-auto text-indigo-600 mb-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <h3 class="text-3xl font-bold text-indigo-800 mb-3">CONGRATULATIONS!</h3>
+                    <p class="text-xl text-gray-700 mb-6">You have successfully completed the T2 Performance Task 02.</p>
+                    <p class="text-md text-green-600 font-bold mb-6">✓ Your results have been saved to the database.</p>
+
+                    <!-- Score Summary Display -->
+                    <div class="inline-block text-left bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-6 mb-6">
+                        <h4 class="font-semibold text-xl text-indigo-800 border-b pb-2 mb-4">Task Performance Summary:</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-1 border-r pr-4">
+                                <h5 class="font-bold text-lg text-indigo-600">TASK 1: Worksheet</h5>
+                                <p class="text-sm">Correct Checks: <strong>${score1.score} / ${score1.total}</strong></p>
+                                <p class="text-xl mt-1">Grade: <span class="font-extrabold p-1 rounded-md ${score1.grade === 'A' ? 'bg-green-200 text-green-800' : score1.grade === 'P' ? 'bg-blue-200 text-blue-800' : score1.grade === 'D' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'}">${score1.grade}</span> (${score1.percentage}%)</p>
+                            </div>
+                            <div class="col-span-1 pl-4">
+                                <h5 class="font-bold text-lg text-indigo-600">Task 2: Financial Statements</h5>
+                                <p class="text-sm">Correct Checks: <strong>${score2.score} / ${score2.total}</strong></p>
+                                <p class="text-xl mt-1">Grade: <span class="font-extrabold p-1 rounded-md ${score2.grade === 'A' ? 'bg-green-200 text-green-800' : score2.grade === 'P' ? 'bg-blue-200 text-blue-800' : score2.grade === 'D' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'}">${score2.grade}</span> (${score2.percentage}%)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="mt-6 text-sm text-gray-600">Please click the button below to generate the final PDF report for your records.</p>
+                </div>
+            `;
+            document.getElementById('next-step-btn').innerText = "Print Final Report to PDF";
+            document.getElementById('next-step-btn').onclick = () => window.handleNextStep(null); // Re-assign handler for print
+            document.getElementById('next-step-btn').classList.remove('hidden');
+            document.getElementById('next-step-btn').disabled = false;
+            document.getElementById('task-validation-buttons').classList.add('hidden');
+            renderMessageBox("Task completed & Data Saved! Print your report.");
+            
+            const timerBox = document.getElementById('timer-box');
+            if (timerBox) {
+                timerBox.classList.remove('bg-red-800', 'bg-red-600', 'animate-pulse');
+                timerBox.classList.add('bg-green-600');
+                document.getElementById('countdown').textContent = "DONE";
+            }
+        };
+
+        // --- RENDER ROUTER ---
+        const renderStep = () => {
+            const renderers = [renderStudentInfo, renderTasksCombinedPage, renderCompletion];
+            
+            if (renderers[state.currentStep]) {
+                renderers[state.currentStep]();
+                const title = getStepTitle(state.currentStep);
+                updateStudentPrintInfo(title);
+                document.getElementById('page-title').innerText = `Accounting Cycle Task - ${title}`;
+            }
+
+            if (state.currentStep === 0) {
+                 // Ensure main button is visible for login
+                document.getElementById('next-step-btn').classList.remove('hidden');
+            } else if (state.currentStep === 1) {
+                // Ensure task buttons are visible, main button is hidden (unless submission ready)
+                document.getElementById('task-validation-buttons').classList.remove('hidden');
+                document.getElementById('next-step-btn').classList.add('hidden');
+                if (state.task1Complete && state.task2Complete) {
+                     document.getElementById('next-step-btn').classList.remove('hidden');
+                }
+            } else if (state.currentStep === 2) {
+                // Ensure only main button is visible for final print
+                document.getElementById('task-validation-buttons').classList.add('hidden');
+                document.getElementById('next-step-btn').classList.remove('hidden');
+            }
+        };
+
+        window.saveWorksheetInput = (id, value) => {
+             state.worksheetInputs[id] = Number(value) || 0;
+        };
+        window.saveFSInput = (type, id, value) => {
+             state.fsInputs[type][id] = Number(value) || 0;
+        };
+
 
         // Initialize: Runs link validation first.
         window.onload = () => {
