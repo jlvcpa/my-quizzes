@@ -10,11 +10,23 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
-        /* * CSS for removing number input spinners (Up/Down arrows) 
-         * This targets both the original number type (for compatibility) 
-         * and the new text type classes.
-         */
-        .table-input, .fs-input {
+        /* --- START: CUSTOM INPUT STYLES (Includes removal of arrows) --- */
+        
+        /* Remove arrows from number input - Webkit (Chrome, Safari) */
+        .table-input[type=number]::-webkit-inner-spin-button, 
+        .table-input[type=number]::-webkit-outer-spin-button,
+        .fs-input[type=number]::-webkit-inner-spin-button, 
+        .fs-input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        /* Remove arrows from number input - Firefox */
+        .table-input[type=number], .fs-input[type=number] {
+            -moz-appearance: textfield; 
+        }
+
+        /* Style for inputs in tables */
+        .table-input {
             width: 100%;
             padding: 4px;
             border: 1px solid #ccc;
@@ -23,19 +35,6 @@
             font-size: 0.85rem; /* Base font size */
             background-color: #f0f9ff; /* light blue background for input areas */
         }
-        /* Hide number spin buttons for Firefox */
-        .table-input[type=number], .fs-input[type=number] {
-            -moz-appearance: textfield;
-        }
-        /* Hide number spin buttons for Chrome/Safari/Edge */
-        .table-input::-webkit-outer-spin-button,
-        .table-input::-webkit-inner-spin-button,
-        .fs-input::-webkit-outer-spin-button,
-        .fs-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
         .text-input {
             width: 100%;
             padding: 4px;
@@ -68,7 +67,7 @@
             line-height: 1.4;
         }
 
-        /* Print-specific styles */
+        /* --- START: PRINT-SPECIFIC STYLES --- */
         @media print {
             .no-print { display: none !important; }
             /* Set margin to 0.25in and center horizontally, ensuring content fits */
@@ -92,6 +91,9 @@
                 /* Ensure numbers don't wrap in an ugly way, relying on container width */
                 white-space: nowrap; 
                 overflow: visible !important;
+                /* Crucial for print: ensure input displays its value */
+                -webkit-print-color-adjust: exact; 
+                color-adjust: exact;
             }
             /* Rubric specific print styles */
             .rubric-box {
@@ -104,14 +106,14 @@
                 color: black !important;
             }
             
-            /* * REVISION: Ensure validation icons (check/X marks) are visible when printing.
-             * The symbols themselves will print in black, which is acceptable. 
-             */
+            /* SHOW CHECK/X MARKS IN PRINTED PDF (User Request) */
             .validation-icon { 
-                display: block !important; 
-                margin-left: 2px;
+                display: inline !important; /* Force inline display in print */
+                font-size: 8pt !important; /* Make it smaller to fit */
+                color: black !important; /* Ensure black color */
+                pointer-events: none;
             }
-            
+
             /* Show student info box in print */
             #student-print-info { display: block !important; border: 1px solid #000 !important; }
             .print-text-sm { font-size: 9pt; }
@@ -165,7 +167,7 @@
             <p class="text-sm text-gray-400 leading-relaxed">
               <strong>Instruction:</strong><br>
               Complete all required fields.<br>
-              Enter amounts with two decimal places but without commas. The system automatically handles comma formatting for display.<br>
+              Enter amounts with two decimal places but without commas.<br>
               Round off centavos to the nearest peso.<br>
               After validating each task or sub-step, use the 'Print to PDF' option.
             </p>
@@ -192,50 +194,69 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- NEW UTILITY FUNCTIONS FOR FORMATTING AND PARSING (REVISION 1) ---
-
+        // --- UTILITY FUNCTIONS (Revised: Added Input Formatting/Handling) ---
+        
         /**
-         * Formats a number for display with commas and two decimal places.
+         * Formats a number to PHP currency style (comma, two decimal places).
          * @param {number | string} num - The number value.
-         * @returns {string} The formatted string (e.g., "123,456.78").
+         * @returns {string} Formatted string.
          */
-        const formatAmountForDisplay = (num) => {
-            const number = Number(num);
-            if (typeof num !== 'number' || isNaN(number) || number === 0) return '';
-            // Use toLocaleString for comma separation and minimumFractionDigits: 2
-            return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        };
-
-        /**
-         * Parses a formatted string input (with commas) back into a raw number.
-         * @param {string} value - The input string.
-         * @returns {number} The raw number, or 0 if invalid.
-         */
-        const parseAmountInput = (value) => {
-            if (typeof value !== 'string') return Number(value) || 0;
-            // Remove all commas before parsing
-            const cleanValue = value.replace(/,/g, '').trim();
-            const number = Number(cleanValue);
-            return isNaN(number) ? 0 : number;
-        };
-
-        /**
-         * Generic function to format the input field on blur or when rendering initial state.
-         * @param {HTMLElement} inputElement - The HTML input element.
-         * @param {number} rawValue - The raw numeric value from state.
-         */
-        window.handleFormatInput = (inputElement, rawValue) => {
-            // Check if the value is empty or zero, if so, don't force formatting on input
-            if (inputElement.value.trim() === '') return;
-            // The `onblur` event is the best place to apply formatting to the visual input box
-            const number = rawValue !== undefined ? rawValue : parseAmountInput(inputElement.value);
-            inputElement.value = formatAmountForDisplay(number);
+        const formatPHP = (num) => {
+            const parsedNum = typeof num === 'string' ? parseFloat(num.replace(/,/g, '')) : num;
+            if (typeof parsedNum !== 'number' || isNaN(parsedNum) || parsedNum === 0) return '';
+            const roundedNum = Math.round(parsedNum * 100) / 100;
+            return roundedNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
         
-        // --- END NEW UTILITY FUNCTIONS ---
+        /**
+         * Parses a formatted string back to a clean number.
+         * @param {string} str - The formatted string value from the input.
+         * @returns {number} Clean numeric value.
+         */
+        const parseInput = (str) => {
+             // Remove commas for clean parsing, then convert to number
+            const cleanStr = String(str).replace(/,/g, '');
+            return Number(cleanStr) || 0;
+        };
+        
+        /**
+         * Handles saving the clean number to state and updating the input for display (onblur/initial render).
+         * @param {string} id - The ID used in the state (e.g., wks_0_ADJ_DR).
+         * @param {string} rawValue - The input's string value.
+         * @param {string} stateKey - 'worksheetInputs' or 'fsInputs'.
+         * @param {string} fsType - 'is', 'sce', or 'bs' (if stateKey is fsInputs).
+         */
+        window.handleAmountInput = (id, rawValue, stateKey, fsType = null) => {
+            const element = document.getElementById(id);
+            const cleanValue = parseInput(rawValue);
+            
+            // 1. Save the clean number to state
+            if (stateKey === 'worksheetInputs') {
+                state.worksheetInputs[id] = cleanValue;
+            } else if (stateKey === 'fsInputs' && fsType) {
+                state.fsInputs[fsType][id] = cleanValue;
+            }
+            
+            // 2. Format the value for display when the input loses focus (onblur)
+            if (element) {
+                element.value = formatPHP(cleanValue);
+            }
+        };
+
+        /**
+         * Called by render functions to display stored numeric values in formatted currency style.
+         * Note: This is crucial for re-rendering/initial load, as the display should be formatted.
+         */
+        const formatDisplayValue = (id, stateValue) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.value = formatPHP(stateValue);
+            }
+        };
 
         /**
         * Validates a student against a specific attendance record in Firestore.
+        * (Unchanged from original logic)
         */
         async function validateStudentLogin(attendanceId, studentId) {
             if (!attendanceId || !studentId) {
@@ -294,7 +315,7 @@
 
         /**
         * Saves the exam results to Firestore.
-        * IMPORTANT: This now saves Task 1 and Task 2 scores/grades.
+        * (Unchanged from original logic)
         */
         async function saveExamResults(attendanceId, resultData) {
             // Note: Using T2 Performance Task 02 as the activity name based on the filename/request context
@@ -387,12 +408,11 @@
         // Global variables for the new timer module interface
         window.examDurationMins = 0;
         let timerInterval = null;
-        let timeRemainingSeconds = 0; // Calculated on the fly now
-        let examEndTime = 0; // REVISION 4: Store the target end time (absolute time)
+        const EXAM_END_TIME_KEY = 'taskEndTime';
 
         /**
          * Disables all interactive elements on the page.
-         * Kept the original implementation logic.
+         * (Unchanged from original logic)
          */
         window.disableAllInputs = () => {
             document.querySelectorAll('input, button, select, textarea').forEach(el => {
@@ -414,18 +434,17 @@
         };
 
         /**
-         * Updates the timer display element with the current remaining time in HH:MM:SS format.
-         * REVISION 4: Calculates time remaining based on `examEndTime` to prevent throttling pauses.
+         * Calculates remaining time and updates the display. Also handles expiration and auto-submission.
+         * REVISED to use wall-clock time difference for non-pausing behavior.
          */
         function updateTimerDisplay() {
             const displayElement = document.getElementById('countdown');
             const boxElement = document.getElementById('timer-box');
-
-            if (!displayElement || examEndTime === 0) return;
-
-            // Calculate remaining time based on current time and end time
-            const remainingMs = examEndTime - Date.now();
-            timeRemainingSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+            const endTime = sessionStorage.getItem(EXAM_END_TIME_KEY) ? parseInt(sessionStorage.getItem(EXAM_END_TIME_KEY)) : 0;
+            const now = Date.now();
+            let timeRemainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
+            
+            if (!displayElement || endTime === 0) return; // Should not happen if startTimer runs correctly
 
             const h = Math.floor(timeRemainingSeconds / 3600);
             const m = Math.floor((timeRemainingSeconds % 3600) / 60);
@@ -446,11 +465,12 @@
 
             if (timeRemainingSeconds <= 0) {
                 stopTimer();
+                sessionStorage.removeItem(EXAM_END_TIME_KEY); // Clean up
                 displayElement.textContent = "00:00:00";
                 window.disableAllInputs(); // Disable inputs immediately to prevent further changes
                 if (typeof window.finishAndPreview === 'function') {
                     console.log("Time is up! Auto-submitting answers.");
-                    // REVISION 4: Auto-submit to Firebase when the quiz duration expires
+                    // Auto-submission on timer expiration (User Request)
                     window.finishAndPreview(true); 
                 }
                 // Ensure the box shows expiration state
@@ -471,17 +491,37 @@
         }
 
         /**
-         * Starts the countdown timer based on window.examDurationMins.
-         * REVISION 4: Sets `examEndTime`.
+         * Starts the countdown timer based on window.examDurationMins, storing end time in session storage.
+         * REVISED for non-pausing behavior.
          */
         function startTimer() {
             if (timerInterval) stopTimer();
 
-            // Calculate the absolute end time
-            examEndTime = Date.now() + (window.examDurationMins * 60 * 1000);
-            updateTimerDisplay(); // Initial display
+            let endTime;
+            const storedEndTime = sessionStorage.getItem(EXAM_END_TIME_KEY);
+            const durationMs = window.examDurationMins * 60 * 1000;
 
-            // REVISION 4: The interval runs every second, but relies on Date.now() for accuracy
+            if (storedEndTime) {
+                endTime = parseInt(storedEndTime);
+                console.log("Resuming timer from stored end time.");
+            } else {
+                endTime = Date.now() + durationMs;
+                sessionStorage.setItem(EXAM_END_TIME_KEY, endTime.toString());
+                console.log("Starting new timer. End time stored.");
+            }
+
+            // Calculate initial time remaining for display
+            const initialRemainingSeconds = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            
+            if (initialRemainingSeconds <= 0) {
+                // If time is already up on load, disable inputs and auto-submit
+                updateTimerDisplay(); // This will trigger submission
+                return;
+            }
+
+            updateTimerDisplay(); // Initial display update
+
+            // Set interval to update display every second
             timerInterval = setInterval(updateTimerDisplay, 1000);
         }
 
@@ -507,6 +547,8 @@
                 document.getElementById('next-step-btn').innerText = "Access Denied";
                 document.getElementById('timer-box').classList.add('hidden');
                 renderMessageBox("Link is incomplete or invalid.", true);
+                // No valid duration, so clear any residual timer state
+                sessionStorage.removeItem(EXAM_END_TIME_KEY);
                 return;
             }
 
@@ -514,7 +556,7 @@
             state.attendanceId = attId; // Pre-fill attendance ID
             window.examDurationMins = parseInt(duration);
             
-            // Start the timer based on duration
+            // Start the non-pausing timer based on duration
             startTimer();
 
             // Render the initial step (Login)
@@ -545,6 +587,7 @@
 
             renderMessageBox("Task complete. Saving results to database...", false);
             stopTimer(); 
+            sessionStorage.removeItem(EXAM_END_TIME_KEY); // Remove end time upon final submission
 
             // 3. Save results
             try {
@@ -674,12 +717,12 @@
             const adjAmountF = rand(3000, 7000);
             
             state.adjustments = [
-                { desc: `A. Supplies on hand, counted on Dec 31, ₱ ${formatAmountForDisplay(initialSupplies - adjAmountA)}. (Initial Supplies ₱ ${formatAmountForDisplay(initialSupplies)})`, dr: 'Supplies Expense', cr: 'Supplies', amount: adjAmountA, isReversing: false },
-                { desc: `B. One month of rent has expired. (Prepaid Rent of ₱ ${formatAmountForDisplay(initialPrepaidRent)} was for ${prepaidMonths} months, dated Dec 1)`, dr: 'Rent Expense', cr: 'Prepaid Rent', amount: adjAmountB, isReversing: true },
-                { desc: `C. Depreciation of equipment for the year, ₱ ${formatAmountForDisplay(adjAmountC)}.`, dr: 'Depreciation Expense', cr: 'Accumulated Depreciation-Equip.', amount: adjAmountC, isReversing: false },
-                { desc: `D. Accrued salaries not yet paid, ₱ ${formatAmountForDisplay(adjAmountD)}.`, dr: 'Salaries Expense', cr: 'Salaries Payable', amount: adjAmountD, isReversing: true },
-                { desc: `E. Unearned Service Revenue earned during the period, ₱ ${formatAmountForDisplay(adjAmountE)}.`, dr: 'Unearned Service Revenue', cr: 'Service Revenue', amount: adjAmountE, isReversing: false },
-                { desc: `F. Services rendered but unbilled/uncollected (Accrued Revenue), ₱ ${formatAmountForDisplay(adjAmountF)}. (Using Accrued Service Revenue account for clarity)`, dr: 'Accrued Service Revenue', cr: 'Service Revenue', amount: adjAmountF, isReversing: true },
+                { desc: `A. Supplies on hand, counted on Dec 31, ₱ ${formatPHP(initialSupplies - adjAmountA)}. (Initial Supplies ₱ ${formatPHP(initialSupplies)})`, dr: 'Supplies Expense', cr: 'Supplies', amount: adjAmountA, isReversing: false },
+                { desc: `B. One month of rent has expired. (Prepaid Rent of ₱ ${formatPHP(initialPrepaidRent)} was for ${prepaidMonths} months, dated Dec 1)`, dr: 'Rent Expense', cr: 'Prepaid Rent', amount: adjAmountB, isReversing: true },
+                { desc: `C. Depreciation of equipment for the year, ₱ ${formatPHP(adjAmountC)}.`, dr: 'Depreciation Expense', cr: 'Accumulated Depreciation-Equip.', amount: adjAmountC, isReversing: false },
+                { desc: `D. Accrued salaries not yet paid, ₱ ${formatPHP(adjAmountD)}.`, dr: 'Salaries Expense', cr: 'Salaries Payable', amount: adjAmountD, isReversing: true },
+                { desc: `E. Unearned Service Revenue earned during the period, ₱ ${formatPHP(adjAmountE)}.`, dr: 'Unearned Service Revenue', cr: 'Service Revenue', amount: adjAmountE, isReversing: false },
+                { desc: `F. Services rendered but unbilled/uncollected (Accrued Revenue), ₱ ${formatPHP(adjAmountF)}. (Using Accrued Service Revenue account for clarity)`, dr: 'Accrued Service Revenue', cr: 'Service Revenue', amount: adjAmountF, isReversing: true },
             ];
             
             state.newAccounts = [
@@ -691,7 +734,7 @@
             ];
         };
         
-        // --- UTILITY FUNCTIONS (UPDATED FOR FORMATTING) ---
+        // --- UTILITY FUNCTIONS (Unchanged) ---
 
         const getFamilyName = () => {
             if (!state.studentInfo || !state.studentInfo.fullName) return 'A';
@@ -699,11 +742,6 @@
             return parts[0] || 'A'; 
         };
 
-        const formatPHP = (num) => {
-             // REVISION 1: Use the new standard formatter
-            return formatAmountForDisplay(num);
-        };
-        
         const getAccountId = (name) => {
             return name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
         };
@@ -758,7 +796,7 @@
                           <strong>Name:</strong> ${info.fullName}
                         </p>
                         <p class="text-right text-gray-700">
-                          <strong>Submitted:</strong> ${info.submissionDateTime}
+                          <strong>Submitted:</strong> ${info.submissionDateTime || 'N/A (Not yet saved)'}
                         </p>
                       </div>
                     </div>
@@ -911,7 +949,7 @@
             };
         };
 
-        // --- RUBRIC GENERATION FUNCTION (REVISED) ---
+        // --- RUBRIC GENERATION FUNCTION (Unchanged) ---
         const renderRubric = (taskNum) => {
             let competency = "";
             if (taskNum === 1) {
@@ -973,7 +1011,7 @@
         // --- END RUBRIC GENERATION FUNCTION ---
 
 
-        // --- STEP RENDERING FUNCTIONS (UPDATED INPUT TYPES AND HANDLERS) ---
+        // --- STEP RENDERING FUNCTIONS (Updated to use handleAmountInput) ---
 
         /** Step 0: Student Login via Firebase */
         const renderStudentInfo = () => {
@@ -1027,17 +1065,16 @@
             document.getElementById('next-step-btn').innerText = "Submit Info & Proceed to Task 1";
             // Disable Next button until login is verified
             document.getElementById('next-step-btn').disabled = true; 
-            if(timeRemainingSeconds <= 0 && window.examDurationMins > 0) {
+            
+            // Check if timer has already expired
+            const endTime = sessionStorage.getItem(EXAM_END_TIME_KEY) ? parseInt(sessionStorage.getItem(EXAM_END_TIME_KEY)) : 0;
+            const timeRemaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            if(timeRemaining <= 0 && window.examDurationMins > 0) {
                 renderMessageBox("Task is expired. Login is disabled.", true);
                 window.disableAllInputs();
             } else {
                 renderMessageBox("Please log in to verify your attendance.");
             }
-        };
-
-        window.saveWorksheetInput = (id, value) => {
-            // REVISION 1: Parse the string input (which may contain commas) to a number
-            state.worksheetInputs[id] = parseAmountInput(value);
         };
 
         /** Step 1: 10-Column Worksheet Preparation (INCLUDING RUBRIC) */
@@ -1051,127 +1088,113 @@
                 const isBalanceSheet = acc.isFS === 'BS';
                 const isNewAccount = acc.TB_DR === 0 && acc.TB_CR === 0 && acc.name.indexOf('Capital') === -1;
 
-                // REVISION 1: Read raw number from state, format for display
-                const valADJ_DR = formatAmountForDisplay(state.worksheetInputs[baseId + 'ADJ_DR']);
-                const valADJ_CR = formatAmountForDisplay(state.worksheetInputs[baseId + 'ADJ_CR']);
-                const valATB_DR = formatAmountForDisplay(state.worksheetInputs[baseId + 'ATB_DR']);
-                const valATB_CR = formatAmountForDisplay(state.worksheetInputs[baseId + 'ATB_CR']);
-                const valIS_DR = formatAmountForDisplay(state.worksheetInputs[baseId + 'IS_DR']);
-                const valIS_CR = formatAmountForDisplay(state.worksheetInputs[baseId + 'IS_CR']);
-                const valBS_DR = formatAmountForDisplay(state.worksheetInputs[baseId + 'BS_DR']);
-                const valBS_CR = formatAmountForDisplay(state.worksheetInputs[baseId + 'BS_CR']);
+                // Helper to render input with formatting/save handler
+                const renderWksInput = (suffix, isDisabled) => {
+                    const id = baseId + suffix;
+                    const value = state.worksheetInputs[id] || '';
+                    return `
+                        <input 
+                            type="number" 
+                            id="${id}" 
+                            oninput="this.classList.add('text-black');" 
+                            onblur="window.handleAmountInput('${id}', this.value, 'worksheetInputs')"
+                            class="table-input" 
+                            ${isDisabled ? 'disabled' : ''} 
+                            value="${value}">
+                        <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    `;
+                };
 
+                // Helper to initialize display value
+                const initDisplay = (suffix) => {
+                    const id = baseId + suffix;
+                    if (state.worksheetInputs[id]) {
+                        // Use a short delay to ensure DOM is fully ready after innerHTML
+                        setTimeout(() => formatDisplayValue(id, state.worksheetInputs[id]), 10);
+                    }
+                };
+
+                // Initialize all display values (only runs once per render)
+                // Use the fact that renderStep calls this function
+                ['ADJ_DR', 'ADJ_CR', 'ATB_DR', 'ATB_CR', 'IS_DR', 'IS_CR', 'BS_DR', 'BS_CR'].forEach(initDisplay);
 
                 return `
                     <tr class="${isNewAccount ? 'bg-yellow-50/50 hover:bg-yellow-100' : 'hover:bg-gray-50'}" id="row_${index}">
                         <td class="p-2 border border-gray-300 text-left whitespace-nowrap ${isNewAccount ? 'font-semibold text-yellow-800' : ''}">${acc.name}</td>
                         <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_DR)}</td>
                         <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_CR)}</td>
-                        <td class="p-0 border border-gray-300 relative">
-                            <input type="text" id="${baseId}ADJ_DR" oninput="window.saveWorksheetInput('${baseId}ADJ_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valADJ_DR}">
-                            <span id="${baseId}ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 relative">
-                            <input type="text" id="${baseId}ADJ_CR" oninput="window.saveWorksheetInput('${baseId}ADJ_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valADJ_CR}">
-                            <span id="${baseId}ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 relative">
-                            <input type="text" id="${baseId}ATB_DR" oninput="window.saveWorksheetInput('${baseId}ATB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valATB_DR}">
-                            <span id="${baseId}ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 relative">
-                            <input type="text" id="${baseId}ATB_CR" oninput="window.saveWorksheetInput('${baseId}ATB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valATB_CR}">
-                            <span id="${baseId}ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 ${!isIncomeStatement ? 'bg-gray-100' : ''} relative">
-                            <input type="text" id="${baseId}IS_DR" oninput="window.saveWorksheetInput('${baseId}IS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" ${!isIncomeStatement ? 'disabled' : ''} value="${valIS_DR}">
-                            <span id="${baseId}IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 ${!isIncomeStatement ? 'bg-gray-100' : ''} relative">
-                            <input type="text" id="${baseId}IS_CR" oninput="window.saveWorksheetInput('${baseId}IS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" ${!isIncomeStatement ? 'disabled' : ''} value="${valIS_CR}">
-                            <span id="${baseId}IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 ${!isBalanceSheet ? 'bg-gray-100' : ''} relative">
-                            <input type="text" id="${baseId}BS_DR" oninput="window.saveWorksheetInput('${baseId}BS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" ${!isBalanceSheet ? 'disabled' : ''} value="${valBS_DR}">
-                            <span id="${baseId}BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                        </td>
-                        <td class="p-0 border border-gray-300 ${!isBalanceSheet ? 'bg-gray-100' : ''} relative">
-                            <input type="text" id="${baseId}BS_CR" oninput="window.saveWorksheetInput('${baseId}BS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" ${!isBalanceSheet ? 'disabled' : ''} value="${valBS_CR}">
-                            <span id="${baseId}BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                        </td>
+                        <td class="p-0 border border-gray-300 relative">${renderWksInput('ADJ_DR', false)}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderWksInput('ADJ_CR', false)}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderWksInput('ATB_DR', false)}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderWksInput('ATB_CR', false)}</td>
+                        <td class="p-0 border border-gray-300 ${!isIncomeStatement ? 'bg-gray-100' : ''} relative">${renderWksInput('IS_DR', !isIncomeStatement)}</td>
+                        <td class="p-0 border border-gray-300 ${!isIncomeStatement ? 'bg-gray-100' : ''} relative">${renderWksInput('IS_CR', !isIncomeStatement)}</td>
+                        <td class="p-0 border border-gray-300 ${!isBalanceSheet ? 'bg-gray-100' : ''} relative">${renderWksInput('BS_DR', !isBalanceSheet)}</td>
+                        <td class="p-0 border border-gray-300 ${!isBalanceSheet ? 'bg-gray-100' : ''} relative">${renderWksInput('BS_CR', !isBalanceSheet)}</td>
                     </tr>
                 `;
+            };
+
+            // Helper to render total row input
+            const renderTotalInput = (id) => {
+                const value = state.worksheetInputs[id] || '';
+                // Initialize display value
+                setTimeout(() => formatDisplayValue(id, value), 10);
+                return `<input type="number" id="${id}" oninput="this.classList.add('text-black');" onblur="window.handleAmountInput('${id}', this.value, 'worksheetInputs')" class="table-input" value="${value}"><span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>`;
             };
 
             const subTotalRow = () => {
-                const valTB_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_TB_DR']);
-                const valTB_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_TB_CR']);
-                const valADJ_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_ADJ_DR']);
-                const valADJ_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_ADJ_CR']);
-                const valATB_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_ATB_DR']);
-                const valATB_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_ATB_CR']);
-                const valIS_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_IS_DR']);
-                const valIS_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_IS_CR']);
-                const valBS_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_BS_DR']);
-                const valBS_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_BS_CR']);
-
                 return `
                     <tr class="font-bold bg-purple-100 text-purple-800 border-t-2 border-purple-500" id="row_SUBTOTAL">
                         <td class="p-2 border border-gray-300 text-left">COLUMN TOTALS (Before NI/NL)</td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_TB_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_TB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valTB_DR}"><span id="wks_SUBTOTAL_TB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_TB_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_TB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valTB_CR}"><span id="wks_SUBTOTAL_TB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_ADJ_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ADJ_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valADJ_DR}"><span id="wks_SUBTOTAL_ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_ADJ_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ADJ_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valADJ_CR}"><span id="wks_SUBTOTAL_ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_ATB_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ATB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valATB_DR}"><span id="wks_SUBTOTAL_ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_ATB_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ATB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valATB_CR}"><span id="wks_SUBTOTAL_ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_IS_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_IS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valIS_DR}"><span id="wks_SUBTOTAL_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_IS_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_IS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valIS_CR}"><span id="wks_SUBTOTAL_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_BS_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_BS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valBS_DR}"><span id="wks_SUBTOTAL_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_BS_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_BS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valBS_CR}"><span id="wks_SUBTOTAL_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_TB_DR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_TB_CR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_ADJ_DR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_ADJ_CR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_ATB_DR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_ATB_CR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_IS_DR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_IS_CR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_BS_DR')}</td>
+                        <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_SUBTOTAL_BS_CR')}</td>
                     </tr>
                 `;
             };
 
-            const valIS_NI_DR = formatAmountForDisplay(state.worksheetInputs['wks_NI_IS_DR']);
-            const valIS_NI_CR = formatAmountForDisplay(state.worksheetInputs['wks_NI_IS_CR']);
-            const valBS_NI_DR = formatAmountForDisplay(state.worksheetInputs['wks_NI_BS_DR']);
-            const valBS_NI_CR = formatAmountForDisplay(state.worksheetInputs['wks_NI_BS_CR']);
+            let rowsHtml = '';
+            const insertSubtotalAfter = 'Depreciation Expense';
+            
+            worksheetData.accounts.forEach((acc, i) => {
+                rowsHtml += renderRow(acc, i);
+                if (acc.name === insertSubtotalAfter) {
+                    rowsHtml += subTotalRow();
+                }
+            });
 
             const netIncomeRow = `
                 <tr class="font-bold bg-green-50/50 text-green-700">
                     <td class="p-2 border border-gray-300 text-left">${worksheetData.netIncome > 0 ? 'Net Income' : 'Net Loss'}</td>
                     <td colspan="6" class="p-2 border border-gray-300 text-center"></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_NI_IS_DR" oninput="window.saveWorksheetInput('wks_NI_IS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valIS_NI_DR}"><span id="wks_NI_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_NI_IS_CR" oninput="window.saveWorksheetInput('wks_NI_IS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valIS_NI_CR}"><span id="wks_NI_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_NI_BS_DR" oninput="window.saveWorksheetInput('wks_NI_BS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valBS_NI_DR}"><span id="wks_NI_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_NI_BS_CR" oninput="window.saveWorksheetInput('wks_NI_BS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valBS_NI_CR}"><span id="wks_NI_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_NI_IS_DR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_NI_IS_CR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_NI_BS_DR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_NI_BS_CR')}</td>
                 </tr>
             `;
-
-            const valF_TB_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_TB_DR']);
-            const valF_TB_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_TB_CR']);
-            const valF_ADJ_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_ADJ_DR']);
-            const valF_ADJ_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_ADJ_CR']);
-            const valF_ATB_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_ATB_DR']);
-            const valF_ATB_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_ATB_CR']);
-            const valF_IS_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_IS_DR']);
-            const valF_IS_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_IS_CR']);
-            const valF_BS_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_BS_DR']);
-            const valF_BS_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_BS_CR']);
 
             const finalTotalRow = `
                 <tr class="font-bold bg-indigo-50/50 border-t-2 border-indigo-700">
                     <td class="p-2 border border-gray-300 text-center">FINAL TOTALS</td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_TB_DR" oninput="window.saveWorksheetInput('wks_FINAL_TB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_TB_DR}"><span id="wks_FINAL_TB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_TB_CR" oninput="window.saveWorksheetInput('wks_FINAL_TB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_TB_CR}"><span id="wks_FINAL_TB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_ADJ_DR" oninput="window.saveWorksheetInput('wks_FINAL_ADJ_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_ADJ_DR}"><span id="wks_FINAL_ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_ADJ_CR" oninput="window.saveWorksheetInput('wks_FINAL_ADJ_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_ADJ_CR}"><span id="wks_FINAL_ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_ATB_DR" oninput="window.saveWorksheetInput('wks_FINAL_ATB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_ATB_DR}"><span id="wks_FINAL_ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_ATB_CR" oninput="window.saveWorksheetInput('wks_FINAL_ATB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_ATB_CR}"><span id="wks_FINAL_ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_IS_DR" oninput="window.saveWorksheetInput('wks_FINAL_IS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_IS_DR}"><span id="wks_FINAL_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_IS_CR" oninput="window.saveWorksheetInput('wks_FINAL_IS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_IS_CR}"><span id="wks_FINAL_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_BS_DR" oninput="window.saveWorksheetInput('wks_FINAL_BS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_BS_DR}"><span id="wks_FINAL_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_BS_CR" oninput="window.saveWorksheetInput('wks_FINAL_BS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_BS_CR}"><span id="wks_FINAL_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_TB_DR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_TB_CR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_ADJ_DR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_ADJ_CR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_ATB_DR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_ATB_CR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_IS_DR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_IS_CR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_BS_DR')}</td>
+                    <td class="p-0 border border-gray-300 relative">${renderTotalInput('wks_FINAL_BS_CR')}</td>
                 </tr>
             `;
 
@@ -1212,22 +1235,28 @@
             document.getElementById('next-step-btn').innerText = "Validate Worksheet & Print Task 1";
             renderMessageBox("Complete the Worksheet columns. Attempt validation when ready.");
 
-            if (timeRemainingSeconds <= 0) window.disableAllInputs();
-        };
-        
-        window.saveFSInput = (type, id, value) => {
-             // REVISION 1: Parse the string input (which may contain commas) to a number
-            state.fsInputs[type][id] = parseAmountInput(value);
+            // Check if timer has expired
+            const endTime = sessionStorage.getItem(EXAM_END_TIME_KEY) ? parseInt(sessionStorage.getItem(EXAM_END_TIME_KEY)) : 0;
+            const timeRemaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            if (timeRemaining <= 0) window.disableAllInputs();
         };
         
         const renderFSInput = (type, id, value, placeholder="Amount", label="") => {
-            // REVISION 1: Render with type="text" and the formatted value, add onblur
-            const formattedValue = formatAmountForDisplay(value);
+            // Helper to initialize display value
+            setTimeout(() => formatDisplayValue(id, value), 10);
+            
             return `
                 <div class="flex justify-between items-center text-sm ${label ? 'mb-1' : ''}">
                     ${label ? `<span class="text-gray-700">${label}</span>` : ''}
                     <div class="relative w-${label ? '1/3' : 'full'}">
-                        <input type="text" id="${id}" oninput="window.saveFSInput('${type}', '${id}', this.value)" onblur="window.handleFormatInput(this)" class="fs-input" placeholder="${placeholder}" value="${formattedValue}">
+                        <input 
+                            type="number" 
+                            id="${id}" 
+                            oninput="this.classList.add('text-black');" 
+                            onblur="window.handleAmountInput('${id}', this.value, 'fsInputs', '${type}')" 
+                            class="fs-input" 
+                            placeholder="${placeholder}" 
+                            value="${value}">
                         <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                     </div>
                 </div>
@@ -1240,8 +1269,6 @@
             const revenue = worksheetData.IS_accounts.filter(acc => acc.type === 'revenue');
             const expenses = worksheetData.IS_accounts.filter(acc => acc.type === 'expense');
             const isNetIncome = worksheetData.netIncome > 0;
-            
-            // REVISION 1: Read raw number from state and pass to renderFSInput for formatting
 
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6">
@@ -1255,20 +1282,26 @@
                         </header>
                         <div class="space-y-4 mt-4">
                             <h4 class="font-bold text-lg border-b pb-1 text-green-700">Service Revenue</h4>
-                            ${revenue.map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
+                            ${revenue.map(acc => {
+                                const id = getAccountId(acc.name) + '_is_li';
+                                return renderFSInput('is', id, state.fsInputs.is[id], 'Amount', acc.name);
+                            }).join('')}
                             <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
                                 <label class="text-md text-green-700">TOTAL SERVICE REVENUE:</label>
-                                ${renderFSInput('is', 'is_total_revenue', state.fsInputs.is.is_total_revenue)}
+                                ${renderFSInput('is', 'is_total_revenue', state.fsInputs.is.is_total_revenue, 'Amount')}
                             </div>
                             <h4 class="font-bold text-lg border-b pb-1 pt-4 text-red-700">Expenses</h4>
-                            ${expenses.map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
+                            ${expenses.map(acc => {
+                                const id = getAccountId(acc.name) + '_is_li';
+                                return renderFSInput('is', id, state.fsInputs.is[id], 'Amount', acc.name);
+                            }).join('')}
                             <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
                                 <label class="text-md text-red-700">TOTAL EXPENSES:</label>
-                                ${renderFSInput('is', 'is_total_expense', state.fsInputs.is.is_total_expense)}
+                                ${renderFSInput('is', 'is_total_expense', state.fsInputs.is.is_total_expense, 'Amount')}
                             </div>
                                <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
                                 <label class="text-xl text-indigo-800">${isNetIncome ? 'NET INCOME' : 'NET LOSS'}:</label>
-                                ${renderFSInput('is', 'is_net_income', state.fsInputs.is.is_net_income, 'Net Income/Loss')}
+                                ${renderFSInput('is', 'is_net_income', state.fsInputs.is.is_net_income, 'Amount')}
                             </div>
                         </div>
                     </div>
@@ -1277,7 +1310,10 @@
             document.getElementById('next-step-btn').innerText = "Validate IS & Proceed to SCE";
             renderMessageBox("Enter all amounts in the Income Statement (Revenue, Expenses, and Totals).");
 
-            if (timeRemainingSeconds <= 0) window.disableAllInputs();
+            // Check if timer has expired
+            const endTime = sessionStorage.getItem(EXAM_END_TIME_KEY) ? parseInt(sessionStorage.getItem(EXAM_END_TIME_KEY)) : 0;
+            const timeRemaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            if (timeRemaining <= 0) window.disableAllInputs();
         };
 
         /** Task 2, Sub-Step 1: SCE (INCLUDING RUBRIC) */
@@ -1287,8 +1323,6 @@
             const WITHDRAWALS_ACCOUNT = `${familyName}, Withdrawals`;
             const worksheetData = calculateWorksheetAnswers();
             const isNetIncome = worksheetData.netIncome > 0;
-
-            // REVISION 1: Read raw number from state and pass to renderFSInput for formatting
 
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6">
@@ -1315,7 +1349,7 @@
                             </div>
                             <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
                                 <label class="text-xl text-indigo-800">${CAPITAL_ACCOUNT}, December 31, 2024</label>
-                                ${renderFSInput('sce', 'sce_ending_capital', state.fsInputs.sce.sce_ending_capital, 'Ending Capital')}
+                                ${renderFSInput('sce', 'sce_ending_capital', state.fsInputs.sce.sce_ending_capital, 'Amount')}
                             </div>
                         </div>
                     </div>
@@ -1324,7 +1358,10 @@
             document.getElementById('next-step-btn').innerText = "Validate SCE & Proceed to BS";
             renderMessageBox("Enter all four amounts in the Statement of Changes in Equity.");
 
-            if (timeRemainingSeconds <= 0) window.disableAllInputs();
+            // Check if timer has expired
+            const endTime = sessionStorage.getItem(EXAM_END_TIME_KEY) ? parseInt(sessionStorage.getItem(EXAM_END_TIME_KEY)) : 0;
+            const timeRemaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            if (timeRemaining <= 0) window.disableAllInputs();
         };
 
         /** Task 2, Sub-Step 2: Balance Sheet (INCLUDING RUBRIC) */
@@ -1334,8 +1371,6 @@
             const worksheetData = calculateWorksheetAnswers();
             const assets = worksheetData.Assets;
             const liabilities = worksheetData.Liabilities;
-
-            // REVISION 1: Read raw number from state and pass to renderFSInput for formatting
 
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6">
@@ -1359,22 +1394,25 @@
                                 </div>
                                 <div class="flex justify-between items-center font-extrabold border-t-2 border-blue-500 pt-3 bg-blue-50 p-2 rounded">
                                     <label class="text-md text-blue-800">TOTAL ASSETS:</label>
-                                    ${renderFSInput('bs', 'bs_total_assets', state.fsInputs.bs.bs_total_assets, 'Total Assets')}
+                                    ${renderFSInput('bs', 'bs_total_assets', state.fsInputs.bs.bs_total_assets, 'Amount')}
                                 </div>
                             </div>
                             <div class="col-span-1 space-y-3">
                                 <h4 class="font-bold text-lg border-b pb-1 text-red-700">LIABILITIES</h4>
                                 <div class="space-y-1 text-sm">
-                                    ${liabilities.map(acc => renderFSInput('bs', getAccountId(acc.name) + '_bs_li', state.fsInputs.bs[getAccountId(acc.name) + '_bs_li'], 'Amount', acc.name)).join('')}
+                                    ${liabilities.map(acc => {
+                                        const id = getAccountId(acc.name) + '_bs_li';
+                                        return renderFSInput('bs', id, state.fsInputs.bs[id], 'Amount', acc.name);
+                                    }).join('')}
                                 </div>
                                 <h4 class="font-bold text-lg border-b pb-1 pt-4 text-purple-700">OWNER'S EQUITY</h4>
                                     <div class="flex justify-between items-center text-sm">
                                     <label class="text-gray-700">${CAPITAL_ACCOUNT}, Dec 31, 2024</label>
-                                    ${renderFSInput('bs', 'bs_ending_capital_bs', state.fsInputs.bs.bs_ending_capital_bs, 'Capital')}
+                                    ${renderFSInput('bs', 'bs_ending_capital_bs', state.fsInputs.bs.bs_ending_capital_bs, 'Amount')}
                                 </div>
                                 <div class="flex justify-between items-center font-extrabold border-t-2 border-red-500 pt-3 bg-red-50 p-2 rounded">
                                     <label class="text-md text-red-800">TOTAL LIA. & EQUITY:</label>
-                                    ${renderFSInput('bs', 'bs_total_liab_equity', state.fsInputs.bs.bs_total_liab_equity, 'Total L & E')}
+                                    ${renderFSInput('bs', 'bs_total_liab_equity', state.fsInputs.bs.bs_total_liab_equity, 'Amount')}
                                 </div>
                             </div>
                         </div>
@@ -1384,7 +1422,10 @@
             document.getElementById('next-step-btn').innerText = "Validate BS & Submit Task";
             renderMessageBox("Enter all amounts in the Balance Sheet. Submitting triggers data save.");
             
-            if (timeRemainingSeconds <= 0) window.disableAllInputs();
+            // Check if timer has expired
+            const endTime = sessionStorage.getItem(EXAM_END_TIME_KEY) ? parseInt(sessionStorage.getItem(EXAM_END_TIME_KEY)) : 0;
+            const timeRemaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            if (timeRemaining <= 0) window.disableAllInputs();
         };
 
         /** Final Step 3: Completion */
@@ -1446,15 +1487,15 @@
             }
         };
 
-        // --- VALIDATION AND SCORING (Unchanged) ---
+        // --- VALIDATION AND SCORING (Updated to use Unicode check/X marks) ---
         
         const renderValidation = (id, isCorrect) => {
             const span = document.getElementById(id + '_val');
             if (!span) return;
             // Only render icons if explicitly asked (i.e., when a validation button is clicked)
             if (isCorrect !== null) {
-                // REVISION 3: Use visible text symbols that print well
-                span.innerHTML = isCorrect ? '<span class="text-green-600">✔</span>' : '<span class="text-red-600">❌</span>';
+                // Using Unicode characters for better print reliability (User Request)
+                span.innerHTML = isCorrect ? '<span class="text-green-600">\u2713</span>' : '<span class="text-red-600">\u2717</span>'; // \u2713 = Heavy Check Mark, \u2717 = Ballot X
             } else {
                 span.innerHTML = '';
             }
@@ -1474,18 +1515,18 @@
                 const checks = [['ADJ', acc.ADJ_DR, acc.ADJ_CR], ['ATB', acc.ATB_DR, acc.ATB_CR], ['IS', acc.IS_DR, acc.IS_CR], ['BS', acc.BS_DR, acc.BS_CR]];
                 checks.forEach(([prefix, correctDR, correctCR]) => {
                     // Debit check
-                    if (document.getElementById(baseId + prefix + '_DR') && !document.getElementById(baseId + prefix + '_DR').disabled) {
-                        // REVISION 1: Use parsed value from state, not raw input.
-                        const isCorrect = Math.abs((state.worksheetInputs[baseId + prefix + '_DR'] || 0) - correctDR) < acceptableError;
-                        if (doRenderIcons) renderValidation(baseId + prefix + '_DR', isCorrect);
+                    const drId = baseId + prefix + '_DR';
+                    if (document.getElementById(drId) && !document.getElementById(drId).disabled) {
+                        const isCorrect = Math.abs((state.worksheetInputs[drId] || 0) - correctDR) < acceptableError;
+                        if (doRenderIcons) renderValidation(drId, isCorrect);
                         if (isCorrect) correctCount++;
                         totalChecks++;
                     }
                     // Credit check
-                    if (document.getElementById(baseId + prefix + '_CR') && !document.getElementById(baseId + prefix + '_CR').disabled) {
-                        // REVISION 1: Use parsed value from state, not raw input.
-                        const isCorrect = Math.abs((state.worksheetInputs[baseId + prefix + '_CR'] || 0) - correctCR) < acceptableError;
-                        if (doRenderIcons) renderValidation(baseId + prefix + '_CR', isCorrect);
+                    const crId = baseId + prefix + '_CR';
+                    if (document.getElementById(crId) && !document.getElementById(crId).disabled) {
+                        const isCorrect = Math.abs((state.worksheetInputs[crId] || 0) - correctCR) < acceptableError;
+                        if (doRenderIcons) renderValidation(crId, isCorrect);
                         if (isCorrect) correctCount++;
                         totalChecks++;
                     }
@@ -1514,7 +1555,6 @@
             
             checksList.forEach(([id, val]) => {
                 if (document.getElementById(id)) {
-                    // REVISION 1: Use parsed value from state, not raw input.
                     const isCorrect = Math.abs((state.worksheetInputs[id] || 0) - val) < acceptableError;
                     if (doRenderIcons) renderValidation(id, isCorrect);
                     if (isCorrect) correctCount++;
@@ -1534,7 +1574,6 @@
             data.IS_accounts.forEach(acc => {
                 const id = getAccountId(acc.name) + '_is_li';
                 const correctVal = acc.type === 'revenue' ? acc.ATB_CR : acc.ATB_DR;
-                // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.is[id] || 0) - correctVal) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
@@ -1542,7 +1581,6 @@
             });
             const checks = [['is_total_revenue', data.totalRevenue], ['is_total_expense', data.totalExpenses], ['is_net_income', Math.abs(data.netIncome)]];
             checks.forEach(([id, val]) => {
-                // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.is[id] || 0) - val) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
@@ -1558,7 +1596,6 @@
             let totalChecks = 0;
             const checks = [['sce_starting_capital', data.startingCapital], ['sce_net_income', Math.abs(data.netIncome)], ['sce_withdrawals', data.withdrawals], ['sce_ending_capital', data.endingCapital]];
             checks.forEach(([id, val]) => {
-                // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.sce[id] || 0) - val) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
@@ -1577,14 +1614,12 @@
                 const id = getAccountId(acc.name) + '_bs_li';
                 // Contra-asset uses CR balance, Liabilities use CR balance, other assets use DR balance.
                 const correctVal = (acc.type === 'contra-asset' || acc.type === 'liability') ? acc.ATB_CR : acc.ATB_DR; 
-                 // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.bs[id] || 0) - correctVal) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
                 totalChecks++;
             });
 
-            // REVISION 1: Use parsed value from state, not raw input.
             const endingCapitalCorrect = Math.abs((state.fsInputs.bs.bs_ending_capital_bs || 0) - data.endingCapital) < acceptableError;
             if (doRenderIcons) renderValidation('bs_ending_capital_bs', endingCapitalCorrect);
             if (endingCapitalCorrect) correctCount++;
@@ -1592,7 +1627,6 @@
 
             const checks = [['bs_total_assets', data.correctTotalAssetsNet], ['bs_total_liab_equity', data.correctTotalLiabilitiesAndEquityNet]];
             checks.forEach(([id, val]) => {
-                 // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.bs[id] || 0) - val) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
@@ -1625,7 +1659,10 @@
             const stuId = document.getElementById('studentId').value.trim();
             const btn = document.getElementById('login-btn');
             
-            if(timeRemainingSeconds <= 0) {
+            const endTime = sessionStorage.getItem(EXAM_END_TIME_KEY) ? parseInt(sessionStorage.getItem(EXAM_END_TIME_KEY)) : 0;
+            const timeRemaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            
+            if(timeRemaining <= 0) {
                 renderMessageBox("Task is expired. Cannot log in.", true);
                 return;
             }
@@ -1647,7 +1684,8 @@
                     idNumber: result.data.idNumber,
                     classNumber: result.data.cn,
                     fullName: result.data.fullName,
-                    gradeSection: result.data.section
+                    gradeSection: result.data.section,
+                    submissionDateTime: new Date().toLocaleString()
                 };
 
                 // Update UI
@@ -1770,9 +1808,10 @@
             }
         };
         
-        // Expose handlers to the global scope
-        window.saveWorksheetInput = saveWorksheetInput;
-        window.saveFSInput = saveFSInput;
+        // Expose new window functions, replacing the old, simpler ones
+        window.formatPHP = formatPHP; // Expose original formatPHP for internal use
+        // window.saveWorksheetInput and window.saveFSInput are now handled by window.handleAmountInput
+        
 
         const renderStep = () => {
             const renderers = [renderStudentInfo, renderWorksheet, renderIncomeStatement, renderStatementOfChangesInEquity, renderBalanceSheet, renderCompletion];
@@ -1797,7 +1836,10 @@
             
             if (state.currentStep > 0 && state.currentStep !== 3) document.getElementById('next-step-btn').disabled = false;
 
-            if (timeRemainingSeconds <= 0 && state.currentStep !== 3) window.disableAllInputs();
+            // Final check on timer expiration after rendering
+            const endTime = sessionStorage.getItem(EXAM_END_TIME_KEY) ? parseInt(sessionStorage.getItem(EXAM_END_TIME_KEY)) : 0;
+            const timeRemaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            if (timeRemaining <= 0 && state.currentStep !== 3) window.disableAllInputs();
         };
 
         // Initialize: Runs link validation first.
