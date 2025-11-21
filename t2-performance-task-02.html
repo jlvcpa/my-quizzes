@@ -9,8 +9,12 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        /* Style for inputs in tables */
-        .table-input {
+        
+        /* * CSS for removing number input spinners (Up/Down arrows) 
+         * This targets both the original number type (for compatibility) 
+         * and the new text type classes.
+         */
+        .table-input, .fs-input {
             width: 100%;
             padding: 4px;
             border: 1px solid #ccc;
@@ -19,6 +23,19 @@
             font-size: 0.85rem; /* Base font size */
             background-color: #f0f9ff; /* light blue background for input areas */
         }
+        /* Hide number spin buttons for Firefox */
+        .table-input[type=number], .fs-input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Hide number spin buttons for Chrome/Safari/Edge */
+        .table-input::-webkit-outer-spin-button,
+        .table-input::-webkit-inner-spin-button,
+        .fs-input::-webkit-outer-spin-button,
+        .fs-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         .text-input {
             width: 100%;
             padding: 4px;
@@ -82,15 +99,19 @@
                 border: 1px solid black !important;
                 box-shadow: none !important;
             }
-            .rubric-box table {
-                border-color: black !important;
-            }
             .rubric-box th, .rubric-box td {
                 border-color: black !important;
                 color: black !important;
             }
-            /* Remove validation icons when printing */
-            .validation-icon { display: none !important; }
+            
+            /* * REVISION: Ensure validation icons (check/X marks) are visible when printing.
+             * The symbols themselves will print in black, which is acceptable. 
+             */
+            .validation-icon { 
+                display: block !important; 
+                margin-left: 2px;
+            }
+            
             /* Show student info box in print */
             #student-print-info { display: block !important; border: 1px solid #000 !important; }
             .print-text-sm { font-size: 9pt; }
@@ -144,7 +165,7 @@
             <p class="text-sm text-gray-400 leading-relaxed">
               <strong>Instruction:</strong><br>
               Complete all required fields.<br>
-              Enter amounts with two decimal places but without commas.<br>
+              Enter amounts with two decimal places but without commas. The system automatically handles comma formatting for display.<br>
               Round off centavos to the nearest peso.<br>
               After validating each task or sub-step, use the 'Print to PDF' option.
             </p>
@@ -170,6 +191,48 @@
         // 2. Initialize Service
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // --- NEW UTILITY FUNCTIONS FOR FORMATTING AND PARSING (REVISION 1) ---
+
+        /**
+         * Formats a number for display with commas and two decimal places.
+         * @param {number | string} num - The number value.
+         * @returns {string} The formatted string (e.g., "123,456.78").
+         */
+        const formatAmountForDisplay = (num) => {
+            const number = Number(num);
+            if (typeof num !== 'number' || isNaN(number) || number === 0) return '';
+            // Use toLocaleString for comma separation and minimumFractionDigits: 2
+            return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        /**
+         * Parses a formatted string input (with commas) back into a raw number.
+         * @param {string} value - The input string.
+         * @returns {number} The raw number, or 0 if invalid.
+         */
+        const parseAmountInput = (value) => {
+            if (typeof value !== 'string') return Number(value) || 0;
+            // Remove all commas before parsing
+            const cleanValue = value.replace(/,/g, '').trim();
+            const number = Number(cleanValue);
+            return isNaN(number) ? 0 : number;
+        };
+
+        /**
+         * Generic function to format the input field on blur or when rendering initial state.
+         * @param {HTMLElement} inputElement - The HTML input element.
+         * @param {number} rawValue - The raw numeric value from state.
+         */
+        window.handleFormatInput = (inputElement, rawValue) => {
+            // Check if the value is empty or zero, if so, don't force formatting on input
+            if (inputElement.value.trim() === '') return;
+            // The `onblur` event is the best place to apply formatting to the visual input box
+            const number = rawValue !== undefined ? rawValue : parseAmountInput(inputElement.value);
+            inputElement.value = formatAmountForDisplay(number);
+        };
+        
+        // --- END NEW UTILITY FUNCTIONS ---
 
         /**
         * Validates a student against a specific attendance record in Firestore.
@@ -319,12 +382,13 @@
             task2Score: null,
         };
 
-        // --- TIMER/LINK VALIDATION FUNCTIONS (REPLACED/ADAPTED) ---
+        // --- TIMER/LINK VALIDATION FUNCTIONS (REVISED FOR NON-PAUSING TIMER) ---
         
         // Global variables for the new timer module interface
         window.examDurationMins = 0;
         let timerInterval = null;
-        let timeRemainingSeconds = 0;
+        let timeRemainingSeconds = 0; // Calculated on the fly now
+        let examEndTime = 0; // REVISION 4: Store the target end time (absolute time)
 
         /**
          * Disables all interactive elements on the page.
@@ -351,13 +415,17 @@
 
         /**
          * Updates the timer display element with the current remaining time in HH:MM:SS format.
-         * Adapted from the provided module to use existing IDs (#countdown and #timer-box).
+         * REVISION 4: Calculates time remaining based on `examEndTime` to prevent throttling pauses.
          */
         function updateTimerDisplay() {
             const displayElement = document.getElementById('countdown');
             const boxElement = document.getElementById('timer-box');
 
-            if (!displayElement || timeRemainingSeconds === null) return;
+            if (!displayElement || examEndTime === 0) return;
+
+            // Calculate remaining time based on current time and end time
+            const remainingMs = examEndTime - Date.now();
+            timeRemainingSeconds = Math.max(0, Math.floor(remainingMs / 1000));
 
             const h = Math.floor(timeRemainingSeconds / 3600);
             const m = Math.floor((timeRemainingSeconds % 3600) / 60);
@@ -382,7 +450,7 @@
                 window.disableAllInputs(); // Disable inputs immediately to prevent further changes
                 if (typeof window.finishAndPreview === 'function') {
                     console.log("Time is up! Auto-submitting answers.");
-                    // Call the global function to handle auto-submission/save
+                    // REVISION 4: Auto-submit to Firebase when the quiz duration expires
                     window.finishAndPreview(true); 
                 }
                 // Ensure the box shows expiration state
@@ -404,17 +472,17 @@
 
         /**
          * Starts the countdown timer based on window.examDurationMins.
+         * REVISION 4: Sets `examEndTime`.
          */
         function startTimer() {
             if (timerInterval) stopTimer();
 
-            timeRemainingSeconds = window.examDurationMins * 60;
-            updateTimerDisplay();
+            // Calculate the absolute end time
+            examEndTime = Date.now() + (window.examDurationMins * 60 * 1000);
+            updateTimerDisplay(); // Initial display
 
-            timerInterval = setInterval(() => {
-                timeRemainingSeconds--;
-                updateTimerDisplay();
-            }, 1000);
+            // REVISION 4: The interval runs every second, but relies on Date.now() for accuracy
+            timerInterval = setInterval(updateTimerDisplay, 1000);
         }
 
         /**
@@ -606,12 +674,12 @@
             const adjAmountF = rand(3000, 7000);
             
             state.adjustments = [
-                { desc: `A. Supplies on hand, counted on Dec 31, ₱ ${formatPHP(initialSupplies - adjAmountA)}. (Initial Supplies ₱ ${formatPHP(initialSupplies)})`, dr: 'Supplies Expense', cr: 'Supplies', amount: adjAmountA, isReversing: false },
-                { desc: `B. One month of rent has expired. (Prepaid Rent of ₱ ${formatPHP(initialPrepaidRent)} was for ${prepaidMonths} months, dated Dec 1)`, dr: 'Rent Expense', cr: 'Prepaid Rent', amount: adjAmountB, isReversing: true },
-                { desc: `C. Depreciation of equipment for the year, ₱ ${formatPHP(adjAmountC)}.`, dr: 'Depreciation Expense', cr: 'Accumulated Depreciation-Equip.', amount: adjAmountC, isReversing: false },
-                { desc: `D. Accrued salaries not yet paid, ₱ ${formatPHP(adjAmountD)}.`, dr: 'Salaries Expense', cr: 'Salaries Payable', amount: adjAmountD, isReversing: true },
-                { desc: `E. Unearned Service Revenue earned during the period, ₱ ${formatPHP(adjAmountE)}.`, dr: 'Unearned Service Revenue', cr: 'Service Revenue', amount: adjAmountE, isReversing: false },
-                { desc: `F. Services rendered but unbilled/uncollected (Accrued Revenue), ₱ ${formatPHP(adjAmountF)}. (Using Accrued Service Revenue account for clarity)`, dr: 'Accrued Service Revenue', cr: 'Service Revenue', amount: adjAmountF, isReversing: true },
+                { desc: `A. Supplies on hand, counted on Dec 31, ₱ ${formatAmountForDisplay(initialSupplies - adjAmountA)}. (Initial Supplies ₱ ${formatAmountForDisplay(initialSupplies)})`, dr: 'Supplies Expense', cr: 'Supplies', amount: adjAmountA, isReversing: false },
+                { desc: `B. One month of rent has expired. (Prepaid Rent of ₱ ${formatAmountForDisplay(initialPrepaidRent)} was for ${prepaidMonths} months, dated Dec 1)`, dr: 'Rent Expense', cr: 'Prepaid Rent', amount: adjAmountB, isReversing: true },
+                { desc: `C. Depreciation of equipment for the year, ₱ ${formatAmountForDisplay(adjAmountC)}.`, dr: 'Depreciation Expense', cr: 'Accumulated Depreciation-Equip.', amount: adjAmountC, isReversing: false },
+                { desc: `D. Accrued salaries not yet paid, ₱ ${formatAmountForDisplay(adjAmountD)}.`, dr: 'Salaries Expense', cr: 'Salaries Payable', amount: adjAmountD, isReversing: true },
+                { desc: `E. Unearned Service Revenue earned during the period, ₱ ${formatAmountForDisplay(adjAmountE)}.`, dr: 'Unearned Service Revenue', cr: 'Service Revenue', amount: adjAmountE, isReversing: false },
+                { desc: `F. Services rendered but unbilled/uncollected (Accrued Revenue), ₱ ${formatAmountForDisplay(adjAmountF)}. (Using Accrued Service Revenue account for clarity)`, dr: 'Accrued Service Revenue', cr: 'Service Revenue', amount: adjAmountF, isReversing: true },
             ];
             
             state.newAccounts = [
@@ -623,7 +691,7 @@
             ];
         };
         
-        // --- UTILITY FUNCTIONS (Unchanged) ---
+        // --- UTILITY FUNCTIONS (UPDATED FOR FORMATTING) ---
 
         const getFamilyName = () => {
             if (!state.studentInfo || !state.studentInfo.fullName) return 'A';
@@ -632,9 +700,8 @@
         };
 
         const formatPHP = (num) => {
-            if (typeof num !== 'number' || isNaN(num) || num === 0) return '';
-            const roundedNum = Math.round(num * 100) / 100;
-            return roundedNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+             // REVISION 1: Use the new standard formatter
+            return formatAmountForDisplay(num);
         };
         
         const getAccountId = (name) => {
@@ -906,7 +973,7 @@
         // --- END RUBRIC GENERATION FUNCTION ---
 
 
-        // --- STEP RENDERING FUNCTIONS (Unchanged, except for removing timer check) ---
+        // --- STEP RENDERING FUNCTIONS (UPDATED INPUT TYPES AND HANDLERS) ---
 
         /** Step 0: Student Login via Firebase */
         const renderStudentInfo = () => {
@@ -968,8 +1035,9 @@
             }
         };
 
-        const saveWorksheetInput = (id, value) => {
-            state.worksheetInputs[id] = Number(value) || 0;
+        window.saveWorksheetInput = (id, value) => {
+            // REVISION 1: Parse the string input (which may contain commas) to a number
+            state.worksheetInputs[id] = parseAmountInput(value);
         };
 
         /** Step 1: 10-Column Worksheet Preparation (INCLUDING RUBRIC) */
@@ -983,41 +1051,52 @@
                 const isBalanceSheet = acc.isFS === 'BS';
                 const isNewAccount = acc.TB_DR === 0 && acc.TB_CR === 0 && acc.name.indexOf('Capital') === -1;
 
+                // REVISION 1: Read raw number from state, format for display
+                const valADJ_DR = formatAmountForDisplay(state.worksheetInputs[baseId + 'ADJ_DR']);
+                const valADJ_CR = formatAmountForDisplay(state.worksheetInputs[baseId + 'ADJ_CR']);
+                const valATB_DR = formatAmountForDisplay(state.worksheetInputs[baseId + 'ATB_DR']);
+                const valATB_CR = formatAmountForDisplay(state.worksheetInputs[baseId + 'ATB_CR']);
+                const valIS_DR = formatAmountForDisplay(state.worksheetInputs[baseId + 'IS_DR']);
+                const valIS_CR = formatAmountForDisplay(state.worksheetInputs[baseId + 'IS_CR']);
+                const valBS_DR = formatAmountForDisplay(state.worksheetInputs[baseId + 'BS_DR']);
+                const valBS_CR = formatAmountForDisplay(state.worksheetInputs[baseId + 'BS_CR']);
+
+
                 return `
                     <tr class="${isNewAccount ? 'bg-yellow-50/50 hover:bg-yellow-100' : 'hover:bg-gray-50'}" id="row_${index}">
                         <td class="p-2 border border-gray-300 text-left whitespace-nowrap ${isNewAccount ? 'font-semibold text-yellow-800' : ''}">${acc.name}</td>
                         <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_DR)}</td>
                         <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_CR)}</td>
                         <td class="p-0 border border-gray-300 relative">
-                            <input type="number" id="${baseId}ADJ_DR" oninput="window.saveWorksheetInput('${baseId}ADJ_DR', this.value)" class="table-input" value="${state.worksheetInputs[baseId + 'ADJ_DR'] || ''}">
+                            <input type="text" id="${baseId}ADJ_DR" oninput="window.saveWorksheetInput('${baseId}ADJ_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valADJ_DR}">
                             <span id="${baseId}ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                         <td class="p-0 border border-gray-300 relative">
-                            <input type="number" id="${baseId}ADJ_CR" oninput="window.saveWorksheetInput('${baseId}ADJ_CR', this.value)" class="table-input" value="${state.worksheetInputs[baseId + 'ADJ_CR'] || ''}">
+                            <input type="text" id="${baseId}ADJ_CR" oninput="window.saveWorksheetInput('${baseId}ADJ_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valADJ_CR}">
                             <span id="${baseId}ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                         <td class="p-0 border border-gray-300 relative">
-                            <input type="number" id="${baseId}ATB_DR" oninput="window.saveWorksheetInput('${baseId}ATB_DR', this.value)" class="table-input" value="${state.worksheetInputs[baseId + 'ATB_DR'] || ''}">
+                            <input type="text" id="${baseId}ATB_DR" oninput="window.saveWorksheetInput('${baseId}ATB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valATB_DR}">
                             <span id="${baseId}ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                         <td class="p-0 border border-gray-300 relative">
-                            <input type="number" id="${baseId}ATB_CR" oninput="window.saveWorksheetInput('${baseId}ATB_CR', this.value)" class="table-input" value="${state.worksheetInputs[baseId + 'ATB_CR'] || ''}">
+                            <input type="text" id="${baseId}ATB_CR" oninput="window.saveWorksheetInput('${baseId}ATB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valATB_CR}">
                             <span id="${baseId}ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                         <td class="p-0 border border-gray-300 ${!isIncomeStatement ? 'bg-gray-100' : ''} relative">
-                            <input type="number" id="${baseId}IS_DR" oninput="window.saveWorksheetInput('${baseId}IS_DR', this.value)" class="table-input" ${!isIncomeStatement ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'IS_DR'] || ''}">
+                            <input type="text" id="${baseId}IS_DR" oninput="window.saveWorksheetInput('${baseId}IS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" ${!isIncomeStatement ? 'disabled' : ''} value="${valIS_DR}">
                             <span id="${baseId}IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                         <td class="p-0 border border-gray-300 ${!isIncomeStatement ? 'bg-gray-100' : ''} relative">
-                            <input type="number" id="${baseId}IS_CR" oninput="window.saveWorksheetInput('${baseId}IS_CR', this.value)" class="table-input" ${!isIncomeStatement ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'IS_CR'] || ''}">
+                            <input type="text" id="${baseId}IS_CR" oninput="window.saveWorksheetInput('${baseId}IS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" ${!isIncomeStatement ? 'disabled' : ''} value="${valIS_CR}">
                             <span id="${baseId}IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                         <td class="p-0 border border-gray-300 ${!isBalanceSheet ? 'bg-gray-100' : ''} relative">
-                            <input type="number" id="${baseId}BS_DR" oninput="window.saveWorksheetInput('${baseId}BS_DR', this.value)" class="table-input" ${!isBalanceSheet ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'BS_DR'] || ''}">
+                            <input type="text" id="${baseId}BS_DR" oninput="window.saveWorksheetInput('${baseId}BS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" ${!isBalanceSheet ? 'disabled' : ''} value="${valBS_DR}">
                             <span id="${baseId}BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                         <td class="p-0 border border-gray-300 ${!isBalanceSheet ? 'bg-gray-100' : ''} relative">
-                            <input type="number" id="${baseId}BS_CR" oninput="window.saveWorksheetInput('${baseId}BS_CR', this.value)" class="table-input" ${!isBalanceSheet ? 'disabled' : ''} value="${state.worksheetInputs[baseId + 'BS_CR'] || ''}">
+                            <input type="text" id="${baseId}BS_CR" oninput="window.saveWorksheetInput('${baseId}BS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" ${!isBalanceSheet ? 'disabled' : ''} value="${valBS_CR}">
                             <span id="${baseId}BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
                         </td>
                     </tr>
@@ -1025,57 +1104,74 @@
             };
 
             const subTotalRow = () => {
+                const valTB_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_TB_DR']);
+                const valTB_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_TB_CR']);
+                const valADJ_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_ADJ_DR']);
+                const valADJ_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_ADJ_CR']);
+                const valATB_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_ATB_DR']);
+                const valATB_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_ATB_CR']);
+                const valIS_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_IS_DR']);
+                const valIS_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_IS_CR']);
+                const valBS_DR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_BS_DR']);
+                const valBS_CR = formatAmountForDisplay(state.worksheetInputs['wks_SUBTOTAL_BS_CR']);
+
                 return `
                     <tr class="font-bold bg-purple-100 text-purple-800 border-t-2 border-purple-500" id="row_SUBTOTAL">
                         <td class="p-2 border border-gray-300 text-left">COLUMN TOTALS (Before NI/NL)</td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_TB_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_TB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_TB_DR'] || ''}"><span id="wks_SUBTOTAL_TB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_TB_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_TB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_TB_CR'] || ''}"><span id="wks_SUBTOTAL_TB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_ADJ_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ADJ_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ADJ_DR'] || ''}"><span id="wks_SUBTOTAL_ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_ADJ_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ADJ_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ADJ_CR'] || ''}"><span id="wks_SUBTOTAL_ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_ATB_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ATB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ATB_DR'] || ''}"><span id="wks_SUBTOTAL_ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_ATB_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ATB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_ATB_CR'] || ''}"><span id="wks_SUBTOTAL_ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_IS_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_IS_DR'] || ''}"><span id="wks_SUBTOTAL_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_IS_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_IS_CR'] || ''}"><span id="wks_SUBTOTAL_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_BS_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_BS_DR'] || ''}"><span id="wks_SUBTOTAL_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                        <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_SUBTOTAL_BS_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_BS_CR'] || ''}"><span id="wks_SUBTOTAL_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_TB_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_TB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valTB_DR}"><span id="wks_SUBTOTAL_TB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_TB_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_TB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valTB_CR}"><span id="wks_SUBTOTAL_TB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_ADJ_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ADJ_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valADJ_DR}"><span id="wks_SUBTOTAL_ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_ADJ_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ADJ_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valADJ_CR}"><span id="wks_SUBTOTAL_ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_ATB_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ATB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valATB_DR}"><span id="wks_SUBTOTAL_ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_ATB_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_ATB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valATB_CR}"><span id="wks_SUBTOTAL_ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_IS_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_IS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valIS_DR}"><span id="wks_SUBTOTAL_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_IS_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_IS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valIS_CR}"><span id="wks_SUBTOTAL_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_BS_DR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_BS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valBS_DR}"><span id="wks_SUBTOTAL_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                        <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_SUBTOTAL_BS_CR" oninput="window.saveWorksheetInput('wks_SUBTOTAL_BS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valBS_CR}"><span id="wks_SUBTOTAL_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
                     </tr>
                 `;
             };
 
-            let rowsHtml = '';
-            const insertSubtotalAfter = 'Depreciation Expense';
-            
-            worksheetData.accounts.forEach((acc, i) => {
-                rowsHtml += renderRow(acc, i);
-                if (acc.name === insertSubtotalAfter) {
-                    rowsHtml += subTotalRow();
-                }
-            });
+            const valIS_NI_DR = formatAmountForDisplay(state.worksheetInputs['wks_NI_IS_DR']);
+            const valIS_NI_CR = formatAmountForDisplay(state.worksheetInputs['wks_NI_IS_CR']);
+            const valBS_NI_DR = formatAmountForDisplay(state.worksheetInputs['wks_NI_BS_DR']);
+            const valBS_NI_CR = formatAmountForDisplay(state.worksheetInputs['wks_NI_BS_CR']);
 
             const netIncomeRow = `
                 <tr class="font-bold bg-green-50/50 text-green-700">
                     <td class="p-2 border border-gray-300 text-left">${worksheetData.netIncome > 0 ? 'Net Income' : 'Net Loss'}</td>
                     <td colspan="6" class="p-2 border border-gray-300 text-center"></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_NI_IS_DR" oninput="window.saveWorksheetInput('wks_NI_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_IS_DR'] || ''}"><span id="wks_NI_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_NI_IS_CR" oninput="window.saveWorksheetInput('wks_NI_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_IS_CR'] || ''}"><span id="wks_NI_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_NI_BS_DR" oninput="window.saveWorksheetInput('wks_NI_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_BS_DR'] || ''}"><span id="wks_NI_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_NI_BS_CR" oninput="window.saveWorksheetInput('wks_NI_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_BS_CR'] || ''}"><span id="wks_NI_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_NI_IS_DR" oninput="window.saveWorksheetInput('wks_NI_IS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valIS_NI_DR}"><span id="wks_NI_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_NI_IS_CR" oninput="window.saveWorksheetInput('wks_NI_IS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valIS_NI_CR}"><span id="wks_NI_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_NI_BS_DR" oninput="window.saveWorksheetInput('wks_NI_BS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valBS_NI_DR}"><span id="wks_NI_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_NI_BS_CR" oninput="window.saveWorksheetInput('wks_NI_BS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valBS_NI_CR}"><span id="wks_NI_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
                 </tr>
             `;
+
+            const valF_TB_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_TB_DR']);
+            const valF_TB_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_TB_CR']);
+            const valF_ADJ_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_ADJ_DR']);
+            const valF_ADJ_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_ADJ_CR']);
+            const valF_ATB_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_ATB_DR']);
+            const valF_ATB_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_ATB_CR']);
+            const valF_IS_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_IS_DR']);
+            const valF_IS_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_IS_CR']);
+            const valF_BS_DR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_BS_DR']);
+            const valF_BS_CR = formatAmountForDisplay(state.worksheetInputs['wks_FINAL_BS_CR']);
 
             const finalTotalRow = `
                 <tr class="font-bold bg-indigo-50/50 border-t-2 border-indigo-700">
                     <td class="p-2 border border-gray-300 text-center">FINAL TOTALS</td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_TB_DR" oninput="window.saveWorksheetInput('wks_FINAL_TB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_TB_DR'] || ''}"><span id="wks_FINAL_TB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_TB_CR" oninput="window.saveWorksheetInput('wks_FINAL_TB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_TB_CR'] || ''}"><span id="wks_FINAL_TB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_ADJ_DR" oninput="window.saveWorksheetInput('wks_FINAL_ADJ_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ADJ_DR'] || ''}"><span id="wks_FINAL_ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_ADJ_CR" oninput="window.saveWorksheetInput('wks_FINAL_ADJ_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ADJ_CR'] || ''}"><span id="wks_FINAL_ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_ATB_DR" oninput="window.saveWorksheetInput('wks_FINAL_ATB_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ATB_DR'] || ''}"><span id="wks_FINAL_ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_ATB_CR" oninput="window.saveWorksheetInput('wks_FINAL_ATB_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_ATB_CR'] || ''}"><span id="wks_FINAL_ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_IS_DR" oninput="window.saveWorksheetInput('wks_FINAL_IS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_IS_DR'] || ''}"><span id="wks_FINAL_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_IS_CR" oninput="window.saveWorksheetInput('wks_FINAL_IS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_IS_CR'] || ''}"><span id="wks_FINAL_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_BS_DR" oninput="window.saveWorksheetInput('wks_FINAL_BS_DR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_BS_DR'] || ''}"><span id="wks_FINAL_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
-                    <td class="p-0 border border-gray-300 relative"><input type="number" id="wks_FINAL_BS_CR" oninput="window.saveWorksheetInput('wks_FINAL_BS_CR', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_BS_CR'] || ''}"><span id="wks_FINAL_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_TB_DR" oninput="window.saveWorksheetInput('wks_FINAL_TB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_TB_DR}"><span id="wks_FINAL_TB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_TB_CR" oninput="window.saveWorksheetInput('wks_FINAL_TB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_TB_CR}"><span id="wks_FINAL_TB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_ADJ_DR" oninput="window.saveWorksheetInput('wks_FINAL_ADJ_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_ADJ_DR}"><span id="wks_FINAL_ADJ_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_ADJ_CR" oninput="window.saveWorksheetInput('wks_FINAL_ADJ_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_ADJ_CR}"><span id="wks_FINAL_ADJ_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_ATB_DR" oninput="window.saveWorksheetInput('wks_FINAL_ATB_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_ATB_DR}"><span id="wks_FINAL_ATB_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_ATB_CR" oninput="window.saveWorksheetInput('wks_FINAL_ATB_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_ATB_CR}"><span id="wks_FINAL_ATB_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_IS_DR" oninput="window.saveWorksheetInput('wks_FINAL_IS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_IS_DR}"><span id="wks_FINAL_IS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_IS_CR" oninput="window.saveWorksheetInput('wks_FINAL_IS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_IS_CR}"><span id="wks_FINAL_IS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_BS_DR" oninput="window.saveWorksheetInput('wks_FINAL_BS_DR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_BS_DR}"><span id="wks_FINAL_BS_DR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
+                    <td class="p-0 border border-gray-300 relative"><input type="text" id="wks_FINAL_BS_CR" oninput="window.saveWorksheetInput('wks_FINAL_BS_CR', this.value)" onblur="window.handleFormatInput(this)" class="table-input" value="${valF_BS_CR}"><span id="wks_FINAL_BS_CR_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></td>
                 </tr>
             `;
 
@@ -1119,19 +1215,24 @@
             if (timeRemainingSeconds <= 0) window.disableAllInputs();
         };
         
-        const saveFSInput = (type, id, value) => {
-            state.fsInputs[type][id] = Number(value) || 0;
+        window.saveFSInput = (type, id, value) => {
+             // REVISION 1: Parse the string input (which may contain commas) to a number
+            state.fsInputs[type][id] = parseAmountInput(value);
         };
         
-        const renderFSInput = (type, id, value, placeholder="Amount", label="") => `
-            <div class="flex justify-between items-center text-sm ${label ? 'mb-1' : ''}">
-                ${label ? `<span class="text-gray-700">${label}</span>` : ''}
-                <div class="relative w-${label ? '1/3' : 'full'}">
-                    <input type="number" id="${id}" oninput="window.saveFSInput('${type}', '${id}', this.value)" class="fs-input" placeholder="${placeholder}" value="${state.fsInputs[type][id] || ''}">
-                    <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+        const renderFSInput = (type, id, value, placeholder="Amount", label="") => {
+            // REVISION 1: Render with type="text" and the formatted value, add onblur
+            const formattedValue = formatAmountForDisplay(value);
+            return `
+                <div class="flex justify-between items-center text-sm ${label ? 'mb-1' : ''}">
+                    ${label ? `<span class="text-gray-700">${label}</span>` : ''}
+                    <div class="relative w-${label ? '1/3' : 'full'}">
+                        <input type="text" id="${id}" oninput="window.saveFSInput('${type}', '${id}', this.value)" onblur="window.handleFormatInput(this)" class="fs-input" placeholder="${placeholder}" value="${formattedValue}">
+                        <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        };
 
         /** Task 2, Sub-Step 0: Income Statement (INCLUDING RUBRIC) */
         const renderIncomeStatement = () => {
@@ -1139,6 +1240,8 @@
             const revenue = worksheetData.IS_accounts.filter(acc => acc.type === 'revenue');
             const expenses = worksheetData.IS_accounts.filter(acc => acc.type === 'expense');
             const isNetIncome = worksheetData.netIncome > 0;
+            
+            // REVISION 1: Read raw number from state and pass to renderFSInput for formatting
 
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6">
@@ -1155,17 +1258,17 @@
                             ${revenue.map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
                             <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
                                 <label class="text-md text-green-700">TOTAL SERVICE REVENUE:</label>
-                                <div class="relative w-1/3"><input type="number" id="is_total_revenue" oninput="saveFSInput('is', 'is_total_revenue', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_revenue || ''}"><span id="is_total_revenue_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                ${renderFSInput('is', 'is_total_revenue', state.fsInputs.is.is_total_revenue)}
                             </div>
                             <h4 class="font-bold text-lg border-b pb-1 pt-4 text-red-700">Expenses</h4>
                             ${expenses.map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
                             <div class="flex justify-between items-center font-bold border-t border-dashed pt-1">
                                 <label class="text-md text-red-700">TOTAL EXPENSES:</label>
-                                <div class="relative w-1/3"><input type="number" id="is_total_expense" oninput="saveFSInput('is', 'is_total_expense', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_expense || ''}"><span id="is_total_expense_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                ${renderFSInput('is', 'is_total_expense', state.fsInputs.is.is_total_expense)}
                             </div>
                                <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
                                 <label class="text-xl text-indigo-800">${isNetIncome ? 'NET INCOME' : 'NET LOSS'}:</label>
-                                <div class="relative w-1/3"><input type="number" id="is_net_income" oninput="saveFSInput('is', 'is_net_income', this.value)" class="fs-input text-indigo-800" value="${state.fsInputs.is.is_net_income || ''}"><span id="is_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                ${renderFSInput('is', 'is_net_income', state.fsInputs.is.is_net_income, 'Net Income/Loss')}
                             </div>
                         </div>
                     </div>
@@ -1185,6 +1288,8 @@
             const worksheetData = calculateWorksheetAnswers();
             const isNetIncome = worksheetData.netIncome > 0;
 
+            // REVISION 1: Read raw number from state and pass to renderFSInput for formatting
+
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6">
                     <h3 class="text-2xl font-bold text-indigo-700">${getTask2SubTitle(1)}</h3>
@@ -1198,19 +1303,19 @@
                         <div class="space-y-3 mt-4">
                             <div class="flex justify-between items-center text-base font-medium border-b border-gray-300 pb-1">
                                 <label class="text-gray-700">${CAPITAL_ACCOUNT}, January 1, 2024</label>
-                                <div class="relative w-1/3"><input type="number" id="sce_starting_capital" oninput="saveFSInput('sce', 'sce_starting_capital', this.value)" class="fs-input font-bold" value="${state.fsInputs.sce.sce_starting_capital || ''}"><span id="sce_starting_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                ${renderFSInput('sce', 'sce_starting_capital', state.fsInputs.sce.sce_starting_capital, 'Amount')}
                             </div>
                             <div class="flex justify-between items-center text-sm ${isNetIncome ? 'text-green-600' : 'text-red-600'}">
                                 <label>${isNetIncome ? 'Add: Net Income' : 'Less: Net Loss'}</label>
-                                <div class="relative w-1/3"><input type="number" id="sce_net_income" oninput="saveFSInput('sce', 'sce_net_income', this.value)" class="fs-input" value="${state.fsInputs.sce.sce_net_income || ''}"><span id="sce_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                ${renderFSInput('sce', 'sce_net_income', state.fsInputs.sce.sce_net_income, 'Amount')}
                             </div>
                             <div class="flex justify-between items-center text-sm text-red-600">
                                 <label>Less: ${WITHDRAWALS_ACCOUNT}</label>
-                                <div class="relative w-1/3"><input type="number" id="sce_withdrawals" oninput="saveFSInput('sce', 'sce_withdrawals', this.value)" class="fs-input" value="${state.fsInputs.sce.sce_withdrawals || ''}"><span id="sce_withdrawals_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                ${renderFSInput('sce', 'sce_withdrawals', state.fsInputs.sce.sce_withdrawals, 'Amount')}
                             </div>
                             <div class="flex justify-between items-center font-extrabold border-t-2 border-indigo-500 pt-3 bg-indigo-50 p-2 rounded">
                                 <label class="text-xl text-indigo-800">${CAPITAL_ACCOUNT}, December 31, 2024</label>
-                                <div class="relative w-1/3"><input type="number" id="sce_ending_capital" oninput="saveFSInput('sce', 'sce_ending_capital', this.value)" class="fs-input text-indigo-800" value="${state.fsInputs.sce.sce_ending_capital || ''}"><span id="sce_ending_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                ${renderFSInput('sce', 'sce_ending_capital', state.fsInputs.sce.sce_ending_capital, 'Ending Capital')}
                             </div>
                         </div>
                     </div>
@@ -1229,6 +1334,8 @@
             const worksheetData = calculateWorksheetAnswers();
             const assets = worksheetData.Assets;
             const liabilities = worksheetData.Liabilities;
+
+            // REVISION 1: Read raw number from state and pass to renderFSInput for formatting
 
             document.getElementById('task-container').innerHTML = `
                 <div class="space-y-6">
@@ -1252,7 +1359,7 @@
                                 </div>
                                 <div class="flex justify-between items-center font-extrabold border-t-2 border-blue-500 pt-3 bg-blue-50 p-2 rounded">
                                     <label class="text-md text-blue-800">TOTAL ASSETS:</label>
-                                    <div class="relative w-3/5"><input type="number" id="bs_total_assets" oninput="saveFSInput('bs', 'bs_total_assets', this.value)" class="fs-input text-blue-800" value="${state.fsInputs.bs.bs_total_assets || ''}"><span id="bs_total_assets_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                    ${renderFSInput('bs', 'bs_total_assets', state.fsInputs.bs.bs_total_assets, 'Total Assets')}
                                 </div>
                             </div>
                             <div class="col-span-1 space-y-3">
@@ -1263,11 +1370,11 @@
                                 <h4 class="font-bold text-lg border-b pb-1 pt-4 text-purple-700">OWNER'S EQUITY</h4>
                                     <div class="flex justify-between items-center text-sm">
                                     <label class="text-gray-700">${CAPITAL_ACCOUNT}, Dec 31, 2024</label>
-                                    <div class="relative w-3/5"><input type="number" id="bs_ending_capital_bs" oninput="saveFSInput('bs', 'bs_ending_capital_bs', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_ending_capital_bs || ''}"><span id="bs_ending_capital_bs_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                    ${renderFSInput('bs', 'bs_ending_capital_bs', state.fsInputs.bs.bs_ending_capital_bs, 'Capital')}
                                 </div>
                                 <div class="flex justify-between items-center font-extrabold border-t-2 border-red-500 pt-3 bg-red-50 p-2 rounded">
                                     <label class="text-md text-red-800">TOTAL LIA. & EQUITY:</label>
-                                    <div class="relative w-3/5"><input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs', 'bs_total_liab_equity', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_liab_equity || ''}"><span id="bs_total_liab_equity_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div>
+                                    ${renderFSInput('bs', 'bs_total_liab_equity', state.fsInputs.bs.bs_total_liab_equity, 'Total L & E')}
                                 </div>
                             </div>
                         </div>
@@ -1346,6 +1453,7 @@
             if (!span) return;
             // Only render icons if explicitly asked (i.e., when a validation button is clicked)
             if (isCorrect !== null) {
+                // REVISION 3: Use visible text symbols that print well
                 span.innerHTML = isCorrect ? '<span class="text-green-600">✔</span>' : '<span class="text-red-600">❌</span>';
             } else {
                 span.innerHTML = '';
@@ -1367,6 +1475,7 @@
                 checks.forEach(([prefix, correctDR, correctCR]) => {
                     // Debit check
                     if (document.getElementById(baseId + prefix + '_DR') && !document.getElementById(baseId + prefix + '_DR').disabled) {
+                        // REVISION 1: Use parsed value from state, not raw input.
                         const isCorrect = Math.abs((state.worksheetInputs[baseId + prefix + '_DR'] || 0) - correctDR) < acceptableError;
                         if (doRenderIcons) renderValidation(baseId + prefix + '_DR', isCorrect);
                         if (isCorrect) correctCount++;
@@ -1374,6 +1483,7 @@
                     }
                     // Credit check
                     if (document.getElementById(baseId + prefix + '_CR') && !document.getElementById(baseId + prefix + '_CR').disabled) {
+                        // REVISION 1: Use parsed value from state, not raw input.
                         const isCorrect = Math.abs((state.worksheetInputs[baseId + prefix + '_CR'] || 0) - correctCR) < acceptableError;
                         if (doRenderIcons) renderValidation(baseId + prefix + '_CR', isCorrect);
                         if (isCorrect) correctCount++;
@@ -1404,6 +1514,7 @@
             
             checksList.forEach(([id, val]) => {
                 if (document.getElementById(id)) {
+                    // REVISION 1: Use parsed value from state, not raw input.
                     const isCorrect = Math.abs((state.worksheetInputs[id] || 0) - val) < acceptableError;
                     if (doRenderIcons) renderValidation(id, isCorrect);
                     if (isCorrect) correctCount++;
@@ -1423,6 +1534,7 @@
             data.IS_accounts.forEach(acc => {
                 const id = getAccountId(acc.name) + '_is_li';
                 const correctVal = acc.type === 'revenue' ? acc.ATB_CR : acc.ATB_DR;
+                // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.is[id] || 0) - correctVal) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
@@ -1430,6 +1542,7 @@
             });
             const checks = [['is_total_revenue', data.totalRevenue], ['is_total_expense', data.totalExpenses], ['is_net_income', Math.abs(data.netIncome)]];
             checks.forEach(([id, val]) => {
+                // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.is[id] || 0) - val) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
@@ -1445,6 +1558,7 @@
             let totalChecks = 0;
             const checks = [['sce_starting_capital', data.startingCapital], ['sce_net_income', Math.abs(data.netIncome)], ['sce_withdrawals', data.withdrawals], ['sce_ending_capital', data.endingCapital]];
             checks.forEach(([id, val]) => {
+                // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.sce[id] || 0) - val) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
@@ -1463,12 +1577,14 @@
                 const id = getAccountId(acc.name) + '_bs_li';
                 // Contra-asset uses CR balance, Liabilities use CR balance, other assets use DR balance.
                 const correctVal = (acc.type === 'contra-asset' || acc.type === 'liability') ? acc.ATB_CR : acc.ATB_DR; 
+                 // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.bs[id] || 0) - correctVal) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
                 totalChecks++;
             });
 
+            // REVISION 1: Use parsed value from state, not raw input.
             const endingCapitalCorrect = Math.abs((state.fsInputs.bs.bs_ending_capital_bs || 0) - data.endingCapital) < acceptableError;
             if (doRenderIcons) renderValidation('bs_ending_capital_bs', endingCapitalCorrect);
             if (endingCapitalCorrect) correctCount++;
@@ -1476,6 +1592,7 @@
 
             const checks = [['bs_total_assets', data.correctTotalAssetsNet], ['bs_total_liab_equity', data.correctTotalLiabilitiesAndEquityNet]];
             checks.forEach(([id, val]) => {
+                 // REVISION 1: Use parsed value from state, not raw input.
                 const isCorrect = Math.abs((state.fsInputs.bs[id] || 0) - val) < acceptableError;
                 if (doRenderIcons) renderValidation(id, isCorrect);
                 if (isCorrect) correctCount++;
@@ -1653,6 +1770,7 @@
             }
         };
         
+        // Expose handlers to the global scope
         window.saveWorksheetInput = saveWorksheetInput;
         window.saveFSInput = saveFSInput;
 
