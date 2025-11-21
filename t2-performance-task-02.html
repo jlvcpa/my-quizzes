@@ -242,7 +242,7 @@
                 Enter amounts with two decimal places but without commas. <br>
                 Round off centavos to the nearest peso. <br>
                 After validating each task or sub-step, proceed to the next. <br>
-                Version 2025.11.22 042219
+                Version 2025.11.22 043535
             </p>
         </footer>
 
@@ -384,7 +384,7 @@
                 window.disableAllInputs();
                 // Auto submit if time is up
                 if (state.currentStep === 1) { // Only auto submit if in the task phase
-                     window.finishAndPreview(true);
+                      window.finishAndPreview(true);
                 }
                 return;
             }
@@ -669,8 +669,10 @@
 
         // --- HTML Generators ---
         const renderRubricHTML = (taskNum) => {
-            let competency = taskNum === 1 ? "To create 10-column worksheet by accurately determining and applying necessary adjustments, then integrating these with unadjusted amounts to complete the worksheet with correct financial data.
-" : "                competency = "To prepare the income statement, statement of changes in equity, and balance sheet by accurately transferring the adjusted figures from the 10-column worksheet into the prescribed financial statement formats.";
+            let competency = taskNum === 1 
+                ? "To create 10-column worksheet by accurately determining and applying necessary adjustments, then integrating these with unadjusted amounts to complete the worksheet with correct financial data." 
+                : "To prepare the income statement, statement of changes in equity, and balance sheet by accurately transferring the adjusted figures from the 10-column worksheet into the prescribed financial statement formats.";
+            
             let scoreInfo = '';
             
             if (taskNum === 1 && state.task1Score) {
