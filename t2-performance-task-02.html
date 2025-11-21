@@ -38,7 +38,6 @@
             font-size: 0.85rem;
             background-color: #f0f9ff;
         }
-        /* Updated FS Input for Auto-Width in 3-column layout */
         .fs-input {
             border: 1px solid #9ca3af;
             background-color: #f9fafb;
@@ -46,8 +45,7 @@
             text-align: right;
             border-radius: 6px;
             font-weight: 500;
-            width: 100%; /* Auto width to fill container */
-            min-width: 60px; /* Prevent collapse */
+            width: 100%; /* changed to full width of container */
             font-size: 0.85rem;
         }
         .header-bg { background-color: #0f172a; color: white; }
@@ -65,7 +63,6 @@
 
         /* Print-specific styles */
         @media print {
-            @page { margin: 0.5cm; size: auto; } /* Minimal margins to fit content */
             .no-print { display: none !important; }
             
             .printable-area { 
@@ -76,7 +73,7 @@
                 border: none !important;
                 box-shadow: none !important;
             }
-            body { background-color: white; color: black; margin: 0; }
+            body { background-color: white; color: black; margin: 0; } /* Reduced margin for footer space */
             .header-bg, .footer-bg { background-color: #fff !important; color: #000 !important; }
             
             /* Inputs in print */
@@ -106,17 +103,15 @@
                 font-size: 7pt !important;
             }
             
-            /* Task 2 Horizontal Alignment Logic */
+            /* Force Horizontal Alignment for Task 2 Parts */
             .print-flex-row {
                 display: flex !important;
                 flex-direction: row !important;
                 justify-content: space-between !important;
-                align-items: flex-start !important;
                 gap: 10px !important;
             }
             .print-w-third {
                 width: 32% !important;
-                flex: 1 1 auto !important;
             }
 
             #student-print-info { display: block !important; border-bottom: 1px solid #000 !important; margin-bottom: 10px; }
@@ -131,12 +126,15 @@
                 left: 0;
                 width: 100%;
                 background: white;
-                padding-bottom: 5px;
+                padding: 5px 20px;
+                font-size: 10pt;
+                z-index: 9999;
             }
-            /* Hide standard footer */
-            #screen-footer { display: none !important; }
-            /* Ensure content doesn't overlap footer */
-            #task-container { margin-bottom: 80px; }
+            
+            /* Content padding to prevent overlap with footer */
+            #task-container {
+                padding-bottom: 100px;
+            }
         }
     </style>
 </head>
@@ -148,7 +146,7 @@
     </div>
 
     <!-- Main Application Container -->
-    <div id="app" class="max-w-7xl mx-auto printable-area bg-white shadow-xl rounded-xl p-6 md:p-10 border border-gray-200 relative">
+    <div id="app" class="max-w-7xl mx-auto printable-area bg-white shadow-xl rounded-xl p-6 md:p-10 border border-gray-200">
 
         <header id="main-header" class="text-center mb-8 pb-4 border-b-4 border-indigo-600 header-bg rounded-t-lg p-4">
             <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" onerror="this.style.display='none'"/>
@@ -164,7 +162,7 @@
         <!-- Student Info for Print -->
         <div id="student-print-info" class="hidden mb-4 text-xs p-2 rounded print:block print:w-full"></div>
 
-        <!-- Instructions Container -->
+        <!-- Instructions Container (Hidden by default, moved here for print) -->
         <div id="print-instructions" class="hidden mb-4 text-xs italic border p-2"></div>
 
         <!-- Dynamic Content Area -->
@@ -186,20 +184,18 @@
                 Enter amounts with two decimal places but without commas. <br>
                 Round off centavos to the nearest peso. <br>
                 After validating each task or sub-step, proceed to the next. <br>
-                Version 2025.11.21 172650
+                Version 2025.11.21 173540
             </p>
         </footer>
 
-        <!-- Print Specific Footer (Strictly Formatted) -->
-        <div id="print-footer" class="hidden print:block">
-            <div class="flex justify-between text-sm font-bold mb-1 px-1">
+        <!-- Print Specific Footer -->
+        <div id="print-footer" class="hidden">
+            <div class="flex justify-between font-bold mb-2 text-black">
                 <span class="text-left">FABM 1</span>
                 <span class="text-right">Page 1 of 1</span> 
             </div>
-            <div class="flex justify-center">
-                <div class="border border-black px-4 py-1 text-center text-xs font-bold">
-                    4Cs: Christ-centeredness, Competence, Character, Compassion
-                </div>
+            <div class="border border-black p-1 text-center text-xs text-black">
+                <p class="font-bold m-0">4Cs: Christ-centeredness, Competence, Character, Compassion</p>
             </div>
         </div>
     </div>
@@ -280,9 +276,13 @@
 
         // --- State ---
         let state = {
-            currentStep: 0, task2SubStep: 0, attendanceId: "", studentInfo: null,
+            currentStep: 0, 
+            // task2SubStep: 0, // Removed: now handled in one view
+            examSubStep: 0, // 0 = Task 1 (Worksheet), 1 = Task 2 (FS)
+            attendanceId: "", studentInfo: null,
             initialTB: [], adjustments: [], worksheetInputs: {}, fsInputs: { is: {}, sce: {}, bs: {} },
             validationAttempts: { 1: 0, 2: 0 }, generatedAnswers: null, task1Score: null, task2Score: null,
+            isTask1Locked: false, isTask2Locked: false
         };
 
         // --- Timer ---
@@ -352,12 +352,17 @@
         // --- Global Submission ---
         window.finishAndPreview = async (isAutoSubmit = false) => {
             if (!state.studentInfo) return;
-            const finalTask2Result = aggregateFinancialStatementScores();
-            state.task2Score = finalTask2Result.scoreData;
+            
+            // Ensure scores are captured if forced finish
+            if (!state.task2Score) {
+                const finalTask2Result = aggregateFinancialStatementScores();
+                state.task2Score = finalTask2Result.scoreData;
+            }
             if (!state.task1Score) {
                 const task1Result = validateWorksheet(false);
                 state.task1Score = task1Result.scoreData;
             }
+            
             renderMessageBox("Task complete. Saving results...", false);
             stopTimer();
             try {
@@ -368,11 +373,11 @@
                     task1Score: state.task1Score, task2Score: state.task2Score, timestamp: new Date().toISOString()
                 };
                 await saveExamResults(state.attendanceId, fullResultData);
-                state.currentStep = 3; 
-                renderStep(); // This will now trigger the full summary view
+                state.currentStep = 2; // Move to Summary/Print view
+                renderStep(); 
             } catch (e) {
                 renderMessageBox("Error saving results: " + e.message, true);
-                state.currentStep = 3; renderStep();
+                state.currentStep = 2; renderStep();
             }
         };
 
@@ -463,8 +468,7 @@
         };
         const formatPHP = (num) => (typeof num !== 'number' || isNaN(num) || num === 0) ? '' : (Math.round(num * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const getAccountId = (name) => name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        const getStepTitle = (step) => ["Student Login", "TASK 1: Worksheet", "Task 2: Financial Statements", "Task Complete!"][step] || "";
-        const getTask2SubTitle = (subStep) => ["Income Statement (IS)", "Statement of Changes in Equity (SCE)", "Balance Sheet (BS)"][subStep];
+        const getStepTitle = (step) => ["Student Login", "Accounting Tasks", "Task Complete!"][step] || "";
         const renderMessageBox = (message, isError = false) => {
             const box = document.getElementById('message-box');
             box.className = `text-lg font-medium min-h-8 ${isError ? 'text-red-600' : 'text-green-600'}`;
@@ -543,14 +547,22 @@
             };
         };
 
-        // --- HTML Generators (Separated for reuse in Final Print) ---
+        // --- HTML Generators ---
         const renderRubricHTML = (taskNum) => {
             let competency = taskNum === 1 ? "To create 10-column worksheet..." : "To create the income statement, SCE, and balance sheet...";
+            let scoreInfo = '';
+            
+            if (taskNum === 1 && state.task1Score) {
+                scoreInfo = `<div class="text-right font-bold text-sm mb-1">Correct: ${state.task1Score.score}/${state.task1Score.total} | Grade: <span class="text-lg border px-1">${state.task1Score.grade}</span></div>`;
+            } else if (taskNum === 2 && state.task2Score) {
+                scoreInfo = `<div class="text-right font-bold text-sm mb-1">Correct: ${state.task2Score.score}/${state.task2Score.total} | Grade: <span class="text-lg border px-1">${state.task2Score.grade}</span></div>`;
+            }
+
             return `
                 <div class="rubric-box bg-white p-4 rounded-lg border-2 border-indigo-300 shadow-md mb-6 print:border-black print:shadow-none">
-                    <div class="flex justify-between items-center border-b-2 border-indigo-600 mb-2 pb-1">
+                    <div class="flex justify-between items-end mb-2 border-b-2 pb-1">
                         <h4 class="font-extrabold text-indigo-700 text-lg print:text-black">TASK ${taskNum} RUBRIC</h4>
-                         <!-- Scores will be injected dynamically via JS in renderCompletion, or shown here if standalone -->
+                        ${scoreInfo}
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-xs border-collapse border border-gray-400">
@@ -564,6 +576,9 @@
         const renderWorksheetHTML = () => {
             const worksheetData = calculateWorksheetAnswers();
             let rowsHtml = '';
+            const disabledAttr = state.isTask1Locked ? 'disabled' : '';
+            const bgClass = state.isTask1Locked ? 'bg-gray-100 text-gray-600' : 'bg-f0f9ff';
+
             worksheetData.accounts.forEach((acc, i) => {
                 const baseId = `wks_${i}_`;
                 const isNewAccount = acc.TB_DR === 0 && acc.TB_CR === 0 && acc.name.indexOf('Capital') === -1;
@@ -571,72 +586,59 @@
                     <td class="p-2 border border-gray-300 text-left whitespace-nowrap ${isNewAccount ? 'font-semibold text-yellow-800' : ''}">${acc.name}</td>
                     <td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_DR)}</td><td class="p-2 border border-gray-300 text-right">${formatPHP(acc.TB_CR)}</td>
                     ${['ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'].map(f => 
-                        `<td class="p-0 border border-gray-300 relative"><input type="number" id="${baseId}${f}" oninput="window.saveWorksheetInput('${baseId}${f}', this.value)" class="table-input" value="${state.worksheetInputs[baseId + f] || ''}"><span id="${baseId}${f}_val" class="validation-icon"></span></td>`
+                        `<td class="p-0 border border-gray-300 relative"><input type="number" id="${baseId}${f}" oninput="window.saveWorksheetInput('${baseId}${f}', this.value)" class="table-input ${bgClass}" value="${state.worksheetInputs[baseId + f] || ''}" ${disabledAttr}><span id="${baseId}${f}_val" class="validation-icon"></span></td>`
                     ).join('')}</tr>`;
                 if (acc.name === 'Depreciation Expense') {
                      rowsHtml += `<tr class="font-bold bg-purple-100 text-purple-800 border-t-2 border-purple-500"><td class="p-2 border text-left">COLUMN TOTALS</td><td colspan="2"></td>
-                     ${['TB_DR','TB_CR','ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_SUBTOTAL_${f}" oninput="window.saveWorksheetInput('wks_SUBTOTAL_${f}', this.value)" class="table-input" value="${state.worksheetInputs['wks_SUBTOTAL_' + f] || ''}"><span id="wks_SUBTOTAL_${f}_val" class="validation-icon"></span></td>`).slice(2).join('')}</tr>`;
+                     ${['TB_DR','TB_CR','ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_SUBTOTAL_${f}" oninput="window.saveWorksheetInput('wks_SUBTOTAL_${f}', this.value)" class="table-input ${bgClass}" value="${state.worksheetInputs['wks_SUBTOTAL_' + f] || ''}" ${disabledAttr}><span id="wks_SUBTOTAL_${f}_val" class="validation-icon"></span></td>`).slice(2).join('')}</tr>`;
                 }
             });
-            rowsHtml += `<tr class="font-bold bg-green-50/50 text-green-700"><td class="p-2 border text-left">${worksheetData.netIncome > 0 ? 'Net Income' : 'Net Loss'}</td><td colspan="6"></td>${['IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_NI_${f}" oninput="window.saveWorksheetInput('wks_NI_${f}', this.value)" class="table-input" value="${state.worksheetInputs['wks_NI_' + f] || ''}"><span id="wks_NI_${f}_val" class="validation-icon"></span></td>`).join('')}</tr>`;
-            rowsHtml += `<tr class="font-bold bg-indigo-50/50 border-t-2 border-indigo-700"><td class="p-2 border text-center">FINAL TOTALS</td>${['TB_DR','TB_CR','ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_FINAL_${f}" oninput="window.saveWorksheetInput('wks_FINAL_${f}', this.value)" class="table-input" value="${state.worksheetInputs['wks_FINAL_' + f] || ''}"><span id="wks_FINAL_${f}_val" class="validation-icon"></span></td>`).join('')}</tr>`;
+            rowsHtml += `<tr class="font-bold bg-green-50/50 text-green-700"><td class="p-2 border text-left">${worksheetData.netIncome > 0 ? 'Net Income' : 'Net Loss'}</td><td colspan="6"></td>${['IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_NI_${f}" oninput="window.saveWorksheetInput('wks_NI_${f}', this.value)" class="table-input ${bgClass}" value="${state.worksheetInputs['wks_NI_' + f] || ''}" ${disabledAttr}><span id="wks_NI_${f}_val" class="validation-icon"></span></td>`).join('')}</tr>`;
+            rowsHtml += `<tr class="font-bold bg-indigo-50/50 border-t-2 border-indigo-700"><td class="p-2 border text-center">FINAL TOTALS</td>${['TB_DR','TB_CR','ADJ_DR','ADJ_CR','ATB_DR','ATB_CR','IS_DR','IS_CR','BS_DR','BS_CR'].map(f => `<td class="p-0 border relative"><input type="number" id="wks_FINAL_${f}" oninput="window.saveWorksheetInput('wks_FINAL_${f}', this.value)" class="table-input ${bgClass}" value="${state.worksheetInputs['wks_FINAL_' + f] || ''}" ${disabledAttr}><span id="wks_FINAL_${f}_val" class="validation-icon"></span></td>`).join('')}</tr>`;
 
             return `<div class="overflow-x-auto"><table class="min-w-full text-xs border-collapse border border-gray-400">
                 <thead><tr class="header-bg text-center"><th rowspan="2" class="p-2 border border-gray-300 w-[150px]">Account Titles</th><th colspan="2" class="p-2 border">Trial Balance</th><th colspan="2" class="p-2 border">Adjustments</th><th colspan="2" class="p-2 border">Adj. Trial Balance</th><th colspan="2" class="p-2 border">Income Statement</th><th colspan="2" class="p-2 border">Balance Sheet</th></tr><tr class="bg-indigo-100 text-indigo-900 text-center"><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th><th class="p-1 border">Debit</th><th class="p-1 border">Credit</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
         };
 
-        // Update renderFSInput to use flex grow for better responsiveness
-        const renderFSInput = (type, id, value, placeholder="Amount", label="") => `
-            <div class="flex justify-between items-center text-sm ${label ? 'mb-1' : ''}">
-                ${label ? `<span class="text-gray-700 mr-2">${label}</span>` : ''}
-                <div class="relative flex-1">
-                    <input type="number" id="${id}" oninput="window.saveFSInput('${type}', '${id}', this.value)" class="fs-input" placeholder="${placeholder}" value="${state.fsInputs[type][id] || ''}">
-                    <span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span>
-                </div>
-            </div>`;
+        const renderFSInput = (type, id, value, placeholder="Amount", label="") => {
+            const disabledAttr = state.isTask2Locked ? 'disabled' : '';
+            const bgClass = state.isTask2Locked ? 'bg-gray-100 text-gray-600' : 'bg-f9fafb';
+            return `<div class="flex justify-between items-center text-sm ${label ? 'mb-1' : ''}">${label ? `<span class="text-gray-700 w-1/3 pr-2">${label}</span>` : ''}<div class="relative w-${label ? '2/3' : 'full'}"><input type="number" id="${id}" oninput="window.saveFSInput('${type}', '${id}', this.value)" class="fs-input ${bgClass}" placeholder="${placeholder}" value="${state.fsInputs[type][id] || ''}" ${disabledAttr}><span id="${id}_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>`;
+        };
 
         const getISHTML = () => {
             const data = calculateWorksheetAnswers();
-            return `<div class="p-4 bg-white rounded shadow border border-green-200 print:border print:shadow-none h-full flex flex-col">
+            return `<div class="p-4 bg-white rounded shadow border border-green-200 print:border print:shadow-none h-full">
                 <h4 class="font-bold text-center mb-2">Income Statement</h4>
-                <div class="flex-grow">
-                    ${data.IS_accounts.filter(acc => acc.type === 'revenue').map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
-                    <div class="flex justify-between font-bold border-t pt-1"><label class="text-green-700 mr-2">TOTAL REV:</label><div class="relative flex-1"><input type="number" id="is_total_revenue" oninput="saveFSInput('is', 'is_total_revenue', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_revenue || ''}"><span id="is_total_revenue_val" class="validation-icon absolute right-1"></span></div></div>
-                    <h5 class="font-bold text-red-700 mt-2">Expenses</h5>
-                    ${data.IS_accounts.filter(acc => acc.type === 'expense').map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
-                    <div class="flex justify-between font-bold border-t pt-1"><label class="text-red-700 mr-2">TOTAL EXP:</label><div class="relative flex-1"><input type="number" id="is_total_expense" oninput="saveFSInput('is', 'is_total_expense', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_expense || ''}"><span id="is_total_expense_val" class="validation-icon absolute right-1"></span></div></div>
-                </div>
-                <div class="flex justify-between font-extrabold border-t-2 border-indigo-500 pt-2 mt-2"><label class="text-indigo-800 mr-2">${data.netIncome > 0 ? 'NET INCOME' : 'NET LOSS'}:</label><div class="relative flex-1"><input type="number" id="is_net_income" oninput="saveFSInput('is', 'is_net_income', this.value)" class="fs-input" value="${state.fsInputs.is.is_net_income || ''}"><span id="is_net_income_val" class="validation-icon absolute right-1"></span></div></div>
-            </div>`;
+                ${data.IS_accounts.filter(acc => acc.type === 'revenue').map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
+                <div class="flex justify-between font-bold border-t pt-1"><label class="text-green-700 w-1/3">TOTAL REV:</label><div class="relative w-2/3"><input type="number" id="is_total_revenue" oninput="saveFSInput('is', 'is_total_revenue', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_revenue || ''}"><span id="is_total_revenue_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                <h5 class="font-bold text-red-700 mt-2">Expenses</h5>
+                ${data.IS_accounts.filter(acc => acc.type === 'expense').map(acc => renderFSInput('is', getAccountId(acc.name) + '_is_li', state.fsInputs.is[getAccountId(acc.name) + '_is_li'], 'Amount', acc.name)).join('')}
+                <div class="flex justify-between font-bold border-t pt-1"><label class="text-red-700 w-1/3">TOTAL EXP:</label><div class="relative w-2/3"><input type="number" id="is_total_expense" oninput="saveFSInput('is', 'is_total_expense', this.value)" class="fs-input" value="${state.fsInputs.is.is_total_expense || ''}"><span id="is_total_expense_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                <div class="flex justify-between font-extrabold border-t-2 border-indigo-500 pt-2 mt-2"><label class="text-indigo-800 w-1/3">${data.netIncome > 0 ? 'NET INCOME' : 'NET LOSS'}:</label><div class="relative w-2/3"><input type="number" id="is_net_income" oninput="saveFSInput('is', 'is_net_income', this.value)" class="fs-input" value="${state.fsInputs.is.is_net_income || ''}"><span id="is_net_income_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div></div>`;
         };
 
         const getSCEHTML = () => {
              const familyName = getFamilyName();
-             return `<div class="p-4 bg-white rounded shadow border border-purple-200 print:border print:shadow-none h-full flex flex-col">
+             return `<div class="p-4 bg-white rounded shadow border border-purple-200 print:border print:shadow-none h-full">
                 <h4 class="font-bold text-center mb-2">Changes in Equity</h4>
-                <div class="flex-grow">
-                    ${renderFSInput('sce', 'sce_starting_capital', state.fsInputs.sce.sce_starting_capital, '', `${familyName}, Capital, Jan 1`)}
-                    ${renderFSInput('sce', 'sce_net_income', state.fsInputs.sce.sce_net_income, '', 'Add/Less: Net Income/Loss')}
-                    ${renderFSInput('sce', 'sce_withdrawals', state.fsInputs.sce.sce_withdrawals, '', `Less: Withdrawals`)}
-                </div>
-                <div class="flex justify-between font-extrabold border-t-2 border-indigo-500 pt-2 mt-2"><label class="text-indigo-800 mr-2">Capital, Dec 31:</label><div class="relative flex-1"><input type="number" id="sce_ending_capital" oninput="saveFSInput('sce', 'sce_ending_capital', this.value)" class="fs-input" value="${state.fsInputs.sce.sce_ending_capital || ''}"><span id="sce_ending_capital_val" class="validation-icon absolute right-1"></span></div></div>
-            </div>`;
+                ${renderFSInput('sce', 'sce_starting_capital', state.fsInputs.sce.sce_starting_capital, '', `${familyName}, Capital, Jan 1`)}
+                ${renderFSInput('sce', 'sce_net_income', state.fsInputs.sce.sce_net_income, '', 'Add/Less: Net Income/Loss')}
+                ${renderFSInput('sce', 'sce_withdrawals', state.fsInputs.sce.sce_withdrawals, '', `Less: Withdrawals`)}
+                <div class="flex justify-between font-extrabold border-t-2 border-indigo-500 pt-2 mt-2"><label class="text-indigo-800 w-1/3">Capital, Dec 31:</label><div class="relative w-2/3"><input type="number" id="sce_ending_capital" oninput="saveFSInput('sce', 'sce_ending_capital', this.value)" class="fs-input" value="${state.fsInputs.sce.sce_ending_capital || ''}"><span id="sce_ending_capital_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div></div>`;
         };
 
         const getBSHTML = () => {
              const data = calculateWorksheetAnswers();
-             return `<div class="p-4 bg-white rounded shadow border border-red-200 print:border print:shadow-none h-full flex flex-col">
+             return `<div class="p-4 bg-white rounded shadow border border-red-200 print:border print:shadow-none h-full">
                 <h4 class="font-bold text-center mb-2">Balance Sheet</h4>
-                <div class="flex-grow">
-                    <h5 class="font-bold text-blue-700">ASSETS</h5>
-                    ${data.Assets.map(acc => renderFSInput('bs', getAccountId(acc.name)+'_bs_li', state.fsInputs.bs[getAccountId(acc.name)+'_bs_li'], '', acc.name)).join('')}
-                    <div class="flex justify-between font-bold border-t pt-1 mb-2"><label class="text-blue-800 mr-2">TOTAL ASSETS:</label><div class="relative flex-1"><input type="number" id="bs_total_assets" oninput="saveFSInput('bs', 'bs_total_assets', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_assets || ''}"><span id="bs_total_assets_val" class="validation-icon absolute right-1"></span></div></div>
-                    <h5 class="font-bold text-red-700">LIABILITIES & EQUITY</h5>
-                    ${data.Liabilities.map(acc => renderFSInput('bs', getAccountId(acc.name)+'_bs_li', state.fsInputs.bs[getAccountId(acc.name)+'_bs_li'], '', acc.name)).join('')}
-                    ${renderFSInput('bs', 'bs_ending_capital_bs', state.fsInputs.bs.bs_ending_capital_bs, '', `Capital, Dec 31`)}
-                </div>
-                <div class="flex justify-between font-bold border-t pt-1"><label class="text-red-800 mr-2">TOTAL L&E:</label><div class="relative flex-1"><input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs', 'bs_total_liab_equity', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_liab_equity || ''}"><span id="bs_total_liab_equity_val" class="validation-icon absolute right-1"></span></div></div>
-            </div>`;
+                <h5 class="font-bold text-blue-700">ASSETS</h5>
+                ${data.Assets.map(acc => renderFSInput('bs', getAccountId(acc.name)+'_bs_li', state.fsInputs.bs[getAccountId(acc.name)+'_bs_li'], '', acc.name)).join('')}
+                <div class="flex justify-between font-bold border-t pt-1 mb-2"><label class="text-blue-800 w-1/3">TOTAL ASSETS:</label><div class="relative w-2/3"><input type="number" id="bs_total_assets" oninput="saveFSInput('bs', 'bs_total_assets', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_assets || ''}"><span id="bs_total_assets_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div>
+                <h5 class="font-bold text-red-700">LIABILITIES & EQUITY</h5>
+                ${data.Liabilities.map(acc => renderFSInput('bs', getAccountId(acc.name)+'_bs_li', state.fsInputs.bs[getAccountId(acc.name)+'_bs_li'], '', acc.name)).join('')}
+                ${renderFSInput('bs', 'bs_ending_capital_bs', state.fsInputs.bs.bs_ending_capital_bs, '', `Capital, Dec 31`)}
+                <div class="flex justify-between font-bold border-t pt-1"><label class="text-red-800 w-1/3">TOTAL L&E:</label><div class="relative w-2/3"><input type="number" id="bs_total_liab_equity" oninput="saveFSInput('bs', 'bs_total_liab_equity', this.value)" class="fs-input" value="${state.fsInputs.bs.bs_total_liab_equity || ''}"><span id="bs_total_liab_equity_val" class="validation-icon absolute right-1 top-1/2 -translate-y-1/2"></span></div></div></div>`;
         };
 
         const renderStudentInfo = () => {
@@ -650,7 +652,7 @@
                         <div class="border-t pt-4"><p class="text-xs uppercase font-bold">Student Details</p><div class="grid grid-cols-2 gap-4 opacity-75"><div class="col-span-2"><input type="text" id="fullName" class="text-input bg-gray-200" disabled value="${state.studentInfo?.fullName || ''}"></div><div><input type="text" id="classNumber" class="text-input bg-gray-200" disabled value="${state.studentInfo?.classNumber || ''}"></div><div><input type="text" id="gradeSection" class="text-input bg-gray-200" disabled value="${state.studentInfo?.gradeSection || ''}"></div></div></div>
                     </div>
                 </div>`;
-            document.getElementById('next-step-btn').innerText = "Submit Info & Proceed to Task 1";
+            document.getElementById('next-step-btn').innerText = "Submit Info & Start Exam";
             document.getElementById('next-step-btn').disabled = true; 
         };
 
@@ -658,35 +660,54 @@
         window.saveWorksheetInput = (id, value) => { state.worksheetInputs[id] = Number(value) || 0; };
         window.saveFSInput = (type, id, value) => { state.fsInputs[type][id] = Number(value) || 0; };
 
-        const renderWorksheet = () => {
-            document.getElementById('task-container').innerHTML = `
-                <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-indigo-700">TASK 1: Create the 10-Column Worksheet</h3>
-                    ${renderRubricHTML(1)}
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200"><h4 class="font-bold text-blue-700">Adjustments:</h4><ul class="list-disc list-inside text-sm">${state.adjustments.map(adj => `<li>${adj.desc}</li>`).join('')}</ul></div>
-                    ${renderWorksheetHTML()}
-                </div>`;
-            document.getElementById('next-step-btn').innerText = "Validate Worksheet & Proceed to Task 2";
-        };
+        // Render Unified Exam Page (Task 1 and Task 2)
+        const renderMainTaskPage = () => {
+            // Render Task 1
+            let content = `
+                <div class="space-y-8">
+                    <!-- TASK 1 SECTION -->
+                    <div>
+                        <div class="flex justify-between items-end mb-2 border-b-2 border-indigo-600 pb-1">
+                            <h3 class="text-xl font-bold text-indigo-800">TASK 1: 10-Column Worksheet</h3>
+                        </div>
+                        ${renderRubricHTML(1)}
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4"><h4 class="font-bold text-blue-700">Adjustments:</h4><ul class="list-disc list-inside text-sm">${state.adjustments.map(adj => `<li>${adj.desc}</li>`).join('')}</ul></div>
+                        ${renderWorksheetHTML()}
+                    </div>
 
-        const renderIncomeStatement = () => {
-            document.getElementById('task-container').innerHTML = `<div class="space-y-6"><h3 class="text-2xl font-bold text-indigo-700">Task 2: Financial Statements</h3>${renderRubricHTML(2)}<div class="max-w-lg mx-auto">${getISHTML()}</div></div>`;
-            document.getElementById('next-step-btn').innerText = "Validate IS & Proceed to SCE";
-        };
-        const renderStatementOfChangesInEquity = () => {
-            document.getElementById('task-container').innerHTML = `<div class="space-y-6"><h3 class="text-2xl font-bold text-indigo-700">Task 2: Financial Statements</h3>${renderRubricHTML(2)}<div class="max-w-md mx-auto">${getSCEHTML()}</div></div>`;
-            document.getElementById('next-step-btn').innerText = "Validate SCE & Proceed to BS";
-        };
-        const renderBalanceSheet = () => {
-            document.getElementById('task-container').innerHTML = `<div class="space-y-6"><h3 class="text-2xl font-bold text-indigo-700">Task 2: Financial Statements</h3>${renderRubricHTML(2)}<div class="max-w-lg mx-auto">${getBSHTML()}</div></div>`;
-            document.getElementById('next-step-btn').innerText = "Validate BS & Submit Task";
+                    <!-- TASK 2 SECTION -->
+                    <div>
+                        <div class="flex justify-between items-end mb-2 border-b-2 border-indigo-600 pb-1">
+                            <h3 class="text-xl font-bold text-indigo-800">TASK 2: Financial Statements</h3>
+                        </div>
+                        ${renderRubricHTML(2)}
+                        
+                        <!-- Flex Container for Task 2 Parts: Stack on Mobile, Row on Desktop -->
+                        <div class="flex flex-col md:flex-row gap-4 w-full print-flex-row">
+                            <div class="w-full md:w-1/3 print-w-third">${getISHTML()}</div>
+                            <div class="w-full md:w-1/3 print-w-third">${getSCEHTML()}</div>
+                            <div class="w-full md:w-1/3 print-w-third">${getBSHTML()}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('task-container').innerHTML = content;
+            
+            // Update button logic based on sub-step
+            if (state.examSubStep === 0) {
+                document.getElementById('next-step-btn').innerText = "Validate Task 1 (Worksheet)";
+            } else {
+                document.getElementById('next-step-btn').innerText = "Validate Task 2 (Financial Statements)";
+            }
         };
 
         // --- FINAL COMPLETION VIEW (All Steps for Print) ---
         const renderCompletion = () => {
             const info = state.studentInfo || {};
-            const score1 = state.task1Score || { percentage: 0, grade: 'N/A', score: 0, total: 0 };
-            const score2 = state.task2Score || { percentage: 0, grade: 'N/A', score: 0, total: 0 };
+            
+            // Force re-render with locked inputs and icons
+            state.isTask1Locked = true;
+            state.isTask2Locked = true;
 
             // Set Print Info
             const infoHTML = `<div class="flex justify-between items-center font-bold border-b-2 border-black pb-1 mb-2">
@@ -696,52 +717,18 @@
             document.getElementById('print-instructions').innerHTML = document.getElementById('footer-instructions-text').innerHTML;
             document.getElementById('print-instructions').classList.remove('hidden');
 
-            // Build Main Content
-            let content = `
-                <div class="space-y-8">
-                    <!-- Task 1 Section -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2 border-b-2 border-indigo-600 pb-1">
-                            <h3 class="text-xl font-bold text-indigo-800">TASK 1: 10-Column Worksheet</h3>
-                            <div class="text-right font-bold text-sm">
-                                Correct: ${score1.score}/${score1.total} | Grade: <span class="text-lg border px-1">${score1.grade}</span>
-                            </div>
-                        </div>
-                        ${renderRubricHTML(1)}
-                         <div class="bg-gray-50 p-2 mb-2 text-xs italic border border-gray-300">Adjustments: ${state.adjustments.map(a => a.desc).join(' | ')}</div>
-                        ${renderWorksheetHTML()}
-                    </div>
-
-                    <!-- Task 2 Section -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2 border-b-2 border-indigo-600 pb-1">
-                            <h3 class="text-xl font-bold text-indigo-800">TASK 2: Financial Statements</h3>
-                            <div class="text-right font-bold text-sm">
-                                Correct: ${score2.score}/${score2.total} | Grade: <span class="text-lg border px-1">${score2.grade}</span>
-                            </div>
-                        </div>
-                         ${renderRubricHTML(2)}
-                        
-                        <!-- Responsive Grid: Vert on Mobile, Horiz on Desktop/Print -->
-                        <!-- Removed "3 parts label" by just rendering the components directly in the grid -->
-                        <div class="flex flex-col md:flex-row print-flex-row gap-4 w-full">
-                            <div class="w-full md:w-1/3 print-w-third">${getISHTML()}</div>
-                            <div class="w-full md:w-1/3 print-w-third">${getSCEHTML()}</div>
-                            <div class="w-full md:w-1/3 print-w-third">${getBSHTML()}</div>
-                        </div>
-                    </div>
-
-                    <div class="text-center font-bold text-xl py-6 border-t-2 border-dashed border-gray-400 mt-8">*** END OF TASK ***</div>
-                </div>
-            `;
-
-            document.getElementById('task-container').innerHTML = content;
+            // Render the Unified layout but unlocked/static
+            renderMainTaskPage();
             
+            // Append End Marker
+            document.getElementById('task-container').insertAdjacentHTML('beforeend', `<div class="text-center font-bold text-xl py-6 border-t-2 border-dashed border-gray-400 mt-8">*** END OF TASK ***</div>`);
+
             // Hide standard UI elements
-            document.getElementById('main-header').querySelector('h1').innerText = "Performance Task Results"; // Simplify header
-            document.getElementById('action-area').classList.add('no-print'); // Hide login button area in print
+            document.getElementById('main-header').querySelector('h1').innerText = "Performance Task Results"; 
+            document.getElementById('action-area').classList.add('no-print'); 
             document.getElementById('next-step-btn').innerText = "Print Final Report to PDF";
             document.getElementById('next-step-btn').onclick = () => { window.print(); };
+            document.getElementById('timer-box').style.display = 'none';
 
             // Inject Validation Icons by running logic again
             validateWorksheet(true);
@@ -752,8 +739,8 @@
             renderMessageBox("Task completed! Scroll down to review and click 'Print to PDF'.");
         };
 
-        // --- Validation Logic Wrappers (Same Logic, just separate) ---
-        const validateWorksheet = (doRenderIcons) => { /* Exact same logic as provided code */ 
+        // --- Validation Logic Wrappers ---
+        const validateWorksheet = (doRenderIcons) => { 
             const worksheetData = calculateWorksheetAnswers();
             const accounts = worksheetData.accounts;
             const acceptableError = 0.01; let correctCount = 0; let totalChecks = 0;
@@ -848,48 +835,65 @@
         window.handleNextStep = async () => {
             let isValid = false; let override = false; let message = "";
             const maxAttempts = 3;
-            if (state.currentStep === 0) { state.currentStep++; renderStep(); return; }
             
-            if (state.currentStep === 1) { // Task 1
-                const res = validateWorksheet(true);
-                isValid = res.isPerfect;
-                state.task1Score = res.scoreData;
-                if (!isValid) {
-                    state.validationAttempts[1]++;
-                    if (state.validationAttempts[1] >= maxAttempts) { isValid = true; override = true; message = "Max attempts reached. Moving to Task 2."; }
-                    else message = `Validation failed (${state.validationAttempts[1]}/${maxAttempts}).`;
-                } else message = "Task 1 Validated!";
-                
-                if (isValid) { renderMessageBox(message, override); state.currentStep++; state.validationAttempts[1] = 0; renderStep(); }
-                else renderMessageBox(message, true);
+            if (state.currentStep === 0) { 
+                state.currentStep = 1; 
+                renderStep(); 
+                return; 
             }
-            else if (state.currentStep === 2) { // Task 2 Parts
-                let subStepValidator = [validateIncomeStatement, validateStatementOfChangesInEquity, validateBalanceSheet][state.task2SubStep];
-                let subName = ["IS", "SCE", "BS"][state.task2SubStep];
-                const res = subStepValidator(true);
-                let subValid = res.isPerfect;
-                if (!subValid) {
-                    state.validationAttempts[2]++;
-                    if (state.validationAttempts[2] >= maxAttempts) { subValid = true; override = true; message = `Max attempts for ${subName}. Next part...`; }
-                    else message = `Validation failed (${state.validationAttempts[2]}/${maxAttempts}).`;
-                } else { message = `${subName} Validated!`; state.validationAttempts[2] = 0; } 
+            
+            if (state.currentStep === 1) {
+                // WE ARE ON THE UNIFIED PAGE
                 
-                renderMessageBox(message, override || !subValid);
-                if (subValid) {
-                    state.validationAttempts[2] = 0; // Reset for next sub-part
-                    if (state.task2SubStep < 2) { state.task2SubStep++; renderStep(); }
-                    else { await window.finishAndPreview(false); } // All Done
+                if (state.examSubStep === 0) { 
+                    // Validating Task 1 (Worksheet)
+                    const res = validateWorksheet(true);
+                    isValid = res.isPerfect;
+                    state.task1Score = res.scoreData;
+                    
+                    if (!isValid) {
+                        state.validationAttempts[1]++;
+                        if (state.validationAttempts[1] >= maxAttempts) { isValid = true; override = true; message = "Max attempts reached. Proceeding to Task 2."; }
+                        else message = `Task 1 Validation failed (${state.validationAttempts[1]}/${maxAttempts}).`;
+                    } else message = "Task 1 Validated!";
+                    
+                    renderMessageBox(message, !isValid && !override);
+                    
+                    if (isValid) {
+                        state.isTask1Locked = true; // Lock Task 1 inputs
+                        state.examSubStep = 1; // Move logic to Task 2
+                        state.validationAttempts[1] = 0; // Reset counter for internal logic (not saved attempt count)
+                        renderStep(); // Re-render to update button text and lock inputs
+                    }
+                } 
+                else if (state.examSubStep === 1) {
+                    // Validating Task 2 (All Financial Statements)
+                    const s1 = validateIncomeStatement(true);
+                    const s2 = validateStatementOfChangesInEquity(true);
+                    const s3 = validateBalanceSheet(true);
+                    
+                    isValid = s1.isPerfect && s2.isPerfect && s3.isPerfect;
+                    
+                    if (!isValid) {
+                        state.validationAttempts[2]++;
+                        if (state.validationAttempts[2] >= maxAttempts) { isValid = true; override = true; message = "Max attempts reached for Task 2."; }
+                        else message = `Task 2 Validation failed (${state.validationAttempts[2]}/${maxAttempts}). Check all statements.`;
+                    } else message = "Task 2 Validated!";
+                    
+                    renderMessageBox(message, !isValid && !override);
+                    
+                    if (isValid) {
+                        state.isTask2Locked = true;
+                        await window.finishAndPreview(false);
+                    }
                 }
             }
         };
 
         const renderStep = () => {
-            const renderers = [renderStudentInfo, renderWorksheet, renderIncomeStatement, renderStatementOfChangesInEquity, renderBalanceSheet, renderCompletion];
-            let idx = state.currentStep;
-            if (state.currentStep === 2) idx = 2 + state.task2SubStep;
-            else if (state.currentStep === 3) idx = 5;
-            if (renderers[idx]) renderers[idx]();
-            document.getElementById('page-title').innerText = `Accounting Task - Step ${idx}`;
+            const renderers = [renderStudentInfo, renderMainTaskPage, renderCompletion];
+            if (renderers[state.currentStep]) renderers[state.currentStep]();
+            document.getElementById('page-title').innerText = `Accounting Task - Step ${state.currentStep}`;
         };
 
         window.onload = () => {
