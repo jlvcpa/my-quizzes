@@ -229,7 +229,7 @@
                 Enter amounts with two decimal places but without commas. <br>
                 Round off centavos to the nearest peso. <br>
                 After validating each task or sub-step, proceed to the next. <br>
-                Version 2025.11.21 195553
+                Version 2025.11.21 200621
             </p>
         </footer>
 
@@ -297,14 +297,12 @@
             const info = resultData.studentInfo;
             const docName = `students.${info.classNumber}-students.${info.idNumber}-${info.fullName}`;
             try {
-                // Clean undefined values
                 const cleanData = JSON.parse(JSON.stringify(resultData, (k, v) => v === undefined ? null : v));
-                
-                // Saving to user document
                 await setDoc(doc(db, collectionName, docName), cleanData);
-                
-                // Maintain list of collections for dashboard indexing
                 await setDoc(doc(db, "results_list", collectionName), { created: new Date().toISOString() });
+                
+                // Clear local storage on successful save to prevent re-entry if refreshed after submit
+                localStorage.removeItem(`exam_end_time_${attendanceId}`);
                 return true;
             } catch (error) {
                 console.error("Save Error:", error);
@@ -329,16 +327,15 @@
             currentStep: 0, 
             examSubStep: 0, // 0 = Task 1 (Worksheet), 1 = Task 2 (FS)
             attendanceId: "", studentInfo: null,
-            initialTB: [], adjustments: [], newAccounts: [], worksheetInputs: {}, fsInputs: { is: {}, sce: {}, bs: {} },
+            initialTB: [], adjustments: [], newAccounts: [], // Added newAccounts to state
+            worksheetInputs: {}, fsInputs: { is: {}, sce: {}, bs: {} },
             validationAttempts: { 1: 0, 2: 0 }, generatedAnswers: null, task1Score: null, task2Score: null,
             isTask1Locked: false, isTask2Locked: false
         };
 
-        // --- Robust Timer ---
+        // --- Robust Timer Logic ---
         window.examDurationMins = 0;
         let timerInterval = null;
-        
-        const STORAGE_PREFIX = "jlvcpa_t2_timer_";
 
         window.disableAllInputs = () => {
             document.querySelectorAll('input, button').forEach(el => {
@@ -356,77 +353,61 @@
             });
         };
 
-        function updateTimerDisplay(remainingSeconds) {
+        function updateTimerDisplay() {
             const displayElement = document.getElementById('countdown');
             const boxElement = document.getElementById('timer-box');
-            if (!displayElement) return;
+            
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            const endTime = localStorage.getItem(storageKey);
+            
+            if (!endTime || !displayElement) return;
 
-            // Prevent negative display
-            const displaySeconds = remainingSeconds < 0 ? 0 : remainingSeconds;
+            const now = Date.now();
+            const distance = parseInt(endTime) - now;
+            
+            if (distance < 0) {
+                displayElement.textContent = "00:00:00";
+                stopTimer();
+                window.disableAllInputs();
+                // Auto submit if time is up
+                if (state.currentStep === 1) { // Only auto submit if in the task phase
+                     window.finishAndPreview(true);
+                }
+                return;
+            }
 
-            const h = Math.floor(displaySeconds / 3600);
-            const m = Math.floor((displaySeconds % 3600) / 60);
-            const s = displaySeconds % 60;
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
             displayElement.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
             
-            if (displaySeconds < 300) {
+            if (distance < 300000) { // Less than 5 mins
                 boxElement?.classList.remove('bg-red-800'); boxElement?.classList.add('animate-pulse', 'bg-red-600');
             } else {
                 boxElement?.classList.remove('animate-pulse', 'bg-red-600'); boxElement?.classList.add('bg-red-800');
             }
         }
         
-        function stopTimer() { 
-            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } 
-            // Optional: Clear storage on finish if desired, but keeping it prevents re-login abuse
-        }
-
+        function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+        
         function startTimer() {
             if (timerInterval) stopTimer();
             
-            if (!state.attendanceId || !state.studentInfo) return;
-
-            const storageKey = `${STORAGE_PREFIX}${state.attendanceId}_${state.studentInfo.idNumber}`;
+            // Robust Timer: Store target End Time in LocalStorage
+            const storageKey = `exam_end_time_${state.attendanceId}`;
             let endTime = localStorage.getItem(storageKey);
-
+            
             if (!endTime) {
-                // First time starting for this user/attendance combo
+                // If no end time exists, calculate it: Current Time + Duration
+                const now = Date.now();
                 const durationMs = window.examDurationMins * 60 * 1000;
-                endTime = Date.now() + durationMs;
+                endTime = now + durationMs;
                 localStorage.setItem(storageKey, endTime);
-            } else {
-                endTime = parseInt(endTime);
             }
-
-            // Immediate check
-            const now = Date.now();
-            let diff = Math.floor((endTime - now) / 1000);
-            updateTimerDisplay(diff);
-
-            if (diff <= 0) {
-                handleTimeExpired();
-                return;
-            }
-
-            timerInterval = setInterval(() => {
-                const currentNow = Date.now();
-                const remaining = Math.floor((endTime - currentNow) / 1000);
-                
-                updateTimerDisplay(remaining);
-
-                if (remaining <= 0) {
-                    handleTimeExpired();
-                }
-            }, 1000);
-        }
-
-        function handleTimeExpired() {
-            stopTimer();
-            window.disableAllInputs();
-            renderMessageBox("TIME IS UP! Submitting results...", true);
-            if (typeof window.finishAndPreview === 'function') {
-                window.finishAndPreview(true); // Force auto-submit
-            }
+            
+            updateTimerDisplay(); // Initial call
+            timerInterval = setInterval(updateTimerDisplay, 1000);
         }
 
         const checkUrlParametersAndInit = () => {
@@ -436,13 +417,22 @@
             const isValidDuration = duration && !isNaN(parseInt(duration)) && parseInt(duration) > 0;
 
             if (!attId || !isValidDuration) {
-                document.getElementById('task-container').innerHTML = `<div class="text-center py-16 bg-red-100 border border-red-400 rounded-xl"><h3 class="text-2xl font-bold text-red-700 mb-4">ACCESS DENIED</h3><p>Missing parameters (Attendance ID or Duration).</p></div>`;
+                document.getElementById('task-container').innerHTML = `<div class="text-center py-16 bg-red-100 border border-red-400 rounded-xl"><h3 class="text-2xl font-bold text-red-700 mb-4">ACCESS DENIED</h3><p>Missing parameters.</p></div>`;
                 const btn = document.getElementById('login-step-btn');
                 if(btn) btn.disabled = true;
                 return;
             }
             state.attendanceId = attId;
             window.examDurationMins = parseInt(duration);
+            
+            // Check if timer is already running (reloaded page)
+            const storageKey = `exam_end_time_${attId}`;
+            if(localStorage.getItem(storageKey)) {
+                 // Ideally we would also save/load state.initialTB here to allow full reload support.
+                 // For now, we stick to the prompt: timer logic. 
+                 startTimer(); 
+            }
+            
             renderStep();
         };
 
@@ -450,7 +440,7 @@
         window.finishAndPreview = async (isAutoSubmit = false) => {
             if (!state.studentInfo) return;
             
-            // Ensure scores are captured if forced finish (timeout)
+            // Ensure scores are captured if forced finish
             if (!state.task2Score) {
                 const finalTask2Result = aggregateFinancialStatementScores();
                 state.task2Score = finalTask2Result.scoreData;
@@ -464,16 +454,15 @@
             stopTimer();
             try {
                 const fullResultData = {
-                    studentInfo: state.studentInfo,
-                    // SAVING ALL DATA NEEDED FOR RECREATION OF PRINT PREVIEW
-                    initialTB: state.initialTB,
+                    studentInfo: state.studentInfo, 
+                    initialTB: state.initialTB, 
                     adjustments: state.adjustments,
-                    newAccounts: state.newAccounts,
-                    worksheetInputs: state.worksheetInputs,
+                    newAccounts: state.newAccounts, // Added newAccounts to saved data for print reconstruction
+                    worksheetInputs: state.worksheetInputs, 
                     fsInputs: state.fsInputs,
                     validationAttempts: { task1: state.validationAttempts[1] || 0, task2: state.validationAttempts[2] || 0 },
-                    task1Score: state.task1Score,
-                    task2Score: state.task2Score,
+                    task1Score: state.task1Score, 
+                    task2Score: state.task2Score, 
                     timestamp: new Date().toISOString()
                 };
                 await saveExamResults(state.attendanceId, fullResultData);
@@ -753,7 +742,21 @@
                     <div class="bg-gray-50 p-6 rounded-lg shadow-inner space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm">Attendance ID</label>${attendanceInputHtml}</div><div><label class="block text-sm">Student ID</label><input type="text" id="studentId" class="text-input"></div></div>
                         <div class="flex justify-end"><button id="login-btn" onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 text-white font-bold rounded">Verify & Login</button></div>
-                        <div class="border-t pt-4"><p class="text-xs uppercase font-bold">Student Details</p><div class="grid grid-cols-2 gap-4 opacity-75"><div class="col-span-2"><input type="text" id="fullName" class="text-input bg-gray-200" disabled value="${state.studentInfo?.fullName || ''}"></div><div><input type="text" id="classNumber" class="text-input bg-gray-200" disabled value="${state.studentInfo?.classNumber || ''}"></div><div><input type="text" id="gradeSection" class="text-input bg-gray-200" disabled value="${state.studentInfo?.gradeSection || ''}"></div></div></div>
+                        <div class="border-t pt-4">
+                            <p class="text-xs uppercase font-bold mb-2">Student Details (Auto-Populated)</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="col-span-2"><label class="text-xs text-gray-500">Full Name</label><input type="text" id="fullName" class="text-input bg-white font-bold" disabled value="${state.studentInfo?.fullName || ''}"></div>
+                                <div><label class="text-xs text-gray-500">Class Number</label><input type="text" id="classNumber" class="text-input bg-white font-bold" disabled value="${state.studentInfo?.classNumber || ''}"></div>
+                                <div><label class="text-xs text-gray-500">Grade & Section</label><input type="text" id="gradeSection" class="text-input bg-white font-bold" disabled value="${state.studentInfo?.gradeSection || ''}"></div>
+                            </div>
+                        </div>
+                        <!-- Start Task Button (Initially Hidden) -->
+                        <div id="start-task-container" class="hidden text-center pt-4 border-t border-gray-200">
+                            <p class="mb-2 text-sm text-gray-600">Verification Successful. Click below to begin the exam.</p>
+                            <button onclick="window.startTask()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transform transition hover:scale-105">
+                                Start the Task
+                            </button>
+                        </div>
                     </div>
                 </div>`;
             
@@ -837,13 +840,13 @@
             // Render the Unified layout but unlocked/static
             renderMainTaskPage();
             
+            // Change header button for completion view
             const printBtn = document.getElementById('login-step-btn');
             printBtn.innerText = "Print Final Report to PDF";
             printBtn.onclick = () => { window.print(); };
             printBtn.classList.remove('hidden');
             printBtn.className = "validate-btn px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-200 no-print mx-auto block";
             
-            // Move this print button to top container for visibility? 
             const headerBtnArea = document.querySelector('#task1-header-container .sticky-btn-area');
             if(headerBtnArea) {
                 headerBtnArea.innerHTML = `<button onclick="window.print()" class="validate-btn px-4 py-2 bg-green-600 text-white text-sm font-bold rounded shadow no-print">Print Report</button>`;
@@ -948,19 +951,45 @@
             const attId = document.getElementById('attendanceId').value.trim();
             const stuId = document.getElementById('studentId').value.trim();
             if(!attId || !stuId) { renderMessageBox("Enter IDs.", true); return; }
+            
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true; btn.innerText = "Verifying...";
+
             const result = await validateStudentLogin(attId, stuId);
             if (result.success) {
                 state.attendanceId = attId;
                 state.studentInfo = { idNumber: result.data.idNumber, classNumber: result.data.cn, fullName: result.data.fullName, gradeSection: result.data.section };
-                generateDynamicData(); updateCompanyName(state.studentInfo.fullName);
-                renderMessageBox("Login Successful!");
-                document.getElementById('login-btn').disabled = true; 
                 
-                // Move to step 1 and START TIMER
-                state.currentStep = 1; 
-                renderStep();
-                startTimer();
-            } else { renderMessageBox(result.message, true); }
+                // Auto-populate fields (DOM manipulation for visual feedback)
+                document.getElementById('fullName').value = result.data.fullName;
+                document.getElementById('classNumber').value = result.data.cn;
+                document.getElementById('gradeSection').value = result.data.section;
+                
+                // Disable verification interactions
+                btn.style.display = 'none';
+                document.getElementById('studentId').disabled = true;
+                document.getElementById('studentId').classList.add('bg-gray-100');
+                
+                // Generate data (backend prep), update UI but DON'T start timer or show task yet
+                generateDynamicData(); 
+                updateCompanyName(state.studentInfo.fullName);
+                
+                renderMessageBox("Verification Successful. Please click Start Task.");
+                
+                // Show the Start Task button
+                document.getElementById('start-task-container').classList.remove('hidden');
+                
+            } else { 
+                renderMessageBox(result.message, true); 
+                btn.disabled = false; btn.innerText = "Verify & Login";
+            }
+        };
+
+        window.startTask = () => {
+            // Move to step 1 (Task View)
+            state.currentStep = 1; 
+            startTimer(); // Start the timer now
+            renderStep();
         };
 
         window.handleNextStep = async () => {
