@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting Cycle Mastery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Phosphor Icons for the menu -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f6f8; }
+        
+        /* Sidebar Transitions */
+        .sidebar-transition { transition: width 0.3s ease-in-out; }
+        
+        /* Scroll locking */
+        .no-scroll { overflow: hidden; height: 100vh; }
+
+        /* Print Specifics */
+        .print-layout { font-family: 'Inter', sans-serif; font-size: 10pt; padding: 0.5in; }
+        .feedback-correct { background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.5rem; padding: 0.75rem; }
+        .feedback-incorrect { background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 0.75rem; }
+        
+        /* Sidebar Text Hiding */
+        .sidebar-collapsed .menu-text { display: none; }
+        .sidebar-collapsed .menu-item { justify-content: center; padding-left: 0; padding-right: 0; }
+
+        /* Question Palette Styles */
+        .q-dot {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        .q-dot:hover { background-color: #f3f4f6; }
+        
+        /* Current Question (Blue) */
+        .q-dot.active {
+            background-color: #3b82f6; 
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        /* Answered Question (Green) */
+        .q-dot.answered {
+            background-color: #dcfce7; 
+            border-color: #22c55e; 
+            color: #166534;
+        }
+        
+        /* Current AND Answered (Dark Green) */
+        .q-dot.active.answered {
+            background-color: #15803d; 
+            color: white;
+            border-color: #15803d;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden bg-gray-50">
+
+    <!-- STUDENT INFO OVERLAY (Modals) -->
+    <div id="student-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
+        <section id="student-info-section" class="bg-yellow-50 p-6 rounded-xl shadow-2xl max-w-md w-full border-l-4 border-yellow-500">
+            <h2 class="text-2xl font-bold text-yellow-800 mb-3">Student Data Input 📝</h2>
+            <p class="text-sm text-yellow-700 mb-4">Please identify yourself to unlock the modules.</p>
+            <div class="space-y-3">
+                <input type="number" id="class-number" placeholder="Class Number" class="w-full p-3 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:outline-none">
+                <input type="text" id="full-name" placeholder="Surname, First Name, M.I." class="w-full p-3 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:outline-none">
+                <input type="text" id="grade-section" placeholder="Grade & Section (e.g. 11-ABM)" class="w-full p-3 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:outline-none">
+            </div>
+            <button onclick="checkStudentInfo()" class="mt-6 w-full px-4 py-3 bg-yellow-600 text-white font-bold rounded-lg shadow-md hover:bg-yellow-700 transition transform hover:scale-105">
+                Confirm & Start Learning
+            </button>
+        </section>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="bg-blue-900 text-white flex flex-col h-full shadow-xl z-20 sidebar-transition w-64">
+        <div class="p-4 flex items-center justify-between border-b border-blue-800 h-16">
+            <span class="font-bold text-lg tracking-wider menu-text truncate">ACCOUNTING CYCLE</span>
+            <button onclick="toggleSidebar()" class="text-blue-200 hover:text-white focus:outline-none">
+                <i class="ph ph-list text-2xl"></i>
+            </button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1" id="nav-container"></nav>
+        <div class="p-4 border-t border-blue-800">
+             <button onclick="printToPDF()" class="w-full flex items-center p-2 rounded-lg bg-green-600 hover:bg-green-700 transition-colors group menu-item">
+                <i class="ph ph-printer text-xl shrink-0"></i>
+                <span class="menu-text ml-3 font-medium whitespace-nowrap">Print Progress PDF</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <div id="warning-message" class="bg-red-100 text-red-700 text-xs font-semibold p-2 text-center border-b border-red-200">
+             ⚠️ **WARNING:** PRINT your PDF before refreshing or closing. Progress is not saved on server.
+        </div>
+
+        <header class="bg-white border-b border-gray-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm z-10">
+            <div>
+                <h1 id="page-title" class="text-2xl font-extrabold text-gray-800">Welcome</h1>
+                <p id="page-subtitle" class="text-sm text-gray-500 mt-1">Select a module from the sidebar to begin.</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-2 bg-gray-100 p-1 rounded-lg">
+                <button onclick="switchTab('theory')" id="tab-theory" class="px-4 py-2 text-sm font-semibold rounded-md shadow-sm bg-white text-blue-700 transition-all">Topics & Concepts</button>
+                <button onclick="switchTab('practice')" id="tab-practice" class="px-4 py-2 text-sm font-semibold rounded-md text-gray-500 hover:text-gray-700 transition-all">Practice Questions</button>
+            </div>
+        </header>
+
+        <div id="main-scroll-area" class="flex-1 overflow-y-auto p-6 scroll-smooth">
+            
+            <!-- THEORY VIEW -->
+            <div id="view-theory" class="max-w-4xl mx-auto animate-fade-in">
+                <div id="dynamic-theory-content" class="prose max-w-none text-gray-700"></div>
+            </div>
+
+            <!-- PRACTICE VIEW (Updated Layout) -->
+            <div id="view-practice" class="hidden max-w-6xl mx-auto animate-fade-in h-full">
+                <div class="flex flex-col lg:flex-row gap-6 h-full">
+
+                    <!-- Left: Question Card -->
+                    <div class="flex-1">
+                        <div id="question-card" class="bg-white p-6 rounded-xl shadow-lg min-h-[400px] relative flex flex-col justify-between">
+                            <!-- Content -->
+                            <div id="question-content-area">
+                                <p class="text-gray-500">Select a module to load questions.</p>
+                            </div>
+
+                            <!-- Navigation -->
+                            <div class="mt-8 flex justify-between items-center pt-4 border-t border-gray-100">
+                                <button onclick="prevQuestion()" id="btn-prev" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                                    ← Previous
+                                </button>
+                                <span id="question-counter" class="text-sm text-gray-500 font-mono">0 / 0</span>
+                                <button onclick="nextQuestion()" id="btn-next" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Next →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Palette -->
+                    <div class="w-full lg:w-72 flex-shrink-0">
+                        <div class="bg-white p-4 rounded-xl shadow-lg lg:sticky lg:top-0">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Navigator</h3>
+                                <span id="progress-text" class="text-xs font-bold text-blue-600">0/50 Answered</span>
+                            </div>
+                            
+                            <div id="question-palette" class="grid grid-cols-5 gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+                                <!-- Dots injected via JS -->
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 flex flex-col gap-2">
+                                <div class="flex items-center"><span class="w-3 h-3 rounded-full border border-gray-300 mr-2"></span> Unanswered</div>
+                                <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> Current</div>
+                                <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-100 border border-green-500 mr-2"></span> Answered</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- PRINT MODALS -->
+    <div id="print-range-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 z-50 flex justify-center items-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h2 class="text-xl font-bold text-blue-800 mb-4">Print Report</h2>
+            <div class="mb-4 p-3 bg-blue-50 rounded border border-blue-100">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="print-current-only" class="form-checkbox text-blue-600" checked onchange="togglePrintInputs()">
+                    <span class="text-sm font-bold text-blue-800">Print ONLY current module questions</span>
+                </label>
+            </div>
+            <div id="custom-range-inputs" class="space-y-3 opacity-50 pointer-events-none transition-opacity">
+                <p class="text-xs text-gray-500">Custom range printing (Global IDs)</p>
+                <div class="flex space-x-2">
+                    <input type="number" id="range-start" placeholder="Start ID" class="w-full p-2 border rounded text-sm">
+                    <input type="number" id="range-end" placeholder="End ID" class="w-full p-2 border rounded text-sm">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="cancelPrintProcess()" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Cancel</button>
+                <button onclick="startPrintProcess()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Start Preview</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-preview-modal" class="hidden fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
+        <div class="min-h-screen flex flex-col">
+            <header class="sticky top-0 bg-white border-b border-gray-300 p-4 shadow-md flex justify-between items-center z-10">
+                <h2 class="text-lg font-bold text-blue-800">PDF Preview</h2>
+                <div class="flex items-center space-x-2">
+                    <button onclick="cancelPrintPreview()" class="px-3 py-1 bg-gray-500 text-white rounded text-sm">Close</button>
+                    <button id="download-pdf-button" onclick="runActualPDFGeneration()" class="px-3 py-1 bg-green-300 text-gray-600 rounded text-sm cursor-not-allowed" disabled>Scroll to End</button>
+                </div>
+            </header>
+            <div id="print-preview-content" class="p-8 bg-white shadow-lg max-w-5xl mx-auto my-4 flex-1"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // Adjusted ranges for 50 questions per topic
+        const modules = [
+            { id: 'step1', title: '1. Deferrals and Accruals', icon: 'ph-scales', range: [1, 50], theoryId: 'theory-adjustments' },
+            { id: 'step5', title: '2. The 10-Column Worksheet', icon: 'ph-table', range: [51, 100], theoryId: 'theory-worksheet' },
+            { id: 'step6', title: '3. Financial Statements', icon: 'ph-file-text', range: [101, 150], theoryId: 'theory-fs' },
+            { id: 'step7', title: '4. Adjusting Entries (Journalizing)', icon: 'ph-notebook', range: [151, 200], theoryId: 'theory-step7' },
+            { id: 'step8', title: '5. Closing Entries', icon: 'ph-x-circle', range: [201, 250], theoryId: 'theory-step8' },
+            { id: 'step9', title: '6. Post-Closing Trial Balance', icon: 'ph-list-checks', range: [251, 300], theoryId: 'theory-step9' },
+            { id: 'step10', title: '7. Reversing Entries', icon: 'ph-arrow-u-up-left', range: [301, 350], theoryId: 'theory-step10' }
+        ];
+
+        let currentModuleIndex = 0;
+        let isSidebarCollapsed = false;
+        let currentModuleQuestions = []; // Subset for current module
+        let currentQuestionIndex = 0;    // Index within the subset
+        let userAnswers = {};            // Global storage: { qID: "Answer String" }
+
+        // --- QUESTION DATA GENERATION ---
+        const questions = [];
+
+        // Helper to create question object
+        const createQ = (id, type, topic, qText, opts, ans, expl) => ({
+            id, type, topic, q: qText, options: opts, a: ans, s: expl
+        });
+
+        // 1. Deferrals and Accruals (1-50)
+        questions.push(
+            createQ(1, 'Theory', 'Deferrals', 'Which of the following best describes a deferral?', ['Cash is received/paid before revenue/expense is recognized', 'Revenue/expense is recognized before cash is received/paid', 'Cash is received/paid at the same time', 'None of the above'], 'Cash is received/paid before revenue/expense is recognized', 'Deferrals postpone recognition until later.'),
+            createQ(2, 'Problem', 'Accruals', 'Accrued interest on a ₱100,000 loan at 12% for 3 months is:', ['₱1,000', '₱3,000', '₱12,000', '₱300'], '₱3,000', 'Calculation: 100,000 * 12% * 3/12 = 3,000.'),
+            createQ(3, 'Theory', 'Principles', 'The matching principle states that:', ['Expenses should be recorded when cash is paid', 'Revenues should be recorded when cash is received', 'Expenses should be matched with revenues in the period they help generate them', 'Assets must equal liabilities'], 'Expenses should be matched with revenues in the period they help generate them', 'This is the core of accrual accounting.')
+        );
+        // Fill rest of Step 1
+        for(let i=4; i<=50; i++) questions.push(createQ(i, i%2===0?'Problem':'Theory', 'Step 1 Practice', `Practice Question ${i}: Placeholder for Step 1 concept application.`, ['Option A', 'Option B', 'Option C', 'Option D'], 'Option A', 'Standard explanation for this placeholder question type.'));
+
+        // 2. Worksheet (51-100)
+        questions.push(
+            createQ(51, 'Theory', 'Worksheet', 'Which columns are used to calculate Net Income?', ['Trial Balance', 'Adjustments', 'Income Statement', 'Balance Sheet'], 'Income Statement', 'Net Income is derived from Revenue - Expenses in the IS columns.'),
+            createQ(52, 'Problem', 'Worksheet', 'If Income Statement Debits are ₱50k and Credits are ₱80k, the result is:', ['Net Loss ₱30k', 'Net Income ₱30k', 'Net Income ₱130k', 'Balanced'], 'Net Income ₱30k', 'Credits (Revenue) > Debits (Expenses) = Income.')
+        );
+        for(let i=53; i<=100; i++) questions.push(createQ(i, i%2===0?'Problem':'Theory', 'Step 5 Practice', `Practice Question ${i}: Placeholder for Worksheet calculations.`, ['Option A', 'Option B', 'Option C', 'Option D'], 'Option A', 'Explanation for worksheet procedure.'));
+
+        // 3. Financial Statements (101-150)
+        questions.push(
+            createQ(101, 'Theory', 'Fin. Statements', 'Which statement reports financial position at a point in time?', ['Income Statement', 'Statement of Changes in Equity', 'Balance Sheet', 'Cash Flow'], 'Balance Sheet', 'It is a snapshot of Assets, Liabilities, and Equity.'),
+            createQ(102, 'Problem', 'Equity', 'Beg. Capital ₱10k, Net Income ₱5k, Drawings ₱2k. End Capital is:', ['₱13,000', '₱15,000', '₱7,000', '₱17,000'], '₱13,000', '10k + 5k - 2k = 13k.')
+        );
+        for(let i=103; i<=150; i++) questions.push(createQ(i, i%2===0?'Problem':'Theory', 'Step 6 Practice', `Practice Question ${i}: Financial Statement analysis question.`, ['Option A', 'Option B', 'Option C', 'Option D'], 'Option A', 'Explanation for FS construction.'));
+
+        // 4. Adjusting Entries (151-200)
+        questions.push(
+            createQ(151, 'Theory', 'Journalizing', 'The entry to record depreciation includes a debit to:', ['Equipment', 'Accumulated Depreciation', 'Depreciation Expense', 'Cash'], 'Depreciation Expense', 'Expense is recognized (Debit) and Contra-Asset increases (Credit).'),
+            createQ(152, 'Problem', 'Supplies', 'Supplies Account balance ₱5,000. Count shows ₱1,000 on hand. Adjustment is:', ['₱4,000', '₱1,000', '₱6,000', '₱5,000'], '₱4,000', 'Used = Beg - End. 5000 - 1000 = 4000.')
+        );
+        for(let i=153; i<=200; i++) questions.push(createQ(i, i%2===0?'Problem':'Theory', 'Step 7 Practice', `Practice Question ${i}: Journalizing adjustment scenarios.`, ['Option A', 'Option B', 'Option C', 'Option D'], 'Option A', 'Explanation of the journal entry.'));
+
+        // 5. Closing Entries (201-250)
+        questions.push(
+            createQ(201, 'Theory', 'Closing', 'Which account is NOT closed at year-end?', ['Service Revenue', 'Rent Expense', 'Drawings', 'Accumulated Depreciation'], 'Accumulated Depreciation', 'It is a permanent (real) account.'),
+            createQ(202, 'Problem', 'Income Summary', 'Revenues ₱100k, Expenses ₱60k. Balance of Income Summary after first two entries?', ['₱40k Credit', '₱40k Debit', '₱160k Credit', 'Zero'], '₱40k Credit', 'Credit 100k (Rev) - Debit 60k (Exp) = 40k Credit balance.')
+        );
+        for(let i=203; i<=250; i++) questions.push(createQ(i, i%2===0?'Problem':'Theory', 'Step 8 Practice', `Practice Question ${i}: Closing entry logic.`, ['Option A', 'Option B', 'Option C', 'Option D'], 'Option A', 'Explanation of REID method.'));
+
+        // 6. Post-Closing Trial Balance (251-300)
+        questions.push(
+            createQ(251, 'Theory', 'PCTB', 'The Post-Closing Trial Balance contains:', ['Nominal Accounts only', 'Real Accounts only', 'Both Real and Nominal', 'Only Cash'], 'Real Accounts only', 'Nominal accounts have been closed to zero.'),
+            createQ(252, 'Problem', 'PCTB', 'If PCTB Debits = ₱500k, Credits must be:', ['₱500k', 'Depends on Net Income', '₱0', 'Unknown'], '₱500k', 'Debits must always equal Credits.')
+        );
+        for(let i=253; i<=300; i++) questions.push(createQ(i, i%2===0?'Problem':'Theory', 'Step 9 Practice', `Practice Question ${i}: PCTB verification.`, ['Option A', 'Option B', 'Option C', 'Option D'], 'Option A', 'Explanation of trial balance equality.'));
+
+        // 7. Reversing Entries (301-350)
+        questions.push(
+            createQ(301, 'Theory', 'Reversing', 'Reversing entries are:', ['Mandatory', 'Optional', 'Required for tax purposes', 'Illegal'], 'Optional', 'They are used for convenience.'),
+            createQ(302, 'Problem', 'Reversing', 'Adjusting Entry: Dr Salaries Exp ₱1k, Cr Salaries Pay ₱1k. Reversing Entry is:', ['Dr Salaries Pay ₱1k, Cr Salaries Exp ₱1k', 'Dr Salaries Exp ₱1k, Cr Cash ₱1k', 'No entry', 'Same as adjusting'], 'Dr Salaries Pay ₱1k, Cr Salaries Exp ₱1k', 'Exact reverse of the adjusting entry.')
+        );
+        for(let i=303; i<=350; i++) questions.push(createQ(i, i%2===0?'Problem':'Theory', 'Step 10 Practice', `Practice Question ${i}: Reversing entry application.`, ['Option A', 'Option B', 'Option C', 'Option D'], 'Option A', 'Explanation of reversing logic.'));
+
+
+        // --- INITIALIZATION ---
+        function init() {
+            renderSidebar();
+            loadModule(0);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            isSidebarCollapsed = !isSidebarCollapsed;
+            if (isSidebarCollapsed) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20', 'sidebar-collapsed');
+            } else {
+                sidebar.classList.add('w-64');
+                sidebar.classList.remove('w-20', 'sidebar-collapsed');
+            }
+        }
+
+        function renderSidebar() {
+            const nav = document.getElementById('nav-container');
+            nav.innerHTML = '';
+            modules.forEach((mod, index) => {
+                const btn = document.createElement('button');
+                btn.className = `w-full flex items-center p-3 transition-colors duration-200 menu-item group
+                    ${index === currentModuleIndex ? 'bg-blue-800 border-l-4 border-yellow-400' : 'hover:bg-blue-800 border-l-4 border-transparent'}`;
+                btn.onclick = () => loadModule(index);
+                const shortTitle = mod.title.split('. ')[1] || mod.title;
+                btn.innerHTML = `
+                    <i class="ph ${mod.icon} text-2xl shrink-0 ${index === currentModuleIndex ? 'text-yellow-400' : 'text-blue-300'}"></i>
+                    <div class="ml-3 text-left menu-text overflow-hidden">
+                        <p class="text-sm font-semibold truncate text-white">${shortTitle}</p>
+                        <p class="text-xs text-blue-300 truncate">Step ${mod.id.replace('step', '')}</p>
+                    </div>
+                `;
+                nav.appendChild(btn);
+            });
+        }
+
+        function loadModule(index) {
+            currentModuleIndex = index;
+            const mod = modules[index];
+            
+            // Header Update
+            document.getElementById('page-title').innerText = mod.title;
+            document.getElementById('page-subtitle').innerText = `Accounting Cycle Step ${mod.id.replace('step','')}`;
+            renderSidebar();
+            renderTheory(mod.theoryId);
+
+            // Filter Questions for this module
+            const startID = mod.range[0];
+            const endID = mod.range[1];
+            currentModuleQuestions = questions.filter(q => q.id >= startID && q.id <= endID);
+            
+            // Reset Practice View
+            currentQuestionIndex = 0;
+            renderQuestionUI();
+            
+            // Default to theory tab
+            switchTab('theory');
+        }
+
+        function switchTab(tabName) {
+            const theoryView = document.getElementById('view-theory');
+            const practiceView = document.getElementById('view-practice');
+            const btnTheory = document.getElementById('tab-theory');
+            const btnPractice = document.getElementById('tab-practice');
+
+            if (tabName === 'theory') {
+                theoryView.classList.remove('hidden');
+                practiceView.classList.add('hidden');
+                btnTheory.className = 'px-4 py-2 text-sm font-semibold rounded-md shadow-sm bg-white text-blue-700 transition-all';
+                btnPractice.className = 'px-4 py-2 text-sm font-semibold rounded-md text-gray-500 hover:text-gray-700 transition-all';
+            } else {
+                theoryView.classList.add('hidden');
+                practiceView.classList.remove('hidden');
+                btnTheory.className = 'px-4 py-2 text-sm font-semibold rounded-md text-gray-500 hover:text-gray-700 transition-all';
+                btnPractice.className = 'px-4 py-2 text-sm font-semibold rounded-md shadow-sm bg-white text-blue-700 transition-all';
+                // Ensure UI is fresh when switching
+                renderQuestionUI(); 
+            }
+        }
+
+        // --- THEORY CONTENT ---
+        const theoryContentDB = {
+            'theory-adjustments': `
+                <div class="space-y-8">
+                    <!-- Header -->
+                    <div class="text-center border-b-2 border-blue-100 pb-4">
+                        <h2 class="text-3xl font-extrabold text-blue-900">The Balance Keeper</h2>
+                        <p class="text-lg text-blue-600 font-medium">A Comprehensive Guide to Accrual and Deferral Adjustments</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-gray-800 mb-2">Table of Contents</h3>
+                        <ul class="list-none space-y-1 text-blue-600">
+                            <li><a href="#intro" class="hover:underline">Introduction: Timing is Everything</a></li>
+                            <li><a href="#chap1" class="hover:underline">Chapter 1: The Accounting Cycle & The Matching Principle</a></li>
+                            <li><a href="#chap2" class="hover:underline">Chapter 2: Deferrals (Prepayments)</a></li>
+                            <li><a href="#chap3" class="hover:underline">Chapter 3: Accruals</a></li>
+                            <li><a href="#chap4" class="hover:underline">Chapter 4: The Impact of Depreciation</a></li>
+                            <li><a href="#chap5" class="hover:underline">Chapter 5: Summary & Cheat Sheet</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Intro -->
+                    <section id="intro">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Introduction: Timing is Everything</h3>
+                        <p class="text-gray-700 mb-2">In the world of accounting, cash is king, but timing is the kingdom.</p>
+                        <p class="text-gray-700 mb-2">If a business only recorded transactions when cash changed hands, the financial picture would be distorted. Imagine a company that pays its rent for the whole year in January. If they recorded that entire cost as an expense only in January, they would look incredibly unprofitable that month and artificially wealthy for the rest of the year.</p>
+                        <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 mt-4">
+                            <p class="font-semibold text-blue-800">This is where Adjusting Entries come in.</p>
+                            <p class="text-gray-700 mt-2">Adjusting entries are the mechanism we use to apply the Accrual Basis of Accounting. They ensure that revenues are recorded when they are earned and expenses are recorded when they are incurred, regardless of when the cash is actually exchanged.</p>
+                            <p class="text-gray-700 mt-2">This eBook will demystify the two main categories of adjustments: Deferrals (putting things off) and Accruals (bringing things forward).</p>
+                        </div>
+                    </section>
+
+                    <!-- Chapter 1 -->
+                    <section id="chap1" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-blue-800 mb-4">Chapter 1: The Accounting Cycle & The Matching Principle</h3>
+                        <p class="mb-4 text-gray-700">Before diving into the math, we must understand the rules of the game.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="bg-gray-50 p-3 rounded">
+                                <strong class="block text-gray-900">Cash Basis</strong>
+                                <span class="text-sm text-gray-600">Revenues/Expenses recognized only when cash is received or paid. (Not GAAP compliant for most businesses).</span>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded">
+                                <strong class="block text-blue-900">Accrual Basis</strong>
+                                <span class="text-sm text-blue-800">Revenues/Expenses recognized when the event occurs (service performed or resource used).</span>
+                            </div>
+                        </div>
+
+                        <h4 class="font-bold text-gray-800 mt-4 mb-2">The Two Pillars of Adjustments</h4>
+                        <ul class="list-disc ml-5 space-y-2 text-gray-700">
+                            <li><strong>The Revenue Recognition Principle:</strong> Revenue is recognized in the period when the performance obligation is satisfied (the work is done).</li>
+                            <li><strong>The Expense Recognition Principle (The Matching Principle):</strong> Expenses should be matched with the revenues they helped generate in the same period.</li>
+                        </ul>
+
+                        <h4 class="font-bold text-gray-800 mt-4 mb-2">Why do we adjust?</h4>
+                        <p class="text-gray-700">We adjust the books at the end of an accounting period (month, quarter, or year) to bring account balances up to date before preparing financial statements.</p>
+                    </section>
+
+                    <!-- Chapter 2 -->
+                    <section id="chap2">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Chapter 2: Deferrals (Prepayments)</h3>
+                        <p class="text-gray-600 mb-4 bg-yellow-50 p-3 rounded border-l-4 border-yellow-400"><em>Definition: A Deferral occurs when Cash is exchanged BEFORE the revenue or expense is recognized. We are "deferring" (delaying) the recognition of the income or expense to a later date.</em></p>
+                        
+                        <div class="space-y-6">
+                            <!-- Prepaid Exp -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-bold text-lg text-gray-900 mb-2">1. Prepaid Expenses</h4>
+                                <p class="text-sm text-gray-700 mb-2"><strong>Scenario:</strong> The company pays cash now for an asset that will benefit future periods (e.g., Insurance, Rent, Supplies).</p>
+                                <p class="text-sm text-gray-700 mb-2"><strong>The Goal:</strong> Convert an Asset into an Expense as it is used up.</p>
+                                
+                                <ul class="list-disc ml-5 text-sm mb-3">
+                                    <li><strong>Initial Entry (Payment Date):</strong> Increase Asset, Decrease Cash.</li>
+                                    <li><strong>Adjusting Entry (End of Period):</strong> Increase Expense, Decrease Asset.</li>
+                                </ul>
+
+                                <div class="bg-gray-50 p-3 rounded text-sm mb-3">
+                                    <p class="font-semibold">Example:</p>
+                                    <p>On December 1, TechSolutions pays $1,200 for a 12-month insurance policy.</p>
+                                    <p class="mt-2"><em>Initial recording:</em> Debit Prepaid Insurance $1,200.</p>
+                                    <p><em>Adjusting Entry on Dec 31:</em> One month of insurance has been "used up" ($1,200 / 12 = $100).</p>
+                                </div>
+
+                                <!-- Example Table -->
+                                <div class="mt-3 overflow-x-auto">
+                                    <table class="min-w-full text-xs text-left border collapse">
+                                        <thead><tr class="bg-gray-100 border-b">
+                                            <th class="p-2 border">Date</th>
+                                            <th class="p-2 border">Account</th>
+                                            <th class="p-2 border">Debit</th>
+                                            <th class="p-2 border">Credit</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            <tr class="border-b"><td class="p-2">Dec 31</td><td class="p-2">Insurance Expense</td><td class="p-2">$100</td><td class="p-2"></td></tr>
+                                            <tr class="border-b"><td class="p-2"></td><td class="p-2 pl-6">Prepaid Insurance</td><td class="p-2"></td><td class="p-2">$100</td></tr>
+                                            <tr><td class="p-2" colspan="4"><em>To record insurance expense for Dec</em></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Unearned Rev -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-bold text-lg text-gray-900 mb-2">2. Unearned Revenues</h4>
+                                <p class="text-sm text-gray-700 mb-2"><strong>Scenario:</strong> A customer pays the company cash now for a service to be performed later (e.g., Plane tickets, Annual Subscriptions, Retainer fees).</p>
+                                <p class="text-sm text-gray-700 mb-2"><strong>The Goal:</strong> Convert a Liability into Revenue as the work is done.</p>
+                                
+                                <ul class="list-disc ml-5 text-sm mb-3">
+                                    <li><strong>Initial Entry (Receipt Date):</strong> Increase Cash, Increase Liability (Unearned Revenue).</li>
+                                    <li><strong>Adjusting Entry (End of Period):</strong> Decrease Liability, Increase Revenue.</li>
+                                </ul>
+
+                                <div class="bg-gray-50 p-3 rounded text-sm mb-3">
+                                    <p class="font-semibold">Example:</p>
+                                    <p>On December 1, a law firm receives a $3,000 retainer from a client for services to be performed over the next three months.</p>
+                                    <p class="mt-2"><em>Initial recording:</em> Credit Unearned Service Revenue $3,000.</p>
+                                    <p><em>Adjusting Entry on Dec 31:</em> The firm has performed one month of work ($3,000 / 3 = $1,000).</p>
+                                </div>
+
+                                <!-- Example Table -->
+                                <div class="mt-3 overflow-x-auto">
+                                     <table class="min-w-full text-xs text-left border collapse">
+                                        <thead><tr class="bg-gray-100 border-b">
+                                            <th class="p-2 border">Date</th>
+                                            <th class="p-2 border">Account</th>
+                                            <th class="p-2 border">Debit</th>
+                                            <th class="p-2 border">Credit</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            <tr class="border-b"><td class="p-2">Dec 31</td><td class="p-2">Unearned Service Revenue</td><td class="p-2">$1,000</td><td class="p-2"></td></tr>
+                                            <tr class="border-b"><td class="p-2"></td><td class="p-2 pl-6">Service Revenue</td><td class="p-2"></td><td class="p-2">$1,000</td></tr>
+                                            <tr><td class="p-2" colspan="4"><em>To record revenue earned in Dec</em></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Chapter 3 -->
+                    <section id="chap3">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Chapter 3: Accruals</h3>
+                        <p class="text-gray-600 mb-4 bg-green-50 p-3 rounded border-l-4 border-green-400"><em>Definition: An Accrual occurs when Cash is exchanged AFTER the revenue or expense is recognized. We are "accruing" (accumulating) the income or expense now, even though money hasn't moved yet.</em></p>
+                        
+                        <div class="space-y-6">
+                            <!-- Accrued Rev -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-bold text-lg text-gray-900 mb-2">1. Accrued Revenues</h4>
+                                <p class="text-sm text-gray-700 mb-2"><strong>Scenario:</strong> The company has performed a service but has not yet received cash or billed the customer.</p>
+                                <p class="text-sm text-gray-700 mb-2"><strong>The Goal:</strong> Record Revenue and a Receivable (Asset).</p>
+                                
+                                <p class="text-sm mb-3"><strong>Adjusting Entry:</strong> Increase Asset (Receivable), Increase Revenue.</p>
+
+                                <div class="bg-gray-50 p-3 rounded text-sm mb-3">
+                                    <p class="font-semibold">Example:</p>
+                                    <p>A consulting firm performs $500 worth of services in the last week of December but won't bill the client until the project finishes in January.</p>
+                                </div>
+
+                                <div class="mt-3 overflow-x-auto">
+                                     <table class="min-w-full text-xs text-left border collapse">
+                                        <thead><tr class="bg-gray-100 border-b">
+                                            <th class="p-2 border">Date</th>
+                                            <th class="p-2 border">Account</th>
+                                            <th class="p-2 border">Debit</th>
+                                            <th class="p-2 border">Credit</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            <tr class="border-b"><td class="p-2">Dec 31</td><td class="p-2">Accounts Receivable</td><td class="p-2">$500</td><td class="p-2"></td></tr>
+                                            <tr class="border-b"><td class="p-2"></td><td class="p-2 pl-6">Service Revenue</td><td class="p-2"></td><td class="p-2">$500</td></tr>
+                                            <tr><td class="p-2" colspan="4"><em>To record revenue for services performed</em></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2"><em>Note: Without this entry, revenue and assets would both be understated.</em></p>
+                            </div>
+
+                             <!-- Accrued Exp -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-bold text-lg text-gray-900 mb-2">2. Accrued Expenses</h4>
+                                <p class="text-sm text-gray-700 mb-2"><strong>Scenario:</strong> The company has incurred a cost (used a resource) but hasn't paid for it yet (e.g., Salaries, Interest, Taxes).</p>
+                                <p class="text-sm text-gray-700 mb-2"><strong>The Goal:</strong> Record Expense and a Payable (Liability).</p>
+
+                                <p class="text-sm mb-3"><strong>Adjusting Entry:</strong> Increase Expense, Increase Liability (Payable).</p>
+
+                                <div class="bg-gray-50 p-3 rounded text-sm mb-3">
+                                    <p class="font-semibold">Example:</p>
+                                    <p>Employees work the last three days of December, earning $4,000 in total wages. Payday isn't until January 5th.</p>
+                                </div>
+
+                                <div class="mt-3 overflow-x-auto">
+                                     <table class="min-w-full text-xs text-left border collapse">
+                                        <thead><tr class="bg-gray-100 border-b">
+                                            <th class="p-2 border">Date</th>
+                                            <th class="p-2 border">Account</th>
+                                            <th class="p-2 border">Debit</th>
+                                            <th class="p-2 border">Credit</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            <tr class="border-b"><td class="p-2">Dec 31</td><td class="p-2">Salaries and Wages Expense</td><td class="p-2">$4,000</td><td class="p-2"></td></tr>
+                                            <tr class="border-b"><td class="p-2"></td><td class="p-2 pl-6">Salaries and Wages Payable</td><td class="p-2"></td><td class="p-2">$4,000</td></tr>
+                                            <tr><td class="p-2" colspan="4"><em>To record accrued salaries</em></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2"><em>Note: Without this entry, expenses and liabilities would be understated, making net income look artificially high.</em></p>
+                            </div>
+                        </div>
+                    </section>
+
+                     <!-- Chapter 4 -->
+                    <section id="chap4" class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Chapter 4: The Impact of Depreciation</h3>
+                        <p class="text-gray-700 mb-3">Depreciation is a special type of Deferral. When a company buys a long-term asset (like a truck or building), it is essentially a huge prepaid expense.</p>
+                        <p class="text-gray-700 mb-3">Instead of expensing the truck all at once, we allocate its cost over its useful life.</p>
+                        
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                             <p class="font-bold mb-2">The Logic:</p>
+                             <ul class="list-decimal ml-5 text-sm mb-4">
+                                <li>Asset purchased (Capitalized).</li>
+                                <li>Asset provides value over time.</li>
+                                <li>Cost is moved to expense gradually using a contra-asset account called Accumulated Depreciation.</li>
+                             </ul>
+
+                             <p class="font-bold mb-2">Example:</p>
+                             <p class="text-sm mb-3">A machine costs $10,000 and has a useful life of 10 years (straight-line depreciation = $1,000/year).</p>
+
+                             <table class="min-w-full text-xs text-left border collapse bg-white">
+                                <thead><tr class="bg-gray-100 border-b">
+                                    <th class="p-2 border">Date</th>
+                                    <th class="p-2 border">Account</th>
+                                    <th class="p-2 border">Debit</th>
+                                    <th class="p-2 border">Credit</th>
+                                </tr></thead>
+                                <tbody>
+                                    <tr class="border-b"><td class="p-2">Dec 31</td><td class="p-2">Depreciation Expense</td><td class="p-2">$1,000</td><td class="p-2"></td></tr>
+                                    <tr class="border-b"><td class="p-2"></td><td class="p-2 pl-6">Accumulated Depreciation</td><td class="p-2"></td><td class="p-2">$1,000</td></tr>
+                                </tbody>
+                            </table>
+                            <p class="text-xs text-gray-500 mt-2"><em>Note: We credit Accumulated Depreciation rather than the asset directly to keep the historical cost of the asset visible on the books.</em></p>
+                        </div>
+                    </section>
+
+                    <!-- Chapter 5 -->
+                    <section id="chap5">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Chapter 5: Summary & Cheat Sheet</h3>
+                        <p class="mb-4 text-gray-700 font-medium">Understanding whether you are dealing with an accrual or a deferral comes down to one question: <strong>Where is the cash?</strong></p>
+                        
+                        <div class="overflow-x-auto shadow-sm rounded-lg border border-gray-200">
+                            <table class="min-w-full text-sm text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-blue-800 text-white">
+                                        <th class="p-3">Type</th>
+                                        <th class="p-3">Scenario</th>
+                                        <th class="p-3">Cash Timing</th>
+                                        <th class="p-3">Adjusting Entry Logic</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="bg-white">
+                                        <td class="p-3 font-bold text-blue-900">Prepaid Expense</td>
+                                        <td class="p-3">Paid for supplies/rent not yet used</td>
+                                        <td class="p-3">Before</td>
+                                        <td class="p-3 font-mono text-xs">Dr. Expense <br> Cr. Asset</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="p-3 font-bold text-blue-900">Unearned Revenue</td>
+                                        <td class="p-3">Cash received for work not yet done</td>
+                                        <td class="p-3">Before</td>
+                                        <td class="p-3 font-mono text-xs">Dr. Liability <br> Cr. Revenue</td>
+                                    </tr>
+                                     <tr class="bg-white">
+                                        <td class="p-3 font-bold text-green-900">Accrued Revenue</td>
+                                        <td class="p-3">Work done, cash not yet received</td>
+                                        <td class="p-3">After</td>
+                                        <td class="p-3 font-mono text-xs">Dr. Asset <br> Cr. Revenue</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="p-3 font-bold text-green-900">Accrued Expense</td>
+                                        <td class="p-3">Expense incurred, cash not yet paid</td>
+                                        <td class="p-3">After</td>
+                                        <td class="p-3 font-mono text-xs">Dr. Expense <br> Cr. Liability</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-gray-100 rounded-lg">
+                            <h4 class="font-bold text-gray-800 mb-2">Final Thoughts</h4>
+                            <p class="text-gray-700">Adjusting entries ensures that the Financial Statements (Balance Sheet and Income Statement) tell the truth about what the company actually owns, owes, earned, and spent during the period. Without them, accounting is just a list of bank transactions; with them, it is a measurement of economic reality.</p>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-6 text-center">© 2025 JLVCPA. All rights reserved.</p>
+                    </section>
+                </div>
+            `,
+            'theory-worksheet': `<h3 class="text-2xl font-bold text-gray-800 mb-4">Step 5: The 10-Column Worksheet</h3><p>An optional tool for preparing financial statements.</p><ul class="list-disc ml-5 mt-2"><li>Trial Balance</li><li>Adjustments</li><li>Adjusted TB</li><li>Income Statement</li><li>Balance Sheet</li></ul>`,
+            'theory-fs': `<h3 class="text-2xl font-bold text-gray-800 mb-4">Step 6: Financial Statements</h3><ol class="list-decimal ml-5 space-y-2"><li><strong>Income Statement:</strong> Profitability.</li><li><strong>Statement of Changes in Equity:</strong> Owner's capital.</li><li><strong>Balance Sheet:</strong> Solvency/Liquidity.</li><li><strong>Cash Flows:</strong> Liquidity.</li></ol>`,
+            'theory-step7': `<h3 class="text-2xl font-bold text-blue-800 mb-2">Step 7: Journalizing Adjusting Entries</h3><p>Formal recording of worksheet adjustments into the General Journal and posting to Ledger.</p>`,
+            'theory-step8': `<h3 class="text-2xl font-bold text-green-800 mb-2">Step 8: Closing Entries (REID)</h3><p>Zero out nominal accounts.</p><ul class="list-disc ml-5"><li>Rev -> Inc Sum</li><li>Exp -> Inc Sum</li><li>Inc Sum -> Cap</li><li>Draw -> Cap</li></ul>`,
+            'theory-step9': `<h3 class="text-2xl font-bold text-purple-800 mb-2">Step 9: Post-Closing Trial Balance</h3><p>Verifies equality of permanent accounts after closing.</p>`,
+            'theory-step10': `<h3 class="text-2xl font-bold text-yellow-800 mb-2">Step 10: Reversing Entries</h3><p>Optional step on Day 1 of new period. Reverses Accruals and Expense-method Deferrals.</p>`
+        };
+
+        function renderTheory(id) {
+            document.getElementById('dynamic-theory-content').innerHTML = theoryContentDB[id] || '<p>Loading content...</p>';
+        }
+
+        // --- PRACTICE LOGIC (UPDATED) ---
+
+        function renderQuestionUI() {
+            if(currentModuleQuestions.length === 0) {
+                document.getElementById('question-content-area').innerHTML = '<p>No questions available.</p>';
+                return;
+            }
+
+            const q = currentModuleQuestions[currentQuestionIndex];
+            const userAns = userAnswers[q.id];
+            
+            // Shuffle options once logic could be added here, keeping simple for now
+            // We assume options are static for stability in this version
+            let optionsHtml = '';
+            q.options.forEach(opt => {
+                const isChecked = userAns === opt;
+                const safeOpt = opt.replace(/"/g, '&quot;');
+                
+                optionsHtml += `
+                    <label class="flex items-start p-3 border rounded-lg hover:bg-blue-50 cursor-pointer transition-colors ${isChecked ? 'bg-blue-50 border-blue-400 ring-1 ring-blue-400' : 'border-gray-200'}">
+                        <input type="radio" name="q_${q.id}" value="${safeOpt}" 
+                            onchange="saveAnswer(${q.id}, this.value)" 
+                            class="mt-1 mr-3 text-blue-600" ${isChecked ? 'checked' : ''}>
+                        <span class="text-gray-700 text-base">${opt}</span>
+                    </label>
+                `;
+            });
+
+            document.getElementById('question-content-area').innerHTML = `
+                <div class="mb-6">
+                    <span class="inline-block px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded mb-3">
+                        ${q.type} - ${q.topic}
+                    </span>
+                    <h3 class="text-xl font-bold text-gray-800 leading-relaxed">
+                        <span class="text-gray-400 mr-2">#${currentQuestionIndex + 1}</span> ${q.q}
+                    </h3>
+                </div>
+                <div class="space-y-3">
+                    ${optionsHtml}
+                </div>
+            `;
+
+            // Buttons
+            const prevBtn = document.getElementById('btn-prev');
+            const nextBtn = document.getElementById('btn-next');
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.disabled = currentQuestionIndex === currentModuleQuestions.length - 1;
+
+            // Counter
+            document.getElementById('question-counter').innerText = `${currentQuestionIndex + 1} / ${currentModuleQuestions.length}`;
+
+            // Render Palette
+            renderPalette();
+        }
+
+        function renderPalette() {
+            const palette = document.getElementById('question-palette');
+            palette.innerHTML = '';
+            
+            let answeredCount = 0;
+
+            currentModuleQuestions.forEach((q, idx) => {
+                const isAnswered = userAnswers[q.id] !== undefined;
+                if (isAnswered) answeredCount++;
+                
+                const isActive = idx === currentQuestionIndex;
+                let classes = 'q-dot';
+                if (isActive) classes += ' active';
+                if (isAnswered) classes += ' answered';
+
+                const dot = document.createElement('div');
+                dot.className = classes;
+                dot.innerText = idx + 1;
+                dot.onclick = () => jumpToQuestion(idx);
+                palette.appendChild(dot);
+            });
+
+            document.getElementById('progress-text').innerText = `${answeredCount}/${currentModuleQuestions.length} Answered`;
+        }
+
+        function nextQuestion() {
+            if(currentQuestionIndex < currentModuleQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestionUI();
+            }
+        }
+
+        function prevQuestion() {
+            if(currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestionUI();
+            }
+        }
+
+        function jumpToQuestion(index) {
+            currentQuestionIndex = index;
+            renderQuestionUI();
+        }
+
+        function saveAnswer(qId, val) {
+            userAnswers[qId] = val;
+            renderQuestionUI(); // Re-render to show active state/coloring
+        }
+
+        function checkStudentInfo() {
+            const cn = document.getElementById('class-number').value;
+            const name = document.getElementById('full-name').value;
+            const section = document.getElementById('grade-section').value;
+            if(cn && name && section) {
+                document.getElementById('student-overlay').classList.add('hidden');
+            } else {
+                alert("Please complete all fields.");
+            }
+        }
+
+        // --- PRINT LOGIC (UPDATED) ---
+        function togglePrintInputs() {
+            const chk = document.getElementById('print-current-only');
+            const inputs = document.getElementById('custom-range-inputs');
+            if(chk.checked) {
+                inputs.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                inputs.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function printToPDF() {
+            document.getElementById('print-range-modal').classList.remove('hidden');
+            const mod = modules[currentModuleIndex];
+            // Pre-fill
+            document.getElementById('range-start').value = mod.range[0];
+            document.getElementById('range-end').value = mod.range[1];
+        }
+
+        function cancelPrintProcess() {
+            document.getElementById('print-range-modal').classList.add('hidden');
+        }
+
+        let printQuestionsList = [];
+        let printChunks = [];
+        let currentChunk = 0;
+
+        function startPrintProcess() {
+            const onlyCurrent = document.getElementById('print-current-only').checked;
+            let start, end;
+            if(onlyCurrent) {
+                const mod = modules[currentModuleIndex];
+                start = mod.range[0];
+                end = mod.range[1];
+            } else {
+                start = parseInt(document.getElementById('range-start').value);
+                end = parseInt(document.getElementById('range-end').value);
+            }
+
+            printQuestionsList = questions.filter(q => q.id >= start && q.id <= end);
+            if(printQuestionsList.length === 0) { alert("No questions in range."); return; }
+
+            printChunks = [];
+            for (let i = 0; i < printQuestionsList.length; i += 50) {
+                printChunks.push(printQuestionsList.slice(i, i + 50));
+            }
+            
+            document.getElementById('print-range-modal').classList.add('hidden');
+            document.getElementById('print-preview-modal').classList.remove('hidden');
+            
+            currentChunk = 0;
+            renderPrintChunk(currentChunk);
+        }
+
+        function renderPrintChunk(index) {
+            const chunk = printChunks[index];
+            const container = document.getElementById('print-preview-content');
+            
+            let score = 0;
+            chunk.forEach(q => {
+                if(userAnswers[q.id] === q.a) score++;
+            });
+
+            let html = `
+                <div class="border-b-4 border-blue-800 pb-4 mb-6">
+                    <h1 class="text-3xl font-bold text-blue-900">Accounting Mastery Report</h1>
+                    <p class="text-gray-600">Student: ${document.getElementById('full-name').value} | Class: ${document.getElementById('class-number').value}</p>
+                    <p class="text-gray-600">Part ${index+1} of ${printChunks.length}</p>
+                    <div class="mt-2 p-2 bg-blue-50 inline-block rounded">
+                        <strong>Score: ${score} / ${chunk.length}</strong>
+                    </div>
+                </div>
+            `;
+
+            chunk.forEach(q => {
+                const userAns = userAnswers[q.id];
+                const isCorrect = userAns === q.a;
+                const isAnswered = userAns !== undefined;
+
+                let statusHTML = '';
+                let feedbackClass = '';
+                let explanationHTML = '';
+
+                if (!isAnswered) {
+                    statusHTML = '<span class="text-gray-500 font-bold">Not Answered</span>';
+                    feedbackClass = 'bg-gray-100 border border-gray-200';
+                    // REQUIREMENT: Do NOT provide explanation if student did not answer
+                    explanationHTML = ''; 
+                } else {
+                    if (isCorrect) {
+                        statusHTML = '<span class="text-green-700 font-bold">Correct</span>';
+                        feedbackClass = 'feedback-correct';
+                    } else {
+                        statusHTML = '<span class="text-red-700 font-bold">Incorrect</span>';
+                        feedbackClass = 'feedback-incorrect';
+                    }
+                    // REQUIREMENT: Show explanation for both correct and wrong answers (if answered)
+                    explanationHTML = `
+                        <div class="mt-2 pt-2 border-t border-gray-200/50">
+                            <p class="font-bold text-xs text-gray-700">Correct Answer: <span class="font-normal">${q.a}</span></p>
+                            <p class="font-bold text-xs text-gray-700 mt-1">Explanation:</p>
+                            <p class="text-sm text-gray-600">${q.s}</p>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="mb-4 p-4 rounded ${feedbackClass} break-inside-avoid">
+                        <div class="flex justify-between">
+                            <p class="font-bold text-sm text-blue-900 mb-1">Question ${q.id} (${q.type})</p>
+                            ${statusHTML}
+                        </div>
+                        <p class="mb-2 text-sm font-medium text-gray-800">${q.q}</p>
+                        <p class="text-xs text-gray-500 mb-2">Your Answer: <span class="font-mono font-bold text-gray-700">${userAns || '---'}</span></p>
+                        ${explanationHTML}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            const btn = document.getElementById('download-pdf-button');
+            btn.disabled = true;
+            btn.classList.add('cursor-not-allowed', 'bg-green-300');
+            btn.classList.remove('bg-green-600');
+            btn.innerText = "Scroll to Bottom to Enable Download";
+
+            const modal = document.getElementById('print-preview-modal');
+            modal.onscroll = () => {
+                if(modal.scrollTop + modal.clientHeight >= modal.scrollHeight - 50) {
+                    btn.disabled = false;
+                    btn.classList.remove('cursor-not-allowed', 'bg-green-300');
+                    btn.classList.add('bg-green-600', 'hover:bg-green-700', 'text-white');
+                    btn.innerText = `Download PDF Part ${index+1}`;
+                }
+            }
+        }
+
+        function runActualPDFGeneration() {
+            const element = document.getElementById('print-preview-content');
+            const name = document.getElementById('full-name').value.replace(/\s+/g, '_');
+            const filename = `Accounting_${name}_Part${currentChunk+1}.pdf`;
+            const opt = { margin: 0.5, filename: filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+            
+            const btn = document.getElementById('download-pdf-button');
+            btn.innerText = "Generating...";
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                currentChunk++;
+                if(currentChunk < printChunks.length) {
+                    renderPrintChunk(currentChunk);
+                    document.getElementById('print-preview-modal').scrollTop = 0;
+                } else {
+                    document.getElementById('print-preview-modal').classList.add('hidden');
+                    alert("All parts generated.");
+                }
+            });
+        }
+
+        function cancelPrintPreview() {
+            document.getElementById('print-preview-modal').classList.add('hidden');
+        }
+
+        window.onload = init;
+
+    </script>
+</body>
+</html>
