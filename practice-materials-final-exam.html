@@ -1323,209 +1323,506 @@
     </div>
 </section>
 
-<!-- Section 4: The Balance Sheet -->
-<section class="border-t pt-6">
-    <h4 class="text-xl font-bold text-gray-800 mb-3">3. The Balance Sheet</h4>
-    <p class="mb-3">
-        <strong>Purpose:</strong> To prove the fundamental accounting equation (Assets = Liabilities + Equity) at a specific <em>point</em> in time (e.g., "As of Dec 31").
-    </p>
-    <p class="mb-4">
-        <strong>Source of Data:</strong> The "Balance Sheet" columns (Cols 9 & 10) of the worksheet, EXCEPT for the Capital account.
-    </p>
-    
-    <div class="bg-yellow-50 p-4 rounded border-l-4 border-yellow-500 mb-4">
-        <strong>The "Ending Capital" Trap:</strong> Do not simply copy the Capital balance from the trial balance. You MUST use the <strong>Ending Capital</strong> calculated in the Statement of Changes in Equity (Step 2).
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Four Financial Statements</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+        }
+        .statement-card {
+            font-family: 'Inter', sans-serif; /* Keep statement text clean */
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .statement-card .title {
+            font-family: 'Playfair Display', serif;
+        }
+        .double-underline {
+            border-bottom: 3px double #000;
+            padding-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
-            <h5 class="font-bold text-gray-700 underline mb-2">Assets (The "Owns")</h5>
-            <ul class="list-none space-y-1 text-sm">
-                <li><strong>Current Assets:</strong> Cash, Accounts Receivable, Supplies, Prepaid Expenses.</li>
-                <li><strong>Non-Current Assets:</strong> Land, Buildings, Equipment.</li>
-                <li><em>Less: Accumulated Depreciation (Contra-Asset).</em></li>
-            </ul>
-        </div>
-        <div>
-            <h5 class="font-bold text-gray-700 underline mb-2">Liabilities (The "Owes")</h5>
-            <ul class="list-none space-y-1 text-sm">
-                <li><strong>Current Liabilities:</strong> Accounts Payable, Unearned Revenue, Salaries Payable.</li>
-                <li><strong>Long-Term Liabilities:</strong> Notes Payable (due > 1 yr), Mortgage Payable.</li>
-                <li class="mt-2 font-bold text-gray-800">Owner's Equity</li>
-                <li>Ending Capital (from Step 2).</li>
-            </ul>
-        </div>
-    </div>
+    <header class="bg-gray-800 text-white p-6 shadow-lg">
+        <h1 class="text-3xl font-bold">The Four Core Financial Statements</h1>
+        <p class="text-gray-400">A sole proprietorship perspective: Order of preparation and purpose.</p>
+    </header>
 
-    <!-- Balance Sheet Example -->
-    <div class="p-6 bg-white border border-gray-300 shadow-xl rounded-lg max-w-xl mx-auto">
-        <h6 class="text-center font-serif text-lg font-bold">Stellar Consulting Services</h6>
-        <p class="text-center font-serif text-sm">Balance Sheet</p>
-        <p class="text-center font-serif text-sm mb-4">As of December 31, 2025</p>
-        
-        <div class="grid grid-cols-2 gap-x-8 text-sm">
-            <!-- ASSETS SECTION -->
-            <div class="col-span-2 mb-3">
-                <p class="font-bold underline text-gray-800">ASSETS</p>
-            </div>
+    <main class="p-6 md:p-10 max-w-6xl mx-auto space-y-12">
 
-            <!-- Current Assets -->
-            <div class="col-span-1 font-bold">
-                Current Assets
-            </div>
-            <div class="col-span-1 text-right">
-                <!-- Column 1 Placeholder -->
-            </div>
-
-            <div class="col-span-1 ml-4">
-                Cash
-            </div>
-            <div class="col-span-1 text-right">
-                $30,000.00
-            </div>
-
-            <div class="col-span-1 ml-4">
-                Accounts Receivable
-            </div>
-            <div class="col-span-1 text-right">
-                10,000.00
-            </div>
-
-            <div class="col-span-1 ml-4">
-                Supplies
-            </div>
-            <div class="col-span-1 text-right border-b pb-1">
-                2,000.00
-            </div>
-
-            <div class="col-span-1 font-bold">
-                Total Current Assets
-            </div>
-            <div class="col-span-1 text-right font-bold border-b pb-2">
-                42,000.00
-            </div>
-
-            <!-- Non-Current Assets -->
-            <div class="col-span-1 font-bold pt-3">
-                Non-Current Assets
-            </div>
-            <div class="col-span-1 text-right pt-3">
-                <!-- Column 1 Placeholder -->
-            </div>
-
-            <div class="col-span-1 ml-4">
-                Equipment (Net of Acc. Depr.)
-            </div>
-            <div class="col-span-1 text-right border-b pb-1">
-                35,000.00
-            </div>
-
-            <div class="col-span-1 font-bold">
-                Total Non-Current Assets
-            </div>
-            <div class="col-span-1 text-right font-bold pb-2">
-                35,000.00
-            </div>
-
-            <div class="col-span-1 pt-3 font-bold text-xl">
-                TOTAL ASSETS
-            </div>
-            <div class="col-span-1 text-right pt-3 font-bold text-xl border-t-2 border-double border-black">
-                $77,000.00
-            </div>
-
-            <!-- LIABILITIES & EQUITY SECTION -->
-            <div class="col-span-2 mb-3 mt-6">
-                <p class="font-bold underline text-gray-800">LIABILITIES & OWNER'S EQUITY</p>
-            </div>
-
-            <!-- Liabilities -->
-            <div class="col-span-1 font-bold">
-                Liabilities
-            </div>
-            <div class="col-span-1 text-right">
-                <!-- Column 1 Placeholder -->
-            </div>
-
-            <div class="col-span-1 ml-4">
-                Accounts Payable
-            </div>
-            <div class="col-span-1 text-right">
-                $5,000.00
-            </div>
-
-            <div class="col-span-1 ml-4">
-                Unearned Revenue
-            </div>
-            <div class="col-span-1 text-right border-b pb-1">
-                4,000.00
-            </div>
-
-            <div class="col-span-1 font-bold">
-                Total Liabilities
-            </div>
-            <div class="col-span-1 text-right font-bold border-b pb-2">
-                9,000.00
-            </div>
-
-            <!-- Owner's Equity -->
-            <div class="col-span-1 font-bold pt-3">
-                Owner's Equity
-            </div>
-            <div class="col-span-1 text-right pt-3">
-                <!-- Column 1 Placeholder -->
-            </div>
+        <!-- Section 1: The Income Statement -->
+        <section>
+            <h4 class="text-2xl font-bold text-gray-800 mb-3">1. The Income Statement</h4>
+            <p class="mb-3">
+                <strong>Purpose:</strong> To show the company's performance over a specific <em>period</em> of time (e.g., "For the Year Ended Dec 31"). It answers the question: "Was the business profitable?"
+            </p>
+            <p class="mb-4">
+                <strong>Formula:</strong> Revenues - Expenses = Net Income (or Net Loss).
+            </p>
             
-            <div class="col-span-1 ml-4">
-                Owner's Capital, December 31, 2025
+            <!-- Income Statement Example -->
+            <div class="p-6 bg-white border border-gray-300 shadow-xl rounded-lg statement-card">
+                <h6 class="text-center title text-lg font-bold">Stellar Consulting Services</h6>
+                <p class="text-center title text-sm">Income Statement</p>
+                <p class="text-center title text-sm mb-6">For the Year Ended December 31, 2025</p>
+                
+                <div class="grid grid-cols-2 gap-x-8 text-sm">
+                    
+                    <div class="col-span-2 mb-3">
+                        <p class="font-bold underline text-gray-800">REVENUES</p>
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Service Revenue
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b-2">
+                        $50,000.00
+                    </div>
+
+                    <div class="col-span-2 mb-3 mt-6">
+                        <p class="font-bold underline text-gray-800">EXPENSES</p>
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Rent Expense
+                    </div>
+                    <div class="col-span-1 text-right">
+                        15,000.00
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Salaries Expense
+                    </div>
+                    <div class="col-span-1 text-right">
+                        8,000.00
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Supplies Expense
+                    </div>
+                    <div class="col-span-1 text-right border-b pb-1">
+                        2,000.00
+                    </div>
+
+                    <div class="col-span-1 font-bold">
+                        Total Expenses
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b pb-2">
+                        25,000.00
+                    </div>
+
+                    <div class="col-span-1 pt-3 font-bold text-lg">
+                        NET INCOME
+                    </div>
+                    <div class="col-span-1 text-right pt-3 font-bold text-lg double-underline">
+                        $25,000.00
+                    </div>
+
+                </div>
             </div>
-            <div class="col-span-1 text-right border-b pb-1">
-                68,000.00
+        </section>
+
+        <!-- Section 2: Statement of Changes in Equity -->
+        <section class="border-t pt-6">
+            <h4 class="text-2xl font-bold text-gray-800 mb-3">2. Statement of Changes in Equity</h4>
+            <p class="mb-3">
+                <strong>Purpose:</strong> To show the movement in the owner's claim on the company's assets over a specific <em>period</em> of time. It links the Income Statement (Net Income) to the Balance Sheet (Ending Capital).
+            </p>
+            <p class="mb-4">
+                <strong>Formula:</strong> Beginning Capital + Investments + Net Income - Drawings = Ending Capital.
+            </p>
+            
+            <!-- Statement of Changes in Equity Example -->
+            <div class="p-6 bg-white border border-gray-300 shadow-xl rounded-lg statement-card">
+                <h6 class="text-center title text-lg font-bold">Stellar Consulting Services</h6>
+                <p class="text-center title text-sm">Statement of Changes in Owner's Equity</p>
+                <p class="text-center title text-sm mb-6">For the Year Ended December 31, 2025</p>
+                
+                <div class="grid grid-cols-2 gap-x-8 text-sm">
+                    
+                    <div class="col-span-1 ml-4">
+                        Owner's Capital, January 1, 2025
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b-2">
+                        $50,000.00
+                    </div>
+
+                    <div class="col-span-2 mb-3 mt-4">
+                        <p class="font-bold underline text-gray-800">Changes in Equity</p>
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Add: Net Income (from Step 1)
+                    </div>
+                    <div class="col-span-1 text-right">
+                        25,000.00
+                    </div>
+                    
+                    <div class="col-span-1 ml-4">
+                        Less: Owner Drawings
+                    </div>
+                    <div class="col-span-1 text-right border-b pb-1">
+                        (7,000.00)
+                    </div>
+
+                    <div class="col-span-1 font-bold">
+                        Net Increase in Equity
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b pb-2">
+                        18,000.00
+                    </div>
+
+                    <div class="col-span-1 pt-3 font-bold text-lg">
+                        Owner's Capital, December 31, 2025
+                    </div>
+                    <div class="col-span-1 text-right pt-3 font-bold text-lg double-underline">
+                        $68,000.00
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Section 3: The Balance Sheet -->
+        <section class="border-t pt-6">
+            <h4 class="text-2xl font-bold text-gray-800 mb-3">3. The Balance Sheet</h4>
+            <p class="mb-3">
+                <strong>Purpose:</strong> To prove the fundamental accounting equation (Assets = Liabilities + Equity) at a specific <em>point</em> in time (e.g., "As of Dec 31").
+            </p>
+            <p class="mb-4">
+                <strong>Source of Data:</strong> The "Balance Sheet" columns (Cols 9 & 10) of the worksheet, EXCEPT for the Capital account.
+            </p>
+            
+            <div class="bg-yellow-50 p-4 rounded border-l-4 border-yellow-500 mb-4">
+                <strong>The "Ending Capital" Trap:</strong> Do not simply copy the Capital balance from the trial balance. You MUST use the <strong>Ending Capital</strong> calculated in the Statement of Changes in Equity (Step 2).
             </div>
 
-            <div class="col-span-1 font-bold">
-                Total Owner's Equity
-            </div>
-            <div class="col-span-1 text-right font-bold pb-2">
-                68,000.00
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <h5 class="font-bold text-gray-700 underline mb-2">Assets (The "Owns")</h5>
+                    <ul class="list-none space-y-1 text-sm">
+                        <li><strong>Current Assets:</strong> Cash, Accounts Receivable, Supplies, Prepaid Expenses.</li>
+                        <li><strong>Non-Current Assets:</strong> Land, Buildings, Equipment.</li>
+                        <li><em>Less: Accumulated Depreciation (Contra-Asset).</em></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-bold text-gray-700 underline mb-2">Liabilities (The "Owes")</h5>
+                    <ul class="list-none space-y-1 text-sm">
+                        <li><strong>Current Liabilities:</strong> Accounts Payable, Unearned Revenue, Salaries Payable.</li>
+                        <li><strong>Long-Term Liabilities:</strong> Notes Payable (due > 1 yr), Mortgage Payable.</li>
+                        <li class="mt-2 font-bold text-gray-800">Owner's Equity</li>
+                        <li>Ending Capital (from Step 2).</li>
+                    </ul>
+                </div>
             </div>
 
+            <!-- Balance Sheet Example -->
+            <div class="p-6 bg-white border border-gray-300 shadow-xl rounded-lg statement-card">
+                <h6 class="text-center title text-lg font-bold">Stellar Consulting Services</h6>
+                <p class="text-center title text-sm">Balance Sheet</p>
+                <p class="text-center title text-sm mb-4">As of December 31, 2025</p>
+                
+                <div class="grid grid-cols-2 gap-x-8 text-sm">
+                    <!-- ASSETS SECTION -->
+                    <div class="col-span-2 mb-3">
+                        <p class="font-bold underline text-gray-800">ASSETS</p>
+                    </div>
 
-            <div class="col-span-1 pt-3 font-bold text-xl">
-                TOTAL LIABILITIES & EQUITY
+                    <!-- Current Assets -->
+                    <div class="col-span-1 font-bold">
+                        Current Assets
+                    </div>
+                    <div class="col-span-1 text-right">
+                        <!-- Column 1 Placeholder -->
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Cash
+                    </div>
+                    <div class="col-span-1 text-right">
+                        $30,000.00
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Accounts Receivable
+                    </div>
+                    <div class="col-span-1 text-right">
+                        10,000.00
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Supplies
+                    </div>
+                    <div class="col-span-1 text-right border-b pb-1">
+                        2,000.00
+                    </div>
+
+                    <div class="col-span-1 font-bold">
+                        Total Current Assets
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b pb-2">
+                        42,000.00
+                    </div>
+
+                    <!-- Non-Current Assets -->
+                    <div class="col-span-1 font-bold pt-3">
+                        Non-Current Assets
+                    </div>
+                    <div class="col-span-1 text-right pt-3">
+                        <!-- Column 1 Placeholder -->
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Equipment
+                    </div>
+                    <div class="col-span-1 text-right">
+                        40,000.00
+                    </div>
+
+                    <div class="col-span-1 ml-8">
+                        Less: Accumulated Depreciation
+                    </div>
+                    <div class="col-span-1 text-right border-b pb-1">
+                        (5,000.00)
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Equipment (Net)
+                    </div>
+                    <div class="col-span-1 text-right font-bold pb-2">
+                        35,000.00
+                    </div>
+                    
+                    <div class="col-span-1 font-bold">
+                        Total Non-Current Assets
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b pb-2">
+                        35,000.00
+                    </div>
+
+
+                    <div class="col-span-1 pt-3 font-bold text-lg">
+                        TOTAL ASSETS
+                    </div>
+                    <div class="col-span-1 text-right pt-3 font-bold text-lg double-underline">
+                        $77,000.00
+                    </div>
+
+                    <!-- LIABILITIES & EQUITY SECTION -->
+                    <div class="col-span-2 mb-3 mt-6">
+                        <p class="font-bold underline text-gray-800">LIABILITIES & OWNER'S EQUITY</p>
+                    </div>
+
+                    <!-- Liabilities -->
+                    <div class="col-span-1 font-bold">
+                        Liabilities
+                    </div>
+                    <div class="col-span-1 text-right">
+                        <!-- Column 1 Placeholder -->
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Accounts Payable
+                    </div>
+                    <div class="col-span-1 text-right">
+                        $5,000.00
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Unearned Revenue (Current Liability)
+                    </div>
+                    <div class="col-span-1 text-right border-b pb-1">
+                        4,000.00
+                    </div>
+
+                    <div class="col-span-1 font-bold">
+                        Total Liabilities
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b pb-2">
+                        9,000.00
+                    </div>
+
+                    <!-- Owner's Equity -->
+                    <div class="col-span-1 font-bold pt-3">
+                        Owner's Equity
+                    </div>
+                    <div class="col-span-1 text-right pt-3">
+                        <!-- Column 1 Placeholder -->
+                    </div>
+                    
+                    <div class="col-span-1 ml-4">
+                        Owner's Capital, December 31, 2025 (from Step 2)
+                    </div>
+                    <div class="col-span-1 text-right border-b pb-1">
+                        68,000.00
+                    </div>
+
+                    <div class="col-span-1 font-bold">
+                        Total Owner's Equity
+                    </div>
+                    <div class="col-span-1 text-right font-bold pb-2">
+                        68,000.00
+                    </div>
+
+
+                    <div class="col-span-1 pt-3 font-bold text-lg">
+                        TOTAL LIABILITIES & EQUITY
+                    </div>
+                    <div class="col-span-1 text-right pt-3 font-bold text-lg double-underline">
+                        $77,000.00
+                    </div>
+
+                </div>
             </div>
-            <div class="col-span-1 text-right pt-3 font-bold text-xl border-t-2 border-double border-black">
-                $77,000.00
+        </section>
+
+        <!-- Section 4: Statement of Cash Flows -->
+        <section class="border-t pt-6">
+            <h4 class="text-2xl font-bold text-gray-800 mb-3">4. Statement of Cash Flows</h4>
+            <p class="mb-3">
+                <strong>Purpose:</strong> To reveal where cash came from and where it went. A business can be profitable (Net Income) but still run out of cash (Liquidity crisis).
+            </p>
+            <p class="mb-4">
+                This statement organizes cash movements into three activities:
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center mb-6">
+                <div class="bg-gray-50 p-3 rounded border">
+                    <strong class="block text-blue-600">Operating</strong>
+                    <span class="text-xs">Day-to-day revenues and expenses.</span>
+                </div>
+                <div class="bg-gray-50 p-3 rounded border">
+                    <strong class="block text-green-600">Investing</strong>
+                    <span class="text-xs">Buying/Selling long-term assets (Land, Equipment).</span>
+                </div>
+                <div class="bg-gray-50 p-3 rounded border">
+                    <strong class="block text-purple-600">Financing</strong>
+                    <span class="text-xs">Owner investments, drawings, and bank loans.</span>
+                </div>
             </div>
 
-        </div>
-    </div>
-</section>
+            <!-- Statement of Cash Flows Example (Direct Method for Simplicity) -->
+            <div class="p-6 bg-white border border-gray-300 shadow-xl rounded-lg statement-card">
+                <h6 class="text-center title text-lg font-bold">Stellar Consulting Services</h6>
+                <p class="text-center title text-sm">Statement of Cash Flows (Direct Method)</p>
+                <p class="text-center title text-sm mb-6">For the Year Ended December 31, 2025</p>
 
-    <!-- Section 5: Statement of Cash Flows -->
-    <section class="border-t pt-6">
-        <h4 class="text-xl font-bold text-gray-800 mb-3">4. Statement of Cash Flows</h4>
-        <p class="mb-3">
-            <strong>Purpose:</strong> To reveal where cash came from and where it went. A business can be profitable (Net Income) but still run out of cash (Liquidity crisis).
-        </p>
-        <p class="mb-4">
-            This statement organizes cash movements into three activities:
-        </p>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-            <div class="bg-gray-50 p-3 rounded border">
-                <strong class="block text-blue-600">Operating</strong>
-                <span class="text-xs">Day-to-day revenues and expenses.</span>
+                <div class="grid grid-cols-2 gap-x-8 text-sm">
+                    
+                    <!-- OPERATING ACTIVITIES -->
+                    <div class="col-span-2 mb-3">
+                        <p class="font-bold underline text-gray-800">CASH FLOWS FROM OPERATING ACTIVITIES</p>
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Cash received from customers
+                    </div>
+                    <div class="col-span-1 text-right">
+                        $48,000.00
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Cash paid for operating expenses
+                    </div>
+                    <div class="col-span-1 text-right">
+                        (17,000.00)
+                    </div>
+
+                    <div class="col-span-1 font-bold border-t pt-1">
+                        Net Cash Flow from Operating Activities
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-t pt-1 border-b pb-2">
+                        31,000.00
+                    </div>
+
+
+                    <!-- INVESTING ACTIVITIES -->
+                    <div class="col-span-2 mb-3 mt-6">
+                        <p class="font-bold underline text-gray-800">CASH FLOWS FROM INVESTING ACTIVITIES</p>
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Purchase of Equipment
+                    </div>
+                    <div class="col-span-1 text-right border-b pb-1">
+                        (40,000.00)
+                    </div>
+                    
+                    <div class="col-span-1 font-bold">
+                        Net Cash Flow from Investing Activities
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b pb-2">
+                        (40,000.00)
+                    </div>
+
+
+                    <!-- FINANCING ACTIVITIES -->
+                    <div class="col-span-2 mb-3 mt-6">
+                        <p class="font-bold underline text-gray-800">CASH FLOWS FROM FINANCING ACTIVITIES</p>
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Owner Investment
+                    </div>
+                    <div class="col-span-1 text-right">
+                        15,000.00
+                    </div>
+
+                    <div class="col-span-1 ml-4">
+                        Owner Drawings
+                    </div>
+                    <div class="col-span-1 text-right border-b pb-1">
+                        (7,000.00)
+                    </div>
+                    
+                    <div class="col-span-1 font-bold">
+                        Net Cash Flow from Financing Activities
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b pb-2">
+                        8,000.00
+                    </div>
+
+
+                    <!-- SUMMARY -->
+                    <div class="col-span-1 pt-3 font-bold text-lg">
+                        NET INCREASE (DECREASE) IN CASH
+                    </div>
+                    <div class="col-span-1 text-right pt-3 font-bold text-lg">
+                        (1,000.00)
+                    </div>
+
+                    <div class="col-span-1 font-bold">
+                        Cash Balance, January 1, 2025
+                    </div>
+                    <div class="col-span-1 text-right font-bold border-b pb-1">
+                        31,000.00
+                    </div>
+
+                    <div class="col-span-1 pt-3 font-bold text-lg">
+                        Cash Balance, December 31, 2025
+                    </div>
+                    <div class="col-span-1 text-right pt-3 font-bold text-lg double-underline">
+                        $30,000.00
+                    </div>
+
+                </div>
             </div>
-            <div class="bg-gray-50 p-3 rounded border">
-                <strong class="block text-green-600">Investing</strong>
-                <span class="text-xs">Buying/Selling long-term assets (Land, Equipment).</span>
-            </div>
-            <div class="bg-gray-50 p-3 rounded border">
-                <strong class="block text-purple-600">Financing</strong>
-                <span class="text-xs">Owner investments, drawings, and bank loans.</span>
-            </div>
-        </div>
-    </section>
+        </section>
+
+    </main>
+</body>
+</html>
 
     <!-- Section 6: Interconnectivity Summary -->
     <section class="mt-8 bg-gray-800 text-white p-6 rounded-lg">
