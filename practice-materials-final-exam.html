@@ -1039,8 +1039,9 @@
                         </div>
                         <p class="text-xs text-gray-400 mt-6 text-center">© 2025 JLVCPA. All rights reserved.</p>
                     </section>
-                </div>
-            `,
+                </div>`,
+            
+// th0ory-Step5 Preparation of the 10 columns worksheet
 'theory-worksheet': `
 <div class="space-y-6 text-gray-700 leading-relaxed">
     
@@ -1059,7 +1060,7 @@
     <section>
         <h4 class="text-xl font-semibold text-gray-800 mb-3">The Anatomy of the 10 Columns</h4>
         <p class="mb-4">
-            The worksheet is divided into five distinct sections, each containing a Debit (Dr.) and Credit (Cr.) column.
+            The worksheet is divided into five distinct sections, each containing a Debit and Credit column.
         </p>
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-300 mb-4 text-sm">
@@ -1083,7 +1084,7 @@
                     <tr>
                         <td class="p-2 border text-gray-600">The raw data from the ledger before any updates.</td>
                         <td class="p-2 border text-gray-600">Where accruals and deferrals are drafted.</td>
-                        <td class="p-2 border text-gray-600">The mathematical result of combining cols 1-4.</td>
+                        <td class="p-2 border text-gray-600">The mathematical result of combining columns 1 through 4.</td>
                         <td class="p-2 border text-gray-600">Revenues and Expenses only.</td>
                         <td class="p-2 border text-gray-600">Assets, Liabilities, Equity, and Drawings.</td>
                     </tr>
@@ -1106,7 +1107,7 @@
         <div class="mb-6">
             <h5 class="font-bold text-gray-800">Step 2: Entering Adjustments</h5>
             <p class="mb-2">
-                This is the critical phase where Accruals and Deferrals are applied. You must enter the adjustments in columns 3 (Dr.) and 4 (Cr.).
+                This is the critical phase where Accruals and Deferrals are applied. You must enter the adjustments in columns 3 (Debit) and 4 (Credit).
             </p>
             <ul class="list-disc ml-5 mt-2 space-y-1">
                 <li><strong>Deferrals:</strong> E.g., Move expired Prepaid Insurance (Credit Asset) to Insurance Expense (Debit Expense).</li>
@@ -1122,9 +1123,9 @@
                 Calculate the new balances by combining the Unadjusted Trial Balance (Step 1) with the Adjustments (Step 2).
             </p>
             <ul class="list-disc ml-5 mt-2 space-y-1">
-                <li><strong>Debit + Debit = Add</strong> (Example: Rent Expense had $1000, added $200 adjustment -> $1200 Debit).</li>
-                <li><strong>Credit + Credit = Add</strong> (Example: Accumulated Depreciation had $500, added $100 adjustment -> $600 Credit).</li>
-                <li><strong>Debit + Credit = Subtract</strong> (Example: Prepaid Rent had $5000 Debit, adjustment was $1000 Credit -> $4000 Debit).</li>
+                <li><strong>Debit + Debit = Add</strong> (Example: Rent Expense had ₱1,000, added ₱200 adjustment -> ₱1,200 Debit).</li>
+                <li><strong>Credit + Credit = Add</strong> (Example: Accumulated Depreciation had ₱500, added ₱100 adjustment -> ₱600 Credit).</li>
+                <li><strong>Debit + Credit = Subtract</strong> (Example: Prepaid Rent had ₱5,000 Debit, adjustment was ₱1,000 Credit -> ₱4,000 Debit).</li>
             </ul>
             <p class="mt-2">Verify that Total Debits = Total Credits in columns 5 and 6.</p>
         </div>
@@ -1132,16 +1133,16 @@
         <div class="mb-6">
             <h5 class="font-bold text-gray-800">Step 4: Extending the Amounts</h5>
             <p class="mb-2">
-                Move every account balance from the Adjusted Trial Balance (Cols 5 & 6) to <strong>EITHER</strong> the Income Statement columns <strong>OR</strong> the Balance Sheet columns. An account can never be in both.
+                Move every account balance from the Adjusted Trial Balance (Columns 5 and 6) to <strong>EITHER</strong> the Income Statement columns <strong>OR</strong> the Balance Sheet columns. An account can never be in both.
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                 <div class="bg-blue-50 p-4 rounded border border-blue-200">
-                    <h6 class="font-bold text-blue-800">Income Statement Columns (7 & 8)</h6>
+                    <h6 class="font-bold text-blue-800">Income Statement Columns (7 and 8)</h6>
                     <p class="text-sm">Includes only <strong>Revenue</strong> and <strong>Expense</strong> accounts.</p>
                     <p class="text-xs mt-1 text-gray-500">Note: These are temporary accounts that will be closed later.</p>
                 </div>
                 <div class="bg-green-50 p-4 rounded border border-green-200">
-                    <h6 class="font-bold text-green-800">Balance Sheet Columns (9 & 10)</h6>
+                    <h6 class="font-bold text-green-800">Balance Sheet Columns (9 and 10)</h6>
                     <p class="text-sm">Includes <strong>Assets</strong>, <strong>Liabilities</strong>, <strong>Owner's Equity</strong>, and <strong>Drawings</strong>.</p>
                     <p class="text-xs mt-1 text-gray-500">Note: Accumulated Depreciation goes here (Credit side).</p>
                 </div>
@@ -1151,7 +1152,7 @@
         <div class="mb-6">
             <h5 class="font-bold text-gray-800">Step 5: Balancing the Worksheet (Net Income/Loss)</h5>
             <p class="mb-2">
-                Initially, the totals for columns 7-10 will NOT match. The difference represents the Net Income or Net Loss.
+                Initially, the totals for columns 7 through 10 will NOT match. The difference represents the Net Income or Net Loss.
             </p>
             <ol class="list-decimal ml-5 mt-2 space-y-2">
                 <li>Sum the Income Statement columns. If Credit (Revenue) > Debit (Expense), the difference is <strong>Net Income</strong>.</li>
@@ -1170,14 +1171,16 @@
     <section class="bg-yellow-50 p-5 rounded-lg border border-yellow-200">
         <h4 class="text-xl font-semibold text-yellow-800 mb-3">Common Errors to Avoid</h4>
         <ul class="list-disc ml-5 space-y-2 text-gray-700">
-            <li><strong>Reversing Dr/Cr logic:</strong> Remember that Expenses are Debits and Revenues are Credits. A common mistake is extending Revenue to the Debit side of the Income Statement.</li>
+            <li><strong>Reversing Debit/Credit logic:</strong> Remember that Expenses are Debits and Revenues are Credits. A common mistake is extending Revenue to the Debit side of the Income Statement.</li>
             <li><strong>Accumulated Depreciation:</strong> This is a Contra-Asset. It must be extended to the <strong>Credit</strong> side of the Balance Sheet columns, not the Income Statement.</li>
             <li><strong>Drawings/Dividends:</strong> These are not Expenses. They must be extended to the <strong>Debit</strong> side of the Balance Sheet columns.</li>
-            <li><strong>Prepaid vs. Expense:</strong> Ensure you are adjusting the correct portion. If the trial balance shows "Prepaid Insurance," you credit it to reduce the asset. If the trial balance shows "Insurance Expense" (rare but possible), you might need to adjust differently.</li>
+            <li><strong>Prepaid versus Expense:</strong> Ensure you are adjusting the correct portion. If the trial balance shows "Prepaid Insurance," you credit it to reduce the asset. If the trial balance shows "Insurance Expense" (rare but possible), you might need to adjust differently.</li>
         </ul>
-    </section>
-
+      </section>
+      <p class="text-xs text-gray-400 mt-6 text-center">© 2025 JLVCPA. All rights reserved.</p>
 </div>`,
+
+// theory-step6 preparation of the financial statement            
 'theory-fs': `
 <div class="space-y-8 text-gray-700 leading-relaxed">
 
@@ -1345,13 +1348,855 @@
             </li>
         </ul>
     </section>
-
+    <p class="text-xs text-gray-400 mt-6 text-center">© 2025 JLVCPA. All rights reserved.</p>
 </div>`,
-            'theory-step7': `<h3 class="text-2xl font-bold text-blue-800 mb-2">Step 7: Journalizing Adjusting Entries</h3><p>Formal recording of worksheet adjustments into the General Journal and posting to Ledger.</p>`,
-            'theory-step8': `<h3 class="text-2xl font-bold text-green-800 mb-2">Step 8: Closing Entries (REID)</h3><p>Zero out nominal accounts.</p><ul class="list-disc ml-5"><li>Rev -> Inc Sum</li><li>Exp -> Inc Sum</li><li>Inc Sum -> Cap</li><li>Draw -> Cap</li></ul>`,
-            'theory-step9': `<h3 class="text-2xl font-bold text-purple-800 mb-2">Step 9: Post-Closing Trial Balance</h3><p>Verifies equality of permanent accounts after closing.</p>`,
-            'theory-step10': `<h3 class="text-2xl font-bold text-yellow-800 mb-2">Step 10: Reversing Entries</h3><p>Optional step on Day 1 of new period. Reverses Accruals and Expense-method Deferrals.</p>`
+            
+'theory-step7': `
+<div class="space-y-8 text-gray-700 leading-relaxed">
+
+    <!-- Section 1: Introduction and Context -->
+    <section>
+        <h3 class="text-2xl font-bold text-blue-900 mb-4">Step 7: Journalizing and Posting Adjusting Entries</h3>
+        <p class="mb-4">
+            At this stage in the accounting cycle, you have likely completed the 10-column worksheet and perhaps even drafted the financial statements. However, there is a critical disconnect: <strong>The official books do not yet match your reports.</strong>
+        </p>
+        <p class="mb-4">
+            The worksheet is merely a scratchpad or a drafting tool. The adjustments you calculated there (Columns 3 and 4) exist <em>only</em> on that piece of paper. To make them a permanent part of the company's financial history, they must be formally recorded in the General Journal and posted to the General Ledger.
+        </p>
+        <div class="bg-blue-50 border-l-4 border-blue-600 p-4 my-4">
+            <h4 class="font-bold text-blue-800">The Objective</h4>
+            <p class="text-sm">
+                To bring the ledger account balances into agreement with the figures reported in the financial statements. Without this step, the books remain "Unadjusted," and the financial statements would be unsupported by the accounting records.
+            </p>
+        </div>
+    </section>
+
+    <!-- Section 2: The Journalizing Process -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">Part 1: Journalizing the Adjustments</h4>
+        <p class="mb-4">
+            Journalizing involves copying the adjustments typically found in the "Adjustments" columns of your worksheet into the General Journal. These entries are dated as of the last day of the accounting period (e.g., December 31).
+        </p>
+        
+        <!-- Example 1: Accrued Expense -->
+        <div class="mb-8">
+            <h5 class="font-bold text-gray-700 mb-2">Example A: Accrued Salaries (Accrued Expense)</h5>
+            <p class="mb-2 text-sm">
+                <strong>Scenario:</strong> Employees have worked for the last three days of December, earning a total of ₱15,000. However, the next payday is not until January 5. We must record the expense incurred in December.
+            </p>
+            <div class="overflow-x-auto border rounded-lg shadow-sm">
+                <table class="min-w-full bg-white text-sm">
+                    <thead class="bg-gray-100 text-gray-600 uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Account Titles and Explanation</th>
+                            <th class="px-4 py-2 text-right">Debit</th>
+                            <th class="px-4 py-2 text-right">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-4 py-2 whitespace-nowrap">Dec. 31</td>
+                            <td class="px-4 py-2 font-medium">Salaries Expense</td>
+                            <td class="px-4 py-2 text-right">₱15,000</td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Salaries Payable</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱15,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-gray-500 italic">To record accrued salaries for Dec 29-31.</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Example 2: Depreciation -->
+        <div class="mb-8">
+            <h5 class="font-bold text-gray-700 mb-2">Example B: Depreciation (Allocation of Cost)</h5>
+            <p class="mb-2 text-sm">
+                <strong>Scenario:</strong> The company owns delivery equipment purchased for ₱600,000 with a 5-year life. Monthly depreciation is ₱10,000.
+            </p>
+            <div class="overflow-x-auto border rounded-lg shadow-sm">
+                <table class="min-w-full bg-white text-sm">
+                    <thead class="bg-gray-100 text-gray-600 uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Account Titles and Explanation</th>
+                            <th class="px-4 py-2 text-right">Debit</th>
+                            <th class="px-4 py-2 text-right">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-4 py-2 whitespace-nowrap">Dec. 31</td>
+                            <td class="px-4 py-2 font-medium">Depreciation Expense—Equipment</td>
+                            <td class="px-4 py-2 text-right">₱10,000</td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Accumulated Depreciation—Equipment</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱10,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-gray-500 italic">To record monthly depreciation.</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Example 3: Prepaid Expense -->
+        <div class="mb-8">
+            <h5 class="font-bold text-gray-700 mb-2">Example C: Prepaid Rent (Deferral)</h5>
+            <p class="mb-2 text-sm">
+                <strong>Scenario:</strong> On December 1, the firm paid ₱60,000 for three months of rent. By December 31, one month (₱20,000) has been used up.
+            </p>
+            <div class="overflow-x-auto border rounded-lg shadow-sm">
+                <table class="min-w-full bg-white text-sm">
+                    <thead class="bg-gray-100 text-gray-600 uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Account Titles and Explanation</th>
+                            <th class="px-4 py-2 text-right">Debit</th>
+                            <th class="px-4 py-2 text-right">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-4 py-2 whitespace-nowrap">Dec. 31</td>
+                            <td class="px-4 py-2 font-medium">Rent Expense</td>
+                            <td class="px-4 py-2 text-right">₱20,000</td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Prepaid Rent</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱20,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-gray-500 italic">To record rent expense for December.</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: The Posting Process -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">Part 2: Posting to the Ledger</h4>
+        <p class="mb-4">
+            Once journalized, the entries must be posted to the individual General Ledger accounts. This updates the specific account balances.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <!-- Visualizing the Flow -->
+            <div>
+                <h5 class="font-bold text-blue-800 mb-3">The Flow of Data</h5>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start">
+                        <span class="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">1</span>
+                        <span>Identify the account in the General Ledger (e.g., Prepaid Rent).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">2</span>
+                        <span>Enter the date (Dec 31) and the amount from the Journal.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">3</span>
+                        <span>Calculate the new running balance.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">4</span>
+                        <span>Enter the Journal Page Number (e.g., J-12) in the Ledger's "Ref" column.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Ledger Representation -->
+            <div class="bg-white p-4 border shadow-sm">
+                <h6 class="text-center font-bold border-b pb-2 mb-2">General Ledger: Prepaid Rent</h6>
+                <table class="w-full text-xs text-center">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="border p-1">Date</th>
+                            <th class="border p-1">Item</th>
+                            <th class="border p-1">Debit</th>
+                            <th class="border p-1">Credit</th>
+                            <th class="border p-1">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border p-1">Dec 1</td>
+                            <td class="border p-1">Payment</td>
+                            <td class="border p-1">₱60,000</td>
+                            <td class="border p-1"></td>
+                            <td class="border p-1">₱60,000</td>
+                        </tr>
+                        <tr class="bg-yellow-50">
+                            <td class="border p-1 font-bold">Dec 31</td>
+                            <td class="border p-1">Adjusting</td>
+                            <td class="border p-1"></td>
+                            <td class="border p-1 text-red-600">₱20,000</td>
+                            <td class="border p-1 font-bold">₱40,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-gray-500 mt-2 italic">
+                    Notice how the Credit posting reduces the Asset balance from ₱60,000 to the correct ₱40,000.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Summary of Impact -->
+    <section class="bg-gray-800 text-white p-6 rounded-lg mt-6">
+        <h4 class="text-lg font-bold mb-3">Why this matters</h4>
+        <p class="text-sm leading-relaxed">
+            If you create Financial Statements but fail to Journalize and Post the adjustments, your General Ledger is technically wrong. 
+            The Ledger is the "source of truth" for the next accounting period.
+        </p>
+        <p class="text-sm mt-3 border-t border-gray-600 pt-3">
+            <strong>Example Consequence:</strong> If you don't post the entry for Prepaid Rent (Example C), the Ledger will still show an asset of ₱60,000 on January 1. 
+            You would then mistakenly expense too much in the future, throwing off your taxes and profit margins for the next year.
+        </p>
+    </section>
+    <p class="text-xs text-gray-400 mt-6 text-center">© 2025 JLVCPA. All rights reserved.</p>
+</div>`,
+            
+'theory-step8': `
+<div class="space-y-8 text-gray-700 leading-relaxed">
+
+    <!-- Section 1: Introduction -->
+    <section>
+        <h3 class="text-2xl font-bold text-green-900 mb-4">Step 8: Journalizing and Posting Closing Entries</h3>
+        <p class="mb-4">
+            The accounting cycle is circular, but the books must be "reset" at the end of every year to start fresh for the next. This reset process is known as <strong>Closing the Books</strong>.
+        </p>
+        <p class="mb-4">
+            Imagine a scoreboard at a basketball game. At the end of the game, the score is final and recorded in the history books. However, before the next game starts, the scoreboard must be reset to 0-0. If we didn't reset it, the next game's score would be added to the previous one, making it impossible to tell who won the specific match.
+        </p>
+        <div class="bg-green-50 border-l-4 border-green-600 p-4 my-4">
+            <h4 class="font-bold text-green-800">The Objective</h4>
+            <p class="text-sm">
+                To reduce the balances of all <strong>Temporary (Nominal) Accounts</strong> to zero and transfer their net effect (Net Income or Loss) into the <strong>Permanent (Real) Account</strong>, which is Owner's Capital.
+            </p>
+        </div>
+    </section>
+
+    <!-- Section 2: Temporary vs Permanent Accounts -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">Distinguishing the Accounts</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-100 p-4 rounded">
+                <h5 class="font-bold text-gray-800 border-b border-gray-300 pb-2 mb-2">Temporary Accounts (Close these)</h5>
+                <p class="text-sm mb-2">These track data for only <em>one</em> accounting period.</p>
+                <ul class="list-disc ml-5 text-sm space-y-1">
+                    <li>All Revenue Accounts</li>
+                    <li>All Expense Accounts</li>
+                    <li>Owner's Drawings Account</li>
+                    <li>The Income Summary Account</li>
+                </ul>
+            </div>
+            <div class="bg-blue-50 p-4 rounded">
+                <h5 class="font-bold text-blue-900 border-b border-blue-200 pb-2 mb-2">Permanent Accounts (Do NOT Close)</h5>
+                <p class="text-sm mb-2">These carry their balances forward to the next period.</p>
+                <ul class="list-disc ml-5 text-sm space-y-1">
+                    <li>Assets (Cash, Accounts Receivable, Land)</li>
+                    <li>Liabilities (Accounts Payable, Loans)</li>
+                    <li>Owner's Capital</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: The REID Method -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">The Closing Process (The REID Method)</h4>
+        <p class="mb-4">
+            We use a special temporary holding account called <strong>Income Summary</strong> to bundle all revenues and expenses before moving the final profit or loss to Capital.
+        </p>
+        
+        <!-- Step R -->
+        <div class="mb-8 border rounded-lg p-4 bg-white shadow-sm">
+            <h5 class="font-bold text-lg text-green-700 mb-2">Step 1: R - Revenue to Income Summary</h5>
+            <p class="mb-3 text-sm">
+                Revenue accounts naturally have Credit balances. To zero them out, we must <strong>Debit</strong> the Revenue accounts and Credit Income Summary.
+            </p>
+            <div class="overflow-x-auto bg-gray-50 rounded border">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-200 text-gray-600">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Account Titles</th>
+                            <th class="px-4 py-2 text-right">Debit</th>
+                            <th class="px-4 py-2 text-right">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-4 py-2">Dec 31</td>
+                            <td class="px-4 py-2 font-medium">Service Revenue</td>
+                            <td class="px-4 py-2 text-right">₱100,000</td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Income Summary</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱100,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-gray-500 italic">To close revenue accounts.</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Step E -->
+        <div class="mb-8 border rounded-lg p-4 bg-white shadow-sm">
+            <h5 class="font-bold text-lg text-green-700 mb-2">Step 2: E - Expenses to Income Summary</h5>
+            <p class="mb-3 text-sm">
+                Expense accounts naturally have Debit balances. To zero them out, we must <strong>Credit</strong> the Expense accounts and Debit Income Summary for the total.
+            </p>
+            <div class="overflow-x-auto bg-gray-50 rounded border">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-200 text-gray-600">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Account Titles</th>
+                            <th class="px-4 py-2 text-right">Debit</th>
+                            <th class="px-4 py-2 text-right">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-4 py-2">Dec 31</td>
+                            <td class="px-4 py-2 font-medium">Income Summary</td>
+                            <td class="px-4 py-2 text-right">₱60,000</td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Salaries Expense</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱40,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Rent Expense</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱15,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Supplies Expense</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱5,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-gray-500 italic">To close expense accounts.</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-2 text-xs text-gray-500 italic">
+                *Note: The Income Summary now has a Credit of ₱100,000 and a Debit of ₱60,000. The balance is a Credit of ₱40,000 (which equals Net Income).
+            </p>
+        </div>
+
+        <!-- Step I -->
+        <div class="mb-8 border rounded-lg p-4 bg-white shadow-sm">
+            <h5 class="font-bold text-lg text-green-700 mb-2">Step 3: I - Income Summary to Capital</h5>
+            <p class="mb-3 text-sm">
+                Now we close the Income Summary account itself. Since it has a Credit balance of ₱40,000 (Net Income), we <strong>Debit</strong> Income Summary to zero it out and <strong>Credit</strong> the Owner's Capital account (increasing equity).
+            </p>
+            <div class="overflow-x-auto bg-gray-50 rounded border">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-200 text-gray-600">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Account Titles</th>
+                            <th class="px-4 py-2 text-right">Debit</th>
+                            <th class="px-4 py-2 text-right">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-4 py-2">Dec 31</td>
+                            <td class="px-4 py-2 font-medium">Income Summary</td>
+                            <td class="px-4 py-2 text-right">₱40,000</td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Juan Dela Cruz, Capital</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱40,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-gray-500 italic">To transfer Net Income to Capital.</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-2 text-xs text-gray-500 italic">
+                *Note: If there was a Net Loss (Expenses > Revenue), the entry would be reversed: Debit Capital, Credit Income Summary.
+            </p>
+        </div>
+
+        <!-- Step D -->
+        <div class="mb-8 border rounded-lg p-4 bg-white shadow-sm">
+            <h5 class="font-bold text-lg text-green-700 mb-2">Step 4: D - Drawings to Capital</h5>
+            <p class="mb-3 text-sm">
+                Drawings (or Withdrawals) are not expenses, so they are not closed to Income Summary. They are closed directly to Capital. Drawings have a natural Debit balance, so we <strong>Credit</strong> Drawings and <strong>Debit</strong> Capital (decreasing equity).
+            </p>
+            <div class="overflow-x-auto bg-gray-50 rounded border">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-200 text-gray-600">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Account Titles</th>
+                            <th class="px-4 py-2 text-right">Debit</th>
+                            <th class="px-4 py-2 text-right">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-4 py-2">Dec 31</td>
+                            <td class="px-4 py-2 font-medium">Juan Dela Cruz, Capital</td>
+                            <td class="px-4 py-2 text-right">₱10,000</td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 pl-8">Juan Dela Cruz, Drawings</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-right">₱10,000</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2 text-gray-500 italic">To close Drawings to Capital.</td>
+                            <td class="px-4 py-2"></td>
+                            <td class="px-4 py-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Visualizing the Result -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">The Aftermath: Posting the Entries</h4>
+        <p class="mb-4">
+            After these four entries are posted to the General Ledger, the landscape of your accounts changes dramatically.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div class="bg-red-50 p-4 border border-red-200 rounded">
+                <h6 class="font-bold text-red-800 mb-2">Revenue Accounts</h6>
+                <p class="text-3xl font-mono text-gray-800">₱0.00</p>
+                <p class="text-xs text-red-600 mt-1">Ready for next year</p>
+            </div>
+            <div class="bg-red-50 p-4 border border-red-200 rounded">
+                <h6 class="font-bold text-red-800 mb-2">Expense Accounts</h6>
+                <p class="text-3xl font-mono text-gray-800">₱0.00</p>
+                <p class="text-xs text-red-600 mt-1">Ready for next year</p>
+            </div>
+             <div class="bg-green-50 p-4 border border-green-200 rounded">
+                <h6 class="font-bold text-green-800 mb-2">Capital Account</h6>
+                <p class="text-3xl font-mono text-gray-800">UPDATED</p>
+                <p class="text-xs text-green-600 mt-1">Beg. Bal + Net Income - Drawings</p>
+            </div>
+        </div>
+
+        <div class="mt-6 bg-gray-800 text-white p-6 rounded-lg">
+            <h5 class="font-bold mb-2">The Final Test: Post-Closing Trial Balance</h5>
+            <p class="text-sm">
+                Once closing is done, we generate one last trial balance. It should contain <strong>only Permanent Accounts</strong> (Assets, Liabilities, and ending Capital). If you see Rent Expense or Service Revenue on a Post-Closing Trial Balance, you have made a mistake!
+            </p>
+        </div>
+    </section>
+    <p class="text-xs text-gray-400 mt-6 text-center">© 2025 JLVCPA. All rights reserved.</p>
+</div>`,
+            
+'theory-step9': `
+<div class="space-y-8 text-gray-700 leading-relaxed">
+
+    <!-- Section 1: Introduction -->
+    <section>
+        <h3 class="text-2xl font-bold text-purple-900 mb-4">Step 9: Preparation of the Post-Closing Trial Balance</h3>
+        <p class="mb-4">
+            We have reached the final mandatory step of the accounting cycle. The adjustments are recorded, the financial statements are published, and the temporary accounts have been closed (zeroed out).
+        </p>
+        <p class="mb-4">
+            The <strong>Post-Closing Trial Balance</strong> is the final "quality control" check before the accounting team goes home for the year. It serves one specific purpose: to prove that the General Ledger is still in balance (Total Debits = Total Credits) after the adjusting and closing entries have been posted.
+        </p>
+        <div class="bg-purple-50 border-l-4 border-purple-600 p-4 my-4">
+            <h4 class="font-bold text-purple-800">The "Litmus Test" for the New Year</h4>
+            <p class="text-sm">
+                If this trial balance does not balance, you cannot start recording transactions for the new year. Any error here will carry over and corrupt the data for the next twelve months.
+            </p>
+        </div>
+    </section>
+
+    <!-- Section 2: What Goes In? (The Survivors) -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">The Contents: Permanent Accounts Only</h4>
+        <p class="mb-4">
+            The most distinct feature of the Post-Closing Trial Balance is what is <em>missing</em>. Because we have just completed the Closing process (Step 8), all Nominal (Temporary) accounts should have a balance of zero.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-green-50 p-5 rounded-lg border border-green-200">
+                <h5 class="font-bold text-green-800 flex items-center mb-3">
+                    <span class="text-xl mr-2">✓</span> INCLUDED (Permanent Accounts)
+                </h5>
+                <p class="text-sm mb-2">These are the accounts that appear on the Balance Sheet. Their balances carry over to January 1.</p>
+                <ul class="list-disc ml-6 text-sm space-y-1 text-gray-800">
+                    <li><strong>Assets</strong> (Cash, Accounts Receivable, Inventory, Equipment)</li>
+                    <li><strong>Contra-Assets</strong> (Accumulated Depreciation)</li>
+                    <li><strong>Liabilities</strong> (Accounts Payable, Unearned Revenue, Salaries Payable)</li>
+                    <li><strong>Owner's Equity</strong> (The <em>ending</em> Capital balance)</li>
+                </ul>
+            </div>
+
+            <div class="bg-red-50 p-5 rounded-lg border border-red-200">
+                <h5 class="font-bold text-red-800 flex items-center mb-3">
+                    <span class="text-xl mr-2">✗</span> EXCLUDED (Temporary Accounts)
+                </h5>
+                <p class="text-sm mb-2">These accounts must be empty. If you see any of these on a Post-Closing Trial Balance, <strong>an error has occurred.</strong></p>
+                <ul class="list-disc ml-6 text-sm space-y-1 text-gray-800">
+                    <li><strong>Revenues</strong> (Service Revenue, Sales)</li>
+                    <li><strong>Expenses</strong> (Rent Expense, Salaries Expense)</li>
+                    <li><strong>Drawings</strong> (Owner's Withdrawals)</li>
+                    <li><strong>Income Summary</strong></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Illustrative Example -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">Illustrative Example</h4>
+        <p class="mb-4">
+            Let us look at the final books for "Summit Consultancy Services" as of December 31. Notice that the Owner's Capital figure is the <strong>new</strong> figure (Beginning Balance + Net Income - Drawings).
+        </p>
+
+        <div class="overflow-x-auto bg-white border rounded-lg shadow-lg max-w-2xl mx-auto">
+            <div class="bg-gray-100 p-4 text-center border-b">
+                <h5 class="font-bold text-lg text-gray-900">Summit Consultancy Services</h5>
+                <h6 class="font-semibold text-gray-700">Post-Closing Trial Balance</h6>
+                <p class="text-sm text-gray-500">December 31, 2023</p>
+            </div>
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider border-b">
+                    <tr>
+                        <th class="px-6 py-3 text-left">Account Title</th>
+                        <th class="px-6 py-3 text-right">Debit</th>
+                        <th class="px-6 py-3 text-right">Credit</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <!-- Assets -->
+                    <tr>
+                        <td class="px-6 py-2 font-medium">Cash</td>
+                        <td class="px-6 py-2 text-right">₱150,000</td>
+                        <td class="px-6 py-2 bg-gray-50"></td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-2 font-medium">Accounts Receivable</td>
+                        <td class="px-6 py-2 text-right">₱45,000</td>
+                        <td class="px-6 py-2 bg-gray-50"></td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-2 font-medium">Prepaid Rent</td>
+                        <td class="px-6 py-2 text-right">₱20,000</td>
+                        <td class="px-6 py-2 bg-gray-50"></td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-2 font-medium">Office Equipment</td>
+                        <td class="px-6 py-2 text-right">₱250,000</td>
+                        <td class="px-6 py-2 bg-gray-50"></td>
+                    </tr>
+                    <!-- Contra Asset -->
+                    <tr>
+                        <td class="px-6 py-2 font-medium pl-8 text-gray-600">Accumulated Depreciation—Equipment</td>
+                        <td class="px-6 py-2 bg-gray-50"></td>
+                        <td class="px-6 py-2 text-right">₱50,000</td>
+                    </tr>
+                    <!-- Liabilities -->
+                    <tr>
+                        <td class="px-6 py-2 font-medium">Accounts Payable</td>
+                        <td class="px-6 py-2 bg-gray-50"></td>
+                        <td class="px-6 py-2 text-right">₱35,000</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-2 font-medium">Salaries Payable</td>
+                        <td class="px-6 py-2 bg-gray-50"></td>
+                        <td class="px-6 py-2 text-right">₱15,000</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-2 font-medium">Unearned Service Revenue</td>
+                        <td class="px-6 py-2 bg-gray-50"></td>
+                        <td class="px-6 py-2 text-right">₱10,000</td>
+                    </tr>
+                    <!-- Equity -->
+                    <tr class="bg-purple-50">
+                        <td class="px-6 py-2 font-bold text-purple-900">Ramos, Capital</td>
+                        <td class="px-6 py-2 bg-purple-100"></td>
+                        <td class="px-6 py-2 text-right font-bold text-purple-900">₱355,000</td>
+                    </tr>
+                    <!-- Totals -->
+                    <tr class="bg-gray-800 text-white font-bold text-lg">
+                        <td class="px-6 py-3 text-right">Totals</td>
+                        <td class="px-6 py-3 text-right border-t-2 border-white double-underline">₱465,000</td>
+                        <td class="px-6 py-3 text-right border-t-2 border-white double-underline">₱465,000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="mt-4 text-sm text-gray-500 italic text-center">
+            *Note: The "Ramos, Capital" balance of ₱355,000 includes the Net Income earned during the year.
+        </p>
+    </section>
+
+    <!-- Section 4: Interpretation and Next Steps -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">Interpreting the Results</h4>
+        
+        <div class="mb-6">
+            <h5 class="font-bold text-gray-700 mb-2">What if it balances?</h5>
+            <p class="mb-3">
+                Success! It means that for every debit recorded in the General Ledger, there is a corresponding credit. It also implies that the closing process was mechanically correct (revenue and expenses were successfully removed). The accounting cycle is complete, and the books are ready for Step 1 of the next period.
+            </p>
+        </div>
+
+        <div class="mb-6">
+            <h5 class="font-bold text-red-700 mb-2">What if it does NOT balance?</h5>
+            <p class="mb-3">
+                If the totals are unequal (e.g., Debits ₱465,000 vs Credits ₱460,000), you must investigate immediately. Common errors include:
+            </p>
+            <ul class="list-disc ml-6 space-y-2 text-sm">
+                <li><strong>Posting Error:</strong> Did you forget to post the Credit part of a closing entry?</li>
+                <li><strong>Calculation Error:</strong> Did you calculate the new Capital balance incorrectly? (Check the Statement of Changes in Equity).</li>
+                <li><strong>Omission:</strong> Did you forget to include an asset or liability account in the list?</li>
+            </ul>
+        </div>
+
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-6">
+            <h5 class="font-bold text-blue-800 mb-1">Looking Ahead: Reversing Entries (Optional Step 10)</h5>
+            <p class="text-sm text-gray-700">
+                While the Post-Closing Trial Balance ends the mandatory cycle, some companies perform an optional Step 10 on the first day of the new year: <strong>Reversing Entries</strong>. This is done to simplify the recording of future transactions related to accruals, but it is not required by accounting standards.
+            </p>
+        </div>
+    </section>
+    <p class="text-xs text-gray-400 mt-6 text-center">© 2025 JLVCPA. All rights reserved.</p>
+</div>`,
+            
+'theory-step10': `
+<div class="space-y-8 text-gray-700 leading-relaxed">
+
+    <!-- Section 1: Introduction to the New Period -->
+    <section>
+        <h3 class="text-2xl font-bold text-yellow-900 mb-4">Step 10: Setting Up for the New Period and Reversing Entries</h3>
+        <p class="mb-4">
+            The calendar has turned. It is January 1st. The financial statements for the previous year are done, and the temporary accounts have been closed. The business is now ready to begin a new accounting cycle.
+        </p>
+        <p class="mb-4">
+            Technically, you could start recording transactions immediately. However, many companies perform an <strong>optional</strong> step on the very first day of the new period called **Reversing Entries**. While not required by accounting standards (GAAP), this step is a "best practice" for efficiency. It is designed to simplify the recording of routine transactions in the new year.
+        </p>
+    </section>
+
+    <!-- Section 2: The Logic of Reversing -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">The Logic: Why Reverse?</h4>
+        <p class="mb-4">
+            To understand Reversing Entries, you must understand the problem they solve. 
+        </p>
+        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+            <h5 class="font-bold text-yellow-800 mb-2">The Problem: Consistency</h5>
+            <p class="text-sm">
+                Imagine you are the bookkeeper. On January 5, you pay the payroll. If there was an accrual made on December 31, you (the bookkeeper) need to remember to check the adjustments from last year to split the payment between "Salaries Payable" and "Salaries Expense." If you forget, you will record the entire payment as Expense, which is incorrect.
+            </p>
+        </div>
+        <p class="mb-4">
+            <strong>The Solution:</strong> By reversing the adjustment on January 1, we effectively "erase" the liability from the books. This allows the bookkeeper to record the payment on January 5 normally (as 100% Expense) without needing to look back at last year's records. The accounting system handles the math automatically.
+        </p>
+    </section>
+
+    <!-- Section 3: The Rules of Reversal -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">The Golden Rules: What do we Reverse?</h4>
+        <p class="mb-4">
+            Not all adjusting entries are reversed. We only reverse entries that create an asset or a liability that will be settled in the near future.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-green-50 p-4 rounded border border-green-200">
+                <h5 class="font-bold text-green-800 mb-2">ALWAYS Reverse</h5>
+                <ul class="list-disc ml-5 text-sm space-y-2">
+                    <li><strong>Accrued Expenses:</strong> (e.g., Salaries Payable, Interest Payable).</li>
+                    <li><strong>Accrued Revenues:</strong> (e.g., Interest Receivable, Accrued Service Revenue).</li>
+                </ul>
+            </div>
+            <div class="bg-red-50 p-4 rounded border border-red-200">
+                <h5 class="font-bold text-red-800 mb-2">NEVER Reverse</h5>
+                <ul class="list-disc ml-5 text-sm space-y-2">
+                    <li><strong>Depreciation:</strong> This is a permanent allocation of cost.</li>
+                    <li><strong>Bad Debts:</strong> Adjustments for doubtful accounts are generally not reversed.</li>
+                    <li><strong>Standard Deferrals:</strong> Prepaid expenses recorded as Assets are typically not reversed (unless the Expense Method was used).</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Comprehensive Example -->
+    <section class="border-t border-gray-200 pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-4">Detailed Walkthrough: Accrued Salaries</h4>
+        <p class="mb-4">
+            Let us compare the workflow <strong>With</strong> versus <strong>Without</strong> reversing entries.
+        </p>
+        
+        <div class="mb-4 bg-gray-100 p-3 rounded">
+            <strong>The Scenario:</strong>
+            <ul class="list-disc ml-5 mt-1 text-sm">
+                <li><strong>Dec 31 (Adjustment):</strong> Employees earned ₱15,000 for the last days of December. This is unpaid.</li>
+                <li><strong>Jan 5 (Payday):</strong> Total payroll is ₱25,000 (covering the ₱15,000 from Dec and ₱10,000 earned in Jan).</li>
+            </ul>
+        </div>
+
+        <h5 class="font-bold text-gray-700 mt-6 mb-3">Option A: WITH Reversing Entries (Recommended)</h5>
+        <div class="overflow-x-auto border rounded-lg shadow-sm mb-6">
+            <table class="min-w-full bg-white text-sm">
+                <thead class="bg-yellow-100 text-gray-700">
+                    <tr>
+                        <th class="px-4 py-2 text-left">Date</th>
+                        <th class="px-4 py-2 text-left">Action</th>
+                        <th class="px-4 py-2 text-left">Journal Entry</th>
+                        <th class="px-4 py-2 text-left">Resulting Ledger Balance (Expense)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-4 py-3 font-bold">Dec 31</td>
+                        <td class="px-4 py-3">Adjusting Entry</td>
+                        <td class="px-4 py-3">
+                            <div class="text-xs">Debit: Salaries Expense ₱15,000</div>
+                            <div class="text-xs">Credit: Salaries Payable ₱15,000</div>
+                        </td>
+                        <td class="px-4 py-3 text-gray-500">₱15,000 (Correct for Year 1)</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td class="px-4 py-3 font-bold text-blue-600">Jan 1</td>
+                        <td class="px-4 py-3 text-blue-600">Reversing Entry</td>
+                        <td class="px-4 py-3">
+                            <div class="text-xs font-semibold text-blue-600">Debit: Salaries Payable ₱15,000</div>
+                            <div class="text-xs font-semibold text-blue-600">Credit: Salaries Expense ₱15,000</div>
+                        </td>
+                        <td class="px-4 py-3 font-bold text-red-600">CREDIT ₱15,000 (Abnormal Balance)</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 font-bold">Jan 5</td>
+                        <td class="px-4 py-3">Payment Entry</td>
+                        <td class="px-4 py-3">
+                            <div class="text-xs">Debit: Salaries Expense ₱25,000</div>
+                            <div class="text-xs">Credit: Cash ₱25,000</div>
+                            <div class="text-xs italic text-gray-400 mt-1">(Recorded as a standard payment)</div>
+                        </td>
+                        <td class="px-4 py-3 font-bold text-green-600">
+                            DEBIT ₱10,000
+                            <div class="text-xs font-normal text-gray-500">(₱25,000 Debit - ₱15,000 Credit)</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="text-sm italic text-gray-600 mb-6">
+            <strong>Observation:</strong> Even though we recorded the full ₱25,000 as expense on Jan 5, the reversing entry automatically netted it against the credit, resulting in the correct expense of ₱10,000 for January.
+        </p>
+
+        <h5 class="font-bold text-gray-700 mb-3">Option B: WITHOUT Reversing Entries</h5>
+        <div class="overflow-x-auto border rounded-lg shadow-sm">
+            <table class="min-w-full bg-white text-sm">
+                <thead class="bg-gray-100 text-gray-700">
+                    <tr>
+                        <th class="px-4 py-2 text-left">Date</th>
+                        <th class="px-4 py-2 text-left">Action</th>
+                        <th class="px-4 py-2 text-left">Journal Entry</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-4 py-3 font-bold">Jan 1</td>
+                        <td class="px-4 py-3">No Action</td>
+                        <td class="px-4 py-3 text-gray-400">No entry made. Liability of ₱15,000 remains on books.</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 font-bold">Jan 5</td>
+                        <td class="px-4 py-3">Payment Entry</td>
+                        <td class="px-4 py-3">
+                            <div class="text-xs font-bold text-red-600">Must be calculated manually!</div>
+                            <div class="text-xs mt-1">Debit: Salaries Payable ₱15,000 <span class="text-gray-400">(Clearing liability)</span></div>
+                            <div class="text-xs">Debit: Salaries Expense ₱10,000 <span class="text-gray-400">(Current portion)</span></div>
+                            <div class="text-xs">Credit: Cash ₱25,000</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 5: Conclusion -->
+    <section class="mt-8 bg-gray-800 text-white p-6 rounded-lg">
+        <h4 class="text-lg font-bold mb-3">Summary</h4>
+        <p class="text-sm mb-4">
+            Reversing entries are strictly a matter of convenience. They do not change the final financial numbers; they simply change <em>when</em> the data is processed.
+        </p>
+        <ul class="space-y-2 text-sm">
+            <li class="flex items-center">
+                <span class="bg-yellow-500 rounded-full w-2 h-2 mr-2"></span>
+                It allows the current year's transactions to be recorded consistently with previous months.
+            </li>
+            <li class="flex items-center">
+                <span class="bg-yellow-500 rounded-full w-2 h-2 mr-2"></span>
+                It protects against double-counting expenses (once as an accrual, and again upon payment).
+            </li>
+        </ul>
+    </section>
+    <p class="text-xs text-gray-400 mt-6 text-center">© 2025 JLVCPA. All rights reserved.</p>
+</div>`,
         };
+
+        // END OF THEORIES AND CONCEPTS
 
         function renderTheory(id) {
             document.getElementById('dynamic-theory-content').innerHTML = theoryContentDB[id] || '<p>Loading content...</p>';
