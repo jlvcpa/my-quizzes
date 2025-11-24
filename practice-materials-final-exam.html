@@ -1178,7 +1178,175 @@
     </section>
 
 </div>`,
-            'theory-fs': `<h3 class="text-2xl font-bold text-gray-800 mb-4">Step 6: Financial Statements</h3><ol class="list-decimal ml-5 space-y-2"><li><strong>Income Statement:</strong> Profitability.</li><li><strong>Statement of Changes in Equity:</strong> Owner's capital.</li><li><strong>Balance Sheet:</strong> Solvency/Liquidity.</li><li><strong>Cash Flows:</strong> Liquidity.</li></ol>`,
+'theory-fs': `
+<div class="space-y-8 text-gray-700 leading-relaxed">
+
+    <!-- Section 1: Introduction -->
+    <section>
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">Step 6: Preparation of Financial Statements</h3>
+        <p class="mb-4">
+            The Financial Statements are the final product of the accounting cycle. While the worksheet is an internal tool for the accountant, the Financial Statements are the formal reports distributed to external stakeholders (investors, creditors, tax authorities) and internal management.
+        </p>
+        <p class="mb-4">
+            They tell the story of the business in financial terms. We prepare them in a specific order because the result of one statement is required to complete the next.
+        </p>
+        <div class="bg-gray-100 p-4 rounded-lg border-l-4 border-blue-500">
+            <h4 class="font-semibold text-blue-800">The Mandatory Order of Preparation:</h4>
+            <ol class="list-decimal ml-5 mt-2 space-y-1">
+                <li><strong>Income Statement</strong> (Finds Net Income/Loss)</li>
+                <li><strong>Statement of Changes in Equity</strong> (Finds Ending Capital)</li>
+                <li><strong>Balance Sheet</strong> (Proves the Accounting Equation)</li>
+                <li><strong>Statement of Cash Flows</strong> (Explains the change in Cash)</li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- Section 2: The Income Statement -->
+    <section class="border-t pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-3">1. The Income Statement</h4>
+        <p class="mb-3">
+            <strong>Purpose:</strong> To measure profitability over a specific period of time (e.g., "For the Month Ended Dec 31").
+        </p>
+        <p class="mb-4">
+            <strong>Source of Data:</strong> The "Income Statement" columns (Cols 7 & 8) of your 10-column worksheet.
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div>
+                <h5 class="font-semibold text-gray-700">Components:</h5>
+                <ul class="list-disc ml-5 mt-2 text-sm space-y-2">
+                    <li><strong>Revenues:</strong> Inflows of assets from selling goods or services.</li>
+                    <li><strong>Expenses:</strong> Outflows or using up of assets to generate revenue.</li>
+                    <li><strong>Net Income:</strong> Revenues > Expenses.</li>
+                    <li><strong>Net Loss:</strong> Expenses > Revenues.</li>
+                </ul>
+            </div>
+            <div class="bg-white p-4 border rounded shadow-sm">
+                <h5 class="font-semibold text-gray-800 border-b pb-2 mb-2">Structure (Single-Step)</h5>
+                <div class="text-sm font-mono">
+                    <div class="flex justify-between"><span>Revenues</span> <span>$XX,XXX</span></div>
+                    <div class="flex justify-between text-gray-500"><span>Less: Expenses</span> <span></span></div>
+                    <div class="flex justify-between pl-4"><span>Salaries Expense</span> <span>(X,XXX)</span></div>
+                    <div class="flex justify-between pl-4"><span>Rent Expense</span> <span>(X,XXX)</span></div>
+                    <div class="flex justify-between pl-4 border-b border-gray-400"><span>Supplies Expense</span> <span>(X,XXX)</span></div>
+                    <div class="flex justify-between font-bold pt-1"><span>Net Income</span> <span>$XX,XXX</span></div>
+                </div>
+            </div>
+        </div>
+        <p class="mt-4 text-sm text-gray-600 italic">
+            *Critical Note: This Net Income figure is the "bridge" to the next statement. You cannot proceed without it.
+        </p>
+    </section>
+
+    <!-- Section 3: Statement of Changes in Equity -->
+    <section class="border-t pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-3">2. Statement of Changes in Equity</h4>
+        <p class="mb-3">
+            <strong>Purpose:</strong> To show why the owner's claim on the assets changed during the period.
+        </p>
+        <p class="mb-4">
+            <strong>Source of Data:</strong> Beginning Capital (Ledger), Net Income (from Step 1), and Drawings (Worksheet Balance Sheet columns).
+        </p>
+
+        <div class="bg-green-50 p-5 rounded-lg border border-green-200">
+            <h5 class="font-bold text-green-800 mb-2">The Equity Formula</h5>
+            <p class="font-mono text-lg text-center bg-white p-2 rounded border border-green-100">
+                Beginning Capital + Net Income (or - Net Loss) - Drawings = Ending Capital
+            </p>
+            <ul class="list-disc ml-5 mt-3 text-sm text-green-900">
+                <li><strong>Beginning Capital:</strong> The balance at the start of the period. If this is a brand new business, this is zero (plus initial investment).</li>
+                <li><strong>Add: Investments:</strong> Any additional personal cash the owner put into the business.</li>
+                <li><strong>Add: Net Income:</strong> The profit calculated in the Income Statement.</li>
+                <li><strong>Less: Drawings:</strong> Cash taken out by the owner for personal use.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Section 4: The Balance Sheet -->
+    <section class="border-t pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-3">3. The Balance Sheet</h4>
+        <p class="mb-3">
+            <strong>Purpose:</strong> To prove the fundamental accounting equation (Assets = Liabilities + Equity) at a specific <em>point</em> in time (e.g., "As of Dec 31").
+        </p>
+        <p class="mb-4">
+            <strong>Source of Data:</strong> The "Balance Sheet" columns (Cols 9 & 10) of the worksheet, EXCEPT for the Capital account.
+        </p>
+        
+        <div class="bg-yellow-50 p-4 rounded border-l-4 border-yellow-500 mb-4">
+            <strong>The "Ending Capital" Trap:</strong> Do not simply copy the Capital balance from the trial balance. You MUST use the <strong>Ending Capital</strong> calculated in the Statement of Changes in Equity (Step 2).
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <h5 class="font-bold text-gray-700 underline mb-2">Assets (The "Owns")</h5>
+                <ul class="list-none space-y-1 text-sm">
+                    <li><strong>Current Assets:</strong> Cash, Accounts Receivable, Supplies, Prepaid Expenses.</li>
+                    <li><strong>Non-Current Assets:</strong> Land, Buildings, Equipment.</li>
+                    <li><em>Less: Accumulated Depreciation (Contra-Asset).</em></li>
+                </ul>
+            </div>
+            <div>
+                <h5 class="font-bold text-gray-700 underline mb-2">Liabilities (The "Owes")</h5>
+                <ul class="list-none space-y-1 text-sm">
+                    <li><strong>Current Liabilities:</strong> Accounts Payable, Unearned Revenue, Salaries Payable.</li>
+                    <li><strong>Long-Term Liabilities:</strong> Notes Payable (due > 1 yr), Mortgage Payable.</li>
+                    <li class="mt-2 font-bold text-gray-800">Owner's Equity</li>
+                    <li>Ending Capital (from Step 2).</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: Statement of Cash Flows -->
+    <section class="border-t pt-6">
+        <h4 class="text-xl font-bold text-gray-800 mb-3">4. Statement of Cash Flows</h4>
+        <p class="mb-3">
+            <strong>Purpose:</strong> To reveal where cash came from and where it went. A business can be profitable (Net Income) but still run out of cash (Liquidity crisis).
+        </p>
+        <p class="mb-4">
+            This statement organizes cash movements into three activities:
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+            <div class="bg-gray-50 p-3 rounded border">
+                <strong class="block text-blue-600">Operating</strong>
+                <span class="text-xs">Day-to-day revenues and expenses.</span>
+            </div>
+            <div class="bg-gray-50 p-3 rounded border">
+                <strong class="block text-green-600">Investing</strong>
+                <span class="text-xs">Buying/Selling long-term assets (Land, Equipment).</span>
+            </div>
+            <div class="bg-gray-50 p-3 rounded border">
+                <strong class="block text-purple-600">Financing</strong>
+                <span class="text-xs">Owner investments, drawings, and bank loans.</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 6: Interconnectivity Summary -->
+    <section class="mt-8 bg-gray-800 text-white p-6 rounded-lg">
+        <h4 class="text-lg font-bold mb-3">How it all connects</h4>
+        <p class="text-sm mb-4">You cannot prepare these in random order. Watch the flow of data:</p>
+        <ul class="space-y-3 text-sm">
+            <li class="flex items-center">
+                <span class="bg-blue-500 px-2 py-1 rounded mr-3 text-xs">Step 1</span>
+                Income Statement calculates <strong>Net Income</strong>.
+            </li>
+            <li class="flex items-center">
+                <span class="bg-green-500 px-2 py-1 rounded mr-3 text-xs">Step 2</span>
+                <strong>Net Income</strong> is moved to the Statement of Changes in Equity to find <strong>Ending Capital</strong>.
+            </li>
+            <li class="flex items-center">
+                <span class="bg-yellow-600 px-2 py-1 rounded mr-3 text-xs">Step 3</span>
+                <strong>Ending Capital</strong> is moved to the Balance Sheet to make <strong>Assets = Liabilities + Equity</strong> match.
+            </li>
+            <li class="flex items-center">
+                <span class="bg-purple-500 px-2 py-1 rounded mr-3 text-xs">Step 4</span>
+                The Cash Flow Statement explains the change in the <strong>Cash</strong> balance found on the Balance Sheet.
+            </li>
+        </ul>
+    </section>
+
+</div>`,
             'theory-step7': `<h3 class="text-2xl font-bold text-blue-800 mb-2">Step 7: Journalizing Adjusting Entries</h3><p>Formal recording of worksheet adjustments into the General Journal and posting to Ledger.</p>`,
             'theory-step8': `<h3 class="text-2xl font-bold text-green-800 mb-2">Step 8: Closing Entries (REID)</h3><p>Zero out nominal accounts.</p><ul class="list-disc ml-5"><li>Rev -> Inc Sum</li><li>Exp -> Inc Sum</li><li>Inc Sum -> Cap</li><li>Draw -> Cap</li></ul>`,
             'theory-step9': `<h3 class="text-2xl font-bold text-purple-800 mb-2">Step 9: Post-Closing Trial Balance</h3><p>Verifies equality of permanent accounts after closing.</p>`,
