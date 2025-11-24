@@ -1041,7 +1041,143 @@
                     </section>
                 </div>
             `,
-            'theory-worksheet': `<h3 class="text-2xl font-bold text-gray-800 mb-4">Step 5: The 10-Column Worksheet</h3><p>An optional tool for preparing financial statements.</p><ul class="list-disc ml-5 mt-2"><li>Trial Balance</li><li>Adjustments</li><li>Adjusted TB</li><li>Income Statement</li><li>Balance Sheet</li></ul>`,
+'theory-worksheet': `
+<div class="space-y-6 text-gray-700 leading-relaxed">
+    
+    <!-- Section 1: Introduction -->
+    <section>
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">Step 5: The 10-Column Worksheet</h3>
+        <p class="mb-4">
+            The 10-column worksheet is an internal accounting tool—a scratchpad used by accountants to draft adjustments and organize financial data before preparing the formal financial statements. While not a mandatory part of the accounting cycle (it is never published to outsiders), it is invaluable for ensuring accuracy, especially in complex accrual scenarios.
+        </p>
+        <p class="mb-4">
+            Think of the worksheet as the "bridge" between the unadjusted records and the final reports. It allows you to see the impact of adjusting entries (accruals and deferrals) on the accounts before they are officially posted to the ledger.
+        </p>
+    </section>
+
+    <!-- Section 2: The Structure -->
+    <section>
+        <h4 class="text-xl font-semibold text-gray-800 mb-3">The Anatomy of the 10 Columns</h4>
+        <p class="mb-4">
+            The worksheet is divided into five distinct sections, each containing a Debit (Dr.) and Credit (Cr.) column.
+        </p>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-300 mb-4 text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-2 border">Columns 1-2</th>
+                        <th class="p-2 border">Columns 3-4</th>
+                        <th class="p-2 border">Columns 5-6</th>
+                        <th class="p-2 border">Columns 7-8</th>
+                        <th class="p-2 border">Columns 9-10</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="p-2 border font-medium">Unadjusted Trial Balance</td>
+                        <td class="p-2 border font-medium">Adjustments</td>
+                        <td class="p-2 border font-medium">Adjusted Trial Balance</td>
+                        <td class="p-2 border font-medium">Income Statement</td>
+                        <td class="p-2 border font-medium">Balance Sheet</td>
+                    </tr>
+                    <tr>
+                        <td class="p-2 border text-gray-600">The raw data from the ledger before any updates.</td>
+                        <td class="p-2 border text-gray-600">Where accruals and deferrals are drafted.</td>
+                        <td class="p-2 border text-gray-600">The mathematical result of combining cols 1-4.</td>
+                        <td class="p-2 border text-gray-600">Revenues and Expenses only.</td>
+                        <td class="p-2 border text-gray-600">Assets, Liabilities, Equity, and Drawings.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 3: Step-by-Step Preparation -->
+    <section>
+        <h4 class="text-xl font-semibold text-gray-800 mb-3">Detailed Preparation Steps</h4>
+        
+        <div class="mb-6">
+            <h5 class="font-bold text-gray-800">Step 1: The Unadjusted Trial Balance</h5>
+            <p class="mb-2">
+                List all account titles and their current balances from the General Ledger. Ensure that total Debits equal total Credits. If they do not match here, STOP. You cannot proceed until the initial errors are found.
+            </p>
+        </div>
+
+        <div class="mb-6">
+            <h5 class="font-bold text-gray-800">Step 2: Entering Adjustments</h5>
+            <p class="mb-2">
+                This is the critical phase where Accruals and Deferrals are applied. You must enter the adjustments in columns 3 (Dr.) and 4 (Cr.).
+            </p>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+                <li><strong>Deferrals:</strong> E.g., Move expired Prepaid Insurance (Credit Asset) to Insurance Expense (Debit Expense).</li>
+                <li><strong>Accruals:</strong> E.g., Record unpaid salaries by Debiting Salaries Expense and Crediting Salaries Payable.</li>
+                <li><strong>Depreciation:</strong> Debit Depreciation Expense and Credit Accumulated Depreciation.</li>
+            </ul>
+            <p class="mt-2 text-sm italic text-gray-600">Tip: Label each adjustment with a letter (a, b, c) to easily cross-reference debits and credits.</p>
+        </div>
+
+        <div class="mb-6">
+            <h5 class="font-bold text-gray-800">Step 3: The Adjusted Trial Balance</h5>
+            <p class="mb-2">
+                Calculate the new balances by combining the Unadjusted Trial Balance (Step 1) with the Adjustments (Step 2).
+            </p>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+                <li><strong>Debit + Debit = Add</strong> (Example: Rent Expense had $1000, added $200 adjustment -> $1200 Debit).</li>
+                <li><strong>Credit + Credit = Add</strong> (Example: Accumulated Depreciation had $500, added $100 adjustment -> $600 Credit).</li>
+                <li><strong>Debit + Credit = Subtract</strong> (Example: Prepaid Rent had $5000 Debit, adjustment was $1000 Credit -> $4000 Debit).</li>
+            </ul>
+            <p class="mt-2">Verify that Total Debits = Total Credits in columns 5 and 6.</p>
+        </div>
+
+        <div class="mb-6">
+            <h5 class="font-bold text-gray-800">Step 4: Extending the Amounts</h5>
+            <p class="mb-2">
+                Move every account balance from the Adjusted Trial Balance (Cols 5 & 6) to <strong>EITHER</strong> the Income Statement columns <strong>OR</strong> the Balance Sheet columns. An account can never be in both.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                <div class="bg-blue-50 p-4 rounded border border-blue-200">
+                    <h6 class="font-bold text-blue-800">Income Statement Columns (7 & 8)</h6>
+                    <p class="text-sm">Includes only <strong>Revenue</strong> and <strong>Expense</strong> accounts.</p>
+                    <p class="text-xs mt-1 text-gray-500">Note: These are temporary accounts that will be closed later.</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded border border-green-200">
+                    <h6 class="font-bold text-green-800">Balance Sheet Columns (9 & 10)</h6>
+                    <p class="text-sm">Includes <strong>Assets</strong>, <strong>Liabilities</strong>, <strong>Owner's Equity</strong>, and <strong>Drawings</strong>.</p>
+                    <p class="text-xs mt-1 text-gray-500">Note: Accumulated Depreciation goes here (Credit side).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h5 class="font-bold text-gray-800">Step 5: Balancing the Worksheet (Net Income/Loss)</h5>
+            <p class="mb-2">
+                Initially, the totals for columns 7-10 will NOT match. The difference represents the Net Income or Net Loss.
+            </p>
+            <ol class="list-decimal ml-5 mt-2 space-y-2">
+                <li>Sum the Income Statement columns. If Credit (Revenue) > Debit (Expense), the difference is <strong>Net Income</strong>.</li>
+                <li>Sum the Balance Sheet columns. The difference should equal the Net Income calculated above.</li>
+                <li><strong>To Balance:</strong>
+                    <ul class="list-disc ml-5 mt-1 text-sm">
+                        <li>If Net Income: Add the amount to the Income Statement Debit column and the Balance Sheet Credit column (representing the increase in Equity).</li>
+                        <li>If Net Loss: Add the amount to the Income Statement Credit column and the Balance Sheet Debit column.</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- Section 4: Common Pitfalls -->
+    <section class="bg-yellow-50 p-5 rounded-lg border border-yellow-200">
+        <h4 class="text-xl font-semibold text-yellow-800 mb-3">Common Errors to Avoid</h4>
+        <ul class="list-disc ml-5 space-y-2 text-gray-700">
+            <li><strong>Reversing Dr/Cr logic:</strong> Remember that Expenses are Debits and Revenues are Credits. A common mistake is extending Revenue to the Debit side of the Income Statement.</li>
+            <li><strong>Accumulated Depreciation:</strong> This is a Contra-Asset. It must be extended to the <strong>Credit</strong> side of the Balance Sheet columns, not the Income Statement.</li>
+            <li><strong>Drawings/Dividends:</strong> These are not Expenses. They must be extended to the <strong>Debit</strong> side of the Balance Sheet columns.</li>
+            <li><strong>Prepaid vs. Expense:</strong> Ensure you are adjusting the correct portion. If the trial balance shows "Prepaid Insurance," you credit it to reduce the asset. If the trial balance shows "Insurance Expense" (rare but possible), you might need to adjust differently.</li>
+        </ul>
+    </section>
+
+</div>`,
             'theory-fs': `<h3 class="text-2xl font-bold text-gray-800 mb-4">Step 6: Financial Statements</h3><ol class="list-decimal ml-5 space-y-2"><li><strong>Income Statement:</strong> Profitability.</li><li><strong>Statement of Changes in Equity:</strong> Owner's capital.</li><li><strong>Balance Sheet:</strong> Solvency/Liquidity.</li><li><strong>Cash Flows:</strong> Liquidity.</li></ol>`,
             'theory-step7': `<h3 class="text-2xl font-bold text-blue-800 mb-2">Step 7: Journalizing Adjusting Entries</h3><p>Formal recording of worksheet adjustments into the General Journal and posting to Ledger.</p>`,
             'theory-step8': `<h3 class="text-2xl font-bold text-green-800 mb-2">Step 8: Closing Entries (REID)</h3><p>Zero out nominal accounts.</p><ul class="list-disc ml-5"><li>Rev -> Inc Sum</li><li>Exp -> Inc Sum</li><li>Inc Sum -> Cap</li><li>Draw -> Cap</li></ul>`,
