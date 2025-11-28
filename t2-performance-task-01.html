@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting Cycle: Posting & Trial Balance</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        /* Base body and gatekeeper styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            padding-top: 5rem; /* Space for the fixed timer */
+            min-height: 100vh;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; } 
+        
+        /* Table Input Styling for Ledger */
+        .ledger-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 4px;
+            font-size: 0.75rem; /* xs */
+        }
+        .ledger-input:focus {
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .ledger-input.error {
+            background-color: #fef2f2; /* red-50 */
+            color: #b91c1c; /* red-700 */
+            font-weight: bold;
+        }
+
+        /* Gatekeeper styles */
+        .table-input {
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: left;
+            font-size: 0.9rem;
+            background-color: #ffffff;
+            transition: border-color 0.2s;
+        }
+        .table-input:focus {
+            border-color: #4f46e5;
+            outline: none;
+            box-shadow: 0 0 0 1px #4f46e5;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+        .timer-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+        }
+        
+        /* Print Specific Styles */
+        @media print {
+            body {
+                padding-top: 0 !important; /* Remove timer space when printing */
+            }
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                z-index: 9999;
+            }
+            /* Hide non-print elements */
+            .no-print, #timer-box {
+                display: none !important;
+            }
+            
+            /* Print Footer Styling */
+            #print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                padding: 5px 20px; /* Padding for the content inside */
+                border-top: 1px solid #aaa;
+                background: white;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900">
+
+    <div id="timer-box" class="timer-box bg-red-800 text-white p-3 shadow-2xl flex items-center justify-center font-mono text-lg font-bold transition duration-500">
+        Task Time Remaining: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
+    </div>
+
+    <div id="gatekeeper-panel" class="w-full max-w-xl mx-auto bg-white shadow-2xl rounded-xl p-8 border border-gray-200 block">
+        
+        <header class="text-center mb-8 pb-4 border-b-2 border-indigo-500">
+            <h1 class="text-3xl font-extrabold text-indigo-700">
+                Quiz Access
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">Verification Required to Start</p>
+        </header>
+
+        <div id="task-container">
+            </div>
+
+        <div id="message-box" class="mt-6 text-center text-sm font-medium min-h-6 text-gray-700">
+            Enter your IDs to verify access.
+        </div>
+    </div>
+
+    <div id="root" class="hidden"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+        import { Book, Check, X, ChevronDown, ChevronRight, Calculator, ArrowRight, Table, AlertCircle, RefreshCw, PlusCircle, Trash2, Lock, List, Printer, FileText, XCircle, AlertTriangle } from 'https://esm.sh/lucide-react@0.263.1';
+
+        // --- ACCOUNTING ENGINE & HELPERS (ORIGINAL CODE HERE) ---
+        // ... (All previous accounting logic constants and functions)
+
+        const CANONICAL_ACCOUNT_ORDER = ["Cash", "Accounts Receivable", "Merchandise Inventory", "Supplies", "Prepaid Rent", "Equipment", "Accumulated Depreciation - Equipment", "Furniture", "Accumulated Depreciation - Furniture", "Accounts Payable", "Notes Payable", "Salaries Payable", "Utilities Payable", "Unearned Revenue", "Owner, Capital", "Owner, Drawings", "Service Revenue", "Sales", "Rent Expense", "Salaries Expense", "Utilities Expense", "Supplies Expense", "Depreciation Expense"];
+
+        const fmt = (n) => `P${n.toLocaleString()}`;
+
+        const sortAccounts = (accounts) => [...accounts].sort((a, b) => {
+            const indexA = CANONICAL_ACCOUNT_ORDER.indexOf(a);
+            const indexB = CANONICAL_ACCOUNT_ORDER.indexOf(b);
+            if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+        });
+
+        const getRandomAmount = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        
+        const shuffleArray = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        };
+
+        // Generates Random Beginning Balances (Subtask B Data Source)
+        const generateBeginningBalances = () => {
+            const balances = {};
+            let totalDr = 0;
+            let totalCr = 0;
+
+            // Base accounts for a standard service business trial balance
+            const assetAccounts = ["Cash", "Accounts Receivable", "Supplies", "Prepaid Rent", "Equipment"];
+            const liabilityAccounts = ["Accounts Payable", "Notes Payable", "Unearned Revenue"];
+            const depreciableAsset = "Equipment";
+
+            // 1. Generate random asset balances (must have Debit normal balance)
+            assetAccounts.forEach(acc => {
+                // Amounts are rounded to the nearest P5,000 for realistic trial balance structure
+                const amount = getRandomAmount(5, acc === "Cash" ? 30 : 15) * 5000;
+                if (amount > 0) {
+                    balances[acc] = { dr: amount, cr: 0 };
+                    totalDr += amount;
+                }
+            });
+
+            // Ensure Cash has a minimum balance of P100,000
+            if (balances["Cash"] && balances["Cash"].dr < 100000) {
+                const adjustment = 100000 - balances["Cash"].dr;
+                balances["Cash"].dr = 100000;
+                totalDr += adjustment;
+            } else if (!balances["Cash"]) {
+                balances["Cash"] = { dr: 100000, cr: 0 };
+                totalDr += 100000;
+            }
+            
+            // 2. Add Accumulated Depreciation if Equipment exists
+            const equipmentCost = balances[depreciableAsset]?.dr || 0;
+            if (equipmentCost > 0) {
+                // Accumulated Depreciation amount is a fraction of the cost (20% to 40% of the cost)
+                const depAmount = getRandomAmount(20, 40) / 100;
+                const accumulatedDepreciation = Math.round((equipmentCost * depAmount) / 1000) * 1000; // Round to nearest 1,000
+                
+                if (accumulatedDepreciation > 0) {
+                    balances[`Accumulated Depreciation - ${depreciableAsset}`] = { dr: 0, cr: accumulatedDepreciation };
+                    totalCr += accumulatedDepreciation;
+                }
+            }
+
+
+            // 3. Generate random liability balances (must have Credit normal balance)
+            liabilityAccounts.forEach(acc => {
+                // Amounts are rounded to the nearest P1,000
+                const amount = getRandomAmount(5, 20) * 1000; 
+                if (amount > 0) {
+                    balances[acc] = { dr: 0, cr: amount };
+                    totalCr += amount;
+                }
+            });
+            
+
+            // 4. Calculate and set Owner's Capital balance (Credit normal balance)
+            // Capital = Assets (Dr) - Liabilities (Cr) - Contra-Assets (Cr)
+            const netAssets = totalDr - totalCr;
+            
+            // Capital must be positive
+            if (netAssets > 100000) { // Ensure a healthy, positive capital
+                balances["Owner, Capital"] = { dr: 0, cr: netAssets };
+                totalCr += netAssets;
+            } else {
+                // Fallback: If total debits are not high enough, drastically increase cash and rebalance.
+                const minimumCapital = 250000; // Target minimum capital
+                const adjustment = minimumCapital - netAssets;
+                balances["Cash"].dr += adjustment;
+                totalDr += adjustment;
+                
+                // Recalculate and set Capital
+                const finalNetAssets = totalDr - totalCr;
+                balances["Owner, Capital"] = { dr: 0, cr: finalNetAssets };
+                totalCr += finalNetAssets;
+            }
+            
+            console.log("Generated Beginning Balances:", balances);
+            console.log("Total Debit:", totalDr, "Total Credit:", totalCr);
+
+            return { balances, total: totalDr };
+        };
+
+        // Function to generate a pool of possible transactions
+        const generateTransactionPool = (beginningBalances) => {
+            const pool = [];
+            let idCounter = 1;
+
+            // Determine which accounts already have starting balances
+            const hasPrepaidRent = beginningBalances.balances["Prepaid Rent"]?.dr > 0;
+            const hasRentExpense = beginningBalances.balances["Rent Expense"]?.dr > 0;
+            const hasEquipment = beginningBalances.balances["Equipment"]?.dr > 0;
+
+            // Helper to add balanced transaction template (minAmt/maxAmt are in thousands)
+            const addTxTemplate = (desc, drAcc, crAcc, minAmt, maxAmt) => {
+                pool.push({
+                    id: idCounter++,
+                    description: desc,
+                    drAcc,
+                    crAcc,
+                    minAmt,
+                    maxAmt,
+                });
+            };
+
+            // --- CORE TRANSACTION TYPES (Required for the month) ---
+            
+            // Service Revenue (Cash/Account) - Always included
+            addTxTemplate("Performed services for cash", "Cash", "Service Revenue", 10, 30); 
+            addTxTemplate("Performed services on account", "Accounts Receivable", "Service Revenue", 5, 15); 
+            addTxTemplate("Received cash for future services", "Cash", "Unearned Revenue", 5, 15);
+            
+            // Supplies (Cash/Account) - Always included
+            addTxTemplate("Purchased supplies for cash", "Supplies", "Cash", 1, 4); 
+            addTxTemplate("Purchased supplies on account", "Supplies", "Accounts Payable", 2, 6); 
+            
+            // Assets Purchase & Collection
+            addTxTemplate("Collected from customers on account", "Cash", "Accounts Receivable", 4, 12); 
+            if (!hasEquipment) {
+                addTxTemplate("Purchased office equipment for cash", "Equipment", "Cash", 15, 40); 
+            }
+            
+            // Liability Payment & Other Expenses
+            addTxTemplate("Paid supplier on account", "Accounts Payable", "Cash", 3, 8);
+            addTxTemplate("Paid miscellaneous expenses", "Miscellaneous Expense", "Cash", 1, 2);
+            
+            // --- EXPENSE/PREPAYMENT LOGIC (Rent/Advertising) ---
+            
+            if (hasPrepaidRent) {
+                addTxTemplate("Paid rent for the month", "Rent Expense", "Cash", 8, 15);
+            } else {
+                 // Represents 12 months advertising or rent
+                 addTxTemplate("Paid 12 months advertising in advance", "Prepaid Rent", "Cash", 24, 60); 
+            }
+            
+            // Salaries (Scheduled Dates: 10th and 25th)
+            addTxTemplate("Paid bi-monthly salaries", "Salaries Expense", "Cash", 5, 10);
+            
+            // Utilities (Scheduled Date: 30th)
+            addTxTemplate("Paid utility bill", "Utilities Expense", "Cash", 1, 3); 
+            
+            // Owner Transactions
+            addTxTemplate("Owner invested additional cash into the business", "Cash", "Owner, Capital", 50, 100);
+            
+            // OWNER'S DRAW: Keep this separate as it must be the last transaction
+            const ownerDrawTx = {
+                id: 999, // High ID to ensure uniqueness
+                description: "Owner withdrew cash for personal use", 
+                drAcc: "Owner, Drawings", 
+                crAcc: "Cash", 
+                minAmt: 5, 
+                maxAmt: 15,
+                isDraw: true // Flag for special handling
+            };
+            pool.push(ownerDrawTx);
+
+            return pool;
+        };
+
+        // Generates 15 random transactions (Subtask C Data Source)
+        const generateTransactions = (beginningBalances) => {
+            const transactionPool = generateTransactionPool(beginningBalances);
+            
+            // 1. Separate scheduled and mandatory transactions
+            const ownerDrawTx = transactionPool.find(t => t.isDraw);
+            const salaryTx = transactionPool.filter(t => t.drAcc === "Salaries Expense").pop();
+            const utilityTx = transactionPool.filter(t => t.drAcc === "Utilities Expense").pop();
+            
+            // Filter out scheduled transactions for the remaining random selection
+            let remainingPool = transactionPool.filter(t => 
+                !t.isDraw && t.id !== salaryTx?.id && t.id !== utilityTx?.id
+            );
+            
+            // Determine how many random transactions to select: 15 total - fixed (4: Draw, Salary x 2, Utility x 1)
+            // Note: Since we need 15 total transactions, and 4 are fixed (Draw, Salary x2, Utility), we need 11 random from the remaining pool.
+            const fixedCount = 4;
+            const requiredRandomCount = 15 - fixedCount; 
+            
+            // Ensure we have enough pool items (should always be true with the current pool size)
+            const selectedTemplates = shuffleArray(remainingPool).slice(0, requiredRandomCount);
+            
+            const finalTemplates = [];
+
+            // 2. Add fixed/scheduled transactions first
+            
+            // Salary transactions (10th and 25th)
+            if (salaryTx) {
+                const salaryAmount = getRandomAmount(salaryTx.minAmt, salaryTx.maxAmt) * 1000;
+                finalTemplates.push({ ...salaryTx, id: `S1-${salaryTx.id}`, day: '10', amount: salaryAmount });
+                finalTemplates.push({ ...salaryTx, id: `S2-${salaryTx.id}`, day: '25', amount: salaryAmount });
+            }
+
+            // Utility transaction (30th)
+            if (utilityTx) {
+                finalTemplates.push({ ...utilityTx, id: `U-${utilityTx.id}`, day: '30', amount: getRandomAmount(utilityTx.minAmt, utilityTx.maxAmt) * 1000 });
+            }
+
+            // Owner's Draw (Last transaction, scheduled on the 30th)
+            if (ownerDrawTx) {
+                finalTemplates.push({ 
+                    ...ownerDrawTx, 
+                    id: `D-${ownerDrawTx.id}`, 
+                    day: '30', 
+                    amount: getRandomAmount(ownerDrawTx.minAmt, ownerDrawTx.maxAmt) * 1000,
+                    isLast: true // Flag for final sort step
+                });
+            }
+
+            // 3. Fill in the rest with random dates
+            const fixedDays = new Set(['10', '25', '30']);
+            
+            const getUniqueRandomDay = () => {
+                let day;
+                let dayStr;
+                do {
+                    // Use days 1 through 29, excluding fixed days
+                    day = getRandomAmount(1, 29); 
+                    dayStr = day.toString().padStart(2, '0');
+                } while (fixedDays.has(dayStr));
+                fixedDays.add(dayStr);
+                return dayStr;
+            };
+
+            // Use the required number of random transactions
+            selectedTemplates.forEach(t => {
+                const amount = getRandomAmount(t.minAmt, t.maxAmt) * 1000; 
+                const dayStr = getUniqueRandomDay();
+
+                finalTemplates.push({
+                    id: t.id,
+                    dateFull: `2023-01-${dayStr}`,
+                    day: dayStr,
+                    description: t.description,
+                    drAcc: t.drAcc,
+                    crAcc: t.crAcc,
+                    amount: amount
+                });
+            });
+            
+            // 4. Format and structure the final transaction objects
+            const transactions = finalTemplates.map(t => ({
+                id: t.id,
+                dateFull: `2023-01-${t.day}`,
+                day: t.day,
+                description: t.description,
+                debits: [{ account: t.drAcc, amount: t.amount }],
+                credits: [{ account: t.crAcc, amount: t.amount }]
+            }));
+            
+            // 5. Final Sort: 
+            // - Sort primarily by date (day)
+            // - Secondary sort: If the day is the same (i.e., day 30), ensure Owner's Draw comes last.
+            transactions.sort((a, b) => {
+                const dayA = parseInt(a.day);
+                const dayB = parseInt(b.day);
+
+                if (dayA !== dayB) {
+                    return dayA - dayB;
+                }
+                
+                // If days are the same (like two transactions on day 30)
+                const isDrawA = a.description.includes("Owner withdrew");
+                const isDrawB = b.description.includes("Owner withdrew");
+
+                if (isDrawA && !isDrawB) return 1; // A (Draw) comes after B
+                if (!isDrawA && isDrawB) return -1; // B (Draw) comes after A
+
+                return 0; // Maintain current order if neither or both are draws (shouldn't happen for both)
+            });
+
+            // Ensure the total count is 15
+            console.log(`Generated ${transactions.length} total transactions.`);
+            
+            return transactions;
+        };
+
+        const getGrade = (percentage) => {
+            if (percentage >= 95) return 'A'; // Advanced
+            if (percentage >= 85) return 'P'; // Proficient
+            if (percentage >= 75) return 'D'; // Developing
+            return 'IR'; // Intervention Required
+        };
+
+        // --- COMPONENTS ---
+
+        const StatusIcon = ({ correct, show }) => {
+            if (!show) return null;
+            return correct ? <Check size={16} className="text-green-600 inline ml-1" /> : <X size={16} className="text-red-600 inline ml-1" />;
+        };
+
+        const InstructionPanel = () => (
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-md mb-6 no-print">
+                <h4 className="font-bold text-slate-800 mb-2">Instruction:</h4>
+                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                    <li>Complete all required fields.</li>
+                    <li>Enter amounts without commas and decimal places.</li>
+                    <li>Round off centavos to the nearest peso.</li>
+                    <li><strong>Format Dates carefully:</strong> 
+                        <ul className="pl-4 list-square">
+                            <li>Row 1 (Year): <strong>YYYY</strong> (e.g., 2023)</li>
+                            <li>Row 2 (Beg. Bal): <strong>MMM dd</strong> (e.g., Jan 01)</li>
+                            <li>Row 3+ (Transactions): <strong>dd</strong> (e.g., 05)</li>
+                        </ul>
+                    </li>
+                    <li>Validate each task to unlock the next one.</li>
+                </ul>
+            </div>
+        );
+
+        const RubricPanel = ({ taskTitle, competency, scoreData }) => {
+            const hasScore = scoreData && scoreData.score !== undefined;
+            
+            return (
+                <div className="border border-indigo-200 rounded-md overflow-hidden mb-6 shadow-sm break-inside-avoid">
+                    <div className="bg-indigo-50 border-b border-indigo-200 p-2 flex justify-between items-center">
+                        <span className="font-bold text-indigo-900 uppercase text-sm">{taskTitle} Rubric</span>
+                        {hasScore && (
+                            <div className="text-sm">
+                                <span className="font-bold text-slate-700 mr-2">Correct: {scoreData.score}/{scoreData.total}</span>
+                                <span className="font-bold text-slate-700 border-l border-slate-300 pl-2">Grade: <span className="text-lg bg-white border px-1 rounded shadow-sm text-indigo-700">{scoreData.grade}</span></span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-5 text-center text-xs">
+                        {/* Header Row */}
+                        <div className="bg-slate-900 text-white p-2 font-bold flex items-center justify-center">Competency</div>
+                        <div className="bg-green-600 text-white p-2 font-bold flex items-center justify-center">Advanced (A)</div>
+                        <div className="bg-blue-600 text-white p-2 font-bold flex items-center justify-center">Proficient (P)</div>
+                        <div className="bg-yellow-600 text-white p-2 font-bold flex items-center justify-center">Developing (D)</div>
+                        <div className="bg-red-600 text-white p-2 font-bold flex items-center justify-center">Intervention Required (IR)</div>
+
+                        {/* Content Row */}
+                        <div className="bg-white border-r p-3 text-left italic text-slate-600 flex items-center">
+                            {competency}
+                        </div>
+                        <div className="bg-white border-r p-3 text-green-700 flex items-center justify-center">Excellent performance. (95-100%)</div>
+                        <div className="bg-white border-r p-3 text-blue-700 flex items-center justify-center">Good performance. (85-94.9%)</div>
+                        <div className="bg-white border-r p-3 text-yellow-700 flex items-center justify-center">Acceptable performance. (75-84.9%)</div>
+                        <div className="bg-white p-3 text-red-700 flex items-center justify-center">Unacceptable performance. (&lt;75%)</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const GlobalActionBar = ({ task1State, task2State, onValidateTask1, onValidateTask2, onPrint, studentInfo }) => {
+            const isTask1Active = !task1State.completed;
+            const activeTitle = isTask1Active ? "Task 1: Posting to the Ledger" : "Task 2: Preparing the Trial Balance";
+            const attempts = isTask1Active ? task1State.attempts : task2State.attempts;
+            const onValidate = isTask1Active ? onValidateTask1 : onValidateTask2;
+            const isCompletedState = isTask1Active ? task1State.completed : task2State.completed;
+            const isCorrect = isTask1Active ? task1State.correct : task2State.correct;
+
+            return (
+                <div className="sticky top-0 z-40 bg-white border-b-2 border-indigo-100 shadow-lg flex flex-col transition-all duration-300 no-print">
+                    <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200">
+                        <div className="flex items-center">
+                            <img 
+                                src="shs-adc.png" 
+                                alt="School Logo" 
+                                className="h-16 w-auto mr-4 object-contain"
+                                onError={(e) => { e.target.style.display = 'none'; }} 
+                            />
+                            <div className="flex flex-col">
+                                <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">SENIOR HIGH SCHOOL DEPARTMENT</span>
+                                <span className="text-lg font-extrabold text-slate-900">Academia de Cebu</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 uppercase tracking-wide">T2 PERFORMANCE TASK 01</h1>
+                            <div className="flex gap-2 mt-2">
+                                <button onClick={() => onPrint(true)} className="flex items-center gap-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded border">
+                                    <FileText size={14}/> Print Preview
+                                </button>
+                                <button onClick={() => onPrint(false)} className="flex items-center gap-1 text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1 rounded border border-indigo-200">
+                                    <Printer size={14}/> Print to PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between items-center p-4 h-20">
+                        <div className="flex flex-col">
+                            <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                                {activeTitle}
+                                {isCompletedState && isCorrect && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded border border-green-200">Completed</span>}
+                                {isCompletedState && !isCorrect && <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded border border-red-200">Failed</span>}
+                            </h2>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Student: <strong>{studentInfo.fullName}</strong> | Section: <strong>{studentInfo.gradeSection}</strong>
+                            </p>
+                        </div>
+                        
+                        <div className="flex flex-col items-end">
+                            {!isCompletedState && (
+                                <span className="text-xs font-bold text-red-600 mb-1 animate-pulse">
+                                    Attempts Remaining: {attempts}
+                                </span>
+                            )}
+                            <button 
+                                onClick={onValidate}
+                                disabled={isCompletedState}
+                                className={`px-6 py-2 rounded-lg font-bold shadow-sm flex items-center gap-2 transition-colors ${
+                                    isCompletedState 
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300' 
+                                        : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+                                }`}
+                            >
+                                {isCompletedState ? "Completed" : "Validate"}
+                                {!isCompletedState && <ArrowRight size={16}/>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PrintReport = ({ data, task1Score, task2Score, userLedgerForms, userTB, detailedErrorsT1, detailedErrorsT2, onClose, studentInfo }) => {
+            const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            const renderErrorTable = (errors, title) => {
+                if (!errors || errors.length === 0) return null;
+                return (
+                    <div className="mb-4 border border-red-200 rounded-lg overflow-hidden break-inside-avoid">
+                        <div className="bg-red-50 p-2 font-bold text-red-800 text-xs uppercase border-b border-red-200 flex items-center gap-2">
+                            <AlertTriangle size={14}/> {title}
+                        </div>
+                        <table className="w-full text-xs text-left">
+                            <thead className="bg-gray-50 text-gray-600 font-semibold border-b">
+                                <tr>
+                                    <th className="p-2 w-1/4">Context</th>
+                                    <th className="p-2 w-1/4">Your Answer</th>
+                                    <th className="p-2 w-1/4">Correct Answer</th>
+                                    <th className="p-2 w-1/4">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {errors.map((err, idx) => (
+                                    <tr key={idx} className="hover:bg-red-50/50">
+                                        <td className="p-2 align-top font-medium text-gray-700">{err.context}</td>
+                                        <td className="p-2 align-top font-mono text-red-600 bg-red-50/30">{err.actual}</td>
+                                        <td className="p-2 align-top font-mono text-green-700 bg-green-50/30">{err.expected}</td>
+                                        <td className="p-2 align-top text-gray-500 italic">{err.explanation}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            };
+
+            const errorsA = detailedErrorsT1.filter(e => e.subtask === 'A');
+            const errorsB = detailedErrorsT1.filter(e => e.subtask === 'B');
+            const errorsC = detailedErrorsT1.filter(e => e.subtask === 'C');
+
+            return (
+                <div id="print-area" className="bg-white p-8 max-w-5xl mx-auto">
+                    {/* Header */}
+                    <div className="flex flex-col items-center mb-6 border-b-4 border-indigo-900 pb-4">
+                        <img src="shs-adc.png" alt="Logo" className="h-20 mb-2 object-contain" onError={(e) => e.target.style.display = 'none'} />
+                        <div className="text-center">
+                            <h2 className="text-indigo-900 font-bold uppercase tracking-wider text-sm">Sacred Heart School - Ateneo de Cebu</h2>
+                            <h1 className="text-indigo-900 font-extrabold text-2xl uppercase">Senior High School Department</h1>
+                            <p className="text-gray-600 font-medium mt-1">SY 2025-2026 | 2nd Semester</p>
+                            <h2 className="text-yellow-500 font-black text-3xl uppercase mt-2">T2 Performance Task 02 Results</h2>
+                        </div>
+                    </div>
+
+                    {/* Student Info */}
+                    <div className="flex justify-between items-end border-b-2 border-gray-800 pb-2 mb-4 text-sm font-mono">
+                        <div>
+                            <p><strong>CN:</strong> {studentInfo.classNumber || '---'}</p>
+                            <p><strong>Name:</strong> {studentInfo.fullName || '---'}</p>
+                        </div>
+                        <div className="text-right">
+                            <p><strong>Section:</strong> {studentInfo.gradeSection || '---'}</p>
+                            <p><strong>Date:</strong> {today}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-300 p-3 italic text-gray-700 text-xs mb-8 rounded">
+                        <strong>Note:</strong> This report shows your submitted answers versus the correct key generated for your specific dataset.
+                    </div>
+
+                    {/* Task 1 Results */}
+                    <div className="mb-10">
+                        <h3 className="text-xl font-bold text-indigo-900 mb-4 uppercase">Task 1: Posting to the Ledger</h3>
+                        <RubricPanel 
+                            taskTitle="Task 1 Rubric" 
+                            competency="To accurately post journal entries to the appropriate General Ledger (T-Accounts) and calculate the correct running balance for each account."
+                            scoreData={task1Score}
+                        />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="bg-white p-3 border rounded shadow-sm">
+                                <h4 className="font-bold text-sm text-gray-700 border-b pb-1 mb-2">Subtask A: Setup</h4>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs">Ledgers Created</span>
+                                    <span className="font-bold text-indigo-700">{task1Score?.subA?.score}/{task1Score?.subA?.total} ({task1Score?.subA?.grade})</span>
+                                </div>
+                            </div>
+                            <div className="bg-white p-3 border rounded shadow-sm">
+                                <h4 className="font-bold text-sm text-gray-700 border-b pb-1 mb-2">Subtask B: Beg. Balances</h4>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs">Accuracy</span>
+                                    <span className="font-bold text-indigo-700">{task1Score?.subB?.score}/{task1Score?.subB?.total} ({task1Score?.subB?.grade})</span>
+                                </div>
+                            </div>
+                            <div className="bg-white p-3 border rounded shadow-sm">
+                                <h4 className="font-bold text-sm text-gray-700 border-b pb-1 mb-2">Subtask C: Posting</h4>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs">Accuracy</span>
+                                    <span className="font-bold text-indigo-700">{task1Score?.subC?.score}/{task1Score?.subC?.total} ({task1Score?.subC?.grade})</span>
+                                </div>
+                            </div>
+                        </div>
+
+                         {/* Task 1 Error Groups */}
+                         {renderErrorTable(errorsA, "Subtask A: Account Setup Errors")}
+                         {renderErrorTable(errorsB, "Subtask B: Beginning Balance Errors")}
+                         {renderErrorTable(errorsC, "Subtask C: Posting & Balancing Errors")}
+
+
+                        <div className="border rounded p-4 text-xs bg-gray-50">
+                             <h4 className="font-bold mb-2 text-gray-600">Student Ledger Summary (Preview)</h4>
+                             <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                                 {userLedgerForms.map(f => (
+                                     <div key={f.id} className="flex justify-between border-b border-gray-200 pb-1">
+                                         <span>{f.account || 'Untitled'}</span>
+                                         <span className="font-mono">{f.balance ? fmt(Number(f.balance)) : '-'} {f.balanceSide}</span>
+                                     </div>
+                                 ))}
+                             </div>
+                        </div>
+                    </div>
+
+                    {/* Task 2 Results */}
+                    <div className="mb-10 page-break-inside-avoid">
+                        <h3 className="text-xl font-bold text-indigo-900 mb-4 uppercase">Task 2: Trial Balance</h3>
+                         <RubricPanel 
+                            taskTitle="Task 2 Rubric" 
+                            competency="To accurately extract account balances from the General Ledger and prepare an unadjusted Trial Balance where total debits equal total credits."
+                            scoreData={task2Score}
+                        />
+
+                        {/* Item Analysis / Wrong Answers for Task 2 */}
+                         {detailedErrorsT2 && detailedErrorsT2.length > 0 && (
+                            <div className="mb-6 border border-red-200 rounded-lg overflow-hidden break-inside-avoid">
+                                <div className="bg-red-50 p-2 font-bold text-red-800 text-xs uppercase border-b border-red-200 flex items-center gap-2">
+                                    <AlertTriangle size={14}/> Task 2 - Detailed Error Report
+                                </div>
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-gray-50 text-gray-600 font-semibold border-b">
+                                        <tr>
+                                            <th className="p-2 w-1/4">Account</th>
+                                            <th className="p-2 w-1/4">Your Answer</th>
+                                            <th className="p-2 w-1/4">Correct Answer</th>
+                                            <th className="p-2 w-1/4">Explanation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {detailedErrorsT2.map((err, idx) => (
+                                            <tr key={idx} className="hover:bg-red-50/50">
+                                                <td className="p-2 align-top font-medium text-gray-700">{err.context}</td>
+                                                <td className="p-2 align-top font-mono text-red-600 bg-red-50/30">{err.actual}</td>
+                                                <td className="p-2 align-top font-mono text-green-700 bg-green-50/30">{err.expected}</td>
+                                                <td className="p-2 align-top text-gray-500 italic">{err.explanation}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                         {/* Minimalist TB Summary for Print */}
+                         <div className="border rounded p-4 text-xs w-2/3 mx-auto bg-gray-50">
+                              <h4 className="font-bold mb-2 text-gray-600">Student Trial Balance (Preview)</h4>
+                              <table className="w-full">
+                                  <thead>
+                                      <tr className="border-b-2 border-gray-800"><th className="text-left">Account</th><th className="text-right">Debit</th><th className="text-right">Credit</th></tr>
+                                  </thead>
+                                  <tbody>
+                                      {Object.entries(userTB).filter(([k]) => k!=='totals').map(([acc, vals]) => (
+                                          <tr key={acc} className="border-b border-gray-200">
+                                              <td className="py-1">{acc}</td>
+                                              <td className="text-right">{vals.dr ? fmt(Number(vals.dr)) : ''}</td>
+                                              <td className="text-right">{vals.cr ? fmt(Number(vals.cr)) : ''}</td>
+                                          </tr>
+                                      ))}
+                                      <tr className="font-bold border-t-2 border-gray-800">
+                                          <td className="py-1">Totals</td>
+                                          <td className="text-right">{userTB.totals?.dr ? fmt(Number(userTB.totals.dr)) : ''}</td>
+                                          <td className="text-right">{userTB.totals?.cr ? fmt(Number(userTB.totals.cr)) : ''}</td>
+                                      </tr>
+                                  </tbody>
+                              </table>
+                         </div>
+                    </div>
+                    
+                    {/* Close Button for Preview Mode */}
+                    {onClose && (
+                        <div className="fixed top-4 right-4 no-print">
+                            <button onClick={onClose} className="bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 flex items-center gap-1">
+                                <XCircle size={18} /> Close Preview
+                            </button>
+                        </div>
+                    )}
+
+                    {/* FOOTER: Static Content for Print */}
+                    <div id="print-footer" className="hidden print:block">
+                        <div class="flex justify-between font-bold mb-1 text-black text-sm">
+                            <span class="text-left">FABM 1</span>
+                            {/* Note: Page numbering 'Page 1 of 1' is typically handled by the browser's print dialog, 
+                                but this template provides the fixed text found in the original HTML. */}
+                            <span class="text-right">Page 1 of 1</span> 
+                        </div>
+                        <div class="border border-black p-1 text-center text-xs text-black mx-auto w-2/3">
+                            <p class="font-bold m-0">4Cs: Christ-centeredness, Competence, Character, Compassion</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+
+        // TASK 1: POSTING (Refactored Layout)
+        const Task1Posting = ({ ledgerData, transactions, beginningBalances, userLedgerForms, onChange, onAddForms, onDeleteForm, showFeedback, validationErrors, isCompleted }) => {
+            
+            const updateForm = (index, field, val, rowIdx = null, side = null) => {
+                if (isCompleted) return; 
+                const forms = [...userLedgerForms];
+                const form = { ...forms[index] };
+
+                if (rowIdx !== null) {
+                    const rows = [...form[side]];
+                    rows[rowIdx] = { ...rows[rowIdx], [field]: val };
+                    form[side] = rows;
+                } else {
+                    form[field] = val;
+                }
+                forms[index] = form;
+                onChange(forms);
+            };
+
+            const addRow = (index) => {
+                if (isCompleted) return;
+                const forms = [...userLedgerForms];
+                forms[index].drRows = [...forms[index].drRows, { date:'', particulars: 'General Journal', pr: '1', amount: '' }];
+                forms[index].crRows = [...forms[index].crRows, { date:'', particulars: 'General Journal', pr: '1', amount: '' }];
+                onChange(forms);
+            };
+
+            return (
+                <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)] min-h-[600px] border rounded-xl overflow-hidden shadow-sm bg-white">
+                    {/* LEFT PANEL: General Journal (Scrollable) */}
+                    <div className="w-full lg:w-4/12 border-r border-gray-200 flex flex-col bg-white">
+                        <div className="p-3 bg-blue-50 border-b border-blue-100 font-bold text-blue-900 flex items-center gap-2 shadow-sm z-10">
+                            <Book size={18}/> Source: General Journal
+                        </div>
+                        <div className="overflow-y-auto flex-1 custom-scrollbar p-0">
+                             <table className="w-full text-xs">
+                                 <thead className="bg-gray-50 text-gray-700 sticky top-0 z-10 shadow-sm">
+                                     <tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">Account</th><th className="p-2 text-right">Dr</th><th className="p-2 text-right">Cr</th></tr>
+                                 </thead>
+                                 <tbody>
+                                     {transactions.map(t => (
+                                         <React.Fragment key={t.id}>
+                                             {t.debits.map((d, i) => (
+                                                 <tr key={`dr-${t.id}-${i}`} className="border-t hover:bg-gray-50 transition-colors">
+                                                     <td className="p-2 text-gray-500 whitespace-nowrap font-mono">{i===0 ? t.dateFull : ''}</td>
+                                                     <td className="p-2 font-medium text-gray-800">{d.account}</td>
+                                                     <td className="p-2 text-right font-mono text-gray-700">{fmt(d.amount)}</td>
+                                                     <td></td>
+                                                 </tr>
+                                             ))}
+                                             {t.credits.map((c, i) => (
+                                                 <tr key={`cr-${t.id}-${i}`} className="hover:bg-gray-50 transition-colors">
+                                                     <td></td>
+                                                     <td className="p-2 pl-6 text-gray-600">{c.account}</td>
+                                                     <td></td>
+                                                     <td className="p-2 text-right font-mono text-gray-700">{fmt(c.amount)}</td>
+                                                 </tr>
+                                             ))}
+                                             <tr><td colSpan="4" className="text-xs italic text-gray-400 pl-2 pb-2 border-b border-gray-100">{t.description}</td></tr>
+                                         </React.Fragment>
+                                     ))}
+                                 </tbody>
+                             </table>
+                        </div>
+                    </div>
+
+                    {/* RIGHT PANEL: Beginning Balances (Sticky) + Ledger Forms (Scrollable) */}
+                    <div className="w-full lg:w-8/12 flex flex-col bg-slate-50 relative">
+                        {/* Sticky Header: Beginning Balances Chips */}
+                        <div className="p-3 bg-white border-b border-gray-200 shadow-sm z-20 sticky top-0">
+                            <div className="flex justify-between items-center mb-2">
+                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                                    <List size={14}/> Beginning Balances (Post-Closing Trial Balance)
+                                </div>
+                                <button onClick={onAddForms} disabled={isCompleted} className={`text-xs font-bold py-1 px-3 rounded flex items-center gap-2 shadow-sm ${isCompleted ? 'bg-gray-300 text-gray-500' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+                                    <PlusCircle size={14}/> Add Ledger
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar">
+                                {Object.entries(beginningBalances.balances).map(([acc, bal]) => {
+                                    const amount = bal.dr > 0 ? `${fmt(bal.dr)} Dr` : `${fmt(bal.cr)} Cr`;
+                                    return (
+                                        <div key={acc} className="bg-white border border-gray-300 rounded px-2 py-1 text-xs shadow-sm flex items-center gap-1 hover:border-blue-400 transition-colors">
+                                            <span className="font-bold text-gray-800">{acc}</span>
+                                            <span className="text-gray-500 text-[10px] bg-gray-100 px-1 rounded">Beg: {amount}</span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Scrollable Ledger Area */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
+                             <div className="mb-2">
+                                 <h4 className="font-bold text-gray-700">General Ledger Forms</h4>
+                             </div>
+
+                            {userLedgerForms.map((form, index) => {
+                                const formErrors = validationErrors[index] || {};
+                                const isAccountNameError = formErrors.account;
+
+                                const renderSide = (sideKey, title) => {
+                                    const totalField = sideKey === 'drRows' ? 'drTotal' : 'crTotal';
+                                    const yearField = sideKey === 'drRows' ? 'drYear' : 'crYear';
+
+                                    return (
+                                        <div className="flex-1 flex flex-col h-full">
+                                            <div className="grid grid-cols-10 bg-gray-100 border-b border-gray-300 text-[10px] font-bold text-center py-1">
+                                                <div className="col-span-2 border-r border-gray-300 px-1">Date</div>
+                                                <div className="col-span-4 border-r border-gray-300 px-1">Particulars</div>
+                                                <div className="col-span-1 border-r border-gray-300 px-1">PR</div>
+                                                <div className="col-span-3 px-1">Amount</div>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-10 border-b border-gray-200 text-xs bg-gray-50">
+                                                <div className="col-span-2 border-r border-gray-200 p-0">
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Year" 
+                                                        className={`w-full text-center bg-transparent font-bold py-0.5 text-[10px] ${formErrors[yearField] ? 'text-red-600' : 'text-gray-700'}`}
+                                                        value={form[yearField] || ''}
+                                                        onChange={(e) => updateForm(index, yearField, e.target.value)}
+                                                        disabled={isCompleted}
+                                                    />
+                                                </div>
+                                                <div className="col-span-8 bg-gray-50"></div>
+                                            </div>
+
+                                            {form[sideKey].map((row, rowIdx) => {
+                                                const rowErr = formErrors[`${sideKey}_${rowIdx}`] || {};
+                                                return (
+                                                    <div key={rowIdx} className="grid grid-cols-10 border-b border-gray-100 text-xs">
+                                                        <div className="col-span-2 border-r border-gray-100">
+                                                            <input type="text" className={`ledger-input text-right ${rowErr.date ? 'error' : ''}`} placeholder="MMM dd" value={row.date || ''} onChange={(e) => updateForm(index, 'date', e.target.value, rowIdx, sideKey)} disabled={isCompleted}/>
+                                                        </div>
+                                                        <div className="col-span-4 border-r border-gray-100">
+                                                            <input type="text" className={`ledger-input text-left ${rowErr.particulars ? 'error' : ''}`} placeholder="" value={row.particulars || ''} onChange={(e) => updateForm(index, 'particulars', e.target.value, rowIdx, sideKey)} disabled={isCompleted}/>
+                                                        </div>
+                                                        <div className="col-span-1 border-r border-gray-100">
+                                                            <input type="text" className={`ledger-input text-center ${rowErr.pr ? 'error' : ''}`} placeholder="1" value={row.pr || ''} onChange={(e) => updateForm(index, 'pr', e.target.value, rowIdx, sideKey)} disabled={isCompleted}/>
+                                                        </div>
+                                                        <div className="col-span-3">
+                                                            <input type="number" className={`ledger-input text-right ${rowErr.amount ? 'error' : ''}`} placeholder="0" value={row.amount || ''} onChange={(e) => updateForm(index, 'amount', e.target.value, rowIdx, sideKey)} disabled={isCompleted}/>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+
+                                            <div className="grid grid-cols-10 border-t border-gray-400 bg-gray-50 py-1 mt-auto">
+                                                <div className="col-span-7 text-right pr-2 text-[10px] font-bold text-gray-600 uppercase pt-1">Total</div>
+                                                <div className="col-span-3 px-1">
+                                                    <input type="number" className={`w-full text-right border-b-2 border-gray-300 bg-transparent font-bold text-xs focus:outline-none focus:border-blue-500 ${formErrors[totalField] ? 'text-red-600 border-red-300' : ''}`} value={form[totalField] || ''} onChange={(e) => updateForm(index, totalField, e.target.value)} disabled={isCompleted}/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                };
+
+                                return (
+                                    <div key={form.id} className="border-2 border-gray-300 rounded shadow-sm flex flex-col bg-white">
+                                        <div className="bg-indigo-50 p-2 border-b-2 border-indigo-100 text-center relative group">
+                                            {/* Delete Button */}
+                                            {!isCompleted && (
+                                                <button 
+                                                    onClick={() => onDeleteForm(form.id)}
+                                                    className="absolute right-2 top-2 text-gray-400 hover:text-red-600 transition-colors opacity-60 hover:opacity-100"
+                                                    title="Delete this Ledger Form"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                            
+                                            <div className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mb-1">Account Title</div>
+                                            <input type="text" placeholder="Enter Account Title" className={`w-1/2 text-center font-bold text-base bg-white border-b-2 outline-none ${showFeedback && isAccountNameError ? 'border-red-500 text-red-600' : 'border-indigo-200 text-indigo-900'}`} value={form.account} onChange={(e) => updateForm(index, 'account', e.target.value)} disabled={isCompleted}/>
+                                        </div>
+                                        <div className="flex divide-x-2 divide-gray-300">
+                                            {renderSide('drRows', 'Debit')}
+                                            {renderSide('crRows', 'Credit')}
+                                        </div>
+                                        <div className="bg-gray-50 p-2 border-t-2 border-gray-300 text-sm">
+                                            <div className="flex justify-center items-center px-4">
+                                                <div className="flex flex-col items-center w-1/2">
+                                                    <div className="text-[10px] text-gray-500 uppercase">Balance</div>
+                                                    <div className="flex gap-2 w-full max-w-xs">
+                                                        <select className={`border rounded text-xs px-1 ${formErrors.balanceSide ? 'border-red-500' : ''}`} value={form.balanceSide || ''} onChange={(e) => updateForm(index, 'balanceSide', e.target.value)} disabled={isCompleted}>
+                                                            <option value="">-</option>
+                                                            <option value="Dr">Dr</option>
+                                                            <option value="Cr">Cr</option>
+                                                        </select>
+                                                        <input type="number" className={`flex-1 text-right border rounded px-1 font-bold ${formErrors.balance ? 'border-red-500 bg-red-50' : ''}`} value={form.balance || ''} onChange={(e) => updateForm(index, 'balance', e.target.value)} disabled={isCompleted}/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-gray-100 p-1 flex justify-center border-t border-gray-200">
+                                            <button onClick={() => addRow(index)} disabled={isCompleted} className={`text-xs font-semibold flex items-center gap-1 ${isCompleted ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}>
+                                                <PlusCircle size={12}/> Add Row
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // TASK 2: TRIAL BALANCE
+        const Task2TrialBalance = ({ ledgerData, userTB, onChange, showFeedback, locked, isCompleted }) => {
+            const validAccounts = sortAccounts(Object.keys(ledgerData));
+
+            if (locked) {
+                return (
+                    <div className="max-w-4xl mx-auto py-12 relative min-h-[400px]">
+                        <div className="absolute inset-0 bg-gray-50/80 z-10 flex flex-col items-center justify-center backdrop-blur-sm rounded-lg border border-gray-200">
+                            <Lock size={64} className="text-gray-400 mb-4"/>
+                            <h3 className="text-2xl font-bold text-gray-500">Task 2 Locked</h3>
+                            <p className="text-gray-400">Complete Task 1 or exhaust attempts to unlock.</p>
+                        </div>
+                         <div className="opacity-25 pointer-events-none filter grayscale">
+                            <div className="bg-white border-t-4 border-purple-600 p-6 rounded shadow-lg">
+                                <div className="text-center mb-6">
+                                    <h2 className="text-2xl font-bold uppercase tracking-wide">Unadjusted Trial Balance</h2>
+                                    <p className="text-gray-500 text-sm">January 31, 2023</p>
+                                </div>
+                                <div className="h-64"></div>
+                            </div>
+                         </div>
+                    </div>
+                )
+            }
+
+            return (
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-white border-t-4 border-purple-600 p-6 rounded shadow-lg">
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl font-bold uppercase tracking-wide">Unadjusted Trial Balance</h2>
+                            <p className="text-gray-500 text-sm">January 31, 2023</p>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-800 text-white border-b-2 border-gray-800">
+                                        <th className="p-3 text-left w-1/2">Account Title</th>
+                                        <th className="p-3 text-right w-1/4 border-l border-gray-600">Debit</th>
+                                        <th className="p-3 text-right w-1/4 border-l border-gray-600">Credit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {validAccounts.map((acc, idx) => {
+                                        const correctNet = (ledgerData[acc].debit || 0) - (ledgerData[acc].credit || 0);
+                                        const correctDr = correctNet > 0 ? correctNet : 0;
+                                        const correctCr = correctNet < 0 ? Math.abs(correctNet) : 0;
+                                        const userDr = Number(userTB[acc]?.dr || 0);
+                                        const userCr = Number(userTB[acc]?.cr || 0);
+                                        const isDrCorrect = Math.abs(userDr - correctDr) < 1;
+                                        const isCrCorrect = Math.abs(userCr - correctCr) < 1;
+                                        return (
+                                            <tr key={acc} className={`border-b hover:bg-purple-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                                <td className="p-2 font-medium">{acc}</td>
+                                                <td className="p-1 border-l relative"><input type="number" disabled={isCompleted} className={`w-full text-right p-1 bg-transparent focus:outline-none ${showFeedback && !isDrCorrect ? 'text-red-600 font-bold' : ''}`} value={userTB[acc]?.dr || ''} onChange={(e) => onChange(acc, 'dr', e.target.value)} /><StatusIcon show={showFeedback} correct={isDrCorrect} /></td>
+                                                <td className="p-1 border-l relative"><input type="number" disabled={isCompleted} className={`w-full text-right p-1 bg-transparent focus:outline-none ${showFeedback && !isCrCorrect ? 'text-red-600 font-bold' : ''}`} value={userTB[acc]?.cr || ''} onChange={(e) => onChange(acc, 'cr', e.target.value)} /><StatusIcon show={showFeedback} correct={isCrCorrect} /></td>
+                                            </tr>
+                                        );
+                                    })}
+                                    <tr className="bg-gray-100 font-bold border-t-2 border-black">
+                                        <td className="p-3 text-right">Totals</td>
+                                        <td className="p-3 border-l relative"><input type="number" disabled={isCompleted} className="w-full text-right bg-transparent" value={userTB.totals?.dr || ''} onChange={(e) => onChange('totals', 'dr', e.target.value)} /></td>
+                                        <td className="p-3 border-l relative"><input type="number" disabled={isCompleted} className="w-full text-right bg-transparent" value={userTB.totals?.cr || ''} onChange={(e) => onChange('totals', 'cr', e.target.value)} /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP ---
+
+        const App = () => {
+            const [data, setData] = useState(null);
+            
+            // Task States
+            const [task1State, setTask1State] = useState({ attempts: 3, completed: false, correct: false });
+            const [task2State, setTask2State] = useState({ attempts: 3, completed: false, correct: false });
+            
+            // Detailed Scores & Errors
+            const [task1Score, setTask1Score] = useState({});
+            const [task2Score, setTask2Score] = useState({});
+            const [task1DetailedErrors, setTask1DetailedErrors] = useState([]);
+            const [task2DetailedErrors, setTask2DetailedErrors] = useState([]);
+
+            // Student Info (Integrated from Gatekeeper State)
+            const [studentInfo, setStudentInfo] = useState(window.initialStudentInfo || { fullName: 'Student, Unverified', gradeSection: 'N/A', classNumber: 'N/A' });
+
+            // Print View Toggle
+            const [showPrintPreview, setShowPrintPreview] = useState(false);
+
+            // Form Data
+            const [userLedgerForms, setUserLedgerForms] = useState([
+                { id: 1, account: '', drRows: [{},{},{},{}], crRows: [{},{},{},{}], drYear: '', crYear: '', balanceSide: '' },
+                { id: 2, account: '', drRows: [{},{},{},{}], crRows: [{},{},{},{}], drYear: '', crYear: '', balanceSide: '' }
+            ]);
+            const [userTB, setUserTB] = useState({});
+            
+            // Validation
+            const [validationErrors, setValidationErrors] = useState({});
+            const [showFeedback, setShowFeedback] = useState(false);
+
+            useEffect(() => {
+                // This effect runs only when the component mounts after the gatekeeper passes.
+                // We use setTimeout to ensure React is fully ready before generating data.
+                const initData = () => {
+                    const beg = generateBeginningBalances();
+                    const txs = generateTransactions(beg);
+                    
+                    const ledgerTruth = {};
+                    Object.keys(beg.balances).forEach(acc => {
+                        ledgerTruth[acc] = { debit: beg.balances[acc].dr, credit: beg.balances[acc].cr };
+                    });
+                    
+                    // Track all accounts touched by transactions so they can be included in ledgerTruth
+                    const transactionAccounts = new Set();
+                    txs.forEach(t => {
+                        t.debits.forEach(d => transactionAccounts.add(d.account));
+                        t.credits.forEach(c => transactionAccounts.add(c.account));
+                    });
+                    
+                    transactionAccounts.forEach(acc => {
+                        if (!ledgerTruth[acc]) {
+                            // Initialize new accounts from transactions
+                            ledgerTruth[acc] = { debit: 0, credit: 0 };
+                        }
+                    });
+
+                    txs.forEach(t => {
+                        t.debits.forEach(d => {
+                            ledgerTruth[d.account].debit += d.amount;
+                        });
+                        t.credits.forEach(c => {
+                            ledgerTruth[c.account].credit += c.amount;
+                        });
+                    });
+
+                    const expectedLedgerRows = {}; 
+                    const allAccounts = sortAccounts(Object.keys(ledgerTruth));
+                    
+                    allAccounts.forEach(acc => {
+                        const drRows = [];
+                        const crRows = [];
+                        
+                        if (beg.balances[acc]) {
+                            if (beg.balances[acc].dr > 0) drRows.push({ date: 'Jan 01', part: 'Beginning Balance', pr: '1', amount: beg.balances[acc].dr });
+                            if (beg.balances[acc].cr > 0) crRows.push({ date: 'Jan 01', part: 'Beginning Balance', pr: '1', amount: beg.balances[acc].cr });
+                        }
+
+                        txs.forEach(t => {
+                            const dateShort = t.day; 
+                            t.debits.forEach(d => {
+                                if (d.account === acc) {
+                                    drRows.push({ dateRaw: t.dateFull, day: dateShort, part: 'General Journal', pr: '1', amount: d.amount });
+                                }
+                            });
+                            t.credits.forEach(c => {
+                                if (c.account === acc) {
+                                    crRows.push({ dateRaw: t.dateFull, day: dateShort, part: 'General Journal', pr: '1', amount: c.amount });
+                                }
+                            });
+                        });
+                        expectedLedgerRows[acc] = { dr: drRows, cr: crRows };
+                    });
+
+                    setData({
+                        beginningBalances: beg,
+                        transactions: txs,
+                        ledgerTruth: ledgerTruth,
+                        expectedLedgerRows: expectedLedgerRows
+                    });
+                };
+                
+                if (window.isQuizLoaded) {
+                     initData();
+                } else {
+                     // Wait for the gatekeeper to finish (in case the page is directly loaded without login)
+                     window.addEventListener('quiz:start', () => {
+                         setStudentInfo(window.initialStudentInfo); // Update React state with verified info
+                         initData();
+                     });
+                }
+            }, []);
+
+            const handleLedgerFormsChange = (newForms) => {
+                setUserLedgerForms(newForms);
+                setValidationErrors({});
+            };
+
+            const addLedgerPair = () => {
+                const nextId = userLedgerForms.length > 0 ? Math.max(...userLedgerForms.map(f=>f.id)) + 1 : 1;
+                const emptyRows = [{},{},{},{}];
+                setUserLedgerForms(prev => [
+                    ...prev,
+                    { id: nextId, account: '', drRows: [...emptyRows], crRows: [...emptyRows], drYear: '', crYear: '', balanceSide: '' },
+                    { id: nextId + 1, account: '', drRows: [...emptyRows], crRows: [...emptyRows], drYear: '', crYear: '', balanceSide: '' }
+                ]);
+            };
+
+            const deleteLedgerForm = (id) => {
+                if (window.confirm("Are you sure you want to delete this General Ledger form? This action cannot be undone.")) {
+                    setUserLedgerForms(prev => prev.filter(f => f.id !== id));
+                }
+            };
+
+            const handleTBChange = (acc, side, val) => {
+                if (acc === 'totals') {
+                    setUserTB(prev => ({ ...prev, totals: { ...prev.totals, [side]: val } }));
+                } else {
+                    setUserTB(prev => ({ ...prev, [acc]: { ...prev[acc], [side]: val } }));
+                }
+            };
+
+            const validateTask1 = () => {
+                if (window.isTimerExpired) return; // Prevent validation if time is up
+                if (!data) return;
+                const errors = {};
+                let isGlobalCorrect = true;
+                const requiredAccounts = Object.keys(data.ledgerTruth);
+                const detailedErrors = []; 
+
+                // --- PRE-CALCULATE MAX SCORES (DENOMINATORS) ---
+                let subATotal = requiredAccounts.length; 
+                let subBTotal = 0; 
+                let subCTotal = 0;
+
+                requiredAccounts.forEach(reqAcc => {
+                    const expected = data.expectedLedgerRows[reqAcc];
+                    
+                    // Determine Beginning Balance Side for this account
+                    const begBalSide = data.beginningBalances.balances[reqAcc] 
+                        ? (data.beginningBalances.balances[reqAcc].dr > 0 ? 'dr' : (data.beginningBalances.balances[reqAcc].cr > 0 ? 'cr' : null))
+                        : null;
+
+                    // Calculate Subtask B points (Beginning Balance side)
+                    if (begBalSide) {
+                        // Subtask B: 4 points for BegBal Account (Year, Date, Desc, Amt)
+                        subBTotal += 4;
+                        
+                        // Subtask C: Year on the OTHER side counts for C
+                        const otherSide = begBalSide === 'dr' ? 'cr' : 'dr';
+                        const otherSideEntryCount = expected[otherSide].length;
+                        if (otherSideEntryCount > 0) {
+                            subCTotal += 1; // Year on the other side
+                        }
+                        
+                    } else {
+                        // No Beg Bal: Year on BOTH sides counts for C
+                        // Only count if there are actual entries (tx)
+                        if (expected.dr.length > 0) subCTotal += 1;
+                        if (expected.cr.length > 0) subCTotal += 1;
+                    }
+
+                    // Count Transaction Lines for Subtask C (4 pts each)
+                    // We need to exclude the 'Beginning Balance' rows from this count
+                    const drTxCount = expected.dr.filter(r => r.part !== 'Beginning Balance').length;
+                    const crTxCount = expected.cr.filter(r => r.part !== 'Beginning Balance').length;
+                    subCTotal += (drTxCount + crTxCount) * 4;
+
+                    // Totals and Balances for Subtask C (3 pts each account: Dr Total, Cr Total, Final Balance/Side)
+                    // Only score if there is any entry on the ledger
+                    if (expected.dr.length > 0 || expected.cr.length > 0) {
+                        subCTotal += 3;
+                    }
+                });
+
+                // --- SCORING ACCUMULATORS ---
+                let subAScore = 0;
+                let subBScore = 0;
+                let subCScore = 0;
+
+                requiredAccounts.forEach(reqAcc => {
+                    const formIdx = userLedgerForms.findIndex(f => (f.account||'').toLowerCase().trim() === reqAcc.toLowerCase());
+                    
+                    if (formIdx !== -1) {
+                        subAScore++;
+                    } else {
+                        isGlobalCorrect = false;
+                        detailedErrors.push({
+                            subtask: 'A',
+                            context: `Account Setup`,
+                            actual: `Missing: ${reqAcc}`,
+                            expected: `Ledger form for ${reqAcc}`,
+                            explanation: `You did not create a General Ledger form for ${reqAcc}.`
+                        });
+                        return;
+                    }
+
+                    const form = userLedgerForms[formIdx];
+                    const expected = data.expectedLedgerRows[reqAcc];
+                    const formError = {};
+                    
+                    // Identify which side has Beg Bal
+                    const begBalSide = data.beginningBalances.balances[reqAcc] 
+                        ? (data.beginningBalances.balances[reqAcc].dr > 0 ? 'dr' : (data.beginningBalances.balances[reqAcc].cr > 0 ? 'cr' : null))
+                        : null;
+                    
+                    // Helper to normalize MMM dd
+                    const normalizeDateMMMdd = (dateStr) => {
+                        // Normalizes "Jan 01", "Jan, 01", "jan.01" to "jan01"
+                        return (dateStr || '').toLowerCase().replace(/[\s,.]/g, ''); 
+                    }
+
+                    // Helper to check side
+                    const checkSide = (side) => {
+                        const isBegBalSide = (side === begBalSide);
+                        const userRows = side === 'dr' ? form.drRows : form.crRows;
+                        const expRows = side === 'dr' ? expected.dr : expected.cr;
+                        const yearInput = side === 'dr' ? form.drYear : form.crYear;
+                        const sideText = side === 'dr' ? 'Debit' : 'Credit';
+
+                        // Skip validation if side is completely empty in expected data
+                        if (expRows.length === 0) {
+                             return;
+                        }
+
+                        // --- SUBTASK B (if applicable) ---
+                        if (isBegBalSide) {
+                            // 1. Year Check (1 pt)
+                            if (yearInput === '2023') subBScore++;
+                            else {
+                                formError[`${side}Year`] = true;
+                                detailedErrors.push({ subtask: 'B', context: `${reqAcc} (${sideText}) Year`, actual: yearInput || 'Empty', expected: '2023', explanation: 'Year incorrect.'});
+                            }
+
+                            // 2. Beg Bal Row (First expected row is Beg Bal)
+                            const expBegRow = expRows.find(r => r.part === 'Beginning Balance');
+                            // User Row 1 (Index 0) MUST be Beg Bal
+                            const userBegRow = userRows[0] || {};
+                            const userAmt = Number(userBegRow.amount || 0);
+
+                            if (expBegRow) {
+                                // Date "Jan 01" (1 pt) - Check for "Jan 01" with or without comma/space variations
+                                const dateVal = normalizeDateMMMdd(userBegRow.date);
+                                if (dateVal === 'jan01') subBScore++;
+                                else {
+                                    if(!formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`]) formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`] = {};
+                                    formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`].date = true;
+                                    detailedErrors.push({ subtask: 'B', context: `${reqAcc} (${sideText}) Row 1 Date`, actual: userBegRow.date, expected: 'Jan 01 (MMM dd)', explanation: 'Beg. Balance date must be in "MMM dd" format, e.g., "Jan 01".'});
+                                }
+                                
+                                // Particulars (1 pt)
+                                if ((userBegRow.particulars || '').toLowerCase().trim() === 'beginning balance') subBScore++;
+                                else {
+                                    if(!formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`]) formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`] = {};
+                                    formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`].particulars = true;
+                                    detailedErrors.push({ subtask: 'B', context: `${reqAcc} (${sideText}) Row 1 Desc`, actual: userBegRow.particulars, expected: 'Beginning Balance', explanation: 'Description must be "Beginning Balance".'});
+                                }
+
+                                // Amount (1 pt)
+                                if (Math.abs(userAmt - expBegRow.amount) < 1 && Number.isInteger(userAmt)) subBScore++;
+                                else {
+                                    if(!formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`]) formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`] = {};
+                                    formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`].amount = true;
+                                    detailedErrors.push({ subtask: 'B', context: `${reqAcc} (${sideText}) Row 1 Amt`, actual: userAmt, expected: expBegRow.amount, explanation: 'Incorrect amount or not whole number.'});
+                                }
+                                
+                                // (No score for PR check, just validation error if present)
+                                if ((userBegRow.pr || '').trim() !== '') {
+                                    if(!formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`]) formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`] = {};
+                                    formError[`${side === 'dr' ? 'drRows' : 'crRows'}_0`].pr = true;
+                                    detailedErrors.push({ subtask: 'B', context: `${reqAcc} (${sideText}) Row 1 PR`, actual: userBegRow.pr, expected: '(Empty)', explanation: 'PR must be empty for Beginning Balance.'});
+                                }
+                            }
+                        } 
+                        // --- SUBTASK C (Transactions & Other Year) ---
+                        else {
+                             // Year Check (1 pt for C) - Only score if denominator was calculated (i.e., there are entries on this side)
+                             const isYearScoreable = begBalSide ? true : (expRows.length > 0);
+                             
+                             if (isYearScoreable) {
+                                 if (yearInput === '2023') subCScore++;
+                                 else {
+                                     formError[`${side}Year`] = true;
+                                     detailedErrors.push({ subtask: 'C', context: `${reqAcc} (${sideText}) Year`, actual: yearInput || 'Empty', expected: '2023', explanation: 'Year incorrect.'});
+                                 }
+                             }
+                        }
+
+                        // Determine which rows to check for transactions
+                        const startIdx = isBegBalSide ? 1 : 0;
+                        const userTxRows = userRows.slice(startIdx);
+                        const expTxRows = expRows.filter(r => r.part !== 'Beginning Balance');
+
+                        if (expTxRows.length > 0) {
+                            // Flexible Matching
+                            const usedUserIndices = new Set();
+                            
+                            expTxRows.forEach(expTx => {
+                                let matchFound = false;
+                                let bestMatchIdx = -1;
+
+                                // Try to find a row with matching Date AND Amount
+                                userTxRows.forEach((uRow, idx) => {
+                                    if (usedUserIndices.has(idx)) return;
+                                    const uAmt = Number(uRow.amount || 0);
+                                    const uDate = (uRow.date || '').trim();
+                                    
+                                    // Validation for Transaction Date: must be 'dd'
+                                    const isDateCorrect = uDate === expTx.day;
+                                    const isAmountCorrect = Math.abs(uAmt - expTx.amount) < 1;
+
+                                    if (isDateCorrect && isAmountCorrect) {
+                                        bestMatchIdx = idx;
+                                    }
+                                });
+
+                                if (bestMatchIdx !== -1) {
+                                    matchFound = true;
+                                    usedUserIndices.add(bestMatchIdx);
+                                    const uRow = userTxRows[bestMatchIdx];
+                                    const realIdx = startIdx + bestMatchIdx; // Map back to form index for errors
+
+                                    // Score the 4 checks
+                                    subCScore++; // 1. Date (Matched implicitly)
+                                    subCScore++; // 2. Amount (Matched implicitly)
+
+                                    // 3. Particulars "General Journal"
+                                    if ((uRow.particulars || '').toLowerCase().trim() === 'general journal') subCScore++;
+                                    else {
+                                        if(!formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`]) formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`] = {};
+                                        formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`].particulars = true;
+                                        detailedErrors.push({ subtask: 'C', context: `${reqAcc} (${sideText}) Tx Desc (Date: ${expTx.day})`, actual: uRow.particulars, expected: 'General Journal', explanation: 'Tx description must be "General Journal".'});
+                                    }
+
+                                    // 4. PR "1"
+                                    if ((uRow.pr || '').trim() === '1') subCScore++;
+                                    else {
+                                        if(!formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`]) formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`] = {};
+                                        formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`].pr = true;
+                                        detailedErrors.push({ subtask: 'C', context: `${reqAcc} (${sideText}) Tx PR (Date: ${expTx.day})`, actual: uRow.pr, expected: '1', explanation: 'Tx PR must be "1".'});
+                                    }
+
+                                } else {
+                                    // Missing Transaction
+                                    detailedErrors.push({ subtask: 'C', context: `${reqAcc} (${sideText}) Transaction`, actual: 'Missing', expected: `Jan ${expTx.day}, Amt ${expTx.amount}`, explanation: 'Transaction not found or date/amount mismatch.'});
+                                }
+                            });
+                            
+                            // Check for invalid date formats in remaining user rows that were not matched
+                            userTxRows.forEach((uRow, idx) => {
+                                const realIdx = startIdx + idx;
+                                if (!usedUserIndices.has(idx) && uRow.date && (uRow.date || '').trim() !== '') {
+                                    // Check if the date format is wrong ('MMM dd' in tx row)
+                                    const dateVal = normalizeDateMMMdd(uRow.date);
+                                    if (dateVal.length > 2) {
+                                        if(!formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`]) formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`] = {};
+                                        formError[`${side === 'dr' ? 'drRows' : 'crRows'}_${realIdx}`].date = true;
+                                        detailedErrors.push({ subtask: 'C', context: `${reqAcc} (${sideText}) Tx Date Format`, actual: uRow.date, expected: 'dd', explanation: 'Transaction dates (Row 3+) must be in "dd" format (e.g., 12).'});
+                                    }
+                                }
+                            });
+                        }
+                    };
+
+                    checkSide('dr');
+                    checkSide('cr');
+
+                    // Balances Validation (3 pts per account for Subtask C)
+                    // Only perform balance scoring if there were entries on the ledger
+                    if (expected.dr.length > 0 || expected.cr.length > 0) {
+                        const trueDrTotal = data.ledgerTruth[reqAcc].debit;
+                        const trueCrTotal = data.ledgerTruth[reqAcc].credit;
+                        const trueNet = trueDrTotal - trueCrTotal;
+                        const trueBal = Math.abs(trueNet);
+                        const trueSide = trueNet >= 0 ? 'Dr' : 'Cr'; 
+
+                        // 1. Dr Total Check
+                        if (Math.abs(Number(form.drTotal || 0) - trueDrTotal) <= 1) subCScore++;
+                        else { 
+                            formError.drTotal = true;
+                            detailedErrors.push({ subtask: 'C', context: `${reqAcc} Debit Total`, actual: form.drTotal, expected: trueDrTotal, explanation: 'Sum of debits incorrect.'});
+                        }
+
+                        // 2. Cr Total Check
+                        if (Math.abs(Number(form.crTotal || 0) - trueCrTotal) <= 1) subCScore++;
+                        else {
+                             formError.crTotal = true;
+                             detailedErrors.push({ subtask: 'C', context: `${reqAcc} Credit Total`, actual: form.crTotal, expected: trueCrTotal, explanation: 'Sum of credits incorrect.'});
+                        }
+
+                        // 3. Balance Check (Amount + Side)
+                        if (Math.abs(Number(form.balance || 0) - trueBal) <= 1 && (trueBal === 0 || form.balanceSide === trueSide)) subCScore++;
+                        else {
+                             formError.balance = true;
+                             if (Math.abs(Number(form.balance || 0) - trueBal) > 1) {
+                                 detailedErrors.push({ subtask: 'C', context: `${reqAcc} Final Balance`, actual: form.balance, expected: trueBal, explanation: 'Final balance calculation incorrect.'});
+                             }
+                             if (trueBal > 0 && form.balanceSide !== trueSide) {
+                                 formError.balanceSide = true;
+                                 detailedErrors.push({ subtask: 'C', context: `${reqAcc} Balance Side`, actual: form.balanceSide, expected: trueSide, explanation: 'Balance is on the wrong side.'});
+                             }
+                        }
+                    }
+
+                    if (Object.keys(formError).length > 0) {
+                        errors[formIdx] = formError;
+                        isGlobalCorrect = false;
+                    }
+                });
+
+                setValidationErrors(errors);
+                setTask1DetailedErrors(detailedErrors); 
+                
+                // Calc Grades
+                const calcGradeObj = (score, total) => {
+                    const pct = total === 0 ? 0 : (score / total) * 100;
+                    return { score, total, grade: getGrade(pct) };
+                };
+
+                const subAObj = calcGradeObj(subAScore, subATotal);
+                const subBObj = calcGradeObj(subBScore, subBTotal);
+                const subCObj = calcGradeObj(subCScore, subCTotal);
+                
+                // Total Task 1 Score
+                const totalScore = subAScore + subBScore + subCScore;
+                const grandTotal = subATotal + subBTotal + subCTotal;
+                const task1Obj = calcGradeObj(totalScore, grandTotal);
+
+                setTask1Score({
+                    ...task1Obj,
+                    subA: subAObj,
+                    subB: subBObj,
+                    subC: subCObj
+                });
+
+                // Update State
+                setTask1State(prev => {
+                    const newAttempts = isGlobalCorrect ? prev.attempts : prev.attempts - 1;
+                    const isCompleted = isGlobalCorrect || newAttempts <= 0;
+                    return {
+                        attempts: newAttempts,
+                        correct: isGlobalCorrect,
+                        completed: isCompleted
+                    };
+                });
+                setShowFeedback(true);
+            };
+
+            const validateTask2 = () => {
+                if (window.isTimerExpired) return; // Prevent validation if time is up
+                if (!data) return;
+                const detailedErrors = [];
+                let correctCells = 0;
+                let totalCells = Object.keys(data.ledgerTruth).length * 2 + 2; // Dr/Cr for each acc + totals
+
+                let isAllCorrect = true;
+                Object.keys(data.ledgerTruth).forEach(acc => {
+                    const truth = data.ledgerTruth[acc];
+                    const net = truth.debit - truth.credit;
+                    const correctDr = net > 0 ? net : 0;
+                    const correctCr = net < 0 ? Math.abs(net) : 0;
+                    
+                    const userDr = Number(userTB[acc]?.dr || 0);
+                    const userCr = Number(userTB[acc]?.cr || 0);
+                    
+                    if (Math.abs(userDr - correctDr) < 1) correctCells++;
+                    else {
+                        isAllCorrect = false;
+                        if (correctDr > 0 || userDr > 0) { 
+                            detailedErrors.push({ context: `${acc} Debit`, actual: userDr, expected: correctDr, explanation: 'Incorrect debit balance.' });
+                        }
+                    }
+
+                    if (Math.abs(userCr - correctCr) < 1) correctCells++;
+                    else {
+                        isAllCorrect = false;
+                         if (correctCr > 0 || userCr > 0) {
+                             detailedErrors.push({ context: `${acc} Credit`, actual: userCr, expected: correctCr, explanation: 'Incorrect credit balance.' });
+                         }
+                    }
+                });
+                
+                // Check totals
+                correctCells += 2; // Assume totals calculation itself is free points if data is right
+
+                const pct = (correctCells / totalCells) * 100;
+                setTask2Score({
+                    score: correctCells,
+                    total: totalCells,
+                    grade: getGrade(pct)
+                });
+                setTask2DetailedErrors(detailedErrors);
+
+                // Update State
+                setTask2State(prev => {
+                    const newAttempts = isAllCorrect ? prev.attempts : prev.attempts - 1;
+                    const isCompleted = isAllCorrect || newAttempts <= 0;
+                    return {
+                        attempts: newAttempts,
+                        correct: isAllCorrect,
+                        completed: isCompleted
+                    };
+                });
+                setShowFeedback(true);
+            };
+
+            const handlePrint = (previewMode) => {
+                if (previewMode) {
+                    setShowPrintPreview(true);
+                } else {
+                    // Direct print to PDF behavior
+                    setShowPrintPreview(true); // Must show it to print it
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
+                }
+            };
+
+            if (!data) return <div className="p-10 text-center">Loading Activity...</div>;
+
+            return (
+                <div className="bg-slate-50 min-h-screen">
+                    <GlobalActionBar 
+                        task1State={task1State}
+                        task2State={task2State}
+                        onValidateTask1={validateTask1}
+                        onValidateTask2={validateTask2}
+                        onPrint={handlePrint}
+                        studentInfo={studentInfo}
+                    />
+
+                    {/* Main Content (Hidden when printing via CSS) */}
+                    <div className="max-w-[1400px] mx-auto p-4 md:p-6 space-y-12 pt-8 no-print">
+                        
+                        <InstructionPanel />
+
+                        {/* TASK 1 SECTION */}
+                        <div className={`transition-opacity duration-500 ${task1State.completed ? 'opacity-80' : 'opacity-100'}`}>
+                            <RubricPanel 
+                                taskTitle="Task 1: Posting to Ledger" 
+                                competency="To accurately post journal entries to the appropriate General Ledger (T-Accounts) and calculate the correct running balance for each account."
+                                scoreData={task1Score}
+                            />
+                            <Task1Posting 
+                                ledgerData={data.ledgerTruth} 
+                                transactions={data.transactions}
+                                beginningBalances={data.beginningBalances}
+                                userLedgerForms={userLedgerForms}
+                                onChange={handleLedgerFormsChange}
+                                onAddForms={addLedgerPair}
+                                onDeleteForm={deleteLedgerForm}
+                                showFeedback={showFeedback} 
+                                validationErrors={validationErrors}
+                                isCompleted={task1State.completed || window.isTimerExpired}
+                            />
+                        </div>
+
+                        {/* TASK 2 SECTION */}
+                        <div className={`transition-all duration-500 ${!task1State.completed ? 'opacity-70' : 'opacity-100'}`}>
+                            <RubricPanel 
+                                taskTitle="Task 2: Trial Balance" 
+                                competency="To accurately extract account balances from the General Ledger and prepare an unadjusted Trial Balance where total debits equal total credits."
+                                scoreData={task2Score}
+                            />
+                            <div className="border rounded-xl shadow-sm bg-white overflow-hidden relative">
+                                <div className="bg-gray-50 border-b p-4">
+                                    <h3 className="text-lg font-bold text-gray-700">Task 2: Preparing the Trial Balance</h3>
+                                </div>
+                                <div className="p-6">
+                                    <div className="mb-4 bg-purple-50 border border-purple-200 p-4 rounded-lg text-purple-900">
+                                        <p className="text-sm">
+                                            <strong>Goal:</strong> Extract the final balances from your Ledger (Task 1) and verify that Total Debits equal Total Credits.
+                                        </p>
+                                    </div>
+                                    <Task2TrialBalance 
+                                        ledgerData={data.ledgerTruth}
+                                        userTB={userTB}
+                                        onChange={handleTBChange}
+                                        showFeedback={showFeedback}
+                                        locked={!task1State.completed}
+                                        isCompleted={task2State.completed || window.isTimerExpired}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Print Preview Overlay */}
+                    {showPrintPreview && (
+                        <div className="fixed inset-0 z-[100] bg-black/50 overflow-y-auto print:bg-white print:static print:overflow-visible">
+                            <PrintReport 
+                                data={data} 
+                                task1Score={task1Score} 
+                                task2Score={task2Score} 
+                                userLedgerForms={userLedgerForms}
+                                userTB={userTB}
+                                detailedErrorsT1={task1DetailedErrors}
+                                detailedErrorsT2={task2DetailedErrors}
+                                onClose={() => setShowPrintPreview(false)}
+                                studentInfo={studentInfo}
+                            />
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // If the element with id 'root' exists, render the App component into it.
+        const rootElement = document.getElementById('root');
+        if (rootElement) {
+            const root = createRoot(rootElement);
+            // This is conditional upon the gatekeeper passing.
+            // The quiz:start event listener handles the initial render.
+        } else {
+            console.error("Root element for React not found.");
+        }
+    </script>
+    
+    <script type="module">
+        // Global state and timer variables
+        let state = {
+            currentStep: 0, 
+            attendanceId: "", 
+            studentInfo: null,
+            isTimerRunning: false 
+        };
+
+        // Exported globals for the React component
+        window.examDurationMins = 0;
+        window.initialStudentInfo = {};
+        window.isQuizLoaded = false;
+        window.isTimerExpired = false;
+
+        let timerInterval = null;
+        const acceptableStudents = {
+            '12345678': { cn: '1', fullName: 'Cruz, Juan Dela', section: 'Grade 12 - A' },
+            '98765432': { cn: '2', fullName: 'Santos, Maria', section: 'Grade 12 - A' }
+        };
+
+        // ====================================================================
+        // MOCK/SIMPLIFIED VALIDATION LOGIC (Replaces Firebase Calls)
+        // ====================================================================
+        async function validateStudentLogin(attendanceId, studentId) {
+            // Mock validation: Checks if studentId is in the mock list
+            await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
+            if (!attendanceId || !studentId) return { success: false, message: "Missing Attendance ID or Student ID." };
+            if (attendanceId !== 'MOCKATT123') return { success: false, message: "Attendance Record not found (Invalid Link/ID)." };
+            
+            const student = acceptableStudents[studentId];
+
+            if (student) {
+                // Simulate status check (e.g., student is present)
+                return {
+                    success: true, message: "Student Verified",
+                    data: { cn: student.cn, fullName: student.fullName, section: student.section, idNumber: studentId }
+                };
+            } else {
+                return { success: false, message: "ID Number not found or student is marked absent." };
+            }
+        }
+        
+        // ====================================================================
+        // TIMER LOGIC
+        // ====================================================================
+
+        /**
+         * Disables all interactive elements when time runs out.
+         */
+        window.disableAllInputs = () => {
+            document.querySelectorAll('#root input, #root button, #root select').forEach(el => {
+                // Keep the print button enabled
+                if(el.textContent.includes('Print')) return;
+                
+                el.disabled = true;
+                el.classList.add('cursor-not-allowed', 'opacity-75');
+            });
+            window.isTimerExpired = true;
+            renderMessageBox("Time is up! All quiz inputs disabled.", true);
+            
+            // Auto-trigger print for forced submission report
+            const finalReportButton = document.querySelector('#root .no-print button');
+            if(finalReportButton && finalReportButton.textContent.includes('Validate')) {
+                 finalReportButton.click(); // Run final validation (if still pending)
+            }
+            
+            // Hide the main Gatekeeper panel if still visible
+            document.getElementById('gatekeeper-panel').style.display = 'none';
+        };
+
+        /**
+         * Updates the countdown display based on the stored end time.
+         */
+        function updateTimerDisplay() {
+            const displayElement = document.getElementById('countdown');
+            const boxElement = document.getElementById('timer-box');
+            
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            const endTime = localStorage.getItem(storageKey);
+            
+            if (!endTime || !displayElement) return;
+
+            const now = Date.now();
+            const distance = parseInt(endTime) - now;
+            
+            if (distance < 0) {
+                displayElement.textContent = "00:00:00";
+                stopTimer();
+                window.disableAllInputs();
+                return;
+            }
+
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            displayElement.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            
+            // Visual alert for low time
+            if (distance < 300000) { // Less than 5 mins
+                boxElement.classList.remove('bg-red-800'); 
+                boxElement.classList.add('animate-pulse', 'bg-red-600');
+            } else {
+                boxElement.classList.remove('animate-pulse', 'bg-red-600'); 
+                boxElement.classList.add('bg-red-800');
+            }
+        }
+        
+        /**
+         * Clears the timer interval.
+         */
+        function stopTimer() { 
+            if (timerInterval) { 
+                clearInterval(timerInterval); 
+                timerInterval = null; 
+                state.isTimerRunning = false;
+            } 
+        }
+        
+        /**
+         * Starts the timer, setting the end time in localStorage if not present.
+         */
+        function startTimer() {
+            if (state.isTimerRunning) stopTimer();
+            
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            let endTime = localStorage.getItem(storageKey);
+            
+            if (!endTime) {
+                // Calculate end time based on the duration parameter from URL
+                const now = Date.now();
+                const durationMs = window.examDurationMins * 60 * 1000;
+                endTime = now + durationMs;
+                localStorage.setItem(storageKey, endTime);
+            }
+            
+            // Check if already expired on start
+            if (parseInt(endTime) < Date.now()) {
+                updateTimerDisplay(); // Will trigger disableAllInputs
+                return;
+            }
+
+            updateTimerDisplay(); // Initial call
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+            state.isTimerRunning = true;
+        }
+
+
+        // ====================================================================
+        // URL PARAMETER CHECK & INITIALIZATION
+        // ====================================================================
+
+        /**
+         * Checks the URL for 'att', 'dur', and 'exp' parameters 
+         * and gates access based on expiration time.
+         */
+        const checkUrlParametersAndInit = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const attId = urlParams.get('att');
+            const duration = urlParams.get('dur'); 
+            const expiration = urlParams.get('exp');
+
+            const isValidDuration = duration && !isNaN(parseInt(duration)) && parseInt(duration) > 0;
+            const isValidExpiration = expiration && !isNaN(parseInt(expiration));
+            const container = document.getElementById('task-container');
+            const timerBox = document.getElementById('timer-box');
+
+            // 1. Check for missing essential parameters
+            if (!attId || !isValidDuration || !isValidExpiration) {
+                container.innerHTML = `<div class="text-center py-12 bg-red-100 border border-red-400 rounded-xl"><h3 class="text-2xl font-bold text-red-700 mb-4">ACCESS DENIED</h3><p>Missing or invalid link parameters (att, dur, exp).</p></div>`;
+                timerBox.style.display = 'none';
+                return;
+            }
+
+            // 2. Check for Link Expiration (Server-side constraint)
+            const now = Date.now();
+            if (now > parseInt(expiration)) {
+                container.innerHTML = `<div class="text-center py-12 bg-red-100 border border-red-400 rounded-xl"><h3 class="text-2xl font-bold text-red-700 mb-4">LINK EXPIRED</h3><p>This activity link has expired and is no longer valid. Expiration: ${new Date(parseInt(expiration)).toLocaleString()}.</p></div>`;
+                timerBox.style.display = 'none';
+                return;
+            }
+
+            // 3. Parameters are valid. Initialize state.
+            state.attendanceId = attId;
+            window.examDurationMins = parseInt(duration);
+            
+            // Check if user has started the quiz already (using localStorage timer check)
+            const storageKey = `exam_end_time_${attId}`;
+            if(localStorage.getItem(storageKey)) {
+                 // Quiz was started, bypass login, go straight to quiz
+                 window.isQuizLoaded = true;
+                 renderMessageBox(`Welcome back! Resuming task. Time remaining: ${document.getElementById('countdown').textContent}`, false);
+                 document.getElementById('gatekeeper-panel').style.display = 'none';
+                 document.getElementById('root').classList.remove('hidden');
+                 startTimer();
+            } else {
+                 // Show the login form
+                 renderStudentInfo();
+            }
+        };
+
+        // ====================================================================
+        // RENDERERS & UTILITIES
+        // ====================================================================
+
+        /**
+         * Renders the Student Login form.
+         */
+        const renderStudentInfo = () => {
+            const attendanceInputHtml = state.attendanceId ? `<input type="text" id="attendanceId" class="table-input bg-gray-100 cursor-not-allowed" value="${state.attendanceId}" readonly>` : `<input type="text" id="attendanceId" class="table-input" value="">`;
+            document.getElementById('task-container').innerHTML = `
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
+                    <div class="bg-gray-50 p-6 rounded-lg shadow-inner space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700">Attendance ID (From Link)</label>${attendanceInputHtml}</div>
+                            <div><label class="block text-sm font-medium text-gray-700">Student ID</label><input type="text" id="studentId" class="table-input" placeholder="e.g., 12345678"></div>
+                        </div>
+                        <div class="flex justify-end"><button id="login-btn" onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition duration-200">Verify & Login</button></div>
+                        <div class="border-t pt-4">
+                            <p class="text-xs uppercase font-bold mb-2 text-gray-600">Verification Details</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="col-span-2"><label class="text-xs text-gray-500">Full Name</label><input type="text" id="fullName" class="table-input bg-white font-bold text-gray-800" disabled value="${state.studentInfo?.fullName || ''}"></div>
+                                <div><label class="text-xs text-gray-500">Class Number</label><input type="text" id="classNumber" class="table-input bg-white font-bold text-gray-800" disabled value="${state.studentInfo?.classNumber || ''}"></div>
+                                <div><label class="text-xs text-gray-500">Grade & Section</label><input type="text" id="gradeSection" class="table-input bg-white font-bold text-gray-800" disabled value="${state.studentInfo?.gradeSection || ''}"></div>
+                            </div>
+                        </div>
+                        <div id="start-task-container" class="hidden text-center pt-4 border-t border-gray-200">
+                            <p class="mb-3 text-sm font-medium text-green-700">Verification Successful. Time limit for the quiz is <span id="quiz-duration-display" class="font-extrabold text-indigo-700"></span> minutes.</p>
+                            <button onclick="window.startTask()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transform transition hover:scale-105">
+                                Start the Quiz Now
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            
+            // Display the quiz duration
+            document.getElementById('quiz-duration-display').textContent = window.examDurationMins;
+        };
+
+        /**
+         * Simple utility to show messages to the user.
+         */
+        const renderMessageBox = (message, isError = false) => {
+            const box = document.getElementById('message-box');
+            box.className = `mt-6 text-center text-sm font-medium min-h-6 ${isError ? 'text-red-600' : 'text-green-600'}`;
+            box.innerHTML = message;
+        };
+
+
+        // ====================================================================
+        // EVENT HANDLERS
+        // ====================================================================
+
+        /**
+         * Handles the login button click.
+         */
+        window.handleLogin = async () => {
+            const attId = document.getElementById('attendanceId').value.trim();
+            const stuId = document.getElementById('studentId').value.trim();
+            if(!attId || !stuId) { renderMessageBox("Please enter both IDs.", true); return; }
+            
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true; btn.innerText = "Verifying...";
+            btn.classList.add('opacity-50');
+
+            const result = await validateStudentLogin(attId, stuId);
+            
+            if (result.success) {
+                state.attendanceId = attId;
+                state.studentInfo = { 
+                    idNumber: result.data.idNumber, 
+                    classNumber: result.data.cn, 
+                    fullName: result.data.fullName, 
+                    gradeSection: result.data.section 
+                };
+                window.initialStudentInfo = state.studentInfo; // Store for React component initialization
+                
+                // Update form fields with verified data
+                document.getElementById('fullName').value = result.data.fullName;
+                document.getElementById('classNumber').value = result.data.cn;
+                document.getElementById('gradeSection').value = result.data.section;
+                
+                // UI updates for successful verification
+                btn.style.display = 'none';
+                document.getElementById('studentId').disabled = true;
+                document.getElementById('studentId').classList.add('bg-gray-100', 'cursor-not-allowed');
+                
+                renderMessageBox("Verification Successful. Click Start to begin the timer.", false);
+                
+                document.getElementById('start-task-container').classList.remove('hidden');
+                
+            } else { 
+                renderMessageBox(result.message, true); 
+                btn.disabled = false; btn.innerText = "Verify & Login";
+                btn.classList.remove('opacity-50');
+            }
+        };
+
+        /**
+         * Transitions the user to the quiz (simulated) and starts the timer.
+         */
+        window.startTask = () => {
+            // 1. Start the Timer
+            startTimer();
+            
+            // 2. Hide Gatekeeper panel and show main quiz
+            document.getElementById('gatekeeper-panel').style.display = 'none';
+            document.getElementById('root').classList.remove('hidden');
+            
+            // 3. Trigger React component initialization/re-render via a custom event
+            window.isQuizLoaded = true;
+            document.dispatchEvent(new CustomEvent('quiz:start'));
+            
+            // 4. Update the message box
+            renderMessageBox(`Good luck, ${state.studentInfo.fullName.split(',')[1].trim()}! The clock is running.`, false);
+        };
+
+
+        // ====================================================================
+        // INITIALIZATION
+        // ====================================================================
+
+        window.onload = checkUrlParametersAndInit;
+    </script>
+</body>
+</html>
