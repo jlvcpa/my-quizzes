@@ -220,7 +220,7 @@
             <img src="https://placehold.co/80x80/0f172a/facc15?text=Logo" alt="School Logo" class="mx-auto mb-2 h-20 w-auto rounded-full" onerror="this.src='https://placehold.co/80x80/0f172a/facc15?text=Logo'; this.style.display='block';"/>
             <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
             <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-300">
-                T2 Performance Task 02
+                T2 Performance Task 01
             </h1>
             <h2 id="company-name" class="text-xl md:text-2xl font-semibold text-gray-200 mt-1 hidden">[Company Name]</h2>
             <p class="text-sm font-light text-gray-400 mt-2 hidden">Sole Proprietorship Service Business | For the Year Ended December 31, 2024</p>
@@ -351,7 +351,7 @@
         async function saveExamResults(attendanceId, resultData) {
             if (!isAuthReady) { throw new Error("Cannot save: Authentication is not ready."); }
             
-            const activityName = "T2 Performance Task 02";
+            const activityName = "T2 Performance Task 01";
             // Use the Canvas mandatory private path structure
             const userId = auth.currentUser?.uid || 'anonymous';
             const collectionName = `artifacts/${appId}/users/${userId}/results_${attendanceId}`;
@@ -1169,7 +1169,7 @@
         const renderStep = () => {
             const renderers = [renderStudentInfo, renderMainTaskPage, renderCompletion];
             if (renderers[state.currentStep]) renderers[state.currentStep]();
-            document.getElementById('page-title').innerText = `${getStepTitle(state.currentStep)} | T2 Performance Task 02`;
+            document.getElementById('page-title').innerText = `${getStepTitle(state.currentStep)} | T2 Performance Task 01`;
         };
 
         window.onload = () => {
