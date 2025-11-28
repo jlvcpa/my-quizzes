@@ -233,9 +233,9 @@
         <!-- Instructions Container (Hidden by default, moved here for print) -->
         <div id="print-instructions" class="hidden mb-4 text-sm italic border p-2"></div>
 
-        <!-- Dynamic Content Area (Add loading state) -->
+        <!-- Dynamic Content Area -->
         <div id="task-container">
-            <div class="text-center py-16 text-gray-500">Initializing Application...</div>
+            <!-- Initial content will be set by JS on DOMContentLoaded -->
         </div>
 
         <!-- Bottom Message Area (Button moved to top headers) -->
@@ -285,42 +285,50 @@
         let app, db, auth;
         let isAuthReady = false;
         
-        document.getElementById('company-name').innerText = "Sole Proprietor Accounting Services";
-
-        let authPromise = Promise.resolve();
-
-        if (firebaseConfig) {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
+        // --- Centralized App Entry Point and Initialization ---
+        function startApp() {
+            // 1. Set initial visual state and company name
+            document.getElementById('company-name').innerText = "Sole Proprietor Accounting Services";
+            document.getElementById('task-container').innerHTML = '<div class="text-center py-16 text-gray-500">Initializing Application...</div>';
             
-            if (initialAuthToken) {
-                // Attempt custom token sign-in, with anonymous fallback
-                authPromise = signInWithCustomToken(auth, initialAuthToken)
-                    .then(() => { 
-                        isAuthReady = true; console.log("Firebase signed in with custom token."); 
-                    })
-                    .catch(e => { 
-                        console.warn("Custom token sign-in failed, falling back to anonymous:", e); 
-                        // Return the new anonymous sign-in promise to keep the chain waiting
-                        return signInAnonymously(auth).then(() => { isAuthReady = true; console.log("Firebase signed in anonymously (fallback)."); }); 
-                    });
+            let authPromise = Promise.resolve();
+
+            if (firebaseConfig) {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                if (initialAuthToken) {
+                    // Attempt custom token sign-in, with anonymous fallback
+                    authPromise = signInWithCustomToken(auth, initialAuthToken)
+                        .then(() => { 
+                            isAuthReady = true; console.log("Firebase signed in with custom token."); 
+                        })
+                        .catch(e => { 
+                            console.warn("Custom token sign-in failed, falling back to anonymous:", e); 
+                            // Return the new anonymous sign-in promise to keep the chain waiting
+                            return signInAnonymously(auth).then(() => { isAuthReady = true; console.log("Firebase signed in anonymously (fallback)."); }); 
+                        });
+                } else {
+                    // Attempt anonymous sign-in directly
+                    authPromise = signInAnonymously(auth)
+                        .then(() => { isAuthReady = true; console.log("Firebase signed in anonymously."); });
+                }
+
+                // Ensure rendering starts only after the entire auth chain is complete
+                authPromise
+                    .catch(e => { console.error("Final authentication failed:", e); })
+                    .finally(() => checkUrlParametersAndInit());
+
             } else {
-                // Attempt anonymous sign-in directly
-                authPromise = signInAnonymously(auth)
-                    .then(() => { isAuthReady = true; console.log("Firebase signed in anonymously."); });
+                console.error("Firebase config not found. App will not function correctly (Running in local/offline mode).");
+                // Proceed without Firebase 
+                checkUrlParametersAndInit();
             }
-
-            // Ensure rendering starts only after the entire auth chain is complete
-            authPromise
-                .catch(e => { console.error("Final authentication failed:", e); })
-                .finally(() => checkUrlParametersAndInit());
-
-        } else {
-            console.error("Firebase config not found. App will not function correctly.");
-            // Proceed without Firebase 
-            checkUrlParametersAndInit();
         }
+
+        // Run startApp only after the entire DOM is parsed
+        window.addEventListener('DOMContentLoaded', startApp);
 
         // --- 2. Validation Logic ---
         async function validateStudentLogin(attendanceId, studentId) {
@@ -1185,9 +1193,6 @@
             if (renderers[state.currentStep]) renderers[state.currentStep]();
             document.getElementById('page-title').innerText = `${getStepTitle(state.currentStep)} | T2 Performance Task 02`;
         };
-
-        // Removed window.onload; the app logic now executes immediately after module loading 
-        // and promises resolve, which is the fastest way to render the initial step.
     </script>
 </body>
 </html>
