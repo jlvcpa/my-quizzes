@@ -263,7 +263,12 @@
         <!-- Footer -->
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
-                <strong>Version 2025.11.29 181920 </strong>
+                <strong>Instruction:</strong><br>
+                Complete all required fields. <br>
+                Enter amounts without commas and decimal places. <br>
+                Round off centavos to the nearest peso. <br>
+                After validating each task, proceed to the next. <br>
+                Version 2025.11.22 LIVE
             </p>
         </footer>
 
@@ -351,13 +356,9 @@
         };
 
         function updateTimerDisplay() {
-            if (!state.attendanceId) return; // FIX: Ensure we have an ID
             const display = document.getElementById('countdown');
             const endTime = localStorage.getItem(`exam_end_time_${state.attendanceId}`);
-            if (!endTime) { 
-                display.textContent = "--:--:--";
-                return;
-            }
+            if (!endTime) return;
             const distance = parseInt(endTime) - Date.now();
             if (distance < 0) {
                 display.textContent = "00:00:00"; stopTimer(); window.disableAllInputs();
@@ -370,29 +371,15 @@
         }
         function stopTimer() { if(timerInterval) clearInterval(timerInterval); }
         function startTimer() {
-            if (!state.attendanceId) {
-                console.error("Cannot start timer: state.attendanceId is missing.");
-                return;
-            }
-            
             if(timerInterval) stopTimer();
             const key = `exam_end_time_${state.attendanceId}`;
-            
-            // FIX: If duration is set > 0, always ensure a timer start time is saved 
-            // and the interval is set.
+            // FIX: Ensure duration is positive before starting timer and setting end time
             if (window.examDurationMins > 0) { 
-                if(!localStorage.getItem(key)) {
-                    localStorage.setItem(key, Date.now() + window.examDurationMins * 60000);
-                }
+                if(!localStorage.getItem(key)) localStorage.setItem(key, Date.now() + window.examDurationMins * 60000);
                 timerInterval = setInterval(updateTimerDisplay, 1000);
                 updateTimerDisplay(); // Initial display update
-            } else if (localStorage.getItem(key)) {
-                // Resume existing timer even if duration parameter was missed/zeroed on init
-                timerInterval = setInterval(updateTimerDisplay, 1000);
-                updateTimerDisplay();
             } else {
-                console.warn("Exam duration is 0 or less, and no existing timer found. Timer not started.");
-                document.getElementById('countdown').textContent = "No Timer";
+                console.warn("Exam duration is 0 or less. Timer not started.");
             }
         }
 
@@ -579,9 +566,8 @@
                 ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
                 : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
             
-            // Determine button state for Task 2 (Locked if Task 1 is NOT completed)
-            const isT2BtnLockedByT1 = !state.isTask1Locked;
-            const isT2BtnDisabled = isT2BtnLockedByT1 || state.isTask2Locked || state.attempts[2] >= max;
+            // Determine button state for Task 2
+            const isT2BtnDisabled = state.isTask2Locked || state.attempts[2] >= max;
              const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
              const t2BtnClass = isT2BtnDisabled 
                  ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
@@ -604,14 +590,21 @@
                     </div>
                     
                     <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task1-instructions-panel">
-                        <!-- Instructions (Updated) -->
+                        <!-- Instructions -->
                         <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
                             <h4 class="font-bold mb-2 text-gray-800">Instruction:</h4>
                             <ul class="list-disc pl-5 space-y-1 text-gray-700">
                                 <li>Complete all required fields.</li>
                                 <li>Enter amounts without commas and decimal places.</li>
                                 <li>Round off centavos to the nearest peso.</li>
-                                <li>Format Dates carefully: Row 1 (Year):  YYYY (e.g., ${new Date().getFullYear()}). Row 2 (Beg. Bal): MMM dd (e.g., Jan 01). Row 3+ (Transactions): dd (e.g., 05)</li>
+                                <li>
+                                    <span class="font-bold">Format Dates carefully:</span>
+                                    <ul class="list-none pl-4 text-xs text-gray-600 mt-1 space-y-1">
+                                        <li>Row 1 (Year): <span class="font-mono font-bold text-indigo-600">YYYY</span> (e.g., ${new Date().getFullYear()})</li>
+                                        <li>Row 2 (Beg. Bal): <span class="font-mono font-bold text-indigo-600">MMM dd</span> (e.g., Jan 01)</li>
+                                        <li>Row 3+ (Transactions): <span class="font-mono font-bold text-indigo-600">dd</span> (e.g., 05)</li>
+                                    </ul>
+                                </li>
                                 <li>Validate each task to unlock the next one.</li>
                             </ul>
                         </div>
@@ -846,7 +839,8 @@
                     </div>
                 </div>`;
 
-            // --- COMBINING THEM INTO ONE PAGE (Responsive Layout: 60/40 Split) ---
+            // --- COMBINING THEM INTO ONE PAGE (Responsive Layout) ---
+            // Adjusted to xl:grid-cols-10 for 60/40 ratio (col-span-6 and col-span-4)
             return `
             <div class="grid grid-cols-1 xl:grid-cols-10 gap-4 p-4 xl:p-6">
                 <!-- Task 1 Column (Left on Desktop) - 60% width -->
@@ -1027,14 +1021,11 @@
                 window.disableTaskInputs('#task1-grid');
                 document.getElementById('btn-add-ledger').disabled = true;
 
-                // Unlock T2 visuals and force a re-render to activate T2 button
+                // Unlock T2
                 const t2Wrapper = document.getElementById('task2-wrapper');
                 t2Wrapper.classList.remove('locked-task');
                 document.getElementById('task2-overlay').style.display = 'none';
                 
-                // Re-render task content to update T2 button state now that Task 1 is complete
-                renderApp();
-
                 renderMessageBox("Task 1 Submitted. Proceed to Task 2.", false);
             } else {
                 renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
@@ -1193,26 +1184,6 @@
                 
             } catch(e) { console.error("Error saving results:", e); }
         };
-        
-        // Function to update the footer dynamically
-        /*function updateFooterVersion() {
-            const now = new Date();
-            const pad = (n) => String(n).padStart(2, '0');
-            
-            // Format: YYYY.MM.DD HHMMSS
-            const year = now.getFullYear();
-            const month = pad(now.getMonth() + 1);
-            const day = pad(now.getDate());
-            const hours = pad(now.getHours());
-            const minutes = pad(now.getMinutes());
-            const seconds = pad(now.getSeconds());
-            
-            const dateTimeString = `${year}.${month}.${day} ${hours}${minutes}${seconds}`;
-            const footerEl = document.getElementById('footer-instructions-text');
-            if (footerEl) {
-                footerEl.innerHTML = `<strong>Version ${dateTimeString}:</strong>`;
-            }
-        }*/
 
         // --- AUTH & INIT ---
         window.handleLogin = async () => {
@@ -1256,6 +1227,12 @@
              generateData();
              startTimer();
              renderApp();
+             // Enable Task 1 button explicitly if it wasn't disabled due to locks
+             const btn1 = document.getElementById('btn-validate-1');
+             if(btn1 && !state.isTask1Locked) {
+                btn1.disabled = false;
+                btn1.className = "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition no-print";
+             }
         };
 
         async function validateStudentLogin(attId, stuId) {
@@ -1326,12 +1303,13 @@
 
         window.enterPreviewMode = () => {
              state.studentInfo = {fullName:'Dela Cruz, Juan',classNumber:'01',gradeSection:'12-ABM', idNumber:'12345'};
-             // FIX: Ensure attendanceId is set for localStorage key generation
-             state.attendanceId = 'preview-mode-test';
              window.examDurationMins = 60; // Set a default duration for preview mode
              generateData();
              startTimer(); // Start timer in preview mode too
              renderApp();
+             // Manually activate Task 1 button in preview mode
+             const btn1 = document.getElementById('btn-validate-1');
+             if(btn1) btn1.disabled = false;
         };
 
         window.checkUrlParametersAndInit = () => {
@@ -1344,14 +1322,8 @@
             }
             // Parse duration early, but validation/setting happens in handleLogin/validateStudentLogin
             window.examDurationMins = parseInt(dur) || 0; // Default to 0 until confirmed by validation
-            state.attendanceId = att; // CRITICAL: Set ID here too, so timer can rely on it
+            state.attendanceId = att; 
             
-            // Attempt to resume timer immediately if an end time exists (reloads/navigation)
-            // We must call it here because state.attendanceId is available now
-            if (localStorage.getItem(`exam_end_time_${state.attendanceId}`)) {
-                startTimer();
-            }
-
             document.getElementById('task-container').innerHTML = `
             <div class="space-y-4 m-4">
                 <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
@@ -1399,10 +1371,7 @@
             </div>`;
         };
 
-        window.onload = () => {
-            window.checkUrlParametersAndInit();
-            updateFooterVersion();
-        };
+        window.onload = window.checkUrlParametersAndInit;
         window.renderApp = renderApp;
     </script>
 </body>
