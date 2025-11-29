@@ -263,8 +263,8 @@
         <!-- Footer -->
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
-                <strong>Instruction:</strong><br>
-                Version 2025.11.29 LIVE
+                <strong>Version 2025.11.29 LIVE</strong><br>
+             
             </p>
         </footer>
 
@@ -369,8 +369,14 @@
         function startTimer() {
             if(timerInterval) stopTimer();
             const key = `exam_end_time_${state.attendanceId}`;
-            if(!localStorage.getItem(key)) localStorage.setItem(key, Date.now() + window.examDurationMins * 60000);
-            timerInterval = setInterval(updateTimerDisplay, 1000);
+            // FIX: Ensure duration is positive before starting timer and setting end time
+            if (window.examDurationMins > 0) { 
+                if(!localStorage.getItem(key)) localStorage.setItem(key, Date.now() + window.examDurationMins * 60000);
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                updateTimerDisplay(); // Initial display update
+            } else {
+                console.warn("Exam duration is 0 or less. Timer not started.");
+            }
         }
 
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -548,6 +554,21 @@
             const attempts1 = state.attempts[1];
             const attempts2 = state.attempts[2];
             const max = 3;
+            
+            // Determine button state for Task 1
+            const isT1BtnDisabled = state.isTask1Locked || state.attempts[1] >= max;
+            const t1BtnText = state.isTask1Locked ? "Task 1 Completed" : (state.attempts[1] >= max ? "Attempts Used" : "Validate Task 1");
+            const t1BtnClass = isT1BtnDisabled 
+                ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
+                : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
+            
+            // Determine button state for Task 2
+            const isT2BtnDisabled = state.isTask2Locked || state.attempts[2] >= max;
+             const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
+             const t2BtnClass = isT2BtnDisabled 
+                 ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
+                 : "px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition";
+
 
             // --- TASK 1 SECTION ---
             const task1ContentHTML = `
@@ -560,7 +581,7 @@
                         <div class="flex items-center space-x-2">
                             <span id="lbl_attempts_1" class="text-xs text-gray-800 font-bold">Attempts: ${attempts1}/${max}</span>
                             <button onclick="window.toggleRubric('task1-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
-                            <button id="btn-validate-1" onclick="window.validateTask1()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition no-print">Validate Task 1</button>
+                            <button id="btn-validate-1" onclick="window.validateTask1()" class="${t1BtnClass}" ${isT1BtnDisabled ? 'disabled' : ''} no-print>${t1BtnText}</button>
                         </div>
                     </div>
                     
@@ -728,7 +749,7 @@
                         <div class="flex items-center space-x-2">
                              <span id="lbl_attempts_2" class="text-xs text-gray-800 font-bold">Attempts: ${attempts2}/${max}</span>
                              <button onclick="window.toggleRubric('task2-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
-                             <button id="btn-validate-2" onclick="window.validateTask2()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition no-print">Validate Task 2</button>
+                             <button id="btn-validate-2" onclick="window.validateTask2()" class="${t2BtnClass}" ${isT2BtnDisabled ? 'disabled' : ''} no-print>${t2BtnText}</button>
                         </div>
                     </div>
 
@@ -815,15 +836,16 @@
                 </div>`;
 
             // --- COMBINING THEM INTO ONE PAGE (Responsive Layout) ---
+            // Adjusted to xl:grid-cols-10 for 60/40 ratio (col-span-6 and col-span-4)
             return `
-            <div class="grid grid-cols-1 xl:grid-cols-7 gap-4 p-4 xl:p-6">
-                <!-- Task 1 Column (Left on Desktop) - 65% width (col-span-7 * 0.65 is ~4.55, so using col-span-5) -->
-                <div class="xl:col-span-4 min-h-[600px] flex flex-col">
+            <div class="grid grid-cols-1 xl:grid-cols-10 gap-4 p-4 xl:p-6">
+                <!-- Task 1 Column (Left on Desktop) - 60% width -->
+                <div class="xl:col-span-6 min-h-[600px] flex flex-col">
                     ${task1ContentHTML}
                 </div>
 
-                <!-- Task 2 Column (Right on Desktop) - 35% width (col-span-7 * 0.35 is ~2.45, so using col-span-2) -->
-                <div class="xl:col-span-3 min-h-[600px] flex flex-col">
+                <!-- Task 2 Column (Right on Desktop) - 40% width -->
+                <div class="xl:col-span-4 min-h-[600px] flex flex-col">
                     ${task2ContentHTML}
                 </div>
             </div>
@@ -1163,7 +1185,10 @@
         window.handleLogin = async () => {
              const attId = document.getElementById('attendanceId').value;
              const stuId = document.getElementById('studentId').value;
-             if(!attId || !stuId) return alert("Missing fields");
+             if(!attId || !stuId) {
+                 renderMessageBox("Missing fields. Please enter both Attendance ID and Student ID.", true);
+                 return;
+             }
              
              const res = await validateStudentLogin(attId, stuId); 
              if(res.success) {
@@ -1189,7 +1214,7 @@
                     msgBox.className = "p-4 mx-4 mb-4 font-bold text-center md:text-left rounded text-green-600 bg-green-50 border border-green-200";
                  }
              } else {
-                 alert(res.message);
+                 renderMessageBox(res.message, true);
              }
         };
 
@@ -1198,16 +1223,54 @@
              generateData();
              startTimer();
              renderApp();
+             // Enable Task 1 button explicitly if it wasn't disabled due to locks
+             const btn1 = document.getElementById('btn-validate-1');
+             if(btn1 && !state.isTask1Locked) {
+                btn1.disabled = false;
+                btn1.className = "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition no-print";
+             }
         };
 
         async function validateStudentLogin(attId, stuId) {
              try {
-                const docSnap = await getDoc(doc(db, "attendance", attId));
-                if (!docSnap.exists()) return { success: false, message: "Invalid Link." };
-                const s = docSnap.data().students.find(x => String(x.Idnumber) === String(stuId));
-                if (!s) return { success: false, message: "ID not found." };
-                return { success: true, data: { cn: s.CN, fullName: s.fullName, section: docSnap.data().section, idNumber: stuId } };
-            } catch (e) { return { success: false, message: "Login Error: " + e.message }; }
+                // Implementing exponential backoff logic for Firestore reads
+                let delay = 1000;
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        const docSnap = await getDoc(doc(db, "attendance", attId));
+                        if (!docSnap.exists()) return { success: false, message: "Invalid Link." };
+                        const s = docSnap.data().students.find(x => String(x.Idnumber) === String(stuId));
+                        if (!s) return { success: false, message: "ID not found." };
+                        
+                        // Set exam duration based on link parameter 'dur' if present
+                        let duration = 0;
+                        const p = new URLSearchParams(window.location.search);
+                        const durParam = p.get('dur');
+                        if (durParam) {
+                           duration = parseInt(durParam);
+                           if (isNaN(duration) || duration <= 0) {
+                               console.warn("Invalid duration parameter, defaulting to 60 minutes.");
+                               duration = 60;
+                           }
+                        } else {
+                             // Default to a sensible duration if param is missing in live mode
+                             duration = 60;
+                        }
+                        window.examDurationMins = duration;
+
+                        return { success: true, data: { cn: s.CN, fullName: s.fullName, section: docSnap.data().section, idNumber: stuId, classNumber: s.CN } };
+                    } catch (error) {
+                        if (i < 2) {
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                        } else {
+                            throw error;
+                        }
+                    }
+                }
+            } catch (e) { 
+                return { success: false, message: "Login Error: " + e.message }; 
+            }
         }
 
         const renderApp = () => {
@@ -1236,8 +1299,13 @@
 
         window.enterPreviewMode = () => {
              state.studentInfo = {fullName:'Dela Cruz, Juan',classNumber:'01',gradeSection:'12-ABM', idNumber:'12345'};
+             window.examDurationMins = 60; // Set a default duration for preview mode
              generateData();
+             startTimer(); // Start timer in preview mode too
              renderApp();
+             // Manually activate Task 1 button in preview mode
+             const btn1 = document.getElementById('btn-validate-1');
+             if(btn1) btn1.disabled = false;
         };
 
         window.checkUrlParametersAndInit = () => {
@@ -1248,7 +1316,8 @@
                 document.getElementById('task-container').innerHTML = `<div class="p-10 text-center"><h3 class="font-bold">Development Mode</h3><p class="mb-4">No parameters found. Entering Preview Mode.</p><button onclick="window.enterPreviewMode()" class="bg-blue-600 text-white px-4 py-2 rounded">Enter Preview</button></div>`;
                 return;
             }
-            window.examDurationMins = parseInt(dur);
+            // Parse duration early, but validation/setting happens in handleLogin/validateStudentLogin
+            window.examDurationMins = parseInt(dur) || 0; // Default to 0 until confirmed by validation
             state.attendanceId = att; 
             
             document.getElementById('task-container').innerHTML = `
