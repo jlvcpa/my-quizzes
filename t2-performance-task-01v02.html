@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">T2 Performance Task 01</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            padding: 0; 
+        }
+        #app {
+            width: 100%;
+            min-height: 100vh; 
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        /* Custom Input Styles */
+        .table-input {
+            width: 100%; padding: 4px 24px 4px 4px; /* Added right padding for icons */
+            border: 1px solid #e2e8f0; border-radius: 2px;
+            text-align: right; font-size: 0.8rem; background-color: #fff;
+            background-repeat: no-repeat;
+            background-position: right 4px center;
+            background-size: 14px 14px;
+        }
+        .text-input {
+            width: 100%; padding: 4px 24px 4px 4px; 
+            border: 1px solid #e2e8f0; border-radius: 2px;
+            font-size: 0.8rem; background-color: #fff;
+            background-repeat: no-repeat;
+            background-position: right 4px center;
+            background-size: 14px 14px;
+        }
+        .table-input:focus, .text-input:focus { outline: none; border-color: #3b82f6; }
+        
+        /* Modified disabled styles: Black text, White/Transparent BG, Opacity 1 */
+        .table-input:disabled, .text-input:disabled { 
+            background-color: #ffffff; 
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000;
+            border-color: #e2e8f0;
+            opacity: 1; 
+        }
+        
+        /* --- Validation Icons (SVG Backgrounds) --- */
+        .input-error-x {
+            border-color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23dc2626' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6 18L18 6M6 6l12 12' /%3E%3C/svg%3E");
+        }
+        .input-correct-check {
+            border-color: #16a34a !important;
+            background-color: #f0fdf4 !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2316a34a' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7' /%3E%3C/svg%3E");
+        }
+        
+        .header-bg { background-color: #0f172a; color: white; }
+        .footer-bg { background-color: #334155; color: white; }
+        
+        .journal-row td { vertical-align: top; padding: 8px 4px; border-bottom: 1px solid #f1f5f9; }
+        .journal-row:last-child td { border-bottom: none; }
+        .journal-line { height: 24px; display: flex; align-items: center; }
+        
+        .pr-box { 
+            cursor: pointer; height: 18px; width: 18px; border: 1px solid #cbd5e1; 
+            display: inline-flex; align-items: center; justify-content: center; background: white; user-select: none;
+            border-radius: 2px;
+            font-size: 10px;
+        }
+        .pr-box:hover { border-color: #3b82f6; }
+        .pr-checked { color: #16a34a; font-weight: bold; border-color: #16a34a; background-color: #dcfce7; }
+
+        .split-panel { height: 600px; overflow: hidden; } 
+        .scroll-panel { height: 100%; overflow-y: auto; }
+        
+        .sticky-section-header {
+            position: sticky; top: 0; z-index: 40;
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(8px);
+            padding: 12px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            border-top: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .locked-task { position: relative; pointer-events: none; user-select: none; }
+        .locked-task .blur-content { filter: blur(4px); opacity: 0.5; transition: all 0.5s ease; }
+        .lock-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 50;
+            display: flex; align-items: center; justify-content: center;
+            background-color: rgba(255,255,255,0.3);
+        }
+        .lock-overlay-hidden { display: none !important; }
+        .lock-message {
+            background: white; padding: 24px 48px; border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #334155;
+        }
+
+        .ledger-form { background: white; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .ledger-header { background-color: #eff6ff; padding: 15px; text-align: center; border-bottom: 1px solid #dbeafe; }
+        .ledger-title-input { background: white; border: 1px solid #bfdbfe; padding: 5px 10px; font-weight: 600; font-size: 1rem; text-align: center; width: 60%; border-radius: 4px; }
+        .ledger-col-header { font-size: 0.7rem; font-weight: 700; color: #475569; text-transform: uppercase; background-color: #f8fafc; padding: 6px 4px; border-bottom: 1px solid #e2e8f0; }
+        .pctb-tag { font-size: 0.75rem; border: 1px solid #e2e8f0; background-color: white; padding: 4px 8px; border-radius: 4px; display: inline-flex; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); white-space: nowrap; }
+
+        @media print {
+            @page { margin: 0.25in; size: auto; }
+            body { background-color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding-bottom: 40px; }
+            .no-print { display: none !important; }
+            .printable-area { border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .split-panel, .scroll-panel { height: auto !important; overflow: visible !important; display: block !important; max-height: none !important; }
+            .sticky-section-header { position: static !important; border: none !important; box-shadow: none !important; background: none !important; padding: 10px 0 !important; }
+            #task1-instructions-panel, #task2-instructions-panel { display: block !important; }
+            .table-input, .text-input { border: none !important; border-bottom: 1px solid #ccc !important; background: transparent !important; padding: 0 !important; color: black !important; }
+            #task1-grid { display: block !important; }
+            .explanation-box { display: block !important; border: 1px solid #ef4444; padding: 15px; margin-top: 30px; font-size: 0.85rem; page-break-inside: avoid; }
+            #print-header { display: block !important; margin-bottom: 20px; text-align: center; }
+            #screen-header, #screen-footer { display: none !important; }
+            #print-footer { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 2px solid black; padding-top: 5px; font-size: 10px; justify-content: space-between; align-items: center; z-index: 100; }
+            .locked-task .blur-content { filter: none !important; opacity: 1 !important; }
+            .lock-overlay { display: none !important; }
+            .page-break { page-break-before: always; }
+        }
+        
+        @media (max-width: 1279px) { body { padding: 1rem; } #app { padding: 0; } }
+        @media (min-width: 1280px) { 
+            #app { border: none; box-shadow: none; border-radius: 0; }
+            .sticky-section-header { padding-left: 1.5rem; padding-right: 1.5rem; }
+            .mx-4 { margin-left: 1.5rem !important; margin-right: 1.5rem !important; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="app" class="printable-area bg-white shadow-xl rounded-xl p-0 md:p-0 border border-gray-200 relative pb-20">
+        
+        <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold sticky top-4 z-50 mx-auto max-w-xs">
+            Task Time: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
+        </div>
+
+        <header id="screen-header" class="text-center pb-4 border-b-4 border-indigo-600 header-bg p-4 rounded-t-xl no-print">
+            <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" onerror="this.style.display='none'"/>
+            <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-300">T2 Performance Task 01</h1>
+            <h2 id="company-name" class="text-xl md:text-2xl font-semibold text-gray-200 mt-1 hidden">[Company Name]</h2>
+        </header>
+
+        <div id="print-header" class="hidden">
+            <div class="flex flex-col items-center justify-center mb-4">
+                <img src="./shs-adc-logo.png" alt="School Logo" class="h-16 w-auto mb-1" onerror="this.style.display='none'"/>
+                <div class="text-center font-serif text-blue-900 leading-tight">
+                    <h3 class="font-bold text-sm uppercase">Sacred Heart School - Ateneo de Cebu</h3>
+                    <h2 class="font-bold text-lg text-blue-800">Senior High School Department</h2>
+                    <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
+                    <h1 class="text-2xl font-extrabold text-yellow-500 mt-2 uppercase">T2 Performance Task 01 Results</h1>
+                </div>
+            </div>
+            <div class="border-t-4 border-blue-600 w-full pt-2 flex justify-between items-end font-mono text-sm font-bold text-black mb-6">
+                <div class="text-left">
+                    <div>CN: <span id="print-cn">--</span></div>
+                    <div>Name: <span id="print-name">--</span></div>
+                </div>
+                <div class="text-right">
+                    <div>Section: <span id="print-section">--</span></div>
+                    <div>Date: <span id="print-date">--</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="task-container" class="pb-4">
+            <!-- Content will be injected here -->
+        </div>
+
+        <div id="error-summary-area" class="hidden print:block mx-4 mt-6"></div>
+
+        <div id="message-box" class="mx-4 mb-4 no-print"></div>
+
+        <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
+            <p id="footer-instructions-text" class="text-sm text-gray-300">
+                <strong>Version 2025.11.30 064200 (Final Fixes):</strong>
+            </p>
+        </footer>
+
+        <div id="print-footer" class="hidden w-full px-8">
+            <div class="font-bold text-black text-xs w-1/4">FABM 1</div>
+            <div class="border border-black px-4 py-1 text-center text-[10px] text-black w-1/2 font-bold uppercase">
+                4Cs: Christ-centeredness, Competence, Character, Compassion
+            </div>
+            <div class="text-right font-bold text-black text-xs w-1/4">Page 1 of 1</div>
+        </div>
+    </div>
+
+    <!-- Firebase & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+            authDomain: "jlvcpa-quizzes.firebaseapp.com",
+            projectId: "jlvcpa-quizzes",
+            storageBucket: "jlvcpa-quizzes.appspot.com",
+            messagingSenderId: "629158256557",
+            appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- STATE & DATA ---
+        let state = {
+            currentStep: 0, 
+            attendanceId: "", studentInfo: null,
+            journalEntries: [], pctb: [], ledgers: [], 
+            attempts: { 1: 0, 2: 0 },
+            scores: { 
+                t1a: { current: 0, max: 0, grade: 'IR' }, 
+                t1b: { current: 0, max: 0, grade: 'IR' }, 
+                t1c: { current: 0, max: 0, grade: 'IR' }, 
+                t2: { current: 0, max: 0, grade: 'IR' } 
+            },
+            requiredAccounts: [],
+            isTask1Locked: false, isTask2Locked: false,
+            explanations: [] 
+        };
+
+        window.examDurationMins = 0; let timerInterval = null;
+        const getLocalStorageKey = (attId) => `exam_state_${attId}`;
+        const getDataKey = (attId) => `exam_data_${attId}`;
+
+        // --- PERSISTENCE HELPERS ---
+        const saveStateToLocalStorage = () => {
+             if (state.attendanceId) {
+                 const persistState = {
+                     studentInfo: state.studentInfo,
+                     currentStep: state.currentStep,
+                     isTask1Locked: state.isTask1Locked,
+                     isTask2Locked: state.isTask2Locked,
+                     attempts: state.attempts,
+                 };
+                 localStorage.setItem(getLocalStorageKey(state.attendanceId), JSON.stringify(persistState));
+             }
+        };
+
+        const loadStateFromLocalStorage = () => {
+            if (state.attendanceId) {
+                const persisted = localStorage.getItem(getLocalStorageKey(state.attendanceId));
+                if (persisted) {
+                    const persistState = JSON.parse(persisted);
+                    state.studentInfo = persistState.studentInfo;
+                    state.currentStep = persistState.currentStep;
+                    state.isTask1Locked = persistState.isTask1Locked;
+                    state.isTask2Locked = persistState.isTask2Locked;
+                    state.attempts = persistState.attempts || { 1: 0, 2: 0 };
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        const saveTestDatatoLocalStorage = () => {
+            if (state.attendanceId) {
+                 const testData = {
+                    journalEntries: state.journalEntries,
+                    pctb: state.pctb, ledgers: state.ledgers, requiredAccounts: state.requiredAccounts
+                 };
+                 localStorage.setItem(getDataKey(state.attendanceId), JSON.stringify(testData));
+            }
+        };
+
+        const loadTestDataFromLocalStorage = () => {
+            if (state.attendanceId) {
+                const persisted = localStorage.getItem(getDataKey(state.attendanceId));
+                if (persisted) {
+                    const testData = JSON.parse(persisted);
+                    state.journalEntries = testData.journalEntries;
+                    state.pctb = testData.pctb;
+                    state.ledgers = testData.ledgers;
+                    state.requiredAccounts = testData.requiredAccounts;
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // --- UTILS ---
+        window.disableAllInputs = () => {
+            document.querySelectorAll('input, button, select').forEach(el => {
+                if(!el.id.includes('print')) { el.disabled = true; el.classList.add('cursor-not-allowed'); el.classList.remove('opacity-75'); }
+            });
+            // Ensure inputs show black text when disabled/uneditable
+            document.querySelectorAll('input:disabled, select:disabled').forEach(el => {
+                el.style.color = "black";
+                el.style.webkitTextFillColor = "black";
+            });
+        };
+
+        window.disableTaskInputs = (selector) => {
+            const container = document.querySelector(selector);
+            if(container) {
+                container.querySelectorAll('input, button, select').forEach(el => {
+                    el.disabled = true;
+                    el.classList.remove('bg-white');
+                    el.classList.add('bg-gray-50');
+                    el.style.color = "black";
+                    el.style.webkitTextFillColor = "black";
+                });
+            }
+        }
+        
+        window.toggleRubric = (panelId, btn) => {
+            const panel = document.getElementById(panelId);
+            if(panel) {
+                panel.classList.toggle('hidden');
+                if(panel.classList.contains('hidden')) {
+                    btn.innerText = "Show Instructions";
+                    btn.classList.add('bg-indigo-50', 'text-indigo-700');
+                    btn.classList.remove('bg-white', 'text-gray-600');
+                } else {
+                    btn.innerText = "Hide Instructions";
+                    btn.classList.remove('bg-indigo-50', 'text-indigo-700');
+                    btn.classList.add('bg-white', 'text-gray-600');
+                }
+            }
+        };
+
+        // --- Timer ---
+        function updateTimerDisplay() {
+            if (!state.attendanceId) return; 
+            const displayElement = document.getElementById('countdown');
+            const boxElement = document.getElementById('timer-box');
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            const endTime = localStorage.getItem(storageKey);
+            
+            if (!endTime || !displayElement) { displayElement.textContent = "--:--:--"; return; }
+            
+            const now = Date.now();
+            const distance = parseInt(endTime) - now;
+            
+            if (distance < 0) {
+                displayElement.textContent = "00:00:00";
+                stopTimer();
+                window.disableAllInputs();
+                window.finishAndPreview(true);
+                return;
+            }
+            
+            const h = Math.floor((distance % (86400000)) / 3600000);
+            const m = Math.floor((distance % 3600000) / 60000);
+            const s = Math.floor((distance % 60000) / 1000);
+            displayElement.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            
+            if (distance < 300000) { 
+                boxElement?.classList.remove('bg-red-800'); boxElement?.classList.add('animate-pulse', 'bg-red-600');
+            } else {
+                boxElement?.classList.remove('animate-pulse', 'bg-red-600'); boxElement?.classList.add('bg-red-800');
+            }
+        }
+
+        function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+
+        function startTimer() {
+            if (!state.attendanceId || window.examDurationMins <= 0) {
+                console.error("Cannot start timer: Missing Attendance ID or Duration.");
+                document.getElementById('countdown').textContent = "No Timer";
+                return;
+            }
+            if (timerInterval) stopTimer();
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            let endTime = localStorage.getItem(storageKey);
+            if (!endTime) {
+                const now = Date.now();
+                const durationMs = window.examDurationMins * 60 * 1000;
+                endTime = now + durationMs;
+                localStorage.setItem(storageKey, endTime);
+            }
+            updateTimerDisplay(); 
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        // --- Data Generation ---
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const formatMoney = (n) => 'P' + n.toLocaleString('en-US');
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        const generateData = () => {
+            const familyName = state.studentInfo.fullName.split(',')[0].trim();
+            const year = new Date().getFullYear();
+            
+            const assets = [
+                {name: 'Cash', bal: rand(100000, 200000)},
+                {name: 'Accounts Receivable', bal: rand(20000, 50000)},
+                {name: 'Supplies', bal: rand(5000, 15000)},
+                {name: 'Prepaid Rent', bal: rand(30000, 60000)},
+                {name: 'Equipment', bal: rand(150000, 250000)},
+            ];
+            const liabs = [
+                {name: 'Accounts Payable', bal: rand(10000, 30000)},
+                {name: 'Notes Payable', bal: rand(15000, 25000)},
+                {name: 'Unearned Revenue', bal: rand(10000, 20000)},
+            ];
+            const totalAsset = assets.reduce((a,b)=>a+b.bal,0);
+            const totalLiab = liabs.reduce((a,b)=>a+b.bal,0);
+            const capital = { name: `Owner, Capital`, bal: totalAsset - totalLiab };
+            
+            state.pctb = [...assets.map(a=>({...a, side:'Dr'})), ...liabs.map(l=>({...l, side:'Cr'})), {...capital, side:'Cr'}];
+
+            const entries = [];
+            const mIdx = rand(0, 5); 
+            const mStr = months[mIdx];
+
+            const addEntry = (d, titles, prs, drs, crs, desc) => {
+                const day = String(d).padStart(2,'0');
+                const fullDate = `${year}-${String(mIdx+1).padStart(2,'0')}-${day}`;
+                entries.push({ dateStr: fullDate, year: year, month: mStr, day: day, titles, prs, drs, crs, desc, id: entries.length });
+            };
+            addEntry(3, ['Rent Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid rent for the month");
+            addEntry(4, ['Supplies','Cash'], ['',''], [rand(4000,4000),0], [0,rand(4000,4000)], "Purchased supplies for cash");
+            addEntry(8, ['Cash','Service Revenue'], ['',''], [rand(24000,24000),0], [0,rand(24000,24000)], "Performed services for cash");
+            addEntry(10, ['Salaries Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid bi-monthly salaries");
+            addEntry(14, ['Accounts Receivable','Service Revenue'], ['',''], [rand(13000,13000),0], [0,rand(13000,13000)], "Performed services on account");
+            addEntry(16, ['Cash','Accounts Receivable'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Collected from customer");
+            addEntry(18, ['Accounts Payable','Cash'], ['',''], [rand(2000,5000),0], [0,rand(2000,5000)], "Paid supplier on account");
+            addEntry(20, ['Cash','Unearned Revenue'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Received advance payment");
+            addEntry(22, ['Utilities Expense','Cash'], ['',''], [rand(3000,6000),0], [0,rand(3000,6000)], "Paid utilities");
+            addEntry(25, ['Salaries Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid bi-monthly salaries");
+            addEntry(28, ['Advertising Expense','Cash'], ['',''], [rand(2000,4000),0], [0,rand(2000,4000)], "Paid advertising");
+            addEntry(29, ['Miscellaneous Expense','Cash'], ['',''], [rand(1000,2000),0], [0,rand(1000,2000)], "Paid misc expenses");
+            addEntry(30, [`Owner, Withdrawals`,'Cash'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Owner personal withdrawal");
+            addEntry(31, ['Supplies','Accounts Payable'], ['',''], [rand(3000,5000),0], [0,rand(3000,5000)], "Bought supplies on credit");
+            addEntry(31, ['Equipment','Notes Payable'], ['',''], [rand(10000,20000),0], [0,rand(10000,20000)], "Bought equipment via note");
+            state.journalEntries = entries;
+            
+            state.requiredAccounts = [...new Set([...state.pctb.map(x=>x.name), ...state.journalEntries.flatMap(x=>x.titles)])].sort();
+            state.ledgers = [];
+            for(let i=0; i<5; i++) { state.ledgers.push({ id: i, name: '', rowCount: 4 }); }
+
+            saveTestDatatoLocalStorage();
+        };
+
+        // --- RENDERERS ---
+        const createLedgerHTML = (ledgerObj) => {
+            const id = ledgerObj.id;
+            const name = ledgerObj.name;
+            const rowCount = ledgerObj.rowCount || 4;
+            let drRows = "", crRows = "";
+            
+            drRows += `<div class="grid grid-cols-12 border-b border-gray-100 bg-gray-50 h-8 items-center"><div class="col-span-3 border-r px-1"><input type="number" id="l_${id}_dr_year" placeholder="YYYY" class="w-full text-center bg-transparent text-xs font-bold outline-none table-input text-right"></div><div class="col-span-9"></div></div>`;
+            crRows += `<div class="grid grid-cols-12 border-b border-gray-100 bg-gray-50 h-8 items-center"><div class="col-span-3 border-r px-1"><input type="number" id="l_${id}_cr_year" placeholder="YYYY" class="w-full text-center bg-transparent text-xs font-bold outline-none table-input text-right"></div><div class="col-span-9"></div></div>`;
+
+            for(let i=0; i<rowCount; i++) { 
+                drRows += `<div class="grid grid-cols-12 border-b border-gray-100 text-sm">
+                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none table-input" placeholder="MMM dd" id="l_${id}_dr_d_${i}"></div>
+                    <div class="col-span-5 border-r p-0"><input class="w-full h-full p-1 outline-none text-input" id="l_${id}_dr_p_${i}"></div>
+                    <div class="col-span-1 border-r p-0"><input class="w-full h-full p-1 text-center outline-none text-input" id="l_${id}_dr_pr_${i}"></div>
+                    <div class="col-span-3 p-0"><input type="number" class="w-full h-full p-1 text-right outline-none table-input" placeholder="0" id="l_${id}_dr_a_${i}"></div>
+                </div>`;
+                crRows += `<div class="grid grid-cols-12 border-b border-gray-100 text-sm">
+                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none table-input" placeholder="MMM dd" id="l_${id}_cr_d_${i}"></div>
+                    <div class="col-span-5 border-r p-0"><input class="w-full h-full p-1 outline-none text-input" id="l_${id}_cr_p_${i}"></div>
+                    <div class="col-span-1 border-r p-0"><input class="w-full h-full p-1 text-center outline-none text-input" id="l_${id}_cr_pr_${i}"></div>
+                    <div class="col-span-3 p-0"><input type="number" class="w-full h-full p-1 text-right outline-none table-input" placeholder="0" id="l_${id}_cr_a_${i}"></div>
+                </div>`;
+            }
+
+            return `
+            <div id="ledger_${id}" class="ledger-form break-inside-avoid">
+                <div class="ledger-header relative">
+                    <div class="text-[10px] font-bold text-blue-500 tracking-widest mb-1 uppercase">Account Title</div>
+                    <input type="text" id="l_${id}_name" class="ledger-title-input shadow-sm focus:ring-2 focus:ring-blue-300 outline-none text-input" placeholder="Enter Account Title" value="${name}">
+                </div>
+                <div class="grid grid-cols-2 divide-x divide-gray-200">
+                    <div>
+                        <div class="grid grid-cols-12 ledger-col-header text-center border-b"><div class="col-span-3">Date</div><div class="col-span-5">Particulars</div><div class="col-span-1">PR</div><div class="col-span-3">Amount</div></div>
+                        ${drRows}
+                        <div class="grid grid-cols-12 border-t-2 border-gray-300 py-1 bg-gray-50"><div class="col-span-9 text-right text-xs font-bold pr-2 self-center text-gray-500">TOTAL</div><div class="col-span-3 px-1"><input type="number" id="l_${id}_total_dr" class="w-full bg-white border-b border-gray-400 text-right text-sm font-bold p-1 table-input"></div></div>
+                    </div>
+                    <div>
+                        <div class="grid grid-cols-12 ledger-col-header text-center border-b"><div class="col-span-3">Date</div><div class="col-span-5">Particulars</div><div class="col-span-1">PR</div><div class="col-span-3">Amount</div></div>
+                        ${crRows}
+                        <div class="grid grid-cols-12 border-t-2 border-gray-300 py-1 bg-gray-50"><div class="col-span-9 text-right text-xs font-bold pr-2 self-center text-gray-500">TOTAL</div><div class="col-span-3 px-1"><input type="number" id="l_${id}_total_cr" class="w-full bg-white border-b border-gray-400 text-right text-sm font-bold p-1 table-input"></div></div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 border-t border-gray-200 p-3">
+                    <div class="flex flex-col items-center justify-center">
+                        <span class="text-[10px] text-gray-500 font-bold tracking-widest mb-1 uppercase">Balance</span>
+                        <div class="flex space-x-2">
+                            <select id="l_${id}_bal_type" class="border border-gray-300 rounded text-sm px-2 py-1 bg-white focus:outline-none focus:border-blue-500"><option value="">-</option><option value="dr">Debit</option><option value="cr">Credit</option></select>
+                            <input type="number" id="l_${id}_bal" class="border border-gray-300 rounded text-sm px-2 py-1 w-40 text-right font-bold focus:outline-none focus:border-blue-500 bg-white table-input">
+                        </div>
+                    </div>
+                    <button onclick="window.addRow(${id})" class="mt-3 w-full text-center text-blue-600 text-xs font-bold hover:text-blue-800 transition flex items-center justify-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>Add Row</button>
+                </div>
+            </div>`;
+        }
+
+        window.addLedger = () => {
+            const container = document.getElementById('ledger-container');
+            const id = state.ledgers.length;
+            state.ledgers.push({ id, name: '', rowCount: 4 });
+            saveTestDatatoLocalStorage();
+            container.insertAdjacentHTML('beforeend', createLedgerHTML(state.ledgers[state.ledgers.length-1]));
+            const rightPanel = document.querySelector('.scroll-panel');
+            if(rightPanel) rightPanel.scrollTop = rightPanel.scrollHeight;
+        };
+
+        window.addRow = (id) => {
+             const ledger = state.ledgers.find(l => l.id === id);
+             if(ledger) {
+                 ledger.rowCount += 1; 
+                 saveTestDatatoLocalStorage(); 
+                 const oldEl = document.getElementById(`ledger_${id}`);
+                 const tempDiv = document.createElement('div');
+                 tempDiv.innerHTML = createLedgerHTML(ledger);
+                 oldEl.parentNode.replaceChild(tempDiv.firstElementChild, oldEl);
+             }
+        };
+
+        window.togglePR = (el, id) => {
+            if(state.isTask1Locked) return;
+            const current = el.innerText;
+            if(current === "") { el.innerText = "✓"; el.classList.add("pr-checked"); state.prChecks[id] = true; }
+            else { el.innerText = ""; el.classList.remove("pr-checked"); state.prChecks[id] = false; }
+        };
+        
+        const getGrade = (current, max) => {
+            if (max === 0) return 'IR';
+            const pct = (current / max) * 100;
+            if (pct >= 95) return 'A';
+            if (pct >= 85) return 'P';
+            if (pct >= 75) return 'D';
+            return 'IR';
+        };
+
+        const removeErrorClass = (selector) => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.classList.remove('input-error-x', 'input-correct-check');
+            });
+        };
+
+        // --- VALIDATION LOGIC ---
+        window.validateTask1 = () => {
+            removeErrorClass('#task1-grid input');
+            state.attempts[1]++;
+            saveStateToLocalStorage();
+            const attempts = state.attempts[1];
+            const max = 3;
+            const currentYear = new Date().getFullYear();
+            document.getElementById('lbl_attempts_1').innerText = `Attempts: ${attempts}/${max}`;
+            
+            state.explanations = []; 
+            const userLedgers = state.ledgers.map(l => {
+                const nameInp = document.getElementById(`l_${l.id}_name`);
+                return { id: l.id, name: nameInp ? nameInp.value.trim() : '', ref: l };
+            });
+
+            // A: Setup
+            let scoreA = 0;
+            state.requiredAccounts.forEach(req => {
+                if (userLedgers.some(ul => ul.name.toLowerCase() === req.toLowerCase())) scoreA++;
+            });
+            state.scores.t1a = { current: scoreA, max: state.requiredAccounts.length, grade: getGrade(scoreA, state.requiredAccounts.length) };
+
+            // B: Beg Bal
+            let scoreB = 0;
+            let maxScoreB = state.pctb.length * 4;
+            state.pctb.forEach(acc => {
+                const userL = userLedgers.find(ul => ul.name.toLowerCase() === acc.name.toLowerCase());
+                if (userL) {
+                    const side = acc.side.toLowerCase();
+                    const y = document.getElementById(`l_${userL.id}_${side}_year`);
+                    const d = document.getElementById(`l_${userL.id}_${side}_d_0`);
+                    const p = document.getElementById(`l_${userL.id}_${side}_p_0`);
+                    const a = document.getElementById(`l_${userL.id}_${side}_a_0`);
+                    
+                    if(y && parseInt(y.value) === currentYear) { scoreB++; y.classList.add('input-correct-check'); } else { y?.classList.add('input-error-x'); }
+                    if(d && d.value) { scoreB++; d.classList.add('input-correct-check'); } else { d?.classList.add('input-error-x'); }
+                    if(p && p.value.toLowerCase().includes('beg')) { scoreB++; p.classList.add('input-correct-check'); } else { p?.classList.add('input-error-x'); }
+                    if(a && Math.abs(parseInt(a.value)-acc.bal)<1) { scoreB++; a.classList.add('input-correct-check'); } else { a?.classList.add('input-error-x'); }
+                }
+            });
+            state.scores.t1b = { current: scoreB, max: maxScoreB, grade: getGrade(scoreB, maxScoreB) };
+
+            // C: Postings (New Logic)
+            let scoreC = 0;
+            let maxScoreC = 0;
+
+            userLedgers.forEach(ul => {
+                const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
+                if(!accName) return;
+
+                const relevantJEs = state.journalEntries.filter(je => je.titles.includes(accName));
+                const begBal = state.pctb.find(p => p.name === accName);
+                const begBalSide = begBal ? (begBal.side === 'Dr' ? 'dr' : 'cr') : null;
+                
+                maxScoreC += 3; 
+                if (begBalSide || relevantJEs.length > 0) maxScoreC += 1;
+
+                let checkYearSide = begBalSide === 'dr' ? 'cr' : 'dr';
+                if (!begBalSide && relevantJEs.length > 0) checkYearSide = 'dr'; 
+
+                const yInp = document.getElementById(`l_${ul.id}_${checkYearSide}_year`);
+                if(yInp && parseInt(yInp.value) === currentYear) { scoreC++; yInp.classList.add('input-correct-check'); } else if (yInp) { yInp.classList.add('input-error-x'); }
+
+                const validAmts = relevantJEs.map(je => {
+                    const idx = je.titles.indexOf(accName);
+                    return idx === 0 ? je.drs[0] : je.crs[1];
+                });
+
+                ['dr','cr'].forEach(side => {
+                    for(let r=1; r<ul.ref.rowCount; r++) {
+                         const aEl = document.getElementById(`l_${ul.id}_${side}_a_${r}`);
+                         const val = parseInt(aEl?.value || 0);
+                         if (val > 0) {
+                             maxScoreC += 4; 
+                             if(validAmts.includes(val)) {
+                                 scoreC += 4; 
+                                 aEl.classList.add('input-correct-check');
+                                 document.getElementById(`l_${ul.id}_${side}_d_${r}`)?.classList.add('input-correct-check');
+                                 document.getElementById(`l_${ul.id}_${side}_p_${r}`)?.classList.add('input-correct-check');
+                                 document.getElementById(`l_${ul.id}_${side}_pr_${r}`)?.classList.add('input-correct-check');
+                             } else {
+                                 aEl.classList.add('input-error-x');
+                             }
+                         }
+                    }
+                });
+
+                if(scoreC > 0) scoreC += 3; // Dummy points for total/bal if any trans correct
+            });
+
+            state.scores.t1c = { current: scoreC, max: maxScoreC || 1, grade: getGrade(scoreC, maxScoreC || 1) };
+            
+            document.getElementById('grade-a-display').innerText = `${state.scores.t1a.current}/${state.scores.t1a.max} - ${state.scores.t1a.grade}`;
+            document.getElementById('grade-b-display').innerText = `${state.scores.t1b.current}/${state.scores.t1b.max} - ${state.scores.t1b.grade}`;
+            document.getElementById('grade-c-display').innerText = `${state.scores.t1c.current}/${state.scores.t1c.max} - ${state.scores.t1c.grade}`;
+
+            const totalScore = scoreA + scoreB + scoreC;
+            const totalMax = maxScoreA + maxScoreB + maxScoreC;
+            
+            if (attempts >= max || (totalMax > 0 && totalScore/totalMax > 0.6)) { 
+                state.isTask1Locked = true;
+                saveStateToLocalStorage();
+                const btn = document.getElementById('btn-validate-1');
+                btn.innerText = attempts >= max ? "Attempts Used" : "Task 1 Completed";
+                btn.className = "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed";
+                btn.disabled = true;
+                window.disableTaskInputs('#task1-grid');
+                document.getElementById('btn-add-ledger').disabled = true;
+                
+                const t2 = document.getElementById('task2-wrapper');
+                t2.classList.remove('locked-task');
+                document.getElementById('task2-overlay').style.display = 'none';
+                
+                const btn2 = document.getElementById('btn-validate-2');
+                if(btn2) {
+                     btn2.disabled = false;
+                     btn2.classList.remove('bg-gray-500', 'cursor-not-allowed');
+                     btn2.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                     btn2.innerText = "Validate Task 2";
+                }
+
+                renderMessageBox("Task 1 Submitted. Proceed to Task 2.", false);
+            } else {
+                renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+            }
+        };
+
+        window.validateTask2 = () => {
+            removeErrorClass('#task2-wrapper input');
+            state.attempts[2]++;
+            saveStateToLocalStorage();
+            const attempts = state.attempts[2];
+            const max = 3;
+            document.getElementById('lbl_attempts_2').innerText = `Attempts: ${attempts}/${max}`;
+
+            let hasData = false;
+            let currentScore = 0;
+            let totalDr = 0; 
+            let totalCr = 0;
+            
+            const numAccounts = state.requiredAccounts.length;
+            const maxScore = (numAccounts * 3) + 2; 
+            
+            for(let i=0; i<numAccounts; i++) {
+                const nEl = document.getElementById(`tb_name_${i}`);
+                const dEl = document.getElementById(`tb_dr_${i}`);
+                const cEl = document.getElementById(`tb_cr_${i}`);
+                const n = nEl.value.trim();
+                const d = Number(dEl.value)||0;
+                const c = Number(cEl.value)||0;
+
+                if(n||d||c) hasData = true;
+                totalDr += d; totalCr += c;
+
+                if(n && state.requiredAccounts.some(r=>r.toLowerCase()===n.toLowerCase())) { 
+                    currentScore++; nEl.classList.add('input-correct-check'); 
+                } else if (n) { nEl.classList.add('input-error-x'); }
+
+                if(d>0) { currentScore++; dEl.classList.add('input-correct-check'); }
+                if(c>0) { currentScore++; cEl.classList.add('input-correct-check'); }
+            }
+
+            const drTotalEl = document.getElementById('tb_total_dr');
+            const crTotalEl = document.getElementById('tb_total_cr');
+            const inputDr = Number(drTotalEl.value)||0;
+            const inputCr = Number(crTotalEl.value)||0;
+
+            let isBalanced = false;
+            if(Math.abs(inputDr - totalDr) < 1 && inputDr > 0) { currentScore++; drTotalEl.classList.add('input-correct-check'); } else { drTotalEl.classList.add('input-error-x'); }
+            if(Math.abs(inputCr - totalCr) < 1 && inputCr > 0) { currentScore++; crTotalEl.classList.add('input-correct-check'); } else { crTotalEl.classList.add('input-error-x'); }
+            
+            if (Math.abs(inputDr - inputCr) < 1 && inputDr > 0) isBalanced = true;
+            else {
+                 drTotalEl.classList.add('input-error-x');
+                 crTotalEl.classList.add('input-error-x');
+            }
+
+            state.scores.t2 = { current: currentScore, max: maxScore, grade: getGrade(currentScore, maxScore) };
+            document.getElementById('t2-score').innerText = `${currentScore}/${maxScore}`;
+            const g = getGrade(currentScore, maxScore);
+            const gEl = document.getElementById('t2-grade');
+            gEl.innerText = g; gEl.className = getGradeColor(g);
+
+            if (attempts >= max || isBalanced) {
+                 state.isTask2Locked = true;
+                 saveStateToLocalStorage();
+                 const btn = document.getElementById('btn-validate-2');
+                 btn.innerText = attempts >= max ? "Attempts Used" : "Task 2 Completed";
+                 btn.className = "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed";
+                 btn.disabled = true;
+                 
+                 window.disableTaskInputs('#task2-wrapper');
+                 const t2w = document.getElementById('task2-wrapper');
+                 t2w.classList.remove('locked-task');
+                 t2w.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
+                 
+                 window.finishAndPreview();
+            } else {
+                renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+            }
+        };
+
+        const renderTaskContent = () => {
+            if (!state.studentInfo || state.journalEntries.length === 0) {
+                 return `<div class="p-10 text-center text-red-500 font-bold">Error: Task data is missing. Please refresh and ensure you click 'Start the Task'.</div>`;
+            }
+            const attempts1 = state.attempts[1];
+            const attempts2 = state.attempts[2];
+            const max = 3;
+            
+            const isT1BtnDisabled = state.isTask1Locked || state.attempts[1] >= max;
+            const t1BtnText = state.isTask1Locked ? "Task 1 Completed" : (state.attempts[1] >= max ? "Attempts Used" : "Validate Task 1");
+            const t1BtnClass = isT1BtnDisabled 
+                ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
+                : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
+            
+            const isT2BtnLockedByT1 = !state.isTask1Locked;
+            const isT2BtnDisabled = isT2BtnLockedByT1 || state.isTask2Locked || state.attempts[2] >= max;
+             const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
+             const t2BtnClass = isT2BtnDisabled 
+                 ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
+                 : "px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition";
+
+            const task1ContentHTML = `
+                <div class="h-full">
+                    <div class="sticky-section-header" id="header-task1">
+                        <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2">
+                            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">Task 1</span>
+                            Posting to General Ledger
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                            <span id="lbl_attempts_1" class="text-xs text-gray-800 font-bold">Attempts: ${attempts1}/${max}</span>
+                            <button onclick="window.toggleRubric('task1-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
+                            <button id="btn-validate-1" onclick="window.validateTask1()" class="${t1BtnClass}" ${isT1BtnDisabled ? 'disabled' : ''} no-print>${t1BtnText}</button>
+                        </div>
+                    </div>
+                    <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task1-instructions-panel">
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
+                            <h4 class="font-bold mb-2 text-gray-800">Instruction:</h4>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700"><li>Complete all required fields.</li><li>Enter amounts without commas and decimal places.</li><li>Round off centavos to the nearest peso.</li><li>Format Dates carefully: Row 1 (Year): YYYY. Row 2 (Beg. Bal): MMM dd. Row 3+ (Transactions): dd.</li><li>Validate each task to unlock the next one.</li></ul>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-xs">
+                            <div class="bg-indigo-50 p-3 flex justify-between items-center border-b border-indigo-100">
+                                <h4 class="font-bold text-indigo-900 uppercase tracking-wider">TASK 1: POSTING TO THE LEDGER</h4>
+                                <div class="font-mono text-sm text-indigo-900 font-bold">A = <span id="grade-a-display">${state.scores.t1a.current}/${state.scores.t1a.max || '-'} - ${state.scores.t1a.grade}</span> / B = <span id="grade-b-display">${state.scores.t1b.current}/${state.scores.t1b.max || '-'} - ${state.scores.t1b.grade}</span> / C = <span id="grade-c-display">${state.scores.t1c.current}/${state.scores.t1c.max || '-'} - ${state.scores.t1c.grade}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 4:6 Ratio applied here: xl:col-span-4 (Journal) vs xl:col-span-6 (Ledger) -->
+                    <div id="task1-grid" class="grid grid-cols-1 xl:grid-cols-10 gap-4 split-panel mb-4 relative mx-4">
+                        <div class="xl:col-span-4 bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
+                            <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
+                                <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
+                            </div>
+                            <div class="overflow-y-auto flex-1 bg-white">
+                                <table class="w-full text-sm border-collapse">
+                                    <thead class="bg-gray-50 sticky top-0 z-10 text-xs uppercase text-gray-500 font-bold">
+                                        <tr>
+                                            <th class="p-2 text-right w-16">Date</th><th class="p-2 text-left">Particulars</th><th class="p-2 text-center w-10">PR</th><th class="p-2 text-right w-20">Debit</th><th class="p-2 text-right w-20">Credit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        ${state.journalEntries.map((e, index) => {
+                                            let dateHTML = index === 0 ? `<div class="text-[10px] font-bold text-gray-500 leading-tight mb-1">${e.year}</div><div>${e.month} ${e.day}</div>` : `<div>${e.day}</div>`;
+                                            return `<tr class="journal-row hover:bg-blue-50/50 transition-colors group"><td class="text-xs font-bold text-gray-600 text-right pr-2 w-16 align-top pt-3">${dateHTML}</td><td class="align-top"><div class="font-bold text-gray-800 journal-line">${e.titles[0]}</div><div class="text-gray-800 journal-line pl-8">${e.titles[1]}</div><div class="text-xs italic text-gray-400 journal-line pl-4">${e.desc}</div></td><td class="align-top w-10"><div class="journal-line justify-center"><div class="pr-box" onclick="window.togglePR(this, 'j_${e.id}_0')"></div></div><div class="journal-line justify-center"><div class="pr-box" onclick="window.togglePR(this, 'j_${e.id}_1')"></div></div></td><td class="align-top w-20"><div class="font-bold text-gray-700 journal-line text-right">${formatMoney(e.drs[0])}</div><div class="journal-line"></div></td><td class="align-top w-20"><div class="journal-line"></div><div class="text-gray-700 journal-line text-right">${formatMoney(e.crs[1])}</div></td></tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="xl:col-span-6 h-full overflow-hidden flex flex-col bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
+                            <div class="flex-none p-2 bg-white border-b">
+                                <div class="flex justify-between items-center pb-2"><h4 class="font-bold text-xs uppercase tracking-wide">Beginning Balances</h4><button id="btn-add-ledger" onclick="window.addLedger()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded shadow">Add Ledger</button></div>
+                                <div class="flex flex-wrap gap-2 pt-1 max-h-32 overflow-y-auto">${state.pctb.map(a => `<div class="pctb-tag hover:border-blue-300 hover:shadow-md transition cursor-default"><span class="font-bold text-gray-800">${a.name}</span> <span class="text-gray-500">Beg: ${formatMoney(a.bal)} ${a.side}</span></div>`).join('')}</div>
+                            </div>
+                            <div class="flex-none p-2 bg-indigo-50 border-t border-b border-indigo-100 font-bold text-indigo-900 text-sm">General Ledger Forms</div>
+                            <div id="ledger-container" class="scroll-panel p-4 pb-20">${state.ledgers.map(l => createLedgerHTML(l)).join('')}</div>
+                        </div>
+                    </div>
+                </div>`;
+
+            const tbRows = state.requiredAccounts.map((acc, i) => `<tr class="hover:bg-gray-50"><td class="p-1 border bg-white"><input id="tb_name_${i}" class="text-input text-left font-medium" placeholder="Select or Type Account..."></td><td class="p-1 border bg-white"><input type="number" id="tb_dr_${i}" class="table-input" placeholder="0"></td><td class="p-1 border bg-white"><input type="number" id="tb_cr_${i}" class="table-input" placeholder="0"></td></tr>`).join('');
+            const task2ContentHTML = `
+                <div class="h-full">
+                    <div class="sticky-section-header" id="header-task2"><h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">Task 2</span> Preparing the Trial Balance</h3><div class="flex items-center space-x-2"><span id="lbl_attempts_2" class="text-xs text-gray-800 font-bold">Attempts: ${attempts2}/${max}</span><button onclick="window.toggleRubric('task2-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button><button id="btn-validate-2" onclick="window.validateTask2()" class="${t2BtnClass}" ${isT2BtnDisabled ? 'disabled' : ''} no-print>${t2BtnText}</button></div></div>
+                    <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task2-instructions-panel">
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm"><h4 class="font-bold mb-2 text-gray-800">Task 2 Instruction:</h4><ul class="list-disc pl-5 space-y-1 text-gray-700"><li>Prepare the Trial Balance based on the balances from the General Ledger.</li><li>Ensure the header (Company Name, Title, Date) is correct.</li><li>List all accounts with their Debit or Credit balances.</li><li>Compute the total Debit and Credit columns.</li><li>Ensure Total Debits equal Total Credits.</li></ul></div>
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-xs">
+                            <div class="bg-indigo-50 p-3 flex justify-between items-center border-b border-indigo-100"><h4 class="font-bold text-indigo-900 uppercase tracking-wider">TASK 2: PREPARING THE TRIAL BALANCE</h4><div class="font-bold text-indigo-900 bg-white px-3 py-1 rounded border border-indigo-200 shadow-sm">Score: <span id="t2-score">0/${state.scores.t2.max || '-'}</span> <span class="mx-1 text-gray-300">|</span> Grade: <span id="t2-grade" class="text-red-600">--</span></div></div>
+                        </div>
+                    </div>
+                    <div id="task2-wrapper" class="relative ${isT2BtnLockedByT1 ? 'locked-task' : ''} transition-all duration-500 mx-4">
+                        <div class="blur-content"><div class="p-6 bg-gray-50 rounded shadow-inner border border-gray-200"><div class="bg-white p-6 border rounded shadow-sm max-w-4xl mx-auto"><div class="text-center font-bold mb-6 text-gray-800"><div class="text-2xl uppercase tracking-wide border-b-2 border-transparent inline-block pb-1">${document.getElementById('company-name').innerText}</div><div class="text-xl text-indigo-700 mt-1">Trial Balance</div><div class="text-md text-gray-500 mt-1 font-medium">December 31, ${new Date().getFullYear()}</div></div><table class="w-full text-sm border-collapse border border-gray-300 shadow-sm"><thead><tr class="bg-indigo-600 text-white uppercase text-xs tracking-wider"><th class="border border-indigo-700 p-3 w-1/2 text-left">Account Titles</th><th class="border border-indigo-700 p-3 w-1/4">Debit</th><th class="border border-indigo-700 p-3 w-1/4">Credit</th></tr></thead><tbody class="divide-y divide-gray-200">${tbRows}<tr class="font-bold bg-indigo-50 border-t-2 border-indigo-300"><td class="text-right p-3 text-indigo-900 uppercase tracking-widest text-xs">Total:</td><td class="p-2 border border-indigo-200"><input type="number" id="tb_total_dr" class="table-input font-bold text-indigo-700 bg-transparent border-none text-base"></td><td class="p-2 border border-indigo-200"><input type="number" id="tb_total_cr" class="table-input font-bold text-indigo-700 bg-transparent border-none text-base"></td></tr></tbody></table></div></div></div>
+                        <div id="task2-overlay" class="${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}"><div class="lock-message"><svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg><p>Task 2 is Locked</p><p class="text-xs font-normal mt-1">Complete Task 1 first.</p></div></div>
+                    </div>
+                </div>`;
+
+            return `<div class="grid grid-cols-1 lg:grid-cols-10 gap-4 p-4 xl:p-6"><div class="lg:col-span-6 min-h-[600px] flex flex-col">${task1ContentHTML}</div><div class="lg:col-span-4 min-h-[600px] flex flex-col">${task2ContentHTML}</div></div>`;
+        };
+
+        window.checkUrlParametersAndInit = () => {
+             const p = new URLSearchParams(window.location.search);
+             const att = p.get('att');
+             const dur = p.get('dur');
+             
+             if(!att) {
+                 document.getElementById('task-container').innerHTML = `<div class="p-10 text-center"><h3 class="font-bold">Development Mode</h3><p class="mb-4">No parameters found. Entering Preview Mode.</p><button onclick="window.enterPreviewMode()" class="bg-blue-600 text-white px-4 py-2 rounded">Enter Preview</button></div>`;
+                 return;
+             }
+             window.examDurationMins = parseInt(dur) || 60;
+             state.attendanceId = att; 
+
+             if (loadStateFromLocalStorage() && state.studentInfo) {
+                 if (state.currentStep === 1) {
+                     window.resumeExam();
+                     return;
+                 } else if (state.currentStep === 0) {
+                     window.renderLoginScreen(true);
+                     return;
+                 }
+             }
+             window.renderLoginScreen(false);
+        };
+
+        window.renderLoginScreen = (isResumingLogin) => {
+             const att = state.attendanceId;
+             const info = state.studentInfo;
+             
+             let initialContent = `
+             <div class="space-y-4 m-4">
+                 <h3 class="text-xl font-semibold text-indigo-700 text-center">Student Verification</h3>
+                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                         <div>
+                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Attendance ID</label>
+                             <input type="text" id="attendanceId" value="${att}" class="w-full p-2 border border-gray-300 rounded bg-gray-100 text-gray-600 text-sm" readonly>
+                         </div>
+                         <div>
+                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Student ID</label>
+                             <input type="text" id="studentId" class="w-full p-2 border border-indigo-500 rounded focus:ring-2 focus:ring-indigo-700 outline-none bg-white text-sm font-bold shadow-md" value="${isResumingLogin && info ? info.idNumber : ''}">
+                         </div>
+                     </div>
+                     
+                     <!-- Centered Verify Button -->
+                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-center mb-6'}">
+                          <button onclick="window.handleLogin()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
+                     </div>
+ 
+                     <div class="border-t border-gray-100 pt-4 mb-6">
+                         <p class="text-xs font-bold text-gray-800 uppercase mb-3">Student Details (Auto-Populated)</p>
+                         <div class="space-y-3">
+                             <div>
+                                 <label class="block text-xs text-gray-400 mb-1">Full Name</label>
+                                 <input type="text" id="disp_fullName" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled value="${isResumingLogin && info ? info.fullName : ''}">
+                             </div>
+                             <div class="grid grid-cols-2 gap-4">
+                                 <div>
+                                     <label class="block text-xs text-gray-400 mb-1">Class Number</label>
+                                     <input type="text" id="disp_cn" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold" disabled value="${isResumingLogin && info ? info.cn : ''}">
+                                 </div>
+                                 <div>
+                                     <label class="block text-xs text-gray-400 mb-1">Grade & Section</label>
+                                     <input type="text" id="disp_section" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled value="${isResumingLogin && info ? info.section : ''}">
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+ 
+                     <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
+                         <div class="text-green-600 font-medium text-sm text-center">Verification Successful. Click below to begin the exam.</div>
+                         <button onclick="window.startExam()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transition transform hover:scale-105 text-sm">Start the Task</button>
+                     </div>
+                 </div>
+             </div>`;
+
+            document.getElementById('task-container').innerHTML = initialContent;
+            
+            if (isResumingLogin) {
+                 document.getElementById('studentId').disabled = true;
+                 document.getElementById('studentId').classList.add('bg-gray-100');
+            }
+        }
+
+        // Call init logic immediately
+        window.checkUrlParametersAndInit();
+        window.renderApp = renderApp;
+    </script>
+</body>
+</html>
