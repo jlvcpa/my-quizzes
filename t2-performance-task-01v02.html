@@ -108,6 +108,7 @@
         .pr-box:hover { border-color: #3b82f6; }
         .pr-checked { color: #16a34a; font-weight: bold; border-color: #16a34a; background-color: #dcfce7; }
         .pr-error { color: #dc2626; font-weight: bold; border-color: #dc2626; background-color: #fef2f2; }
+        .pr-valid { background-color: #dcfce7; border-color: #16a34a; color: #16a34a; }
         
         /* Style for disabled/checked PR boxes */
         .pr-box[disabled] { cursor: default; }
@@ -325,7 +326,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 07:36:50 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 07:45:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -724,7 +725,7 @@
             if(state.isTask1Locked) return;
             const current = el.innerText;
             if(current === "") { el.innerText = "✓"; el.classList.add("pr-checked"); state.prChecks[id] = true; }
-            else { el.innerText = ""; el.classList.remove("pr-checked"); el.classList.remove("pr-error"); state.prChecks[id] = false; }
+            else { el.innerText = ""; el.classList.remove("pr-checked"); el.classList.remove("pr-error"); el.classList.remove("pr-valid"); state.prChecks[id] = false; }
         };
         
         const getGrade = (current, max) => {
@@ -1245,12 +1246,20 @@
                 if(state.prChecks[drKey]) {
                     const exists = userLedgers.some(ul => ul.name.toLowerCase() === drAccount.toLowerCase());
                     const box = document.getElementById(`pr_box_${drKey}`);
-                    if(!exists) { box?.classList.add('pr-error'); }
+                    if(!exists) { 
+                        box?.classList.add('pr-error'); 
+                    } else {
+                        box?.classList.add('pr-valid');
+                    }
                 }
                 if(state.prChecks[crKey]) {
                     const exists = userLedgers.some(ul => ul.name.toLowerCase() === crAccount.toLowerCase());
                     const box = document.getElementById(`pr_box_${crKey}`);
-                    if(!exists) { box?.classList.add('pr-error'); }
+                    if(!exists) { 
+                        box?.classList.add('pr-error'); 
+                    } else {
+                        box?.classList.add('pr-valid');
+                    }
                 }
             });
             
@@ -1722,6 +1731,11 @@
                              <input type="text" id="studentId" class="w-full p-2 border border-indigo-500 rounded focus:ring-2 focus:ring-indigo-700 outline-none bg-white text-sm font-bold shadow-md" value="${isResumingLogin && info ? info.idNumber : ''}">
                          </div>
                      </div>
+                     
+                     <!-- REVISED LOCATION: Verify Button immediately after inputs -->
+                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-center mt-2 mb-6'}">
+                          <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
+                     </div>
  
                      <div class="border-t border-gray-100 pt-4 mb-6">
                          <p class="text-xs font-bold text-gray-800 uppercase mb-3">Student Details (Auto-Populated)</p>
@@ -1741,10 +1755,6 @@
                                  </div>
                              </div>
                          </div>
-                     </div>
-                     
-                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-center mt-4'}">
-                          <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
                      </div>
  
                      <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
