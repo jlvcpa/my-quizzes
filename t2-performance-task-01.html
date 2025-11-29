@@ -263,7 +263,7 @@
         <!-- Footer -->
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
-                <strong>Version 2025.11.29 LIVE:</strong>
+                <strong>Version 2025.11.29 180022:</strong>
             </p>
         </footer>
 
@@ -374,7 +374,15 @@
                 timerInterval = setInterval(updateTimerDisplay, 1000);
                 updateTimerDisplay(); // Initial display update
             } else {
-                console.warn("Exam duration is 0 or less. Timer not started.");
+                // If duration is 0 (like in dev mode default, or if dur is not in URL), 
+                // we should still try to resume if a time exists in local storage.
+                if (localStorage.getItem(key)) {
+                    timerInterval = setInterval(updateTimerDisplay, 1000);
+                    updateTimerDisplay();
+                } else {
+                    console.warn("Exam duration is 0 or less, and no existing timer found. Timer not started.");
+                    document.getElementById('countdown').textContent = "No Timer";
+                }
             }
         }
 
@@ -585,7 +593,7 @@
                     </div>
                     
                     <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task1-instructions-panel">
-                        <!-- Instructions -->
+                        <!-- Instructions (Updated) -->
                         <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
                             <h4 class="font-bold mb-2 text-gray-800">Instruction:</h4>
                             <ul class="list-disc pl-5 space-y-1 text-gray-700">
@@ -827,8 +835,7 @@
                     </div>
                 </div>`;
 
-            // --- COMBINING THEM INTO ONE PAGE (Responsive Layout) ---
-            // xl:grid-cols-10, Task 1: col-span-6 (60%), Task 2: col-span-4 (40%)
+            // --- COMBINING THEM INTO ONE PAGE (Responsive Layout: 60/40 Split) ---
             return `
             <div class="grid grid-cols-1 xl:grid-cols-10 gap-4 p-4 xl:p-6">
                 <!-- Task 1 Column (Left on Desktop) - 60% width -->
@@ -1215,12 +1222,7 @@
              generateData();
              startTimer();
              renderApp();
-             // Enable Task 1 button explicitly if it wasn't disabled due to locks
-             const btn1 = document.getElementById('btn-validate-1');
-             if(btn1 && !state.isTask1Locked) {
-                btn1.disabled = false;
-                btn1.className = "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition no-print";
-             }
+             // The button state is now managed correctly by renderTaskContent and validateTask1 logic itself.
         };
 
         async function validateStudentLogin(attId, stuId) {
@@ -1295,9 +1297,7 @@
              generateData();
              startTimer(); // Start timer in preview mode too
              renderApp();
-             // Manually activate Task 1 button in preview mode
-             const btn1 = document.getElementById('btn-validate-1');
-             if(btn1) btn1.disabled = false;
+             // The button state is now managed correctly by renderTaskContent and validateTask1 logic itself.
         };
 
         window.checkUrlParametersAndInit = () => {
