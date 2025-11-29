@@ -264,7 +264,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025.11.29 193200:</strong>
+                <strong>Version 2025.11.29 195800 (Timer Fix):</strong>
             </p>
         </footer>
 
@@ -296,7 +296,7 @@
 
         // --- STATE & DATA ---
         let state = {
-            currentStep: 0, 
+            currentStep: 0, // 0: Login, 1: Task Started
             attendanceId: "", studentInfo: null,
             journalEntries: [], pctb: [], 
             ledgers: [], 
@@ -316,6 +316,38 @@
         };
 
         window.examDurationMins = 0; let timerInterval = null;
+
+        // Key for localStorage persistence
+        const getLocalStorageKey = (attId) => `exam_state_${attId}`;
+
+        // --- PERSISTENCE HELPERS (NEW) ---
+        const saveStateToLocalStorage = () => {
+             if (state.attendanceId) {
+                 const persistState = {
+                     studentInfo: state.studentInfo,
+                     currentStep: state.currentStep,
+                     // Only persist fields necessary for immediate UI rendering/check
+                     isTask1Locked: state.isTask1Locked,
+                     isTask2Locked: state.isTask2Locked,
+                 };
+                 localStorage.setItem(getLocalStorageKey(state.attendanceId), JSON.stringify(persistState));
+             }
+        };
+
+        const loadStateFromLocalStorage = () => {
+            if (state.attendanceId) {
+                const persisted = localStorage.getItem(getLocalStorageKey(state.attendanceId));
+                if (persisted) {
+                    const persistState = JSON.parse(persisted);
+                    state.studentInfo = persistState.studentInfo;
+                    state.currentStep = persistState.currentStep;
+                    state.isTask1Locked = persistState.isTask1Locked;
+                    state.isTask2Locked = persistState.isTask2Locked;
+                    return true;
+                }
+            }
+            return false;
+        };
 
         window.disableAllInputs = () => {
             document.querySelectorAll('input, button, select').forEach(el => {
@@ -368,6 +400,8 @@
                 displayElement.textContent = "00:00:00";
                 stopTimer();
                 window.disableAllInputs();
+                // Auto-submit if time runs out
+                window.finishAndPreview(true);
                 return;
             }
             
@@ -392,9 +426,11 @@
             } 
         }
 
+        // Timer initialization logic (now called from startExam or resumeExam)
         function startTimer() {
-            if (!state.attendanceId) {
-                console.error("Cannot start timer: state.attendanceId is missing.");
+            if (!state.attendanceId || window.examDurationMins <= 0) {
+                console.error("Cannot start timer: Missing Attendance ID or Duration is zero.");
+                document.getElementById('countdown').textContent = "No Timer";
                 return;
             }
             
@@ -404,18 +440,12 @@
             let endTime = localStorage.getItem(storageKey);
             
             if (!endTime) {
-                // Calculate and set end time if missing
+                // Calculate and set end time if missing (Initial start)
                 const now = Date.now();
                 const durationMs = window.examDurationMins * 60 * 1000;
                 
-                if (durationMs > 0) {
-                    endTime = now + durationMs;
-                    localStorage.setItem(storageKey, endTime);
-                } else {
-                    console.warn("Timer duration is zero. Timer will not be set.");
-                    document.getElementById('countdown').textContent = "No Timer";
-                    return;
-                }
+                endTime = now + durationMs;
+                localStorage.setItem(storageKey, endTime);
             }
             
             updateTimerDisplay(); // Initial call
@@ -996,23 +1026,11 @@
                     const elTotalCr = parseInt(document.getElementById(`l_${ul.id}_total_cr`).value || 0);
                     const elBal = parseInt(document.getElementById(`l_${ul.id}_bal`).value || 0);
                     
-                    // 1. Posting Points Estimation (via Totals match)
-                    // If Dr total matches (excluding beg), user likely posted all Dr lines correctly
-                    // We'll award proportional points based on matching totals
-                    if(Math.abs(elTotalDr - expected.dr) < 2) {
-                         // Find number of journal lines for this account Dr side to calculate exact pts?
-                         // Approximation: Max score includes 4 pts per line.
-                         // Let's add a fixed chunk for demo or detailed calculation if possible.
-                         // For now, simpler: If total is correct, assume postings are correct.
-                    }
-                    
                     // SIMPLIFIED DEMO SCORING FOR C:
                     // Check Year on Non-Beg Side
                     let checkSide = 'dr';
                     if(expected.hasBegDr) checkSide = 'cr'; // Check credit side year
                     else if(expected.hasBegCr) checkSide = 'dr'; // Check debit side year
-                    // If no beg bal, check both? Prompt says "side that does not have..." implies one.
-                    // Let's check the side that has transactions but no beg bal.
                     
                     const yearInp = document.getElementById(`l_${ul.id}_${checkSide}_year`);
                     if(yearInp && parseInt(yearInp.value) === currentYear) scoreC += 1;
@@ -1022,8 +1040,7 @@
                     if(Math.abs(elBal - Math.abs(net)) < 2) {
                         scoreC += 3; // Correct Balance
                         // Also assume postings were correct if balance matches
-                        // Add dummy points to simulate transaction checking
-                        scoreC += 10; 
+                        scoreC += 10; // Dummy points to simulate transaction checking
                     }
                 }
             });
@@ -1035,7 +1052,7 @@
             state.scores.t1c.grade = getGrade(scoreC, maxScoreC);
 
 
-            // --- UPDATE UI ---
+            // --- UPDATE UI & PERSISTENCE ---
             document.getElementById('grade-a-display').innerText = `${state.scores.t1a.current}/${state.scores.t1a.max} - ${state.scores.t1a.grade}`;
             document.getElementById('grade-b-display').innerText = `${state.scores.t1b.current}/${state.scores.t1b.max} - ${state.scores.t1b.grade}`;
             document.getElementById('grade-c-display').innerText = `${state.scores.t1c.current}/${state.scores.t1c.max} - ${state.scores.t1c.grade}`;
@@ -1046,6 +1063,8 @@
             
             if (attempts >= max || totalScore >= (allMax * 0.6)) { 
                 state.isTask1Locked = true;
+                saveStateToLocalStorage(); // Persist lock state
+                
                 const btn1 = document.getElementById('btn-validate-1');
                 btn1.innerText = attempts >= max ? "Attempts Used" : "Task 1 Completed";
                 btn1.className = "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed";
@@ -1054,7 +1073,7 @@
                 window.disableTaskInputs('#task1-grid');
                 document.getElementById('btn-add-ledger').disabled = true;
 
-                // Unlock T2 visuals and force a re-render to activate T2 button
+                // Unlock T2 visuals
                 const t2Wrapper = document.getElementById('task2-wrapper');
                 t2Wrapper.classList.remove('locked-task');
                 document.getElementById('task2-overlay').style.display = 'none';
@@ -1135,6 +1154,8 @@
 
             if (attempts >= max || passed) {
                 state.isTask2Locked = true;
+                saveStateToLocalStorage(); // Persist final lock state
+                
                 const btn2 = document.getElementById('btn-validate-2');
                 
                 if (passed) {
@@ -1217,12 +1238,14 @@
                 
                 await setDoc(doc(db, collectionName, docName), results);
                 console.log("Saved to", collectionName, docName);
+
+                // Clean up local storage after final submission
+                localStorage.removeItem(`exam_end_time_${state.attendanceId}`);
+                localStorage.removeItem(getLocalStorageKey(state.attendanceId));
                 
             } catch(e) { console.error("Error saving results:", e); }
         };
         
-        // Removed updateFooterVersion function as requested.
-
         // --- AUTH & INIT ---
         window.handleLogin = async () => {
              const attId = document.getElementById('attendanceId').value;
@@ -1249,6 +1272,10 @@
                  // Make Student ID input read-only/disabled AFTER successful login
                  document.getElementById('studentId').disabled = true;
                  document.getElementById('studentId').classList.add('bg-gray-100');
+
+                 // PERSIST LOGIN STATE (NEW)
+                 state.currentStep = 0; // Logged in, ready to start
+                 saveStateToLocalStorage();
                  
                  const msgBox = document.getElementById('message-box');
                  if(msgBox) {
@@ -1262,10 +1289,28 @@
 
         window.startExam = () => {
              state.currentStep = 1; 
+             saveStateToLocalStorage(); // Persist state as 'started'
+             
+             // Regenerate data and start timer on initial run only
              generateData();
              startTimer();
+             
              renderApp();
         };
+        
+        // NEW: Resume function for persistence on refresh
+        window.resumeExam = () => {
+             // 1. Resume timer
+             startTimer();
+             // 2. Load necessary randomized data (must be loaded on start)
+             generateData();
+             // 3. Render task content
+             renderApp();
+             // 4. Disable inputs if tasks were previously locked (loaded from state)
+             if (state.isTask1Locked) window.disableTaskInputs('#task1-grid');
+             if (state.isTask2Locked) window.disableTaskInputs('#task2-wrapper');
+        };
+
 
         async function validateStudentLogin(attId, stuId) {
              try {
@@ -1278,22 +1323,6 @@
                         const s = docSnap.data().students.find(x => String(x.Idnumber) === String(stuId));
                         if (!s) return { success: false, message: "ID not found." };
                         
-                        // Set exam duration based on link parameter 'dur' if present
-                        let duration = 0;
-                        const p = new URLSearchParams(window.location.search);
-                        const durParam = p.get('dur');
-                        if (durParam) {
-                           duration = parseInt(durParam);
-                           if (isNaN(duration) || duration <= 0) {
-                               console.warn("Invalid duration parameter, defaulting to 60 minutes.");
-                               duration = 60;
-                           }
-                        } else {
-                             // Default to a sensible duration if param is missing in live mode
-                             duration = 60;
-                        }
-                        window.examDurationMins = duration;
-
                         return { success: true, data: { cn: s.CN, fullName: s.fullName, section: docSnap.data().section, idNumber: stuId, classNumber: s.CN } };
                     } catch (error) {
                         if (i < 2) {
@@ -1335,12 +1364,9 @@
 
         window.enterPreviewMode = () => {
              state.studentInfo = {fullName:'Dela Cruz, Juan',classNumber:'01',gradeSection:'12-ABM', idNumber:'12345'};
-             // FIX: Ensure attendanceId is set for localStorage key generation
              state.attendanceId = 'preview-mode-test';
              window.examDurationMins = 60; // Set a default duration for preview mode
-             generateData();
-             startTimer(); // Start timer in preview mode too
-             renderApp();
+             window.startExam(); // Start exam flow
         };
 
         window.checkUrlParametersAndInit = () => {
@@ -1351,67 +1377,98 @@
                 document.getElementById('task-container').innerHTML = `<div class="p-10 text-center"><h3 class="font-bold">Development Mode</h3><p class="mb-4">No parameters found. Entering Preview Mode.</p><button onclick="window.enterPreviewMode()" class="bg-blue-600 text-white px-4 py-2 rounded">Enter Preview</button></div>`;
                 return;
             }
-            // Parse duration early, but validation/setting happens in handleLogin/validateStudentLogin
-            window.examDurationMins = parseInt(dur) || 0; // Default to 0 until confirmed by validation
-            state.attendanceId = att; // CRITICAL: Set ID here too, so timer can rely on it
             
-            // Attempt to resume timer immediately if an end time exists (reloads/navigation)
-            // We must call it here because state.attendanceId is available now
-            if (localStorage.getItem(`exam_end_time_${state.attendanceId}`)) {
-                startTimer();
+            // Set Duration globally early
+            let duration = parseInt(dur) || 0;
+            if (isNaN(duration) || duration <= 0) {
+                 duration = 60; // Default to 60 minutes
             }
+            window.examDurationMins = duration;
+            state.attendanceId = att; 
 
-            document.getElementById('task-container').innerHTML = `
-            <div class="space-y-4 m-4">
-                <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Attendance ID</label>
-                            <input type="text" id="attendanceId" value="${att}" class="w-full p-2 border border-gray-300 rounded bg-gray-100 text-gray-600 text-sm" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Student ID</label>
-                            <!-- FIX: Ensured the input is clearly enabled and actionable -->
-                            <input type="text" id="studentId" class="w-full p-2 border border-indigo-500 rounded focus:ring-2 focus:ring-indigo-700 outline-none bg-white text-sm font-bold shadow-md">
-                        </div>
-                    </div>
-
-                    <div class="border-t border-gray-100 pt-4 mb-6">
-                        <p class="text-xs font-bold text-gray-800 uppercase mb-3">Student Details (Auto-Populated)</p>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-xs text-gray-400 mb-1">Full Name</label>
-                                <input type="text" id="disp_fullName" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Class Number</label>
-                                    <input type="text" id="disp_cn" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold" disabled>
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Grade & Section</label>
-                                    <input type="text" id="disp_section" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="login-actions" class="flex justify-end">
-                         <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
-                    </div>
-
-                    <div id="start-actions" class="hidden flex flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
-                        <div class="text-green-600 font-medium text-sm">Verification Successful. Click below to begin the exam.</div>
-                        <button onclick="window.startExam()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transition transform hover:scale-105 text-sm">Start the Task</button>
-                    </div>
-                </div>
-            </div>`;
+            // --- NEW PERSISTENCE CHECK ---
+            if (loadStateFromLocalStorage() && state.studentInfo) {
+                if (state.currentStep === 1) {
+                    // Logged in and task started. Resume immediately.
+                    console.log("Resuming task from saved state.");
+                    window.resumeExam();
+                    return;
+                } else if (state.currentStep === 0) {
+                     // Logged in but task not started yet. Render start button directly.
+                    console.log("Resuming login state.");
+                    window.renderLoginScreen(true);
+                    return;
+                }
+            }
+            // --- END NEW PERSISTENCE CHECK ---
+            
+            // Default: Render the standard login screen
+            window.renderLoginScreen(false);
         };
+        
+        window.renderLoginScreen = (isResumingLogin) => {
+             const att = state.attendanceId;
+             const info = state.studentInfo;
+             
+             let initialContent = `
+             <div class="space-y-4 m-4">
+                 <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
+                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                         <div>
+                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Attendance ID</label>
+                             <input type="text" id="attendanceId" value="${att}" class="w-full p-2 border border-gray-300 rounded bg-gray-100 text-gray-600 text-sm" readonly>
+                         </div>
+                         <div>
+                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Student ID</label>
+                             <input type="text" id="studentId" class="w-full p-2 border border-indigo-500 rounded focus:ring-2 focus:ring-indigo-700 outline-none bg-white text-sm font-bold shadow-md">
+                         </div>
+                     </div>
+ 
+                     <div class="border-t border-gray-100 pt-4 mb-6">
+                         <p class="text-xs font-bold text-gray-800 uppercase mb-3">Student Details (Auto-Populated)</p>
+                         <div class="space-y-3">
+                             <div>
+                                 <label class="block text-xs text-gray-400 mb-1">Full Name</label>
+                                 <input type="text" id="disp_fullName" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled value="${isResumingLogin ? info.fullName : ''}">
+                             </div>
+                             <div class="grid grid-cols-2 gap-4">
+                                 <div>
+                                     <label class="block text-xs text-gray-400 mb-1">Class Number</label>
+                                     <input type="text" id="disp_cn" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold" disabled value="${isResumingLogin ? info.cn : ''}">
+                                 </div>
+                                 <div>
+                                     <label class="block text-xs text-gray-400 mb-1">Grade & Section</label>
+                                     <input type="text" id="disp_section" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled value="${isResumingLogin ? info.section : ''}">
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                     
+                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-end'}">
+                          <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
+                     </div>
+ 
+                     <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
+                         <div class="text-green-600 font-medium text-sm">Verification Successful. Click below to begin the exam.</div>
+                         <button onclick="window.startExam()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transition transform hover:scale-105 text-sm">Start the Task</button>
+                     </div>
+                 </div>
+             </div>`;
+
+            document.getElementById('task-container').innerHTML = initialContent;
+            
+            // If resuming login, lock the student ID input and show verification message
+            if (isResumingLogin) {
+                 document.getElementById('studentId').value = info.idNumber;
+                 document.getElementById('studentId').disabled = true;
+                 document.getElementById('studentId').classList.add('bg-gray-100');
+                 renderMessageBox("Resuming session. Please click Start Task to continue.", false);
+            }
+        }
 
         window.onload = () => {
             window.checkUrlParametersAndInit();
-           
         };
         window.renderApp = renderApp;
     </script>
