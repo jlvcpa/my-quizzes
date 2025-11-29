@@ -303,7 +303,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 06:45:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 07:15:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -546,7 +546,7 @@
             const familyName = state.studentInfo.fullName.split(',')[0].trim();
             const year = new Date().getFullYear();
             
-            // 1. PCTB
+            // 1. PCTB (Randomized Opening Balances)
             const assets = [
                 {name: 'Cash', bal: rand(100000, 200000)},
                 {name: 'Accounts Receivable', bal: rand(20000, 50000)},
@@ -565,7 +565,7 @@
             
             state.pctb = [...assets.map(a=>({...a, side:'Dr'})), ...liabs.map(l=>({...l, side:'Cr'})), {...capital, side:'Cr'}];
 
-            // 2. Journal Entries
+            // 2. Journal Entries (Specific Sequence of 15 Entries)
             const entries = [];
             const mIdx = rand(0, 5); 
             const mStr = months[mIdx];
@@ -578,21 +578,57 @@
                     titles, prs, drs, crs, desc, id: entries.length 
                 });
             };
-            addEntry(3, ['Rent Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid rent for the month");
-            addEntry(4, ['Supplies','Cash'], ['',''], [rand(4000,4000),0], [0,rand(4000,4000)], "Purchased supplies for cash");
-            addEntry(8, ['Cash','Service Revenue'], ['',''], [rand(24000,24000),0], [0,rand(24000,24000)], "Performed services for cash");
-            addEntry(10, ['Salaries Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid bi-monthly salaries");
-            addEntry(14, ['Accounts Receivable','Service Revenue'], ['',''], [rand(13000,13000),0], [0,rand(13000,13000)], "Performed services on account");
-            addEntry(16, ['Cash','Accounts Receivable'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Collected from customer");
-            addEntry(18, ['Accounts Payable','Cash'], ['',''], [rand(2000,5000),0], [0,rand(2000,5000)], "Paid supplier on account");
-            addEntry(20, ['Cash','Unearned Revenue'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Received advance payment");
-            addEntry(22, ['Utilities Expense','Cash'], ['',''], [rand(3000,6000),0], [0,rand(3000,6000)], "Paid utilities");
-            addEntry(25, ['Salaries Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid bi-monthly salaries");
-            addEntry(28, ['Advertising Expense','Cash'], ['',''], [rand(2000,4000),0], [0,rand(2000,4000)], "Paid advertising");
-            addEntry(29, ['Miscellaneous Expense','Cash'], ['',''], [rand(1000,2000),0], [0,rand(1000,2000)], "Paid misc expenses");
-            addEntry(30, [`Owner, Withdrawals`,'Cash'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Owner personal withdrawal");
-            addEntry(31, ['Supplies','Accounts Payable'], ['',''], [rand(3000,5000),0], [0,rand(3000,5000)], "Bought supplies on credit");
-            addEntry(31, ['Equipment','Notes Payable'], ['',''], [rand(10000,20000),0], [0,rand(10000,20000)], "Bought equipment via note");
+
+            // 1. Prepaid Rent or Insurance (Use existing Prepaid Rent)
+            addEntry(1, ['Prepaid Rent','Cash'], ['',''], [rand(10000,15000),0], [0,rand(10000,15000)], "Paid rent for the month");
+
+            // 2. Purchase of Supplies (On account or cash)
+            const isSuppliesCredit = Math.random() > 0.5;
+            if(isSuppliesCredit) {
+                addEntry(3, ['Supplies','Accounts Payable'], ['',''], [rand(3000,5000),0], [0,rand(3000,5000)], "Purchased supplies on account");
+            } else {
+                addEntry(3, ['Supplies','Cash'], ['',''], [rand(3000,5000),0], [0,rand(3000,5000)], "Purchased supplies for cash");
+            }
+
+            // 3. Rendering of Services (Cash)
+            addEntry(5, ['Cash','Service Revenue'], ['',''], [rand(15000,25000),0], [0,rand(15000,25000)], "Performed services for cash");
+
+            // 4. Rendering of Services (Account)
+            addEntry(8, ['Accounts Receivable','Service Revenue'], ['',''], [rand(12000,20000),0], [0,rand(12000,20000)], "Performed services on account");
+
+            // 5. Payment of Salaries (10th)
+            addEntry(10, ['Salaries Expense','Cash'], ['',''], [rand(8000,12000),0], [0,rand(8000,12000)], "Paid salaries (1st half)");
+
+            // 6. Collection of Accounts Receivable
+            addEntry(12, ['Cash','Accounts Receivable'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Collected from customer");
+
+            // 7. Payment of Accounts Payable
+            addEntry(15, ['Accounts Payable','Cash'], ['',''], [rand(4000,8000),0], [0,rand(4000,8000)], "Paid supplier on account");
+
+            // 8. Rendering of Services (Cash)
+            addEntry(18, ['Cash','Service Revenue'], ['',''], [rand(15000,20000),0], [0,rand(15000,20000)], "Performed services for cash");
+
+            // 9. Purchase of Supplies (On account)
+            addEntry(20, ['Supplies','Accounts Payable'], ['',''], [rand(2000,4000),0], [0,rand(2000,4000)], "Purchased supplies on account");
+
+            // 10. Payment of Salaries (25th)
+            addEntry(25, ['Salaries Expense','Cash'], ['',''], [rand(8000,12000),0], [0,rand(8000,12000)], "Paid salaries (2nd half)");
+
+            // 11. Utilities Expense
+            addEntry(28, ['Utilities Expense','Cash'], ['',''], [rand(3000,6000),0], [0,rand(3000,6000)], "Paid utilities for month");
+
+            // 12. Dues and Subscription
+            addEntry(28, ['Dues and Subscriptions Expense','Cash'], ['',''], [rand(1000,2000),0], [0,rand(1000,2000)], "Paid dues and subscriptions");
+
+            // 13. Advertising Expense
+            addEntry(29, ['Advertising Expense','Cash'], ['',''], [rand(2000,4000),0], [0,rand(2000,4000)], "Paid advertising expense");
+
+            // 14. Miscellaneous Expense
+            addEntry(29, ['Miscellaneous Expense','Cash'], ['',''], [rand(500,1500),0], [0,rand(500,1500)], "Paid miscellaneous expenses");
+
+            // 15. Owner's Drawings
+            addEntry(30, [`Owner, Drawings`,'Cash'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Owner withdrew cash");
+
             state.journalEntries = entries;
             
             // Generate list of all required accounts for validation
@@ -1061,7 +1097,6 @@
                     scoreA++;
                 } else {
                     state.explanations.push(`Subtask A: Ledger for '${req}' is missing.`);
-                    // NOTE: Marking missing ledgers is hard, but we can visually mark the empty account title inputs.
                 }
             });
             state.scores.t1a.current = scoreA;
@@ -1069,7 +1104,7 @@
             state.scores.t1a.grade = getGrade(scoreA, maxScoreA);
 
 
-            // --- SUBTASK B: Input Beginning Balances (Simplified Error Marking) ---
+            // --- SUBTASK B: Input Beginning Balances ---
             let scoreB = 0;
             const maxScoreB = state.pctb.length * 4; 
 
@@ -1102,12 +1137,20 @@
             state.scores.t1b.grade = getGrade(scoreB, maxScoreB);
 
             // --- SUBTASK C: Post Journal Entries and Totals (REVISED LOGIC) ---
-            // Calculate max potential transactions points accurately based on actual journal data
-            let totalJournalTransPoints = 0;
+            
+            // 1. Score PR Checkboxes (30 points)
+            let prCheckScore = 0;
+            state.journalEntries.forEach(e => {
+                if(state.prChecks[`j_${e.id}_0`]) prCheckScore++;
+                if(state.prChecks[`j_${e.id}_1`]) prCheckScore++;
+            });
+            
+            // 2. Score Ledger Entries (30 entries * 4 columns = 120 points)
+            let ledgerEntriesScore = 0;
             const accountTotals = {}; 
             state.requiredAccounts.forEach(a => accountTotals[a] = { dr:0, cr:0, begDr:0, begCr:0, hasBegDr:false, hasBegCr:false });
             
-            // Map Beg Bals
+            // Map Beg Bals to know which side has beg bal
             state.pctb.forEach(a => {
                 if(accountTotals[a.name]) {
                     if(a.side === 'Dr') { accountTotals[a.name].begDr = a.bal; accountTotals[a.name].hasBegDr = true; }
@@ -1115,21 +1158,116 @@
                 }
             });
 
-            // Map Journal Entries
+            // Map Journal Entries to Account Totals
             state.journalEntries.forEach(e => {
                 const drAcc = e.titles[0]; const crAcc = e.titles[1];
                 if(accountTotals[drAcc]) accountTotals[drAcc].dr += e.drs[0];
                 if(accountTotals[crAcc]) accountTotals[crAcc].cr += e.crs[1];
-                totalJournalTransPoints += 2; // 1 point for dr, 1 point for cr
             });
-            // Multiplier for difficulty? Let's say 2 pts per correct entry match (Date + Amount)
-            totalJournalTransPoints = totalJournalTransPoints * 2; 
 
-            const yearPointsMax = state.requiredAccounts.length * 1;
-            const totalsPointsMax = (state.requiredAccounts.length * 3);
+            // Iterate User Ledgers to score individual transaction rows
+            userLedgers.forEach(ul => {
+                const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
+                if(accName) {
+                    // Get expected transactions for this account
+                    const expectedTrans = state.journalEntries.filter(e => e.titles.includes(accName)).map(e => {
+                        const isDr = e.titles[0] === accName;
+                        return {
+                            day: e.day,
+                            amount: isDr ? e.drs[0] : e.crs[1],
+                            side: isDr ? 'dr' : 'cr',
+                            matched: false
+                        };
+                    });
 
-            const maxScoreC = totalJournalTransPoints + yearPointsMax + totalsPointsMax;
-            let scoreC = 0;
+                    // Iterate User Rows (Skipping 0 which is Beg Bal)
+                    const rowsToCheck = ul.ref.rowCount || 4;
+                    for(let r=1; r < rowsToCheck; r++) {
+                        // Check Dr Side
+                        const uDrD = getLedgerInput(ul.id, 'dr', 'd', r);
+                        const uDrP = getLedgerInput(ul.id, 'dr', 'p', r);
+                        const uDrPR = getLedgerInput(ul.id, 'dr', 'pr', r);
+                        const uDrA = parseInt(getLedgerInput(ul.id, 'dr', 'a', r) || 0);
+                        
+                        if (uDrA > 0 || uDrD) {
+                            // Find match in expected
+                            const matchIdx = expectedTrans.findIndex(et => et.side === 'dr' && !et.matched && Math.abs(et.amount - uDrA) < 1); 
+                            if (matchIdx > -1) {
+                                // Found valid transaction, score 4 points (Date, Part, PR, Amount)
+                                ledgerEntriesScore++; // Amount
+                                if(uDrD) ledgerEntriesScore++; else document.getElementById(`l_${ul.id}_dr_d_${r}`)?.classList.add('input-error-x');
+                                if(uDrP) ledgerEntriesScore++; else document.getElementById(`l_${ul.id}_dr_p_${r}`)?.classList.add('input-error-x');
+                                if(uDrPR) ledgerEntriesScore++; else document.getElementById(`l_${ul.id}_dr_pr_${r}`)?.classList.add('input-error-x');
+                                expectedTrans[matchIdx].matched = true;
+                            } else {
+                                // Mark amount error if no match found
+                                if(uDrA > 0) document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-error-x');
+                            }
+                        }
+
+                        // Check Cr Side
+                        const uCrD = getLedgerInput(ul.id, 'cr', 'd', r);
+                        const uCrP = getLedgerInput(ul.id, 'cr', 'p', r);
+                        const uCrPR = getLedgerInput(ul.id, 'cr', 'pr', r);
+                        const uCrA = parseInt(getLedgerInput(ul.id, 'cr', 'a', r) || 0);
+
+                        if (uCrA > 0 || uCrD) {
+                             const matchIdx = expectedTrans.findIndex(et => et.side === 'cr' && !et.matched && Math.abs(et.amount - uCrA) < 1);
+                             if (matchIdx > -1) {
+                                 ledgerEntriesScore++; // Amount
+                                 if(uCrD) ledgerEntriesScore++; else document.getElementById(`l_${ul.id}_cr_d_${r}`)?.classList.add('input-error-x');
+                                 if(uCrP) ledgerEntriesScore++; else document.getElementById(`l_${ul.id}_cr_p_${r}`)?.classList.add('input-error-x');
+                                 if(uCrPR) ledgerEntriesScore++; else document.getElementById(`l_${ul.id}_cr_pr_${r}`)?.classList.add('input-error-x');
+                                 expectedTrans[matchIdx].matched = true;
+                             } else {
+                                 if(uCrA > 0) document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-error-x');
+                             }
+                        }
+                    }
+                }
+            });
+
+            // 3. Year Entry Score
+            let yearEntryScore = 0;
+            let yearEntryMax = 0;
+
+            userLedgers.forEach(ul => {
+                const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
+                if(accName) {
+                    const hasDrBeg = accountTotals[accName].hasBegDr;
+                    const hasCrBeg = accountTotals[accName].hasBegCr;
+                    
+                    // If Beg Bal on Dr, we score Cr side Year
+                    if(hasDrBeg) {
+                        yearEntryMax++;
+                        const yVal = document.getElementById(`l_${ul.id}_cr_year`)?.value;
+                        if(yVal && parseInt(yVal) === currentYear) yearEntryScore++;
+                        else document.getElementById(`l_${ul.id}_cr_year`)?.classList.add('input-error-x');
+                    }
+                    // If Beg Bal on Cr, we score Dr side Year
+                    else if(hasCrBeg) {
+                        yearEntryMax++;
+                        const yVal = document.getElementById(`l_${ul.id}_dr_year`)?.value;
+                        if(yVal && parseInt(yVal) === currentYear) yearEntryScore++;
+                        else document.getElementById(`l_${ul.id}_dr_year`)?.classList.add('input-error-x');
+                    }
+                    // If no Beg Bal, we score BOTH
+                    else {
+                        yearEntryMax += 2;
+                        const yValDr = document.getElementById(`l_${ul.id}_dr_year`)?.value;
+                        if(yValDr && parseInt(yValDr) === currentYear) yearEntryScore++;
+                        else document.getElementById(`l_${ul.id}_dr_year`)?.classList.add('input-error-x');
+                        
+                        const yValCr = document.getElementById(`l_${ul.id}_cr_year`)?.value;
+                        if(yValCr && parseInt(yValCr) === currentYear) yearEntryScore++;
+                        else document.getElementById(`l_${ul.id}_cr_year`)?.classList.add('input-error-x');
+                    }
+                }
+            });
+
+            // 4. Totals and Balance Score (3 points per account)
+            let totalsScore = 0;
+            const totalsMax = state.requiredAccounts.length * 3;
 
             userLedgers.forEach(ul => {
                 const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
@@ -1143,65 +1281,23 @@
                     const valTotalCr = parseInt(elTotalCr.value || 0);
                     const valBal = parseInt(elBal.value || 0);
                     
-                    // Simple total check (2 pts)
-                    if (Math.abs(valTotalDr - (expected.dr + expected.begDr)) < 2) { scoreC++; } else { elTotalDr?.classList.add('input-error-x'); }
-                    if (Math.abs(valTotalCr - (expected.cr + expected.begCr)) < 2) { scoreC++; } else { elTotalCr?.classList.add('input-error-x'); }
+                    // Total Dr check (1 pt)
+                    if (Math.abs(valTotalDr - (expected.dr + expected.begDr)) < 2) { totalsScore++; } else { elTotalDr?.classList.add('input-error-x'); }
+                    
+                    // Total Cr check (1 pt)
+                    if (Math.abs(valTotalCr - (expected.cr + expected.begCr)) < 2) { totalsScore++; } else { elTotalCr?.classList.add('input-error-x'); }
 
                     // Balance check (1 pt)
                     const net = (expected.begDr + expected.dr) - (expected.begCr + expected.cr);
-                    if(Math.abs(valBal - Math.abs(net)) < 2) { scoreC++; } else { elBal?.classList.add('input-error-x'); }
-
-                    // --- REVISED TRANSACTION SCORING ---
-                    // Get expected transactions for this account
-                    const expectedTrans = state.journalEntries.filter(e => e.titles.includes(accName)).map(e => {
-                        const isDr = e.titles[0] === accName;
-                        return {
-                            day: e.day,
-                            amount: isDr ? e.drs[0] : e.crs[1],
-                            side: isDr ? 'dr' : 'cr',
-                            matched: false
-                        };
-                    });
-
-                    // Iterate User Rows (Skipping 0 which is Beg Bal)
-                    // We assume max rows is what is rendered.
-                    // Note: This relies on DOM presence.
-                    const rowsToCheck = ul.ref.rowCount || 4;
-                    for(let r=1; r < rowsToCheck; r++) {
-                        // Check Dr Side
-                        const uDrD = getLedgerInput(ul.id, 'dr', 'd', r);
-                        const uDrA = parseInt(getLedgerInput(ul.id, 'dr', 'a', r) || 0);
-                        
-                        if (uDrA > 0) {
-                            // Find match in expected
-                            const matchIdx = expectedTrans.findIndex(et => et.side === 'dr' && !et.matched && Math.abs(et.amount - uDrA) < 1); // Looser check on Date for now to prevent frustration, stricter check on amount
-                            if (matchIdx > -1) {
-                                scoreC += 2;
-                                expectedTrans[matchIdx].matched = true;
-                            } else {
-                                // Mark error on specific cell
-                                document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-error-x');
-                            }
-                        }
-
-                        // Check Cr Side
-                        const uCrD = getLedgerInput(ul.id, 'cr', 'd', r);
-                        const uCrA = parseInt(getLedgerInput(ul.id, 'cr', 'a', r) || 0);
-
-                        if (uCrA > 0) {
-                             const matchIdx = expectedTrans.findIndex(et => et.side === 'cr' && !et.matched && Math.abs(et.amount - uCrA) < 1);
-                             if (matchIdx > -1) {
-                                 scoreC += 2;
-                                 expectedTrans[matchIdx].matched = true;
-                             } else {
-                                 document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-error-x');
-                             }
-                        }
-                    }
+                    if(Math.abs(valBal - Math.abs(net)) < 2) { totalsScore++; } else { elBal?.classList.add('input-error-x'); }
                 }
             });
-            
-            // Clamp and finalize C score (keeping the original calculation structure)
+
+
+            // --- FINALIZE SUBTASK C SCORE ---
+            const maxScoreC = 30 + 120 + yearEntryMax + totalsMax;
+            let scoreC = prCheckScore + ledgerEntriesScore + yearEntryScore + totalsScore;
+
             if (scoreC > maxScoreC) scoreC = maxScoreC;
             state.scores.t1c.current = scoreC;
             state.scores.t1c.max = maxScoreC;
@@ -1668,6 +1764,11 @@
                          </div>
                      </div>
  
+                     <!-- REVISED: Moved Login Button Here -->
+                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-center mb-6'}">
+                          <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
+                     </div>
+
                      <div class="border-t border-gray-100 pt-4 mb-6">
                          <p class="text-xs font-bold text-gray-800 uppercase mb-3">Student Details (Auto-Populated)</p>
                          <div class="space-y-3">
@@ -1686,11 +1787,6 @@
                                  </div>
                              </div>
                          </div>
-                     </div>
-                     
-                     <!-- REVISED: Moved center and below inputs -->
-                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-center mt-4'}">
-                          <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
                      </div>
  
                      <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
