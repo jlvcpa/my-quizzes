@@ -8,19 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        /* Adjusted body padding for full width on larger screens */
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            padding: 0; /* Remove default body padding */
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
-        /* Ensure main container takes full width */
-        #app {
-            width: 100%;
-            min-height: 100vh; /* Ensure it takes full viewport height */
-        }
-
         /* HIDE SPINNERS */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -180,29 +169,6 @@
             /* Force page breaks if needed */
             .page-break { page-break-before: always; }
         }
-        
-        /* PADDING FOR MOBILE/SMALL SCREENS */
-        @media (max-width: 1279px) {
-            body { padding: 1rem; }
-            #app { padding: 0; }
-        }
-        
-        /* PADDING FOR DESKTOP/WIDE SCREENS (NO MAX-WIDTH) */
-        @media (min-width: 1280px) {
-            #app { 
-                border: none; 
-                box-shadow: none; 
-                border-radius: 0;
-            }
-            .sticky-section-header {
-                padding-left: 1.5rem; /* Match spacing to content */
-                padding-right: 1.5rem;
-            }
-            .mx-4 { /* Ensure instructions and task content use padding on the sides */
-                margin-left: 1.5rem !important;
-                margin-right: 1.5rem !important;
-            }
-        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -212,8 +178,8 @@
         Task Time: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
     </div>
 
-    <!-- Main Application Container: Removed max-w-7xl mx-auto for full width -->
-    <div id="app" class="printable-area bg-white shadow-xl rounded-xl p-0 md:p-0 border border-gray-200 relative pb-20">
+    <!-- Main Application Container -->
+    <div id="app" class="max-w-7xl mx-auto printable-area bg-white shadow-xl rounded-xl p-0 md:p-0 border border-gray-200 relative pb-20">
 
         <!-- Screen Header -->
         <header id="screen-header" class="text-center pb-4 border-b-4 border-indigo-600 header-bg p-4 rounded-t-xl no-print">
@@ -618,7 +584,7 @@
                         </div>
                     </div>
 
-                    <div id="task1-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 split-panel mb-4 relative mx-4">
+                    <div id="task1-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 split-panel mb-4 relative">
                         <!-- Journal -->
                         <div class="bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
                             <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
@@ -820,7 +786,7 @@
 
             // --- COMBINING THEM INTO ONE PAGE (Responsive Layout) ---
             return `
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 p-4 xl:p-6">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 <!-- Task 1 Column (Left on Desktop) -->
                 <div class="xl:col-span-1 min-h-[600px] flex flex-col">
                     ${task1ContentHTML}
