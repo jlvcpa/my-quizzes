@@ -284,7 +284,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025.11.29 213559</strong>
+                <strong>Version 2025.11.29 214111</strong>
             </p>
         </footer>
 
@@ -773,7 +773,9 @@
                         </div>
                     </div>
 
-                    <div id="task1-grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-10 gap-4 split-panel mb-4 relative mx-4">
+                    <!-- Task 1 Internal Grid: 4/10 (Journal) and 6/10 (Ledger Forms) -->
+                    <!-- NOTE: Reverted back to xl:grid-cols-10 and adjusted spans for 4:6 ratio -->
+                    <div id="task1-grid" class="grid grid-cols-1 xl:grid-cols-10 gap-4 split-panel mb-4 relative mx-4">
                         <!-- Journal (4/10 width) -->
                         <div class="xl:col-span-4 bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
                             <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
@@ -973,16 +975,17 @@
                     </div>
                 </div>`;
 
-            // --- COMBINING THEM INTO ONE PAGE (Responsive Layout: 60/40 Split) ---
+            // --- COMBINING THEM INTO ONE PAGE (60/40 Split Task 1 / Task 2) ---
             return `
-            <div class="grid grid-cols-1 xl:grid-cols-10 gap-4 p-4 xl:p-6">
-                <!-- Task 1 Column (Left on Desktop) - 40% width -->
-                <div class="xl:col-span-4 min-h-[600px] flex flex-col">
+            <!-- Corrected Main Grid to maintain 60/40 Split (Task 1 / Task 2) -->
+            <div class="grid grid-cols-1 lg:grid-cols-10 gap-4 p-4 xl:p-6">
+                <!-- Task 1 Column (6/10 width) -->
+                <div class="lg:col-span-6 min-h-[600px] flex flex-col">
                     ${task1ContentHTML}
                 </div>
 
-                <!-- Task 2 Column (Right on Desktop) - 60% width -->
-                <div class="xl:col-span-6 min-h-[600px] flex flex-col">
+                <!-- Task 2 Column (4/10 width) -->
+                <div class="lg:col-span-4 min-h-[600px] flex flex-col">
                     ${task2ContentHTML}
                 </div>
             </div>
@@ -1211,12 +1214,14 @@
             
             let isBalanced = false;
             
+            // Check if input total matches calculated total
             if(Math.abs(inputTotalDr - totalDr) < 1 && totalDr > 0) {
                  currentScore++;
             } else {
                  inputTotalDrEl.classList.add('input-error-x');
             }
 
+            // Check if input total matches calculated total
             if(Math.abs(inputTotalCr - totalCr) < 1 && totalCr > 0) {
                  currentScore++;
             } else {
