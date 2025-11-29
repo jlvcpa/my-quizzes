@@ -263,8 +263,7 @@
         <!-- Footer -->
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
-                <strong>Version 2025.11.29 LIVE</strong><br>
-             
+                <strong>Version 2025.11.29 LIVE:</strong>
             </p>
         </footer>
 
@@ -593,14 +592,7 @@
                                 <li>Complete all required fields.</li>
                                 <li>Enter amounts without commas and decimal places.</li>
                                 <li>Round off centavos to the nearest peso.</li>
-                                <li>
-                                    <span class="font-bold">Format Dates carefully:</span>
-                                    <ul class="list-none pl-4 text-xs text-gray-600 mt-1 space-y-1">
-                                        <li>Row 1 (Year): <span class="font-mono font-bold text-indigo-600">YYYY</span> (e.g., ${new Date().getFullYear()})</li>
-                                        <li>Row 2 (Beg. Bal): <span class="font-mono font-bold text-indigo-600">MMM dd</span> (e.g., Jan 01)</li>
-                                        <li>Row 3+ (Transactions): <span class="font-mono font-bold text-indigo-600">dd</span> (e.g., 05)</li>
-                                    </ul>
-                                </li>
+                                <li>Format Dates carefully: Row 1 (Year):  YYYY (e.g., ${new Date().getFullYear()}). Row 2 (Beg. Bal): MMM dd (e.g., Jan 01). Row 3+ (Transactions): dd (e.g., 05)</li>
                                 <li>Validate each task to unlock the next one.</li>
                             </ul>
                         </div>
@@ -836,7 +828,7 @@
                 </div>`;
 
             // --- COMBINING THEM INTO ONE PAGE (Responsive Layout) ---
-            // Adjusted to xl:grid-cols-10 for 60/40 ratio (col-span-6 and col-span-4)
+            // xl:grid-cols-10, Task 1: col-span-6 (60%), Task 2: col-span-4 (40%)
             return `
             <div class="grid grid-cols-1 xl:grid-cols-10 gap-4 p-4 xl:p-6">
                 <!-- Task 1 Column (Left on Desktop) - 60% width -->
