@@ -37,7 +37,25 @@
         }
         .table-input:focus, .text-input:focus { outline: none; border-color: #3b82f6; }
         .table-input:disabled, .text-input:disabled { background-color: #f8fafc; color: #64748b; border-color: #e2e8f0; }
-
+        
+        /* --- New Error Feedback Style --- */
+        .input-error-x {
+            border-color: #dc2626 !important; /* Red border */
+            background-color: #fef2f2 !important; /* Light red background */
+            box-shadow: 0 0 0 1px #ef4444 !important;
+            position: relative;
+        }
+        .input-error-x::after {
+            content: "❌"; /* Red X symbol */
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            pointer-events: none;
+            color: #dc2626;
+        }
+        
         /* HEADER & FOOTER COLORS */
         .header-bg { background-color: #0f172a; color: white; }
         .footer-bg { background-color: #334155; color: white; }
@@ -663,6 +681,12 @@
              return 'text-red-600';
         };
 
+        const removeErrorClass = (selector) => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.classList.remove('input-error-x');
+            });
+        };
+
         const renderTaskContent = () => {
             // CRITICAL CHECK: Ensure data is loaded or generated before rendering task content
             if (!state.studentInfo || state.journalEntries.length === 0) {
@@ -749,9 +773,9 @@
                         </div>
                     </div>
 
-                    <div id="task1-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 split-panel mb-4 relative mx-4">
-                        <!-- Journal -->
-                        <div class="bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
+                    <div id="task1-grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-10 gap-4 split-panel mb-4 relative mx-4">
+                        <!-- Journal (4/10 width) -->
+                        <div class="xl:col-span-4 bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
                             <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
                                 <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
                             </div>
@@ -820,8 +844,8 @@
                             </div>
                         </div>
 
-                        <!-- Ledgers -->
-                        <div class="h-full overflow-hidden flex flex-col bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
+                        <!-- Ledgers (6/10 width) -->
+                        <div class="xl:col-span-6 h-full overflow-hidden flex flex-col bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
                             <div class="flex-none p-2 bg-white border-b">
                                 <div class="flex justify-between items-center pb-2">
                                     <h4 class="font-bold text-xs uppercase tracking-wide">Beginning Balances</h4>
@@ -952,13 +976,13 @@
             // --- COMBINING THEM INTO ONE PAGE (Responsive Layout: 60/40 Split) ---
             return `
             <div class="grid grid-cols-1 xl:grid-cols-10 gap-4 p-4 xl:p-6">
-                <!-- Task 1 Column (Left on Desktop) - 60% width -->
-                <div class="xl:col-span-6 min-h-[600px] flex flex-col">
+                <!-- Task 1 Column (Left on Desktop) - 40% width -->
+                <div class="xl:col-span-4 min-h-[600px] flex flex-col">
                     ${task1ContentHTML}
                 </div>
 
-                <!-- Task 2 Column (Right on Desktop) - 40% width -->
-                <div class="xl:col-span-4 min-h-[600px] flex flex-col">
+                <!-- Task 2 Column (Right on Desktop) - 60% width -->
+                <div class="xl:col-span-6 min-h-[600px] flex flex-col">
                     ${task2ContentHTML}
                 </div>
             </div>
@@ -972,6 +996,9 @@
         };
 
         window.validateTask1 = () => {
+            // 1. Clear previous error indicators
+            removeErrorClass('#task1-grid input');
+
             state.attempts[1]++;
             saveStateToLocalStorage(); // Persist attempt count
             const attempts = state.attempts[1];
@@ -989,7 +1016,6 @@
             });
 
             // --- SUBTASK A: Setup General Ledger ---
-            // 1 point for every general ledger created (highest possible score is number of accounts in the chart X 1)
             let scoreA = 0;
             const maxScoreA = state.requiredAccounts.length;
             
@@ -998,6 +1024,7 @@
                     scoreA++;
                 } else {
                     state.explanations.push(`Subtask A: Ledger for '${req}' is missing.`);
+                    // NOTE: Marking missing ledgers is hard, but we can visually mark the empty account title inputs.
                 }
             });
             state.scores.t1a.current = scoreA;
@@ -1005,35 +1032,39 @@
             state.scores.t1a.grade = getGrade(scoreA, maxScoreA);
 
 
-            // --- SUBTASK B: Input Beginning Balances ---
-            // 4 points per correct beginning balance
-            // Logic: Determine side -> Check Year (Row 1/Input), Date, Particulars ("Beginning Balance"), Amount.
+            // --- SUBTASK B: Input Beginning Balances (Simplified Error Marking) ---
             let scoreB = 0;
             const maxScoreB = state.pctb.length * 4; 
 
             state.pctb.forEach(acc => {
                 const userL = userLedgers.find(ul => ul.name.toLowerCase() === acc.name.toLowerCase());
+                let accBScore = 0;
                 if (userL) {
                     const side = acc.side.toLowerCase(); 
                     
                     // 1. Year Value in First Row (which is now an input field)
                     const yearInp = document.getElementById(`l_${userL.id}_${side}_year`);
-                    const dateInp = getLedgerInput(userL.id, side, 'd', 0); 
-                    const partInp = getLedgerInput(userL.id, side, 'p', 0);
-                    const amtInp = parseInt(getLedgerInput(userL.id, side, 'a', 0) || 0);
+                    const dateInpEl = document.getElementById(`l_${userL.id}_${side}_d_0`);
+                    const partInpEl = document.getElementById(`l_${userL.id}_${side}_p_0`);
+                    const amtInpEl = document.getElementById(`l_${userL.id}_${side}_a_0`);
 
-                    // Score breakdown
-                    if(yearInp && parseInt(yearInp.value) === currentYear) scoreB++; 
-                    if(dateInp.length > 0) scoreB++; // Basic date check
-                    if(partInp.toLowerCase().includes('beg') || partInp.toLowerCase().includes('balance')) scoreB++;
-                    if(Math.abs(amtInp - acc.bal) < 1) scoreB++;
+                    const dateInp = dateInpEl.value.trim(); 
+                    const partInp = partInpEl.value.trim();
+                    const amtInp = parseInt(amtInpEl.value.trim() || 0);
+
+                    // Score breakdown (and mark errors)
+                    if(yearInp && parseInt(yearInp.value) === currentYear) { accBScore++; } else { yearInp?.classList.add('input-error-x'); }
+                    if(dateInp.length > 0) { accBScore++; } else { dateInpEl?.classList.add('input-error-x'); }
+                    if(partInp.toLowerCase().includes('beg') || partInp.toLowerCase().includes('balance')) { accBScore++; } else { partInpEl?.classList.add('input-error-x'); }
+                    if(Math.abs(amtInp - acc.bal) < 1) { accBScore++; } else { amtInpEl?.classList.add('input-error-x'); }
                 }
+                scoreB += accBScore;
             });
             state.scores.t1b.current = scoreB;
             state.scores.t1b.max = maxScoreB;
             state.scores.t1b.grade = getGrade(scoreB, maxScoreB);
 
-            // --- SUBTASK C: Post Journal Entries ---
+            // --- SUBTASK C: Post Journal Entries and Totals (Simplified Error Marking) ---
             const transactionPointsMax = (state.journalEntries.length * 2 * 4);
             const yearPointsMax = state.requiredAccounts.length * 1;
             const totalsPointsMax = (state.requiredAccounts.length * 3);
@@ -1063,28 +1094,32 @@
                 const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
                 if(accName) {
                     const expected = accountTotals[accName];
-                    const elTotalDr = parseInt(document.getElementById(`l_${ul.id}_total_dr`).value || 0);
-                    const elTotalCr = parseInt(document.getElementById(`l_${ul.id}_total_cr`).value || 0);
-                    const elBal = parseInt(document.getElementById(`l_${ul.id}_bal`).value || 0);
+                    const elTotalDr = document.getElementById(`l_${ul.id}_total_dr`);
+                    const elTotalCr = document.getElementById(`l_${ul.id}_total_cr`);
+                    const elBal = document.getElementById(`l_${ul.id}_bal`);
                     
-                    // SIMPLIFIED DEMO SCORING FOR C:
-                    let checkSide = 'dr';
-                    if(expected.hasBegDr) checkSide = 'cr'; 
-                    else if(expected.hasBegCr) checkSide = 'dr'; 
+                    const valTotalDr = parseInt(elTotalDr.value || 0);
+                    const valTotalCr = parseInt(elTotalCr.value || 0);
+                    const valBal = parseInt(elBal.value || 0);
                     
-                    const yearInp = document.getElementById(`l_${ul.id}_${checkSide}_year`);
-                    if(yearInp && parseInt(yearInp.value) === currentYear) scoreC += 1;
+                    // Simple total check (2 pts)
+                    if (Math.abs(valTotalDr - (expected.dr + expected.begDr)) < 2) { scoreC++; } else { elTotalDr?.classList.add('input-error-x'); }
+                    if (Math.abs(valTotalCr - (expected.cr + expected.begCr)) < 2) { scoreC++; } else { elTotalCr?.classList.add('input-error-x'); }
 
-                    // Check Totals & Balance (3 pts)
+                    // Balance check (1 pt)
                     const net = (expected.begDr + expected.dr) - (expected.begCr + expected.cr);
-                    if(Math.abs(elBal - Math.abs(net)) < 2) {
-                        scoreC += 3; 
-                        scoreC += 10; 
+                    if(Math.abs(valBal - Math.abs(net)) < 2) { scoreC++; } else { elBal?.classList.add('input-error-x'); }
+
+                    // Increment for transaction posting (Highly simplified)
+                    // If the account title is correct, give points proportional to the number of transactions it should contain.
+                    const transactionsForAcc = state.journalEntries.filter(e => e.titles.includes(accName));
+                    if (transactionsForAcc.length > 0) {
+                        scoreC += 10; // Placeholder points for transactions
                     }
                 }
             });
             
-            // Clamp C
+            // Clamp and finalize C score (keeping the original calculation structure)
             if (scoreC > maxScoreC) scoreC = maxScoreC;
             state.scores.t1c.current = scoreC;
             state.scores.t1c.max = maxScoreC;
@@ -1127,6 +1162,9 @@
         };
 
         window.validateTask2 = () => {
+            // 1. Clear previous error indicators
+            removeErrorClass('#task2-wrapper input');
+            
             state.attempts[2]++;
             saveStateToLocalStorage(); // Persist attempt count
             
@@ -1139,28 +1177,61 @@
             let currentScore = 0;
             let totalDr = 0;
             let totalCr = 0;
+            
+            const errorInputs = []; // To store IDs of inputs that are wrong
 
             for(let i=0; i<numAccounts; i++) {
-                const n = document.getElementById(`tb_name_${i}`).value.trim();
-                const d = Number(document.getElementById(`tb_dr_${i}`).value) || 0;
-                const c = Number(document.getElementById(`tb_cr_${i}`).value) || 0;
+                const nEl = document.getElementById(`tb_name_${i}`);
+                const dEl = document.getElementById(`tb_dr_${i}`);
+                const cEl = document.getElementById(`tb_cr_${i}`);
+                
+                const n = nEl.value.trim();
+                const d = Number(dEl.value) || 0;
+                const c = Number(cEl.value) || 0;
                 
                 if(n || d!==0 || c!==0) hasData = true;
                 totalDr += d;
                 totalCr += c;
 
-                // Scoring: 1 pt for correct name present, 1 for Dr value, 1 for Cr value
-                if (n && state.requiredAccounts.some(r => r.toLowerCase() === n.toLowerCase())) currentScore++;
-                // Simple logic: if data exists in dr/cr where it should/shouldn't be, score it. 
-                if (d > 0 || c > 0) currentScore += 2; 
+                // Simplified check: If name exists, score 1
+                const isNameCorrect = state.requiredAccounts.some(r => r.toLowerCase() === n.toLowerCase());
+                if (isNameCorrect) { currentScore++; } else if (n.length > 0) { nEl.classList.add('input-error-x'); }
+
+                // Very basic scoring for Dr/Cr presence
+                if (d > 0) { currentScore++; }
+                if (c > 0) { currentScore++; }
             }
             
             // Check Totals (1 pt each)
-            const inputTotalDr = Number(document.getElementById('tb_total_dr').value) || 0;
-            const inputTotalCr = Number(document.getElementById('tb_total_cr').value) || 0;
+            const inputTotalDrEl = document.getElementById('tb_total_dr');
+            const inputTotalCrEl = document.getElementById('tb_total_cr');
+
+            const inputTotalDr = Number(inputTotalDrEl.value) || 0;
+            const inputTotalCr = Number(inputTotalCrEl.value) || 0;
             
-            if(Math.abs(inputTotalDr - totalDr) < 1 && totalDr > 0) currentScore++;
-            if(Math.abs(inputTotalCr - totalCr) < 1 && totalCr > 0) currentScore++;
+            let isBalanced = false;
+            
+            if(Math.abs(inputTotalDr - totalDr) < 1 && totalDr > 0) {
+                 currentScore++;
+            } else {
+                 inputTotalDrEl.classList.add('input-error-x');
+            }
+
+            if(Math.abs(inputTotalCr - totalCr) < 1 && totalCr > 0) {
+                 currentScore++;
+            } else {
+                 inputTotalCrEl.classList.add('input-error-x');
+            }
+
+            // Check if the overall balance is achieved
+            if(Math.abs(totalDr - totalCr) < 1 && totalDr > 0) {
+                isBalanced = true;
+            } else if (totalDr > 0 || totalCr > 0) {
+                // If it's not balanced, mark both total fields as error regardless of whether the sums matched their inputs
+                inputTotalDrEl.classList.add('input-error-x');
+                inputTotalCrEl.classList.add('input-error-x');
+            }
+
 
             const attempts = state.attempts[2];
             const max = 3;
@@ -1174,12 +1245,12 @@
                 state.explanations.push(message);
                 currentScore = 0;
             } else {
-                const isBalanced = (Math.abs(inputTotalDr - inputTotalCr) < 1) && (inputTotalDr > 0);
                 if(isBalanced) {
                     passed = true;
                     message = "Task 2 Validated!";
                 } else {
                     message = `Task 2 Unbalanced.`;
+                    state.explanations.push(message);
                 }
             }
             
