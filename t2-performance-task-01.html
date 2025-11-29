@@ -263,7 +263,7 @@
         <!-- Footer -->
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
-                <strong>Version [DateTime now]:</strong>
+                <strong>Version 181920 </strong>
             </p>
         </footer>
 
@@ -351,9 +351,13 @@
         };
 
         function updateTimerDisplay() {
+            if (!state.attendanceId) return; // FIX: Ensure we have an ID
             const display = document.getElementById('countdown');
             const endTime = localStorage.getItem(`exam_end_time_${state.attendanceId}`);
-            if (!endTime) return;
+            if (!endTime) { 
+                display.textContent = "--:--:--";
+                return;
+            }
             const distance = parseInt(endTime) - Date.now();
             if (distance < 0) {
                 display.textContent = "00:00:00"; stopTimer(); window.disableAllInputs();
@@ -366,23 +370,29 @@
         }
         function stopTimer() { if(timerInterval) clearInterval(timerInterval); }
         function startTimer() {
+            if (!state.attendanceId) {
+                console.error("Cannot start timer: state.attendanceId is missing.");
+                return;
+            }
+            
             if(timerInterval) stopTimer();
             const key = `exam_end_time_${state.attendanceId}`;
-            // FIX: Ensure duration is positive before starting timer and setting end time
+            
+            // FIX: If duration is set > 0, always ensure a timer start time is saved 
+            // and the interval is set.
             if (window.examDurationMins > 0) { 
-                if(!localStorage.getItem(key)) localStorage.setItem(key, Date.now() + window.examDurationMins * 60000);
+                if(!localStorage.getItem(key)) {
+                    localStorage.setItem(key, Date.now() + window.examDurationMins * 60000);
+                }
                 timerInterval = setInterval(updateTimerDisplay, 1000);
                 updateTimerDisplay(); // Initial display update
+            } else if (localStorage.getItem(key)) {
+                // Resume existing timer even if duration parameter was missed/zeroed on init
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                updateTimerDisplay();
             } else {
-                // If duration is 0 (like in dev mode default, or if dur is not in URL), 
-                // we should still try to resume if a time exists in local storage.
-                if (localStorage.getItem(key)) {
-                    timerInterval = setInterval(updateTimerDisplay, 1000);
-                    updateTimerDisplay();
-                } else {
-                    console.warn("Exam duration is 0 or less, and no existing timer found. Timer not started.");
-                    document.getElementById('countdown').textContent = "No Timer";
-                }
+                console.warn("Exam duration is 0 or less, and no existing timer found. Timer not started.");
+                document.getElementById('countdown').textContent = "No Timer";
             }
         }
 
@@ -1316,6 +1326,8 @@
 
         window.enterPreviewMode = () => {
              state.studentInfo = {fullName:'Dela Cruz, Juan',classNumber:'01',gradeSection:'12-ABM', idNumber:'12345'};
+             // FIX: Ensure attendanceId is set for localStorage key generation
+             state.attendanceId = 'preview-mode-test';
              window.examDurationMins = 60; // Set a default duration for preview mode
              generateData();
              startTimer(); // Start timer in preview mode too
@@ -1332,8 +1344,14 @@
             }
             // Parse duration early, but validation/setting happens in handleLogin/validateStudentLogin
             window.examDurationMins = parseInt(dur) || 0; // Default to 0 until confirmed by validation
-            state.attendanceId = att; 
+            state.attendanceId = att; // CRITICAL: Set ID here too, so timer can rely on it
             
+            // Attempt to resume timer immediately if an end time exists (reloads/navigation)
+            // We must call it here because state.attendanceId is available now
+            if (localStorage.getItem(`exam_end_time_${state.attendanceId}`)) {
+                startTimer();
+            }
+
             document.getElementById('task-container').innerHTML = `
             <div class="space-y-4 m-4">
                 <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
