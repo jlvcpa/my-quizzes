@@ -8,8 +8,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        /* Adjusted body padding for full width on larger screens */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            padding: 0; /* Remove default body padding */
+        }
         
+        /* Ensure main container takes full width */
+        #app {
+            width: 100%;
+            min-height: 100vh; /* Ensure it takes full viewport height */
+        }
+
         /* HIDE SPINNERS */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -25,8 +36,33 @@
             font-size: 0.8rem; background-color: #fff;
         }
         .table-input:focus, .text-input:focus { outline: none; border-color: #3b82f6; }
-        .table-input:disabled, .text-input:disabled { background-color: #f8fafc; color: #64748b; border-color: #e2e8f0; }
-
+        
+        /* Modified disabled styles to show black text and remove opacity */
+        .table-input:disabled, .text-input:disabled { 
+            background-color: #f8fafc; 
+            color: #1f2937; /* Dark gray/black text */
+            border-color: #e2e8f0;
+            opacity: 1; /* Ensure visibility */
+        }
+        
+        /* --- New Error Feedback Style --- */
+        .input-error-x {
+            border-color: #dc2626 !important; /* Red border */
+            background-color: #fef2f2 !important; /* Light red background */
+            box-shadow: 0 0 0 1px #ef4444 !important;
+            position: relative;
+        }
+        .input-error-x::after {
+            content: "❌"; /* Red X symbol */
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            pointer-events: none;
+            color: #dc2626;
+        }
+        
         /* HEADER & FOOTER COLORS */
         .header-bg { background-color: #0f172a; color: white; }
         .footer-bg { background-color: #334155; color: white; }
@@ -46,6 +82,8 @@
         }
         .pr-box:hover { border-color: #3b82f6; }
         .pr-checked { color: #16a34a; font-weight: bold; border-color: #16a34a; background-color: #dcfce7; }
+        /* Style for disabled/checked PR boxes */
+        .pr-box[disabled] { cursor: default; }
 
         /* Layout & Scroll */
         .split-panel { height: 600px; overflow: hidden; } 
@@ -67,13 +105,17 @@
         /* Task Locking Overlay */
         .locked-task {
             position: relative;
-            pointer-events: none;
             user-select: none;
         }
+        /* REMOVED blur-content styling to show answers */
         .locked-task .blur-content {
-            filter: blur(4px);
-            opacity: 0.5;
+            /* filter: blur(4px); */
+            opacity: 1; /* Ensure visibility */
             transition: all 0.5s ease;
+        }
+        /* Added class to hide lock overlay when content is visible */
+        .lock-overlay-hidden {
+             display: none !important;
         }
         .lock-overlay {
             position: absolute;
@@ -145,6 +187,7 @@
             .table-input, .text-input { 
                 border: none !important; border-bottom: 1px solid #ccc !important; 
                 background: transparent !important; padding: 0 !important;
+                color: black !important; /* Ensure printed text is black */
             }
             #task1-grid { display: block !important; }
             .explanation-box { display: block !important; border: 1px solid #ef4444; padding: 15px; margin-top: 30px; font-size: 0.85rem; page-break-inside: avoid; }
@@ -169,17 +212,42 @@
             /* Force page breaks if needed */
             .page-break { page-break-before: always; }
         }
+        
+        /* PADDING FOR MOBILE/SMALL SCREENS */
+        @media (max-width: 1279px) {
+            body { padding: 1rem; }
+            #app { padding: 0; }
+        }
+        
+        /* PADDING FOR DESKTOP/WIDE SCREENS (NO MAX-WIDTH) */
+        @media (min-width: 1280px) {
+            #app { 
+                border: none; 
+                box-shadow: none; 
+                border-radius: 0;
+            }
+            .sticky-section-header {
+                padding-left: 1.5rem; /* Match spacing to content */
+                padding-right: 1.5rem;
+            }
+            .mx-4 { /* Ensure instructions and task content use padding on the sides */
+                margin-left: 1.5rem !important;
+                margin-right: 1.5rem !important;
+            }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <!-- Timer Display -->
-    <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold sticky top-4 z-50 mx-auto max-w-xs">
-        Task Time: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
-    </div>
+    <!-- REMOVED TIMER FROM HERE (Moved inside #app) -->
 
-    <!-- Main Application Container -->
-    <div id="app" class="max-w-7xl mx-auto printable-area bg-white shadow-xl rounded-xl p-0 md:p-0 border border-gray-200 relative pb-20">
+    <!-- Main Application Container: Removed max-w-7xl mx-auto for full width -->
+    <div id="app" class="printable-area bg-white shadow-xl rounded-xl p-0 md:p-0 border border-gray-200 relative pb-20">
+        
+        <!-- Timer Display (MOVED INSIDE #app FOR STRUCTURAL CORRECTION) -->
+        <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold sticky top-4 z-50 mx-auto max-w-xs">
+            Task Time: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
+        </div>
 
         <!-- Screen Header -->
         <header id="screen-header" class="text-center pb-4 border-b-4 border-indigo-600 header-bg p-4 rounded-t-xl no-print">
@@ -229,12 +297,8 @@
         <!-- Footer -->
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
-                <strong>Instruction:</strong><br>
-                Complete all required fields. <br>
-                Enter amounts without commas and decimal places. <br>
-                Round off centavos to the nearest peso. <br>
-                After validating each task, proceed to the next. <br>
-                Version 2025.11.22 LIVE
+                <!-- Static Version Number based on current revision -->
+                <strong>Version 2025-11-29 22:41:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -266,7 +330,7 @@
 
         // --- STATE & DATA ---
         let state = {
-            currentStep: 0, 
+            currentStep: 0, // 0: Login, 1: Task Started
             attendanceId: "", studentInfo: null,
             journalEntries: [], pctb: [], 
             ledgers: [], 
@@ -287,9 +351,77 @@
 
         window.examDurationMins = 0; let timerInterval = null;
 
+        // Keys for localStorage persistence
+        const getLocalStorageKey = (attId) => `exam_state_${attId}`;
+        const getDataKey = (attId) => `exam_data_${attId}`;
+
+
+        // --- PERSISTENCE HELPERS ---
+        const saveStateToLocalStorage = () => {
+             if (state.attendanceId) {
+                 const persistState = {
+                     studentInfo: state.studentInfo,
+                     currentStep: state.currentStep,
+                     isTask1Locked: state.isTask1Locked,
+                     isTask2Locked: state.isTask2Locked,
+                     attempts: state.attempts, // Save attempts too
+                 };
+                 localStorage.setItem(getLocalStorageKey(state.attendanceId), JSON.stringify(persistState));
+             }
+        };
+
+        const loadStateFromLocalStorage = () => {
+            if (state.attendanceId) {
+                const persisted = localStorage.getItem(getLocalStorageKey(state.attendanceId));
+                if (persisted) {
+                    const persistState = JSON.parse(persisted);
+                    state.studentInfo = persistState.studentInfo;
+                    state.currentStep = persistState.currentStep;
+                    state.isTask1Locked = persistState.isTask1Locked;
+                    state.isTask2Locked = persistState.isTask2Locked;
+                    state.attempts = persistState.attempts || { 1: 0, 2: 0 };
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // NEW: Persistence for the randomized test data (Crucial for validation)
+        const saveTestDatatoLocalStorage = () => {
+            if (state.attendanceId) {
+                 const testData = {
+                    journalEntries: state.journalEntries,
+                    pctb: state.pctb, 
+                    ledgers: state.ledgers, 
+                    requiredAccounts: state.requiredAccounts
+                 };
+                 localStorage.setItem(getDataKey(state.attendanceId), JSON.stringify(testData));
+            }
+        };
+
+        const loadTestDataFromLocalStorage = () => {
+            if (state.attendanceId) {
+                const persisted = localStorage.getItem(getDataKey(state.attendanceId));
+                if (persisted) {
+                    const testData = JSON.parse(persisted);
+                    state.journalEntries = testData.journalEntries;
+                    state.pctb = testData.pctb;
+                    state.ledgers = testData.ledgers;
+                    state.requiredAccounts = testData.requiredAccounts;
+                    return true;
+                }
+            }
+            return false;
+        };
+
+
         window.disableAllInputs = () => {
             document.querySelectorAll('input, button, select').forEach(el => {
-                if(!el.id.includes('print')) { el.disabled = true; el.classList.add('cursor-not-allowed', 'opacity-75'); }
+                if(!el.id.includes('print')) { el.disabled = true; el.classList.add('cursor-not-allowed'); el.classList.remove('opacity-75'); }
+            });
+            // Ensure inputs show black text when disabled/uneditable
+            document.querySelectorAll('input:disabled, select:disabled').forEach(el => {
+                el.classList.add('text-black');
             });
         };
 
@@ -298,9 +430,14 @@
             if(container) {
                 container.querySelectorAll('input, button, select').forEach(el => {
                     el.disabled = true;
-                    el.classList.add('bg-gray-100', 'text-gray-500', 'border-gray-200');
+                    el.classList.add('bg-gray-100', 'text-black', 'border-gray-200');
                     el.classList.remove('bg-white');
                 });
+            }
+            // Also disable ledger add row button permanently if task is locked
+            if (selector === '#task1-grid') {
+                 const addRowBtns = container.querySelectorAll('button[onclick^="window.addRow"]');
+                 addRowBtns.forEach(btn => btn.disabled = true);
             }
         }
         
@@ -321,27 +458,75 @@
             }
         };
 
+        // --- Timer Logic ---
         function updateTimerDisplay() {
-            const display = document.getElementById('countdown');
-            const endTime = localStorage.getItem(`exam_end_time_${state.attendanceId}`);
-            if (!endTime) return;
-            const distance = parseInt(endTime) - Date.now();
+            if (!state.attendanceId) return; 
+            const displayElement = document.getElementById('countdown');
+            const boxElement = document.getElementById('timer-box');
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            const endTime = localStorage.getItem(storageKey);
+            
+            if (!endTime || !displayElement) { displayElement.textContent = "--:--:--"; return; }
+            
+            const now = Date.now();
+            const distance = parseInt(endTime) - now;
+            
             if (distance < 0) {
-                display.textContent = "00:00:00"; stopTimer(); window.disableAllInputs();
+                displayElement.textContent = "00:00:00";
+                stopTimer();
+                window.disableAllInputs();
+                // Auto-submit if time runs out
+                window.finishAndPreview(true);
                 return;
             }
+            
             const h = Math.floor((distance % (86400000)) / 3600000);
             const m = Math.floor((distance % 3600000) / 60000);
             const s = Math.floor((distance % 60000) / 1000);
-            display.textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            
+            displayElement.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            
+            // Visual timer warning
+            if (distance < 300000) { // Less than 5 mins
+                boxElement?.classList.remove('bg-red-800'); boxElement?.classList.add('animate-pulse', 'bg-red-600');
+            } else {
+                boxElement?.classList.remove('animate-pulse', 'bg-red-600'); boxElement?.classList.add('bg-red-800');
+            }
         }
-        function stopTimer() { if(timerInterval) clearInterval(timerInterval); }
+
+        function stopTimer() { 
+            if (timerInterval) { 
+                clearInterval(timerInterval); 
+                timerInterval = null; 
+            } 
+        }
+
+        // Timer initialization logic (now called from startExam or resumeExam)
         function startTimer() {
-            if(timerInterval) stopTimer();
-            const key = `exam_end_time_${state.attendanceId}`;
-            if(!localStorage.getItem(key)) localStorage.setItem(key, Date.now() + window.examDurationMins * 60000);
+            if (!state.attendanceId || window.examDurationMins <= 0) {
+                console.error("Cannot start timer: Missing Attendance ID or Duration is zero.");
+                document.getElementById('countdown').textContent = "No Timer";
+                return;
+            }
+            
+            if (timerInterval) stopTimer();
+            
+            const storageKey = `exam_end_time_${state.attendanceId}`;
+            let endTime = localStorage.getItem(storageKey);
+            
+            if (!endTime) {
+                // Calculate and set end time if missing (Initial start)
+                const now = Date.now();
+                const durationMs = window.examDurationMins * 60 * 1000;
+                
+                endTime = now + durationMs;
+                localStorage.setItem(storageKey, endTime);
+            }
+            
+            updateTimerDisplay(); // Initial call
             timerInterval = setInterval(updateTimerDisplay, 1000);
         }
+        // --- End Timer Logic ---
 
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const formatMoney = (n) => 'P' + n.toLocaleString('en-US');
@@ -406,6 +591,9 @@
             // Initialize 5 empty ledgers
             state.ledgers = [];
             for(let i=0; i<5; i++) { state.ledgers.push({ id: i, name: '', rowCount: 4 }); }
+
+            // Save the newly generated data
+            saveTestDatatoLocalStorage();
         };
 
         // --- RENDERERS ---
@@ -475,6 +663,7 @@
             const id = state.ledgers.length;
             const newLedger = { id, name: '', rowCount: 4 };
             state.ledgers.push(newLedger);
+            saveTestDatatoLocalStorage(); // Persist changes to ledger structure
             container.insertAdjacentHTML('beforeend', createLedgerHTML(newLedger));
             const rightPanel = document.querySelector('.scroll-panel');
             if(rightPanel) rightPanel.scrollTop = rightPanel.scrollHeight;
@@ -484,6 +673,7 @@
              const ledger = state.ledgers.find(l => l.id === id);
              if(ledger) {
                  ledger.rowCount += 1; 
+                 saveTestDatatoLocalStorage(); // Persist changes to ledger structure
                  const oldEl = document.getElementById(`ledger_${id}`);
                  const tempDiv = document.createElement('div');
                  tempDiv.innerHTML = createLedgerHTML(ledger);
@@ -514,10 +704,39 @@
              return 'text-red-600';
         };
 
+        const removeErrorClass = (selector) => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.classList.remove('input-error-x');
+            });
+        };
+
         const renderTaskContent = () => {
+            // CRITICAL CHECK: Ensure data is loaded or generated before rendering task content
+            if (!state.studentInfo || state.journalEntries.length === 0) {
+                 // This should only happen if called before resume/start
+                 return `<div class="p-10 text-center text-red-500 font-bold">Error: Task data is missing. Please refresh and ensure you click 'Start the Task'.</div>`;
+            }
+
+
             const attempts1 = state.attempts[1];
             const attempts2 = state.attempts[2];
             const max = 3;
+            
+            // Determine button state for Task 1
+            const isT1BtnDisabled = state.isTask1Locked || state.attempts[1] >= max;
+            const t1BtnText = state.isTask1Locked ? "Task 1 Completed" : (state.attempts[1] >= max ? "Attempts Used" : "Validate Task 1");
+            const t1BtnClass = isT1BtnDisabled 
+                ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
+                : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
+            
+            // Determine button state for Task 2 (Locked if Task 1 is NOT completed)
+            const isT2BtnLockedByT1 = !state.isTask1Locked;
+            const isT2BtnDisabled = isT2BtnLockedByT1 || state.isTask2Locked || state.attempts[2] >= max;
+             const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
+             const t2BtnClass = isT2BtnDisabled 
+                 ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
+                 : "px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition";
+
 
             // --- TASK 1 SECTION ---
             const task1ContentHTML = `
@@ -530,26 +749,19 @@
                         <div class="flex items-center space-x-2">
                             <span id="lbl_attempts_1" class="text-xs text-gray-800 font-bold">Attempts: ${attempts1}/${max}</span>
                             <button onclick="window.toggleRubric('task1-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
-                            <button id="btn-validate-1" onclick="window.validateTask1()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition no-print">Validate Task 1</button>
+                            <button id="btn-validate-1" onclick="window.validateTask1()" class="${t1BtnClass}" ${isT1BtnDisabled ? 'disabled' : ''} no-print>${t1BtnText}</button>
                         </div>
                     </div>
                     
                     <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task1-instructions-panel">
-                        <!-- Instructions -->
+                        <!-- Instructions (Updated) -->
                         <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
                             <h4 class="font-bold mb-2 text-gray-800">Instruction:</h4>
                             <ul class="list-disc pl-5 space-y-1 text-gray-700">
                                 <li>Complete all required fields.</li>
                                 <li>Enter amounts without commas and decimal places.</li>
                                 <li>Round off centavos to the nearest peso.</li>
-                                <li>
-                                    <span class="font-bold">Format Dates carefully:</span>
-                                    <ul class="list-none pl-4 text-xs text-gray-600 mt-1 space-y-1">
-                                        <li>Row 1 (Year): <span class="font-mono font-bold text-indigo-600">YYYY</span> (e.g., ${new Date().getFullYear()})</li>
-                                        <li>Row 2 (Beg. Bal): <span class="font-mono font-bold text-indigo-600">MMM dd</span> (e.g., Jan 01)</li>
-                                        <li>Row 3+ (Transactions): <span class="font-mono font-bold text-indigo-600">dd</span> (e.g., 05)</li>
-                                    </ul>
-                                </li>
+                                <li>Format Dates carefully: Row 1 (Year):  YYYY (e.g., ${new Date().getFullYear()}). Row 2 (Beg. Bal): MMM dd (e.g., Jan 01). Row 3+ (Transactions): dd (e.g., 05)</li>
                                 <li>Validate each task to unlock the next one.</li>
                             </ul>
                         </div>
@@ -584,9 +796,11 @@
                         </div>
                     </div>
 
-                    <div id="task1-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 split-panel mb-4 relative">
-                        <!-- Journal -->
-                        <div class="bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
+                    <!-- Task 1 Internal Grid: 4/10 (Journal) and 6/10 (Ledger Forms) -->
+                    <!-- NOTE: Reverted back to xl:grid-cols-10 and adjusted spans for 4:6 ratio -->
+                    <div id="task1-grid" class="grid grid-cols-1 xl:grid-cols-10 gap-4 split-panel mb-4 relative mx-4">
+                        <!-- Journal (4/10 width) -->
+                        <div class="xl:col-span-4 bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
                             <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
                                 <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
                             </div>
@@ -655,8 +869,8 @@
                             </div>
                         </div>
 
-                        <!-- Ledgers -->
-                        <div class="h-full overflow-hidden flex flex-col bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
+                        <!-- Ledgers (6/10 width) -->
+                        <div class="xl:col-span-6 h-full overflow-hidden flex flex-col bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
                             <div class="flex-none p-2 bg-white border-b">
                                 <div class="flex justify-between items-center pb-2">
                                     <h4 class="font-bold text-xs uppercase tracking-wide">Beginning Balances</h4>
@@ -698,7 +912,7 @@
                         <div class="flex items-center space-x-2">
                              <span id="lbl_attempts_2" class="text-xs text-gray-800 font-bold">Attempts: ${attempts2}/${max}</span>
                              <button onclick="window.toggleRubric('task2-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
-                             <button id="btn-validate-2" onclick="window.validateTask2()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition no-print">Validate Task 2</button>
+                             <button id="btn-validate-2" onclick="window.validateTask2()" class="${t2BtnClass}" ${isT2BtnDisabled ? 'disabled' : ''} no-print>${t2BtnText}</button>
                         </div>
                     </div>
 
@@ -743,7 +957,7 @@
                         </div>
                     </div>
 
-                    <div id="task2-wrapper" class="relative locked-task transition-all duration-500 mx-4">
+                    <div id="task2-wrapper" class="relative ${isT2BtnLockedByT1 ? 'locked-task' : ''} transition-all duration-500 mx-4">
                         <div class="blur-content">
                             <div class="p-6 bg-gray-50 rounded shadow-inner border border-gray-200">
                                 <div class="bg-white p-6 border rounded shadow-sm max-w-4xl mx-auto">
@@ -774,7 +988,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="task2-overlay" class="lock-overlay">
+                        <div id="task2-overlay" class.class = "${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}">
                             <div class="lock-message">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                                 <p>Task 2 is Locked</p>
@@ -784,16 +998,17 @@
                     </div>
                 </div>`;
 
-            // --- COMBINING THEM INTO ONE PAGE (Responsive Layout) ---
+            // --- COMBINING THEM INTO ONE PAGE (60/40 Split Task 1 / Task 2) ---
             return `
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <!-- Task 1 Column (Left on Desktop) -->
-                <div class="xl:col-span-1 min-h-[600px] flex flex-col">
+            <!-- Corrected Main Grid to maintain 60/40 Split (Task 1 / Task 2) -->
+            <div class="grid grid-cols-1 lg:grid-cols-10 gap-4 p-4 xl:p-6">
+                <!-- Task 1 Column (6/10 width) -->
+                <div class="lg:col-span-6 min-h-[600px] flex flex-col">
                     ${task1ContentHTML}
                 </div>
 
-                <!-- Task 2 Column (Right on Desktop) -->
-                <div class="xl:col-span-1 min-h-[600px] flex flex-col">
+                <!-- Task 2 Column (4/10 width) -->
+                <div class="lg:col-span-4 min-h-[600px] flex flex-col">
                     ${task2ContentHTML}
                 </div>
             </div>
@@ -807,7 +1022,11 @@
         };
 
         window.validateTask1 = () => {
+            // 1. Clear previous error indicators
+            removeErrorClass('#task1-grid input');
+
             state.attempts[1]++;
+            saveStateToLocalStorage(); // Persist attempt count
             const attempts = state.attempts[1];
             const max = 3;
             const currentYear = new Date().getFullYear();
@@ -823,7 +1042,6 @@
             });
 
             // --- SUBTASK A: Setup General Ledger ---
-            // 1 point for every general ledger created (highest possible score is number of accounts in the chart X 1)
             let scoreA = 0;
             const maxScoreA = state.requiredAccounts.length;
             
@@ -832,6 +1050,7 @@
                     scoreA++;
                 } else {
                     state.explanations.push(`Subtask A: Ledger for '${req}' is missing.`);
+                    // NOTE: Marking missing ledgers is hard, but we can visually mark the empty account title inputs.
                 }
             });
             state.scores.t1a.current = scoreA;
@@ -839,43 +1058,41 @@
             state.scores.t1a.grade = getGrade(scoreA, maxScoreA);
 
 
-            // --- SUBTASK B: Input Beginning Balances ---
-            // 4 points per correct beginning balance
-            // Logic: Determine side -> Check Year (Row 1/Input), Date, Particulars ("Beginning Balance"), Amount.
+            // --- SUBTASK B: Input Beginning Balances (Simplified Error Marking) ---
             let scoreB = 0;
             const maxScoreB = state.pctb.length * 4; 
 
             state.pctb.forEach(acc => {
                 const userL = userLedgers.find(ul => ul.name.toLowerCase() === acc.name.toLowerCase());
+                let accBScore = 0;
                 if (userL) {
                     const side = acc.side.toLowerCase(); 
                     
                     // 1. Year Value in First Row (which is now an input field)
                     const yearInp = document.getElementById(`l_${userL.id}_${side}_year`);
-                    const dateInp = getLedgerInput(userL.id, side, 'd', 0); 
-                    const partInp = getLedgerInput(userL.id, side, 'p', 0);
-                    const amtInp = parseInt(getLedgerInput(userL.id, side, 'a', 0) || 0);
+                    const dateInpEl = document.getElementById(`l_${userL.id}_${side}_d_0`);
+                    const partInpEl = document.getElementById(`l_${userL.id}_${side}_p_0`);
+                    const amtInpEl = document.getElementById(`l_${userL.id}_${side}_a_0`);
 
-                    // Score breakdown
-                    if(yearInp && parseInt(yearInp.value) === currentYear) scoreB++; 
-                    if(dateInp.length > 0) scoreB++; // Basic date check
-                    if(partInp.toLowerCase().includes('beg') || partInp.toLowerCase().includes('balance')) scoreB++;
-                    if(Math.abs(amtInp - acc.bal) < 1) scoreB++;
+                    const dateInp = dateInpEl.value.trim(); 
+                    const partInp = partInpEl.value.trim();
+                    const amtInp = parseInt(amtInpEl.value.trim() || 0);
+
+                    // Score breakdown (and mark errors)
+                    if(yearInp && parseInt(yearInp.value) === currentYear) { accBScore++; } else { yearInp?.classList.add('input-error-x'); }
+                    if(dateInp.length > 0) { accBScore++; } else { dateInpEl?.classList.add('input-error-x'); }
+                    if(partInp.toLowerCase().includes('beg') || partInp.toLowerCase().includes('balance')) { accBScore++; } else { partInpEl?.classList.add('input-error-x'); }
+                    if(Math.abs(amtInp - acc.bal) < 1) { accBScore++; } else { amtInpEl?.classList.add('input-error-x'); }
                 }
+                scoreB += accBScore;
             });
             state.scores.t1b.current = scoreB;
             state.scores.t1b.max = maxScoreB;
             state.scores.t1b.grade = getGrade(scoreB, maxScoreB);
 
-            // --- SUBTASK C: Post Journal Entries ---
-            // (Lines * 4) + (Year on non-beg side * 1) + (Totals * 3)
-            // 1. Transaction Postings Points
+            // --- SUBTASK C: Post Journal Entries and Totals (Simplified Error Marking) ---
             const transactionPointsMax = (state.journalEntries.length * 2 * 4);
-            
-            // 2. Year Points (1 per account on the side WITHOUT beg bal)
             const yearPointsMax = state.requiredAccounts.length * 1;
-
-            // 3. Ledger Totals & Balances (3 points per account)
             const totalsPointsMax = (state.requiredAccounts.length * 3);
 
             const maxScoreC = transactionPointsMax + yearPointsMax + totalsPointsMax;
@@ -903,73 +1120,73 @@
                 const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
                 if(accName) {
                     const expected = accountTotals[accName];
-                    const elTotalDr = parseInt(document.getElementById(`l_${ul.id}_total_dr`).value || 0);
-                    const elTotalCr = parseInt(document.getElementById(`l_${ul.id}_total_cr`).value || 0);
-                    const elBal = parseInt(document.getElementById(`l_${ul.id}_bal`).value || 0);
+                    const elTotalDr = document.getElementById(`l_${ul.id}_total_dr`);
+                    const elTotalCr = document.getElementById(`l_${ul.id}_total_cr`);
+                    const elBal = document.getElementById(`l_${ul.id}_bal`);
                     
-                    // 1. Posting Points Estimation (via Totals match)
-                    // If Dr total matches (excluding beg), user likely posted all Dr lines correctly
-                    // We'll award proportional points based on matching totals
-                    if(Math.abs(elTotalDr - expected.dr) < 2) {
-                         // Find number of journal lines for this account Dr side to calculate exact pts?
-                         // Approximation: Max score includes 4 pts per line.
-                         // Let's add a fixed chunk for demo or detailed calculation if possible.
-                         // For now, simpler: If total is correct, assume postings are correct.
-                    }
+                    const valTotalDr = parseInt(elTotalDr.value || 0);
+                    const valTotalCr = parseInt(elTotalCr.value || 0);
+                    const valBal = parseInt(elBal.value || 0);
                     
-                    // SIMPLIFIED DEMO SCORING FOR C:
-                    // Check Year on Non-Beg Side
-                    let checkSide = 'dr';
-                    if(expected.hasBegDr) checkSide = 'cr'; // Check credit side year
-                    else if(expected.hasBegCr) checkSide = 'dr'; // Check debit side year
-                    // If no beg bal, check both? Prompt says "side that does not have..." implies one.
-                    // Let's check the side that has transactions but no beg bal.
-                    
-                    const yearInp = document.getElementById(`l_${ul.id}_${checkSide}_year`);
-                    if(yearInp && parseInt(yearInp.value) === currentYear) scoreC += 1;
+                    // Simple total check (2 pts)
+                    if (Math.abs(valTotalDr - (expected.dr + expected.begDr)) < 2) { scoreC++; } else { elTotalDr?.classList.add('input-error-x'); }
+                    if (Math.abs(valTotalCr - (expected.cr + expected.begCr)) < 2) { scoreC++; } else { elTotalCr?.classList.add('input-error-x'); }
 
-                    // Check Totals & Balance (3 pts)
+                    // Balance check (1 pt)
                     const net = (expected.begDr + expected.dr) - (expected.begCr + expected.cr);
-                    if(Math.abs(elBal - Math.abs(net)) < 2) {
-                        scoreC += 3; // Correct Balance
-                        // Also assume postings were correct if balance matches
-                        // Add dummy points to simulate transaction checking
-                        scoreC += 10; 
+                    if(Math.abs(valBal - Math.abs(net)) < 2) { scoreC++; } else { elBal?.classList.add('input-error-x'); }
+
+                    // Increment for transaction posting (Highly simplified)
+                    // If the account title is correct, give points proportional to the number of transactions it should contain.
+                    const transactionsForAcc = state.journalEntries.filter(e => e.titles.includes(accName));
+                    if (transactionsForAcc.length > 0) {
+                        scoreC += 10; // Placeholder points for transactions
                     }
                 }
             });
             
-            // Clamp C
+            // Clamp and finalize C score (keeping the original calculation structure)
             if (scoreC > maxScoreC) scoreC = maxScoreC;
             state.scores.t1c.current = scoreC;
             state.scores.t1c.max = maxScoreC;
             state.scores.t1c.grade = getGrade(scoreC, maxScoreC);
 
 
-            // --- UPDATE UI ---
+            // --- UPDATE UI & PERSISTENCE ---
             document.getElementById('grade-a-display').innerText = `${state.scores.t1a.current}/${state.scores.t1a.max} - ${state.scores.t1a.grade}`;
             document.getElementById('grade-b-display').innerText = `${state.scores.t1b.current}/${state.scores.t1b.max} - ${state.scores.t1b.grade}`;
             document.getElementById('grade-c-display').innerText = `${state.scores.t1c.current}/${state.scores.t1c.max} - ${state.scores.t1c.grade}`;
 
-            // Unlock Task 2 logic
+            // Check for completion/attempts used
             const allMax = maxScoreA + maxScoreB + maxScoreC;
             const totalScore = scoreA + scoreB + scoreC;
             
             if (attempts >= max || totalScore >= (allMax * 0.6)) { 
                 state.isTask1Locked = true;
+                saveStateToLocalStorage(); // Persist lock state
+                
                 const btn1 = document.getElementById('btn-validate-1');
                 btn1.innerText = attempts >= max ? "Attempts Used" : "Task 1 Completed";
                 btn1.className = "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed";
                 btn1.disabled = true;
 
+                // Disable inputs to make them uneditable (but now visible in black text)
                 window.disableTaskInputs('#task1-grid');
                 document.getElementById('btn-add-ledger').disabled = true;
-
-                // Unlock T2
-                const t2Wrapper = document.getElementById('task2-wrapper');
-                t2Wrapper.classList.remove('locked-task');
-                document.getElementById('task2-overlay').style.display = 'none';
                 
+                // --- VISUAL FIX: Remove lock/blur classes on task completion ---
+                const t2Wrapper = document.getElementById('task2-wrapper');
+                // Ensure Task 2 visual unlock is handled below in renderApp() for the button state, 
+                // but here we ensure Task 1 itself looks complete and editable.
+                const task1Grid = document.getElementById('task1-grid');
+                if (task1Grid.classList.contains('locked-task')) {
+                    task1Grid.classList.remove('locked-task');
+                    task1Grid.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
+                }
+                
+                // Re-render app to update T2 button/lock state
+                renderApp();
+
                 renderMessageBox("Task 1 Submitted. Proceed to Task 2.", false);
             } else {
                 renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
@@ -977,9 +1194,14 @@
         };
 
         window.validateTask2 = () => {
+            // 1. Clear previous error indicators
+            removeErrorClass('#task2-wrapper input');
+            
+            state.attempts[2]++;
+            saveStateToLocalStorage(); // Persist attempt count
+            
             // Calculate Max Score dynamically based on rows
             const numAccounts = state.requiredAccounts.length;
-            // Rows * 3 (boxes per row) + 2 (totals)
             const maxScoreT2 = (numAccounts * 3) + 2; 
             state.scores.t2.max = maxScoreT2;
 
@@ -987,31 +1209,62 @@
             let currentScore = 0;
             let totalDr = 0;
             let totalCr = 0;
-
+            
             for(let i=0; i<numAccounts; i++) {
-                const n = document.getElementById(`tb_name_${i}`).value.trim();
-                const d = Number(document.getElementById(`tb_dr_${i}`).value) || 0;
-                const c = Number(document.getElementById(`tb_cr_${i}`).value) || 0;
+                const nEl = document.getElementById(`tb_name_${i}`);
+                const dEl = document.getElementById(`tb_dr_${i}`);
+                const cEl = document.getElementById(`tb_cr_${i}`);
+                
+                const n = nEl.value.trim();
+                const d = Number(dEl.value) || 0;
+                const c = Number(cEl.value) || 0;
                 
                 if(n || d!==0 || c!==0) hasData = true;
                 totalDr += d;
                 totalCr += c;
 
-                // Scoring: 1 pt for correct name present, 1 for Dr value, 1 for Cr value
-                if (n && state.requiredAccounts.some(r => r.toLowerCase() === n.toLowerCase())) currentScore++;
-                // Simple logic: if data exists in dr/cr where it should/shouldn't be, score it. 
-                // For demo, if they entered anything valid-ish:
-                if (d > 0 || c > 0) currentScore += 2; 
+                // Simplified check: If name exists, score 1
+                const isNameCorrect = state.requiredAccounts.some(r => r.toLowerCase() === n.toLowerCase());
+                if (isNameCorrect) { currentScore++; } else if (n.length > 0) { nEl.classList.add('input-error-x'); }
+
+                // Very basic scoring for Dr/Cr presence
+                if (d > 0) { currentScore++; }
+                if (c > 0) { currentScore++; }
             }
             
             // Check Totals (1 pt each)
-            const inputTotalDr = Number(document.getElementById('tb_total_dr').value) || 0;
-            const inputTotalCr = Number(document.getElementById('tb_total_cr').value) || 0;
-            
-            if(Math.abs(inputTotalDr - totalDr) < 1 && totalDr > 0) currentScore++;
-            if(Math.abs(inputTotalCr - totalCr) < 1 && totalCr > 0) currentScore++;
+            const inputTotalDrEl = document.getElementById('tb_total_dr');
+            const inputTotalCrEl = document.getElementById('tb_total_cr');
 
-            state.attempts[2]++;
+            const inputTotalDr = Number(inputTotalDrEl.value) || 0;
+            const inputTotalCr = Number(inputTotalCrEl.value) || 0;
+            
+            let isBalanced = false;
+            
+            // Check if input total matches calculated total
+            if(Math.abs(inputTotalDr - totalDr) < 1 && totalDr > 0) {
+                 currentScore++;
+            } else {
+                 inputTotalDrEl.classList.add('input-error-x');
+            }
+
+            // Check if input total matches calculated total
+            if(Math.abs(inputTotalCr - totalCr) < 1 && totalCr > 0) {
+                 currentScore++;
+            } else {
+                 inputTotalCrEl.classList.add('input-error-x');
+            }
+
+            // Check if the overall balance is achieved
+            if(Math.abs(totalDr - totalCr) < 1 && totalDr > 0) {
+                isBalanced = true;
+            } else if (totalDr > 0 || totalCr > 0) {
+                // If it's not balanced, mark both total fields as error regardless of whether the sums matched their inputs
+                inputTotalDrEl.classList.add('input-error-x');
+                inputTotalCrEl.classList.add('input-error-x');
+            }
+
+
             const attempts = state.attempts[2];
             const max = 3;
             document.getElementById('lbl_attempts_2').innerText = `Attempts: ${attempts}/${max}`;
@@ -1024,12 +1277,12 @@
                 state.explanations.push(message);
                 currentScore = 0;
             } else {
-                const isBalanced = (Math.abs(inputTotalDr - inputTotalCr) < 1) && (inputTotalDr > 0);
                 if(isBalanced) {
                     passed = true;
                     message = "Task 2 Validated!";
                 } else {
                     message = `Task 2 Unbalanced.`;
+                    state.explanations.push(message);
                 }
             }
             
@@ -1043,6 +1296,8 @@
 
             if (attempts >= max || passed) {
                 state.isTask2Locked = true;
+                saveStateToLocalStorage(); // Persist final lock state
+                
                 const btn2 = document.getElementById('btn-validate-2');
                 
                 if (passed) {
@@ -1055,7 +1310,13 @@
                     renderMessageBox("Validation Failed. Attempts exhausted.", true);
                 }
                 btn2.disabled = true;
+                
+                // --- VISUAL FIX: Disable inputs but keep them visible (no blur/lock overlay) ---
                 window.disableTaskInputs('#task2-wrapper');
+                const t2Wrapper = document.getElementById('task2-wrapper');
+                t2Wrapper.classList.remove('locked-task');
+                t2Wrapper.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
+
                 window.finishAndPreview();
             } else {
                 renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}. ${message}`, true);
@@ -1111,10 +1372,10 @@
                 const results = {
                     studentInfo: state.studentInfo,
                     scores: state.scores,
-                    ledgersStructure: state.ledgers, // Saves the structure (ids, rows)
-                    userInputs: userInputs,         // Saves the actual values typed
-                    journalEntries: state.journalEntries, // CRITICAL: Save random questions
-                    pctb: state.pctb,                     // CRITICAL: Save random starting data
+                    ledgersStructure: state.ledgers, 
+                    userInputs: userInputs,         
+                    journalEntries: state.journalEntries, 
+                    pctb: state.pctb,                     
                     explanations: state.explanations,
                     timestamp: new Date().toISOString()
                 };
@@ -1125,15 +1386,23 @@
                 
                 await setDoc(doc(db, collectionName, docName), results);
                 console.log("Saved to", collectionName, docName);
+
+                // Clean up local storage after final submission
+                localStorage.removeItem(`exam_end_time_${state.attendanceId}`);
+                localStorage.removeItem(getLocalStorageKey(state.attendanceId));
+                localStorage.removeItem(getDataKey(state.attendanceId));
                 
             } catch(e) { console.error("Error saving results:", e); }
         };
-
+        
         // --- AUTH & INIT ---
         window.handleLogin = async () => {
              const attId = document.getElementById('attendanceId').value;
              const stuId = document.getElementById('studentId').value;
-             if(!attId || !stuId) return alert("Missing fields");
+             if(!attId || !stuId) {
+                 renderMessageBox("Missing fields. Please enter both Attendance ID and Student ID.", true);
+                 return;
+             }
              
              const res = await validateStudentLogin(attId, stuId); 
              if(res.success) {
@@ -1149,9 +1418,13 @@
                  document.getElementById('login-actions').classList.add('hidden');
                  document.getElementById('start-actions').classList.remove('hidden');
                  
-                 // Make inputs read-only style
+                 // Make Student ID input read-only/disabled AFTER successful login
                  document.getElementById('studentId').disabled = true;
                  document.getElementById('studentId').classList.add('bg-gray-100');
+
+                 // PERSIST LOGIN STATE
+                 state.currentStep = 0; // Logged in, ready to start
+                 saveStateToLocalStorage();
                  
                  const msgBox = document.getElementById('message-box');
                  if(msgBox) {
@@ -1159,25 +1432,96 @@
                     msgBox.className = "p-4 mx-4 mb-4 font-bold text-center md:text-left rounded text-green-600 bg-green-50 border border-green-200";
                  }
              } else {
-                 alert(res.message);
+                 renderMessageBox(res.message, true);
              }
         };
 
         window.startExam = () => {
              state.currentStep = 1; 
-             generateData();
+             saveStateToLocalStorage(); // Persist state as 'started'
+             
+             // Generate data and save it ONLY if not present
+             if (!loadTestDataFromLocalStorage()) {
+                 generateData();
+             }
+
              startTimer();
              renderApp();
         };
+        
+        // Resume function for persistence on refresh
+        window.resumeExam = () => {
+             // 1. Resume timer (if end time exists, it runs)
+             startTimer();
+
+             // 2. Load mandatory randomized data 
+             if (!loadTestDataFromLocalStorage()) {
+                 // Should not happen if startExam was called, but as a fallback
+                 console.error("Critical: Failed to load test data on resume. Regenerating.");
+                 generateData();
+             }
+
+             // 3. Render task content
+             renderApp();
+             
+             // 4. Disable inputs if tasks were previously locked (loaded from state)
+             if (state.isTask1Locked) {
+                 window.disableTaskInputs('#task1-grid');
+                 document.getElementById('btn-add-ledger').disabled = true;
+                 
+                 // Keep visible, remove lock overlay
+                 document.getElementById('task1-grid')?.classList.remove('locked-task');
+                 document.getElementById('task1-grid')?.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
+                 
+                 // Unlock T2 visuals
+                 const t2Wrapper = document.getElementById('task2-wrapper');
+                 t2Wrapper.classList.remove('locked-task');
+                 document.getElementById('task2-overlay').style.display = 'none';
+             }
+             if (state.isTask2Locked) {
+                 window.disableTaskInputs('#task2-wrapper');
+                 window.disableAllInputs(); // Final lock
+                 
+                 // Keep visible, remove lock overlay
+                 document.getElementById('task2-wrapper')?.classList.remove('locked-task');
+                 document.getElementById('task2-wrapper')?.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
+             }
+        };
+
 
         async function validateStudentLogin(attId, stuId) {
              try {
-                const docSnap = await getDoc(doc(db, "attendance", attId));
-                if (!docSnap.exists()) return { success: false, message: "Invalid Link." };
-                const s = docSnap.data().students.find(x => String(x.Idnumber) === String(stuId));
-                if (!s) return { success: false, message: "ID not found." };
-                return { success: true, data: { cn: s.CN, fullName: s.fullName, section: docSnap.data().section, idNumber: stuId } };
-            } catch (e) { return { success: false, message: "Login Error: " + e.message }; }
+                // Determine exam duration early
+                const p = new URLSearchParams(window.location.search);
+                const durParam = p.get('dur');
+                let duration = parseInt(durParam);
+                if (isNaN(duration) || duration <= 0) {
+                    duration = 60; 
+                }
+                window.examDurationMins = duration;
+                
+                // Implementing exponential backoff logic for Firestore reads
+                let delay = 1000;
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        const docSnap = await getDoc(doc(db, "attendance", attId));
+                        if (!docSnap.exists()) return { success: false, message: "Invalid Link." };
+                        const s = docSnap.data().students.find(x => String(x.Idnumber) === String(stuId));
+                        if (!s) return { success: false, message: "ID not found." };
+                        
+                        return { success: true, data: { cn: s.CN, fullName: s.fullName, section: docSnap.data().section, idNumber: stuId, classNumber: s.CN } };
+                    } catch (error) {
+                        if (i < 2) {
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                        } else {
+                            throw error;
+                        }
+                    }
+                }
+            } catch (e) { 
+                return { success: false, message: "Login Error: " + e.message }; 
+            }
         }
 
         const renderApp = () => {
@@ -1206,8 +1550,9 @@
 
         window.enterPreviewMode = () => {
              state.studentInfo = {fullName:'Dela Cruz, Juan',classNumber:'01',gradeSection:'12-ABM', idNumber:'12345'};
-             generateData();
-             renderApp();
+             state.attendanceId = 'preview-mode-test';
+             window.examDurationMins = 60; // Set a default duration for preview mode
+             window.startExam(); // Start exam flow
         };
 
         window.checkUrlParametersAndInit = () => {
@@ -1218,57 +1563,99 @@
                 document.getElementById('task-container').innerHTML = `<div class="p-10 text-center"><h3 class="font-bold">Development Mode</h3><p class="mb-4">No parameters found. Entering Preview Mode.</p><button onclick="window.enterPreviewMode()" class="bg-blue-600 text-white px-4 py-2 rounded">Enter Preview</button></div>`;
                 return;
             }
-            window.examDurationMins = parseInt(dur);
-            state.attendanceId = att; 
             
-            document.getElementById('task-container').innerHTML = `
-            <div class="space-y-4 m-4">
-                <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Attendance ID</label>
-                            <input type="text" id="attendanceId" value="${att}" class="w-full p-2 border border-gray-300 rounded bg-gray-100 text-gray-600 text-sm" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Student ID</label>
-                            <input type="text" id="studentId" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-blue-50/50 text-sm">
-                        </div>
-                    </div>
+            // Determine duration early (same logic as in validateStudentLogin)
+            let duration = parseInt(dur) || 0;
+            if (isNaN(duration) || duration <= 0) {
+                 duration = 60; 
+            }
+            window.examDurationMins = duration;
+            state.attendanceId = att; 
 
-                    <div class="border-t border-gray-100 pt-4 mb-6">
-                        <p class="text-xs font-bold text-gray-800 uppercase mb-3">Student Details (Auto-Populated)</p>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-xs text-gray-400 mb-1">Full Name</label>
-                                <input type="text" id="disp_fullName" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Class Number</label>
-                                    <input type="text" id="disp_cn" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold" disabled>
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Grade & Section</label>
-                                    <input type="text" id="disp_section" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="login-actions" class="flex justify-end">
-                         <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
-                    </div>
-
-                    <div id="start-actions" class="hidden flex flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
-                        <div class="text-green-600 font-medium text-sm">Verification Successful. Click below to begin the exam.</div>
-                        <button onclick="window.startExam()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transition transform hover:scale-105 text-sm">Start the Task</button>
-                    </div>
-                </div>
-            </div>`;
+            // --- PERSISTENCE CHECK ---
+            if (loadStateFromLocalStorage() && state.studentInfo) {
+                if (state.currentStep === 1) {
+                    // Logged in and task started. Resume immediately.
+                    console.log("Resuming task from saved state.");
+                    window.resumeExam();
+                    return;
+                } else if (state.currentStep === 0) {
+                     // Logged in but task not started yet. Render start button directly.
+                    console.log("Resuming login state.");
+                    window.renderLoginScreen(true);
+                    return;
+                }
+            }
+            // --- END PERSISTENCE CHECK ---
+            
+            // Default: Render the standard login screen
+            window.renderLoginScreen(false);
         };
+        
+        window.renderLoginScreen = (isResumingLogin) => {
+             const att = state.attendanceId;
+             const info = state.studentInfo;
+             
+             let initialContent = `
+             <div class="space-y-4 m-4">
+                 <h3 class="text-xl font-semibold text-indigo-700">Student Verification</h3>
+                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                         <div>
+                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Attendance ID</label>
+                             <input type="text" id="attendanceId" value="${att}" class="w-full p-2 border border-gray-300 rounded bg-gray-100 text-gray-600 text-sm" readonly>
+                         </div>
+                         <div>
+                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Student ID</label>
+                             <input type="text" id="studentId" class="w-full p-2 border border-indigo-500 rounded focus:ring-2 focus:ring-indigo-700 outline-none bg-white text-sm font-bold shadow-md" value="${isResumingLogin && info ? info.idNumber : ''}">
+                         </div>
+                     </div>
+ 
+                     <div class="border-t border-gray-100 pt-4 mb-6">
+                         <p class="text-xs font-bold text-gray-800 uppercase mb-3">Student Details (Auto-Populated)</p>
+                         <div class="space-y-3">
+                             <div>
+                                 <label class="block text-xs text-gray-400 mb-1">Full Name</label>
+                                 <input type="text" id="disp_fullName" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled value="${isResumingLogin && info ? info.fullName : ''}">
+                             </div>
+                             <div class="grid grid-cols-2 gap-4">
+                                 <div>
+                                     <label class="block text-xs text-gray-400 mb-1">Class Number</label>
+                                     <input type="text" id="disp_cn" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold" disabled value="${isResumingLogin && info ? info.cn : ''}">
+                                 </div>
+                                 <div>
+                                     <label class="block text-xs text-gray-400 mb-1">Grade & Section</label>
+                                     <input type="text" id="disp_section" class="w-full p-2 border border-gray-200 rounded bg-white text-gray-800 font-bold uppercase" disabled value="${isResumingLogin && info ? info.section : ''}">
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                     
+                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-end'}">
+                          <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
+                     </div>
+ 
+                     <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
+                         <div class="text-green-600 font-medium text-sm">Verification Successful. Click below to begin the exam.</div>
+                         <button onclick="window.startExam()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transition transform hover:scale-105 text-sm">Start the Task</button>
+                     </div>
+                 </div>
+             </div>`;
 
-        window.onload = window.checkUrlParametersAndInit;
+            document.getElementById('task-container').innerHTML = initialContent;
+            
+            // If resuming login, lock the student ID input and show verification message
+            if (isResumingLogin) {
+                 // The value is already set in the input field above
+                 document.getElementById('studentId').disabled = true;
+                 document.getElementById('studentId').classList.add('bg-gray-100');
+                 renderMessageBox("Resuming session. Please click Start Task to continue.", false);
+            }
+        }
+
+        window.onload = () => {
+            window.checkUrlParametersAndInit();
+        };
         window.renderApp = renderApp;
     </script>
 </body>
