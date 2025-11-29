@@ -234,7 +234,7 @@
                 Enter amounts without commas and decimal places. <br>
                 Round off centavos to the nearest peso. <br>
                 After validating each task, proceed to the next. <br>
-                Version 2025.11.22 210210 LIVE
+                Version 2025.11.22 210605 LIVE
             </p>
         </footer>
 
@@ -519,167 +519,198 @@
             const attempts2 = state.attempts[2];
             const max = 3;
 
-            // --- TASK 1 SECTION ---
-            const task1ContentHTML = `
-                <div class="h-full">
-                    <div class="sticky-section-header" id="header-task1">
-                        <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2">
-                            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">Task 1</span>
-                            Posting to General Ledger
-                        </h3>
-                        <div class="flex items-center space-x-2">
-                            <span id="lbl_attempts_1" class="text-xs text-gray-800 font-bold">Attempts: ${attempts1}/${max}</span>
-                            <button onclick="window.toggleRubric('task1-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
-                            <button id="btn-validate-1" onclick="window.validateTask1()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition no-print">Validate Task 1</button>
-                        </div>
-                    </div>
-                    
-                    <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task1-instructions-panel">
-                        <!-- Instructions -->
-                        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
-                            <h4 class="font-bold mb-2 text-gray-800">Instruction:</h4>
-                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
-                                <li>Complete all required fields.</li>
-                                <li>Enter amounts without commas and decimal places.</li>
-                                <li>Round off centavos to the nearest peso.</li>
-                                <li>
-                                    <span class="font-bold">Format Dates carefully:</span>
-                                    <ul class="list-none pl-4 text-xs text-gray-600 mt-1 space-y-1">
-                                        <li>Row 1 (Year): <span class="font-mono font-bold text-indigo-600">YYYY</span> (e.g., ${new Date().getFullYear()})</li>
-                                        <li>Row 2 (Beg. Bal): <span class="font-mono font-bold text-indigo-600">MMM dd</span> (e.g., Jan 01)</li>
-                                        <li>Row 3+ (Transactions): <span class="font-mono font-bold text-indigo-600">dd</span> (e.g., 05)</li>
-                                    </ul>
-                                </li>
-                                <li>Validate each task to unlock the next one.</li>
+            // --- INSTRUCTIONS & RUBRIC (TASK 1) ---
+            const instructionsAndRubricHTML = `
+            <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task1-instructions-panel">
+                <!-- Instructions -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
+                    <h4 class="font-bold mb-2 text-gray-800">Instruction:</h4>
+                    <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                        <li>Complete all required fields.</li>
+                        <li>Enter amounts without commas and decimal places.</li>
+                        <li>Round off centavos to the nearest peso.</li>
+                        <li>
+                            <span class="font-bold">Format Dates carefully:</span>
+                            <ul class="list-none pl-4 text-xs text-gray-600 mt-1 space-y-1">
+                                <li>Row 1 (Year): <span class="font-mono font-bold text-indigo-600">YYYY</span> (e.g., 2023)</li>
+                                <li>Row 2 (Beg. Bal): <span class="font-mono font-bold text-indigo-600">MMM dd</span> (e.g., Jan 01)</li>
+                                <li>Row 3+ (Transactions): <span class="font-mono font-bold text-indigo-600">dd</span> (e.g., 05)</li>
                             </ul>
-                        </div>
+                        </li>
+                        <li>Validate each task to unlock the next one.</li>
+                    </ul>
+                </div>
 
-                        <!-- Rubric -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-xs">
-                            <div class="bg-indigo-50 p-3 flex justify-between items-center border-b border-indigo-100">
-                                <h4 class="font-bold text-indigo-900 uppercase tracking-wider">TASK 1: POSTING TO THE LEDGER</h4>
-                                <div class="font-mono text-sm text-indigo-900 font-bold">
-                                    A = <span id="grade-a-display">${state.scores.t1a.current}/${state.scores.t1a.max || '-'} - ${state.scores.t1a.grade}</span> / 
-                                    B = <span id="grade-b-display">${state.scores.t1b.current}/${state.scores.t1b.max || '-'} - ${state.scores.t1b.grade}</span> / 
-                                    C = <span id="grade-c-display">${state.scores.t1c.current}/${state.scores.t1c.max || '-'} - ${state.scores.t1c.grade}</span>
-                                </div>
-                            </div>
-                            <!-- Detailed Rubric Table (Task 1) -->
-                            <div class="grid grid-cols-5 text-center text-white font-bold leading-tight">
-                                <div class="bg-slate-900 p-2 flex items-center justify-center">Competency</div>
-                                <div class="bg-green-600 p-2 flex items-center justify-center">Advanced (A)</div>
-                                <div class="bg-blue-600 p-2 flex items-center justify-center">Proficient (P)</div>
-                                <div class="bg-amber-600 p-2 flex items-center justify-center">Developing (D)</div>
-                                <div class="bg-red-600 p-2 flex items-center justify-center">Intervention Required (IR)</div>
-                            </div>
-                            <div class="grid grid-cols-5 text-center min-h-[70px] divide-x divide-gray-100 border-t border-gray-200">
-                                <div class="p-3 text-left text-gray-700 italic flex items-center bg-gray-50 text-[10px]">
-                                    To accurately post journal entries to the appropriate General Ledger (T-Accounts) and calculate the correct running balance for each account.
-                                </div>
-                                <div class="p-2 text-green-700 flex items-center justify-center font-medium bg-green-50/50">Excellent performance. (95-100%)</div>
-                                <div class="p-2 text-blue-700 flex items-center justify-center font-medium bg-blue-50/50">Good performance. (85-94.9%)</div>
-                                <div class="p-2 text-amber-700 flex items-center justify-center font-medium bg-amber-50/50">Acceptable performance. (75-84.9%)</div>
-                                <div class="p-2 text-red-700 flex items-center justify-center font-medium bg-red-50/50">Unacceptable performance. (<75%)</div>
-                            </div>
+                <!-- Rubric -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-xs">
+                    <div class="bg-indigo-50 p-3 flex justify-between items-center border-b border-indigo-100">
+                        <h4 class="font-bold text-indigo-900 uppercase tracking-wider">TASK 1: POSTING TO THE LEDGER</h4>
+                        <div class="font-mono text-sm text-indigo-900 font-bold">
+                            A = <span id="grade-a-display">${state.scores.t1a.current}/${state.scores.t1a.max || '-'} - ${state.scores.t1a.grade}</span> / 
+                            B = <span id="grade-b-display">${state.scores.t1b.current}/${state.scores.t1b.max || '-'} - ${state.scores.t1b.grade}</span> / 
+                            C = <span id="grade-c-display">${state.scores.t1c.current}/${state.scores.t1c.max || '-'} - ${state.scores.t1c.grade}</span>
                         </div>
                     </div>
-
-                    <div id="task1-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 split-panel mb-4 relative">
-                        <!-- Journal -->
-                        <div class="bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
-                            <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
-                                <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
-                            </div>
-                            <div class="overflow-y-auto flex-1 bg-white">
-                                <table class="w-full text-sm border-collapse">
-                                    <thead class="bg-gray-50 sticky top-0 z-10 text-xs uppercase text-gray-500 font-bold">
-                                        <tr>
-                                            <th class="p-2 text-right w-16">Date</th>
-                                            <th class="p-2 text-left">Particulars</th>
-                                            <th class="p-2 text-center w-10">PR</th>
-                                            <th class="p-2 text-right w-20">Debit</th>
-                                            <th class="p-2 text-right w-20">Credit</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100">
-                                        ${state.journalEntries.map((e, index) => {
-                                            let dateHTML = index === 0 
-                                                ? `<div class="text-[10px] font-bold text-gray-500 leading-tight mb-1">${e.year}</div><div>${e.month} ${e.day}</div>`
-                                                : `<div>${e.day}</div>`;
-                                            
-                                            const partHTML = `
-                                                <div class="font-bold text-gray-800 journal-line">${e.titles[0]}</div>
-                                                <div class="text-gray-800 journal-line pl-8">${e.titles[1]}</div>
-                                                <div class="text-xs italic text-gray-400 journal-line pl-4">${e.desc}</div>
-                                            `;
-
-                                            const prHTML = `
-                                                <div class="journal-line justify-center"><div class="pr-box" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div></div>
-                                                <div class="journal-line justify-center"><div class="pr-box" onclick="window.togglePR(this, 'j_${e.id}_1')" title="Post Credit"></div></div>
-                                                <div class="journal-line"></div>
-                                            `;
-
-                                            const drHTML = `
-                                                <div class="font-bold text-gray-700 journal-line text-right">${formatMoney(e.drs[0])}</div>
-                                                <div class="journal-line"></div>
-                                                <div class="journal-line"></div>
-                                            `;
-
-                                            const crHTML = `
-                                                <div class="journal-line"></div>
-                                                <div class="text-gray-700 journal-line text-right">${formatMoney(e.crs[1])}</div>
-                                                <div class="journal-line"></div>
-                                            `;
-
-                                            return `
-                                            <tr class="journal-row hover:bg-blue-50/50 transition-colors group">
-                                                <td class="text-xs font-bold text-gray-600 text-right pr-2 w-16 align-top pt-3">
-                                                    ${dateHTML}
-                                                </td>
-                                                <td class="align-top">
-                                                    ${partHTML}
-                                                </td>
-                                                <td class="align-top w-10">
-                                                    ${prHTML}
-                                                </td>
-                                                <td class="align-top w-20">
-                                                    ${drHTML}
-                                                </td>
-                                                <td class="align-top w-20">
-                                                    ${crHTML}
-                                                </td>
-                                            </tr>`;
-                                        }).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
+                    <!-- Detailed Rubric Table (Task 1) -->
+                    <div class="grid grid-cols-5 text-center text-white font-bold leading-tight">
+                        <div class="bg-slate-900 p-2 flex items-center justify-center">Competency</div>
+                        <div class="bg-green-600 p-2 flex items-center justify-center">Advanced (A)</div>
+                        <div class="bg-blue-600 p-2 flex items-center justify-center">Proficient (P)</div>
+                        <div class="bg-amber-600 p-2 flex items-center justify-center">Developing (D)</div>
+                        <div class="bg-red-600 p-2 flex items-center justify-center">Intervention Required (IR)</div>
+                    </div>
+                    <div class="grid grid-cols-5 text-center min-h-[70px] divide-x divide-gray-100 border-t border-gray-200">
+                        <div class="p-3 text-left text-gray-700 italic flex items-center bg-gray-50 text-[10px]">
+                            To accurately post journal entries to the appropriate General Ledger (T-Accounts) and calculate the correct running balance for each account.
                         </div>
+                        <div class="p-2 text-green-700 flex items-center justify-center font-medium bg-green-50/50">Excellent performance. (95-100%)</div>
+                        <div class="p-2 text-blue-700 flex items-center justify-center font-medium bg-blue-50/50">Good performance. (85-94.9%)</div>
+                        <div class="p-2 text-amber-700 flex items-center justify-center font-medium bg-amber-50/50">Acceptable performance. (75-84.9%)</div>
+                        <div class="p-2 text-red-700 flex items-center justify-center font-medium bg-red-50/50">Unacceptable performance. (<75%)</div>
+                    </div>
+                </div>
+            </div>`;
 
-                        <!-- Ledgers -->
-                        <div class="h-full overflow-hidden flex flex-col bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
-                            <div class="flex-none p-2 bg-white border-b">
-                                <div class="flex justify-between items-center pb-2">
-                                    <h4 class="font-bold text-xs uppercase tracking-wide">Beginning Balances</h4>
-                                    <button id="btn-add-ledger" onclick="window.addLedger()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded shadow">Add Ledger</button>
-                                </div>
-                                <div class="flex flex-wrap gap-2 pt-1 max-h-32 overflow-y-auto">
-                                    ${state.pctb.map(a => `
-                                        <div class="pctb-tag hover:border-blue-300 hover:shadow-md transition cursor-default">
-                                            <span class="font-bold text-gray-800">${a.name}</span>
-                                            <span class="text-gray-500">Beg: ${formatMoney(a.bal)} ${a.side}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="flex-none p-2 bg-indigo-50 border-t border-b border-indigo-100 font-bold text-indigo-900 text-sm">General Ledger Forms</div>
-                            <div id="ledger-container" class="scroll-panel p-4 pb-20">
-                                ${state.ledgers.map(l => createLedgerHTML(l)).join('')}
-                            </div>
+            // --- INSTRUCTIONS & RUBRIC (TASK 2) ---
+            const task2InstructionsAndRubricHTML = `
+            <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task2-instructions-panel">
+                <!-- Instructions -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
+                    <h4 class="font-bold mb-2 text-gray-800">Task 2 Instruction:</h4>
+                    <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                        <li>Prepare the Trial Balance based on the balances from the General Ledger.</li>
+                        <li>Ensure the header (Company Name, Title, Date) is correct.</li>
+                        <li>List all accounts with their Debit or Credit balances.</li>
+                        <li>Compute the total Debit and Credit columns.</li>
+                        <li>Ensure Total Debits equal Total Credits.</li>
+                    </ul>
+                </div>
+
+                <!-- Rubric -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-xs">
+                    <div class="bg-indigo-50 p-3 flex justify-between items-center border-b border-indigo-100">
+                        <h4 class="font-bold text-indigo-900 uppercase tracking-wider">TASK 2: PREPARING THE TRIAL BALANCE</h4>
+                        <div class="font-bold text-indigo-900 bg-white px-3 py-1 rounded border border-indigo-200 shadow-sm">
+                            Score: <span id="t2-score">0/${state.scores.t2.max || '-'}</span> <span class="mx-1 text-gray-300">|</span> Grade: <span id="t2-grade" class="text-red-600">--</span>
                         </div>
                     </div>
-                </div>`;
-            
-            // --- TASK 2 SECTION ---
+                    <!-- Detailed Rubric Table (Task 2) -->
+                    <div class="grid grid-cols-5 text-center text-white font-bold leading-tight">
+                        <div class="bg-slate-900 p-2 flex items-center justify-center">Competency</div>
+                        <div class="bg-green-600 p-2 flex items-center justify-center">Advanced (A)</div>
+                        <div class="bg-blue-600 p-2 flex items-center justify-center">Proficient (P)</div>
+                        <div class="bg-amber-600 p-2 flex items-center justify-center">Developing (D)</div>
+                        <div class="bg-red-600 p-2 flex items-center justify-center">Intervention Required (IR)</div>
+                    </div>
+                    <div class="grid grid-cols-5 text-center min-h-[70px] divide-x divide-gray-100 border-t border-gray-200">
+                        <div class="p-3 text-left text-gray-700 italic flex items-center bg-gray-50 text-[10px]">
+                            To accurately prepare a Trial Balance by listing all accounts with their correct debit or credit balances and ensuring total debits equal total credits.
+                        </div>
+                        <div class="p-2 text-green-700 flex items-center justify-center font-medium bg-green-50/50">Excellent performance. Accurate entries and balanced totals. (95-100%)</div>
+                        <div class="p-2 text-blue-700 flex items-center justify-center font-medium bg-blue-50/50">Good performance. Mostly accurate with minor errors. (85-94.9%)</div>
+                        <div class="p-2 text-amber-700 flex items-center justify-center font-medium bg-amber-50/50">Acceptable performance. Several errors in entries or totals. (75-84.9%)</div>
+                        <div class="p-2 text-red-700 flex items-center justify-center font-medium bg-red-50/50">Unacceptable performance. Unbalanced or significant errors. (<75%)</div>
+                    </div>
+                </div>
+            </div>`;
+
+
+            const journalRows = state.journalEntries.map((e, index) => {
+                let dateHTML = "";
+                if (index === 0) {
+                     dateHTML = `<div class="text-[10px] font-bold text-gray-500 leading-tight mb-1">${e.year}</div>`;
+                     dateHTML += `<div>${e.month} ${e.day}</div>`;
+                } else {
+                     dateHTML = `<div>${e.day}</div>`;
+                }
+                
+                const partHTML = `
+                    <div class="font-bold text-gray-800 journal-line">${e.titles[0]}</div>
+                    <div class="text-gray-800 journal-line pl-8">${e.titles[1]}</div>
+                    <div class="text-xs italic text-gray-400 journal-line pl-4">${e.desc}</div>
+                `;
+
+                const prHTML = `
+                    <div class="journal-line justify-center"><div class="pr-box" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div></div>
+                    <div class="journal-line justify-center"><div class="pr-box" onclick="window.togglePR(this, 'j_${e.id}_1')" title="Post Credit"></div></div>
+                    <div class="journal-line"></div>
+                `;
+
+                const drHTML = `
+                    <div class="font-bold text-gray-700 journal-line text-right">${formatMoney(e.drs[0])}</div>
+                    <div class="journal-line"></div>
+                    <div class="journal-line"></div>
+                `;
+
+                const crHTML = `
+                    <div class="journal-line"></div>
+                    <div class="text-gray-700 journal-line text-right">${formatMoney(e.crs[1])}</div>
+                    <div class="journal-line"></div>
+                `;
+
+                return `
+                <tr class="journal-row hover:bg-blue-50/50 transition-colors group">
+                    <td class="text-xs font-bold text-gray-600 text-right pr-2 w-16 align-top pt-3">
+                        ${dateHTML}
+                    </td>
+                    <td class="align-top">
+                        ${partHTML}
+                    </td>
+                    <td class="align-top w-10">
+                        ${prHTML}
+                    </td>
+                    <td class="align-top w-20">
+                        ${drHTML}
+                    </td>
+                    <td class="align-top w-20">
+                        ${crHTML}
+                    </td>
+                </tr>`;
+            }).join('');
+
+            const journalHTML = `
+            <div class="bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
+                <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
+                     <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
+                </div>
+                <div class="overflow-y-auto flex-1 bg-white">
+                    <table class="w-full text-sm border-collapse">
+                        <thead class="bg-gray-50 sticky top-0 z-10 text-xs uppercase text-gray-500 font-bold">
+                            <tr>
+                                <th class="p-2 text-right w-16">Date</th>
+                                <th class="p-2 text-left">Particulars</th>
+                                <th class="p-2 text-center w-10">PR</th>
+                                <th class="p-2 text-right w-20">Debit</th>
+                                <th class="p-2 text-right w-20">Credit</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">${journalRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+
+            const pctbTags = state.pctb.map(a => `
+                <div class="pctb-tag hover:border-blue-300 hover:shadow-md transition cursor-default">
+                    <span class="font-bold text-gray-800">${a.name}</span>
+                    <span class="text-gray-500">Beg: ${formatMoney(a.bal)} ${a.side}</span>
+                </div>
+            `).join('');
+
+            const ledgersHTML = state.ledgers.map(l => createLedgerHTML(l)).join('');
+            const rightHTML = `
+            <div class="h-full overflow-hidden flex flex-col bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
+                <div class="flex-none p-2 bg-white border-b">
+                    <div class="flex justify-between items-center pb-2">
+                         <h4 class="font-bold text-xs uppercase tracking-wide">Beginning Balances</h4>
+                         <button id="btn-add-ledger" onclick="window.addLedger()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded shadow">Add Ledger</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 pt-1 max-h-32 overflow-y-auto">${pctbTags}</div>
+                </div>
+                <div class="flex-none p-2 bg-indigo-50 border-t border-b border-indigo-100 font-bold text-indigo-900 text-sm">General Ledger Forms</div>
+                <div id="ledger-container" class="scroll-panel p-4 pb-20">${ledgersHTML}</div>
+            </div>`;
+
+            // --- TASK 2 GENERATION ---
             const tbRows = state.requiredAccounts.map((acc, i) => `
                 <tr class="hover:bg-gray-50">
                     <td class="p-1 border bg-white"><input id="tb_name_${i}" class="text-input text-left font-medium" placeholder="Select or Type Account..."></td>
@@ -688,113 +719,85 @@
                 </tr>
             `).join('');
 
-            const task2ContentHTML = `
-                <div class="h-full">
-                    <div class="sticky-section-header" id="header-task2">
-                         <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2">
-                            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">Task 2</span>
-                            Preparing the Trial Balance
-                        </h3>
-                        <div class="flex items-center space-x-2">
-                             <span id="lbl_attempts_2" class="text-xs text-gray-800 font-bold">Attempts: ${attempts2}/${max}</span>
-                             <button onclick="window.toggleRubric('task2-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
-                             <button id="btn-validate-2" onclick="window.validateTask2()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition no-print">Validate Task 2</button>
-                        </div>
+            const task2Content = `
+            <div class="p-6 bg-gray-50 rounded shadow-inner border border-gray-200">
+                <div class="bg-white p-6 border rounded shadow-sm max-w-4xl mx-auto">
+                    <!-- Centered Header -->
+                    <div class="text-center font-bold mb-6 text-gray-800">
+                        <div class="text-2xl uppercase tracking-wide border-b-2 border-transparent inline-block pb-1">${document.getElementById('company-name').innerText}</div>
+                        <div class="text-xl text-indigo-700 mt-1">Trial Balance</div>
+                        <div class="text-md text-gray-500 mt-1 font-medium">December 31, ${new Date().getFullYear()}</div>
                     </div>
-
-                    <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task2-instructions-panel">
-                        <!-- Instructions -->
-                        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
-                            <h4 class="font-bold mb-2 text-gray-800">Task 2 Instruction:</h4>
-                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
-                                <li>Prepare the Trial Balance based on the balances from the General Ledger.</li>
-                                <li>Ensure the header (Company Name, Title, Date) is correct.</li>
-                                <li>List all accounts with their Debit or Credit balances.</li>
-                                <li>Compute the total Debit and Credit columns.</li>
-                                <li>Ensure Total Debits equal Total Credits.</li>
-                            </ul>
-                        </div>
-
-                        <!-- Rubric -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-xs">
-                            <div class="bg-indigo-50 p-3 flex justify-between items-center border-b border-indigo-100">
-                                <h4 class="font-bold text-indigo-900 uppercase tracking-wider">TASK 2: PREPARING THE TRIAL BALANCE</h4>
-                                <div class="font-bold text-indigo-900 bg-white px-3 py-1 rounded border border-indigo-200 shadow-sm">
-                                    Score: <span id="t2-score">0/${state.scores.t2.max || '-'}</span> <span class="mx-1 text-gray-300">|</span> Grade: <span id="t2-grade" class="text-red-600">--</span>
-                                </div>
-                            </div>
-                            <!-- Detailed Rubric Table (Task 2) -->
-                            <div class="grid grid-cols-5 text-center text-white font-bold leading-tight">
-                                <div class="bg-slate-900 p-2 flex items-center justify-center">Competency</div>
-                                <div class="bg-green-600 p-2 flex items-center justify-center">Advanced (A)</div>
-                                <div class="bg-blue-600 p-2 flex items-center justify-center">Proficient (P)</div>
-                                <div class="bg-amber-600 p-2 flex items-center justify-center">Developing (D)</div>
-                                <div class="bg-red-600 p-2 flex items-center justify-center">Intervention Required (IR)</div>
-                            </div>
-                            <div class="grid grid-cols-5 text-center min-h-[70px] divide-x divide-gray-100 border-t border-gray-200">
-                                <div class="p-3 text-left text-gray-700 italic flex items-center bg-gray-50 text-[10px]">
-                                    To accurately prepare a Trial Balance by listing all accounts with their correct debit or credit balances and ensuring total debits equal total credits.
-                                </div>
-                                <div class="p-2 text-green-700 flex items-center justify-center font-medium bg-green-50/50">Excellent performance. Accurate entries and balanced totals. (95-100%)</div>
-                                <div class="p-2 text-blue-700 flex items-center justify-center font-medium bg-blue-50/50">Good performance. Mostly accurate with minor errors. (85-94.9%)</div>
-                                <div class="p-2 text-amber-700 flex items-center justify-center font-medium bg-amber-50/50">Acceptable performance. Several errors in entries or totals. (75-84.9%)</div>
-                                <div class="p-2 text-red-700 flex items-center justify-center font-medium bg-red-50/50">Unacceptable performance. Unbalanced or significant errors. (<75%)</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="task2-wrapper" class="relative locked-task transition-all duration-500 mx-4">
-                        <div class="blur-content">
-                            <div class="p-6 bg-gray-50 rounded shadow-inner border border-gray-200">
-                                <div class="bg-white p-6 border rounded shadow-sm max-w-4xl mx-auto">
-                                    <!-- Centered Header -->
-                                    <div class="text-center font-bold mb-6 text-gray-800">
-                                        <div class="text-2xl uppercase tracking-wide border-b-2 border-transparent inline-block pb-1">${document.getElementById('company-name').innerText}</div>
-                                        <div class="text-xl text-indigo-700 mt-1">Trial Balance</div>
-                                        <div class="text-md text-gray-500 mt-1 font-medium">December 31, ${new Date().getFullYear()}</div>
-                                    </div>
-                                    
-                                    <!-- 3 Column Table -->
-                                    <table class="w-full text-sm border-collapse border border-gray-300 shadow-sm">
-                                        <thead>
-                                            <tr class="bg-indigo-600 text-white uppercase text-xs tracking-wider">
-                                                <th class="border border-indigo-700 p-3 w-1/2 text-left">Account Titles</th>
-                                                <th class="border border-indigo-700 p-3 w-1/4">Debit</th>
-                                                <th class="border border-indigo-700 p-3 w-1/4">Credit</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-200">${tbRows}
-                                            <tr class="font-bold bg-indigo-50 border-t-2 border-indigo-300">
-                                                <td class="text-right p-3 text-indigo-900 uppercase tracking-widest text-xs">Total:</td>
-                                                <td class="p-2 border border-indigo-200"><input type="number" id="tb_total_dr" class="table-input font-bold text-indigo-700 bg-transparent border-none text-base"></td>
-                                                <td class="p-2 border border-indigo-200"><input type="number" id="tb_total_cr" class="table-input font-bold text-indigo-700 bg-transparent border-none text-base"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="task2-overlay" class="lock-overlay">
-                            <div class="lock-message">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                                <p>Task 2 is Locked</p>
-                                <p class="text-xs font-normal mt-1">Complete Task 1 or consume all attempts to unlock.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-
-            // --- COMBINING THEM INTO ONE PAGE (Responsive Layout) ---
-            return `
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <!-- Task 1 Column (Left on Desktop) -->
-                <div class="xl:col-span-1 min-h-[600px] flex flex-col">
-                    ${task1ContentHTML}
+                    
+                    <!-- 3 Column Table -->
+                    <table class="w-full text-sm border-collapse border border-gray-300 shadow-sm">
+                        <thead>
+                            <tr class="bg-indigo-600 text-white uppercase text-xs tracking-wider">
+                                <th class="border border-indigo-700 p-3 w-1/2 text-left">Account Titles</th>
+                                <th class="border border-indigo-700 p-3 w-1/4">Debit</th>
+                                <th class="border border-indigo-700 p-3 w-1/4">Credit</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">${tbRows}
+                            <tr class="font-bold bg-indigo-50 border-t-2 border-indigo-300">
+                                <td class="text-right p-3 text-indigo-900 uppercase tracking-widest text-xs">Total:</td>
+                                <td class="p-2 border border-indigo-200"><input type="number" id="tb_total_dr" class="table-input font-bold text-indigo-700 bg-transparent border-none text-base"></td>
+                                <td class="p-2 border border-indigo-200"><input type="number" id="tb_total_cr" class="table-input font-bold text-indigo-700 bg-transparent border-none text-base"></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+            </div>`;
 
-                <!-- Task 2 Column (Right on Desktop) -->
-                <div class="xl:col-span-1 min-h-[600px] flex flex-col">
-                    ${task2ContentHTML}
+            // --- COMBINING THEM INTO ONE PAGE ---
+            return `
+            <!-- TASK 1 SECTION -->
+            <div class="sticky-section-header" id="header-task1">
+                <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2">
+                    <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">Task 1</span>
+                    Posting to General Ledger
+                </h3>
+                <div class="flex items-center space-x-2">
+                     <span id="lbl_attempts_1" class="text-xs text-gray-800 font-bold">Attempts: ${attempts1}/${max}</span>
+                     <button onclick="window.toggleRubric('task1-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
+                     <button id="btn-validate-1" onclick="window.validateTask1()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition no-print">Validate Task 1</button>
+                </div>
+            </div>
+            
+            ${instructionsAndRubricHTML}
+
+            <div id="task1-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 split-panel mb-20 relative">
+                ${journalHTML}
+                ${rightHTML}
+            </div>
+            
+            <div class="page-break"></div>
+
+            <!-- TASK 2 SECTION -->
+            <div class="sticky-section-header" id="header-task2">
+                 <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2">
+                    <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">Task 2</span>
+                    Preparing the Trial Balance
+                </h3>
+                <div class="flex items-center space-x-2">
+                     <span id="lbl_attempts_2" class="text-xs text-gray-800 font-bold">Attempts: ${attempts2}/${max}</span>
+                     <button onclick="window.toggleRubric('task2-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
+                     <button id="btn-validate-2" onclick="window.validateTask2()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition no-print">Validate Task 2</button>
+                </div>
+            </div>
+
+            ${task2InstructionsAndRubricHTML}
+
+            <div id="task2-wrapper" class="relative locked-task transition-all duration-500">
+                <div class="blur-content">
+                    ${task2Content}
+                </div>
+                <div id="task2-overlay" class="lock-overlay">
+                    <div class="lock-message">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                        <p>Task 2 is Locked</p>
+                        <p class="text-xs font-normal mt-1">Complete Task 1 or consume all attempts to unlock.</p>
+                    </div>
                 </div>
             </div>
             `;
