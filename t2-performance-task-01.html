@@ -263,7 +263,8 @@
         <!-- Footer -->
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
-                <strong>Version 2025.11.29 212220:</strong>
+                <!-- Static Version Number based on current revision -->
+                <strong>Version 2025.11.29 193200:</strong>
             </p>
         </footer>
 
@@ -350,7 +351,7 @@
             }
         };
 
-        // --- FIX: Adopted robust timer logic from the reference file ---
+        // --- Timer Logic ---
         function updateTimerDisplay() {
             if (!state.attendanceId) return; 
             const displayElement = document.getElementById('countdown');
@@ -420,7 +421,7 @@
             updateTimerDisplay(); // Initial call
             timerInterval = setInterval(updateTimerDisplay, 1000);
         }
-        // --- END FIX: Adopted robust timer logic ---
+        // --- End Timer Logic ---
 
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const formatMoney = (n) => 'P' + n.toLocaleString('en-US');
@@ -1220,25 +1221,7 @@
             } catch(e) { console.error("Error saving results:", e); }
         };
         
-        // Function to update the footer dynamically
-        /*function updateFooterVersion() {
-            const now = new Date();
-            const pad = (n) => String(n).padStart(2, '0');
-            
-            // Format: YYYY.MM.DD HHMMSS
-            const year = now.getFullYear();
-            const month = pad(now.getMonth() + 1);
-            const day = pad(now.getDate());
-            const hours = pad(now.getHours());
-            const minutes = pad(now.getMinutes());
-            const seconds = pad(now.getSeconds());
-            
-            const dateTimeString = `${year}.${month}.${day} ${hours}${minutes}${seconds}`;
-            const footerEl = document.getElementById('footer-instructions-text');
-            if (footerEl) {
-                footerEl.innerHTML = `<strong>Version ${dateTimeString}:</strong>`;
-            }
-        }*/
+        // Removed updateFooterVersion function as requested.
 
         // --- AUTH & INIT ---
         window.handleLogin = async () => {
@@ -1263,7 +1246,7 @@
                  document.getElementById('login-actions').classList.add('hidden');
                  document.getElementById('start-actions').classList.remove('hidden');
                  
-                 // Make inputs read-only style
+                 // Make Student ID input read-only/disabled AFTER successful login
                  document.getElementById('studentId').disabled = true;
                  document.getElementById('studentId').classList.add('bg-gray-100');
                  
@@ -1389,7 +1372,8 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Student ID</label>
-                            <input type="text" id="studentId" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-blue-50/50 text-sm">
+                            <!-- FIX: Ensured the input is clearly enabled and actionable -->
+                            <input type="text" id="studentId" class="w-full p-2 border border-indigo-500 rounded focus:ring-2 focus:ring-indigo-700 outline-none bg-white text-sm font-bold shadow-md">
                         </div>
                     </div>
 
@@ -1427,7 +1411,7 @@
 
         window.onload = () => {
             window.checkUrlParametersAndInit();
-            updateFooterVersion();
+           
         };
         window.renderApp = renderApp;
     </script>
