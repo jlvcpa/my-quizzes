@@ -263,7 +263,7 @@
         <!-- Footer -->
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
-                <strong>Version 2025.11.29 180022:</strong>
+                <strong>Version [DateTime now]:</strong>
             </p>
         </footer>
 
@@ -569,8 +569,9 @@
                 ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
                 : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
             
-            // Determine button state for Task 2
-            const isT2BtnDisabled = state.isTask2Locked || state.attempts[2] >= max;
+            // Determine button state for Task 2 (Locked if Task 1 is NOT completed)
+            const isT2BtnLockedByT1 = !state.isTask1Locked;
+            const isT2BtnDisabled = isT2BtnLockedByT1 || state.isTask2Locked || state.attempts[2] >= max;
              const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
              const t2BtnClass = isT2BtnDisabled 
                  ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
@@ -1016,11 +1017,14 @@
                 window.disableTaskInputs('#task1-grid');
                 document.getElementById('btn-add-ledger').disabled = true;
 
-                // Unlock T2
+                // Unlock T2 visuals and force a re-render to activate T2 button
                 const t2Wrapper = document.getElementById('task2-wrapper');
                 t2Wrapper.classList.remove('locked-task');
                 document.getElementById('task2-overlay').style.display = 'none';
                 
+                // Re-render task content to update T2 button state now that Task 1 is complete
+                renderApp();
+
                 renderMessageBox("Task 1 Submitted. Proceed to Task 2.", false);
             } else {
                 renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
@@ -1179,6 +1183,26 @@
                 
             } catch(e) { console.error("Error saving results:", e); }
         };
+        
+        // Function to update the footer dynamically
+        function updateFooterVersion() {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            
+            // Format: YYYY.MM.DD HHMMSS
+            const year = now.getFullYear();
+            const month = pad(now.getMonth() + 1);
+            const day = pad(now.getDate());
+            const hours = pad(now.getHours());
+            const minutes = pad(now.getMinutes());
+            const seconds = pad(now.getSeconds());
+            
+            const dateTimeString = `${year}.${month}.${day} ${hours}${minutes}${seconds}`;
+            const footerEl = document.getElementById('footer-instructions-text');
+            if (footerEl) {
+                footerEl.innerHTML = `<strong>Version ${dateTimeString}:</strong>`;
+            }
+        }
 
         // --- AUTH & INIT ---
         window.handleLogin = async () => {
@@ -1222,7 +1246,6 @@
              generateData();
              startTimer();
              renderApp();
-             // The button state is now managed correctly by renderTaskContent and validateTask1 logic itself.
         };
 
         async function validateStudentLogin(attId, stuId) {
@@ -1297,7 +1320,6 @@
              generateData();
              startTimer(); // Start timer in preview mode too
              renderApp();
-             // The button state is now managed correctly by renderTaskContent and validateTask1 logic itself.
         };
 
         window.checkUrlParametersAndInit = () => {
@@ -1359,7 +1381,10 @@
             </div>`;
         };
 
-        window.onload = window.checkUrlParametersAndInit;
+        window.onload = () => {
+            window.checkUrlParametersAndInit();
+            updateFooterVersion();
+        };
         window.renderApp = renderApp;
     </script>
 </body>
