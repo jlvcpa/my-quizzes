@@ -326,7 +326,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 07:45:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 08:33:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -385,60 +385,61 @@
 
 
         // --- PERSISTENCE HELPERS ---
+        // DISABLED LOCAL STORAGE FOR TESTING
         const saveStateToLocalStorage = () => {
-             if (state.attendanceId) {
-                 const persistState = {
-                     studentInfo: state.studentInfo,
-                     currentStep: state.currentStep,
-                     isTask1Locked: state.isTask1Locked,
-                     isTask2Locked: state.isTask2Locked,
-                     attempts: state.attempts, // Save attempts too
-                 };
-                 localStorage.setItem(getLocalStorageKey(state.attendanceId), JSON.stringify(persistState));
-             }
+             // if (state.attendanceId) {
+             //     const persistState = {
+             //         studentInfo: state.studentInfo,
+             //         currentStep: state.currentStep,
+             //         isTask1Locked: state.isTask1Locked,
+             //         isTask2Locked: state.isTask2Locked,
+             //         attempts: state.attempts, // Save attempts too
+             //     };
+             //     localStorage.setItem(getLocalStorageKey(state.attendanceId), JSON.stringify(persistState));
+             // }
         };
 
         const loadStateFromLocalStorage = () => {
-            if (state.attendanceId) {
-                const persisted = localStorage.getItem(getLocalStorageKey(state.attendanceId));
-                if (persisted) {
-                    const persistState = JSON.parse(persisted);
-                    state.studentInfo = persistState.studentInfo;
-                    state.currentStep = persistState.currentStep;
-                    state.isTask1Locked = persistState.isTask1Locked;
-                    state.isTask2Locked = persistState.isTask2Locked;
-                    state.attempts = persistState.attempts || { 1: 0, 2: 0 };
-                    return true;
-                }
-            }
+            // if (state.attendanceId) {
+            //     const persisted = localStorage.getItem(getLocalStorageKey(state.attendanceId));
+            //     if (persisted) {
+            //         const persistState = JSON.parse(persisted);
+            //         state.studentInfo = persistState.studentInfo;
+            //         state.currentStep = persistState.currentStep;
+            //         state.isTask1Locked = persistState.isTask1Locked;
+            //         state.isTask2Locked = persistState.isTask2Locked;
+            //         state.attempts = persistState.attempts || { 1: 0, 2: 0 };
+            //         return true;
+            //     }
+            // }
             return false;
         };
 
         // NEW: Persistence for the randomized test data (Crucial for validation)
         const saveTestDatatoLocalStorage = () => {
-            if (state.attendanceId) {
-                 const testData = {
-                    journalEntries: state.journalEntries,
-                    pctb: state.pctb, 
-                    ledgers: state.ledgers, 
-                    requiredAccounts: state.requiredAccounts
-                 };
-                 localStorage.setItem(getDataKey(state.attendanceId), JSON.stringify(testData));
-            }
+            // if (state.attendanceId) {
+            //      const testData = {
+            //         journalEntries: state.journalEntries,
+            //         pctb: state.pctb, 
+            //         ledgers: state.ledgers, 
+            //         requiredAccounts: state.requiredAccounts
+            //      };
+            //      localStorage.setItem(getDataKey(state.attendanceId), JSON.stringify(testData));
+            // }
         };
 
         const loadTestDataFromLocalStorage = () => {
-            if (state.attendanceId) {
-                const persisted = localStorage.getItem(getDataKey(state.attendanceId));
-                if (persisted) {
-                    const testData = JSON.parse(persisted);
-                    state.journalEntries = testData.journalEntries;
-                    state.pctb = testData.pctb;
-                    state.ledgers = testData.ledgers;
-                    state.requiredAccounts = testData.requiredAccounts;
-                    return true;
-                }
-            }
+            // if (state.attendanceId) {
+            //     const persisted = localStorage.getItem(getDataKey(state.attendanceId));
+            //     if (persisted) {
+            //         const testData = JSON.parse(persisted);
+            //         state.journalEntries = testData.journalEntries;
+            //         state.pctb = testData.pctb;
+            //         state.ledgers = testData.ledgers;
+            //         state.requiredAccounts = testData.requiredAccounts;
+            //         return true;
+            //     }
+            // }
             return false;
         };
 
@@ -496,13 +497,14 @@
             if (!state.attendanceId) return; 
             const displayElement = document.getElementById('countdown');
             const boxElement = document.getElementById('timer-box');
-            const storageKey = `exam_end_time_${state.attendanceId}`;
-            const endTime = localStorage.getItem(storageKey);
+            // DISABLED STORAGE
+            // const storageKey = `exam_end_time_${state.attendanceId}`;
+            // const endTime = localStorage.getItem(storageKey);
             
-            if (!endTime || !displayElement) { displayElement.textContent = "--:--:--"; return; }
+            if (!window.endTime || !displayElement) { displayElement.textContent = "--:--:--"; return; }
             
             const now = Date.now();
-            const distance = parseInt(endTime) - now;
+            const distance = parseInt(window.endTime) - now;
             
             if (distance < 0) {
                 displayElement.textContent = "00:00:00";
@@ -544,16 +546,17 @@
             
             if (timerInterval) stopTimer();
             
-            const storageKey = `exam_end_time_${state.attendanceId}`;
-            let endTime = localStorage.getItem(storageKey);
+            // DISABLED STORAGE
+            // const storageKey = `exam_end_time_${state.attendanceId}`;
+            // let endTime = localStorage.getItem(storageKey);
             
-            if (!endTime) {
+            if (!window.endTime) {
                 // Calculate and set end time if missing (Initial start)
                 const now = Date.now();
                 const durationMs = window.examDurationMins * 60 * 1000;
                 
-                endTime = now + durationMs;
-                localStorage.setItem(storageKey, endTime);
+                window.endTime = now + durationMs;
+                // localStorage.setItem(storageKey, endTime);
             }
             
             updateTimerDisplay(); // Initial call
@@ -1536,7 +1539,10 @@
 
                  // Switch UI
                  document.getElementById('login-actions').classList.add('hidden');
-                 document.getElementById('start-actions').classList.remove('hidden');
+                 
+                 const startArea = document.getElementById('start-actions');
+                 startArea.classList.remove('hidden');
+                 startArea.classList.add('flex'); // Explicitly add flex to ensure centering
                  
                  // Make Student ID input read-only/disabled AFTER successful login
                  document.getElementById('studentId').disabled = true;
