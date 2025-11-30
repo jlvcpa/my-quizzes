@@ -315,7 +315,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 11:18:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 11:35:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -510,6 +510,7 @@
 
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const formatMoney = (n) => 'P' + n.toLocaleString('en-US');
+        const formatNumber = (n) => n.toLocaleString('en-US');
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
         const generateData = () => {
@@ -882,11 +883,15 @@
                                             <td colspan="4" class="bg-gray-50"></td>
                                         </tr>
                                         ${state.journalEntries.map((e, index) => {
+                                            let dateHTML = index === 0 
+                                                ? `<div class="text-[10px] font-bold text-gray-500 leading-tight mb-1">${e.month}</div><div>${e.day}</div>`
+                                                : `<div>${e.day}</div>`;
+                                            
                                             return `
                                             <!-- Debit Row -->
                                             <tr class="hover:bg-blue-50/50 transition-colors group border-b-0">
                                                 <td class="text-xs text-gray-600 text-right pr-2 align-top pt-2 whitespace-nowrap">
-                                                    ${e.month} ${e.day}
+                                                    ${dateHTML}
                                                 </td>
                                                 <td class="align-top text-gray-800 whitespace-nowrap pt-2">
                                                     ${e.titles[0]}
@@ -895,7 +900,7 @@
                                                     <div class="pr-box" id="pr_box_j_${e.id}_0" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div>
                                                 </td>
                                                 <td class="align-top text-right text-gray-700 whitespace-nowrap pt-2">
-                                                    ${formatMoney(e.drs[0])}
+                                                    ${formatNumber(e.drs[0])}
                                                 </td>
                                                 <td class="align-top pt-2"></td>
                                             </tr>
@@ -910,7 +915,7 @@
                                                 </td>
                                                 <td class="align-top pt-1"></td>
                                                 <td class="align-top text-right text-gray-700 whitespace-nowrap pt-1">
-                                                    ${formatMoney(e.crs[1])}
+                                                    ${formatNumber(e.crs[1])}
                                                 </td>
                                             </tr>
                                             <!-- Description Row -->
