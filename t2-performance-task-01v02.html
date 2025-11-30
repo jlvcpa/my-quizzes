@@ -48,44 +48,30 @@
             cursor: default;
         }
         
-        /* --- New Error Feedback Style --- */
+        /* --- New Error Feedback Style (Using Background Images for Inputs) --- */
         .input-error-x {
             border-color: #dc2626 !important; /* Red border */
             background-color: #fef2f2 !important; /* Light red background */
             box-shadow: 0 0 0 1px #ef4444 !important;
-            position: relative;
-        }
-        /* Ensure the error mark shows even on disabled inputs */
-        .input-error-x + .error-marker, .input-error-x::after {
-            content: "❌"; /* Red X symbol */
-            position: absolute;
-            right: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 10px;
-            pointer-events: none;
-            color: #dc2626;
-            z-index: 10;
+            /* SVG Data URI for Red X */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23dc2626'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 18L18 6M6 6l12 12'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 4px center;
+            background-size: 14px;
+            padding-right: 22px !important; /* Make space for icon */
         }
 
-        /* --- Success Feedback Style --- */
+        /* --- Success Feedback Style (Using Background Images for Inputs) --- */
         .input-success-check {
             border-color: #16a34a !important; /* Green border */
             background-color: #f0fdf4 !important; /* Light green bg */
             box-shadow: 0 0 0 1px #22c55e !important;
-            position: relative;
-        }
-        .input-success-check::after {
-            content: "✓";
-            position: absolute;
-            right: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 10px;
-            pointer-events: none;
-            color: #16a34a;
-            font-weight: bold;
-            z-index: 10;
+            /* SVG Data URI for Green Check */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2316a34a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 4px center;
+            background-size: 14px;
+            padding-right: 22px !important; /* Make space for icon */
         }
         
         /* HEADER & FOOTER COLORS */
@@ -152,7 +138,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: rgba(255,255,255,0.3);
+            background-color: rgba(255,255,255,0.95); /* Slightly opaque to hide content if truly locked */
         }
         .lock-message {
             background: white;
@@ -216,6 +202,7 @@
                 border: none !important; border-bottom: 1px solid #ccc !important; 
                 background: transparent !important; padding: 0 !important;
                 color: black !important; /* Ensure printed text is black */
+                background-image: none !important; /* No validation icons on print */
             }
             #task1-grid { display: block !important; }
             .explanation-box { display: block !important; border: 1px solid #ef4444; padding: 15px; margin-top: 30px; font-size: 0.85rem; page-break-inside: avoid; }
@@ -326,7 +313,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 10:06:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 10:29:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -799,13 +786,9 @@
                 : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
             
             // Determine button state for Task 2
-            // Task 2 unlocks if Task 1 is Locked OR if Task 1 is Passed (Score >= 60%)
-            // We calculate pass status dynamically
-            const t1Max = state.scores.t1a.max + state.scores.t1b.max + state.scores.t1c.max;
-            const t1Current = state.scores.t1a.current + state.scores.t1b.current + state.scores.t1c.current;
-            const task1Passed = t1Max > 0 && t1Current >= (t1Max * 0.6);
-            
-            const isT2BtnLockedByT1 = !(state.isTask1Locked || task1Passed);
+            // Task 2 unlocks if Task 1 is Locked OR if Task 1 is Passed (Score >= 60%) - NO, user requested just completed/attempts used.
+            // Simplified logic: T2 Unlocks if T1 is locked (which happens on pass or exhaust)
+            const isT2BtnLockedByT1 = !state.isTask1Locked;
             const isT2BtnDisabled = isT2BtnLockedByT1 || state.isTask2Locked || state.attempts[2] >= max;
              const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
              const t2BtnClass = isT2BtnDisabled 
@@ -1032,7 +1015,7 @@
                         </div>
                     </div>
 
-                    <div id="task2-wrapper" class="relative ${isT2BtnLockedByT1 ? 'locked-task' : ''} transition-all duration-500 mx-4">
+                    <div id="task2-wrapper" class="relative ${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}">
                         <div class="blur-content">
                             <div class="p-6 bg-gray-50 rounded shadow-inner border border-gray-200">
                                 <div class="bg-white p-6 border rounded shadow-sm max-w-4xl mx-auto">
@@ -1063,7 +1046,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="task2-overlay" class.class = "${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}">
+                        <div id="task2-overlay" class="${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}">
                             <div class="lock-message">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                                 <p>Task 2 is Locked</p>
@@ -1381,16 +1364,10 @@
                 renderMessageBox("Task 1 Attempts Used. Proceed to Task 2.", false);
             } else {
                 // If not locked, we still want to show success if they passed so they know they can move on
-                const t1Max = state.scores.t1a.max + state.scores.t1b.max + state.scores.t1c.max;
-                const t1Current = state.scores.t1a.current + state.scores.t1b.current + state.scores.t1c.current;
-                const passed = t1Max > 0 && t1Current >= (t1Max * 0.6);
-                
-                if (passed) {
-                     renderApp(); // Update Task 2 unlock state visually
-                     renderMessageBox(`Task 1 Validated (Passing Score). You have ${max - attempts} attempts left to improve or proceed to Task 2.`, false);
-                } else {
-                     renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
-                }
+                // UPDATED LOGIC: If T1 is exhausted, T2 unlocks. 
+                // We re-render app so T2 button updates.
+                renderApp();
+                renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
             }
         };
 
@@ -1518,6 +1495,7 @@
                 window.disableTaskInputs('#task2-wrapper');
                 const t2Wrapper = document.getElementById('task2-wrapper');
                 t2Wrapper.classList.remove('locked-task');
+                // HIDE OVERLAY completely when completed so answers are visible
                 t2Wrapper.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
 
                 window.finishAndPreview();
@@ -1684,7 +1662,8 @@
                  // Unlock T2 visuals
                  const t2Wrapper = document.getElementById('task2-wrapper');
                  t2Wrapper.classList.remove('locked-task');
-                 document.getElementById('task2-overlay').style.display = 'none';
+                 // Ensure T2 overlay is hidden if T1 is done
+                 t2Wrapper.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden'); 
              }
              if (state.isTask2Locked) {
                  window.disableTaskInputs('#task2-wrapper');
