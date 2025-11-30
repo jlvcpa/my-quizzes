@@ -264,7 +264,8 @@
     <div id="app" class="printable-area bg-white shadow-xl rounded-xl p-0 md:p-0 border border-gray-200 relative pb-20">
         
         <!-- Timer Display (MOVED INSIDE #app FOR STRUCTURAL CORRECTION) -->
-        <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold sticky top-4 z-50 mx-auto max-w-xs">
+        <!-- REVISED: Centered horizontally at 25% of the container width -->
+        <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold sticky top-4 z-50 max-w-xs ml-[25%] -translate-x-1/2">
             Task Time: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
         </div>
 
@@ -317,7 +318,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 01:21:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-12-01 03:36:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -1183,6 +1184,12 @@
             let scoreB = 0;
             const maxScoreB = state.pctb.length * 5; // Year, Date, Part, PR, Amount
 
+            // Get transaction month for validation
+            const transMonth = state.journalEntries.length > 0 ? state.journalEntries[0].month : "Jan";
+            // Construct strict valid date strings: "MMM 01" or "MMM 1"
+            const expectedBegDate1 = `${transMonth} 01`;
+            const expectedBegDate2 = `${transMonth} 1`;
+
             state.pctb.forEach(acc => {
                 const userL = userLedgers.find(ul => ul.name.toLowerCase() === acc.name.toLowerCase());
                 let accBScore = 0;
@@ -1204,7 +1211,11 @@
 
                     // Score breakdown (Strict conditions)
                     if(yearInp && parseInt(yearInp.value) === currentYear) { accBScore++; yearInp.classList.add('input-success-check'); } else { yearInp?.classList.add('input-error-x'); }
-                    if(dateInp.length > 0) { accBScore++; dateInpEl.classList.add('input-success-check'); } else { dateInpEl?.classList.add('input-error-x'); }
+                    
+                    // Strict Date Check
+                    const validDate = dateInp === expectedBegDate1 || dateInp === expectedBegDate2;
+                    if(validDate) { accBScore++; dateInpEl.classList.add('input-success-check'); } else { dateInpEl?.classList.add('input-error-x'); }
+                    
                     if(partInp.toUpperCase() === 'BB') { accBScore++; partInpEl.classList.add('input-success-check'); } else { partInpEl?.classList.add('input-error-x'); }
                     if(prInp === '') { accBScore++; prInpEl.classList.add('input-success-check'); } else { prInpEl?.classList.add('input-error-x'); }
                     if(Math.abs(amtInp - acc.bal) < 1) { accBScore++; amtInpEl.classList.add('input-success-check'); } else { amtInpEl?.classList.add('input-error-x'); }
@@ -1268,8 +1279,8 @@
                 journalLinePostedStatus[keyCr] = false;
 
                 // Store expected ledger lines with reference to journal key
-                if(accountTransactions[drAcc]) accountTransactions[drAcc].push({ amount: e.drs[0], side: 'dr', day: e.day, matched: false, key: keyDr });
-                if(accountTransactions[crAcc]) accountTransactions[crAcc].push({ amount: e.crs[1], side: 'cr', day: e.day, matched: false, key: keyCr });
+                if(accountTransactions[drAcc]) accountTransactions[drAcc].push({ amount: e.drs[0], side: 'dr', day: e.day, matched: false, key: keyDr, month: e.month });
+                if(accountTransactions[crAcc]) accountTransactions[crAcc].push({ amount: e.crs[1], side: 'cr', day: e.day, matched: false, key: keyCr, month: e.month });
             });
 
             // 1. Score Ledger Rows & Totals
@@ -1318,11 +1329,12 @@
 
                                 if (matchIdx > -1) {
                                     // Found a matching amount. Now check formatting strictly.
-                                    expectedTransList[matchIdx].matched = true; // Mark as found
+                                    const matchedTrans = expectedTransList[matchIdx];
+                                    matchedTrans.matched = true; // Mark as found
                                     
                                     // Mark the specific journal line as posted
-                                    if(expectedTransList[matchIdx].key) {
-                                        journalLinePostedStatus[expectedTransList[matchIdx].key] = true;
+                                    if(matchedTrans.key) {
+                                        journalLinePostedStatus[matchedTrans.key] = true;
                                     }
                                     
                                     // 1. Amount Score
@@ -1336,8 +1348,20 @@
                                     if(prEl.value.trim() === '1') { scoreC++; prEl.classList.add('input-success-check'); } 
                                     else { prEl.classList.add('input-error-x'); }
 
-                                    // 4. Date (Simple check for existence/correct day)
-                                    if(dEl.value.trim().length > 0) { scoreC++; dEl.classList.add('input-success-check'); } 
+                                    // 4. Date (Check against trans day/month)
+                                    // Accepted formats: "MMM d", "MMM dd", "d", "dd"
+                                    const inputDate = dEl.value.trim();
+                                    const expectedDay = matchedTrans.day; // string "05" or "12"
+                                    const expectedMonth = matchedTrans.month; // "Jan"
+                                    
+                                    const validFormats = [
+                                        expectedDay, // "05"
+                                        parseInt(expectedDay).toString(), // "5"
+                                        `${expectedMonth} ${expectedDay}`, // "Jan 05"
+                                        `${expectedMonth} ${parseInt(expectedDay)}` // "Jan 5"
+                                    ];
+
+                                    if(validFormats.includes(inputDate)) { scoreC++; dEl.classList.add('input-success-check'); } 
                                     else { dEl.classList.add('input-error-x'); }
 
                                 } else {
