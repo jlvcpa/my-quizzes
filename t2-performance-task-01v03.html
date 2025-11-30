@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">T2 Performance Task 01</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        /* Adjusted body padding for full width on larger screens */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            padding: 0; /* Remove default body padding */
+        }
+        
+        /* Ensure main container takes full width */
+        #app {
+            width: 100%;
+            min-height: 100vh; /* Ensure it takes full viewport height */
+        }
+
+        /* HIDE SPINNERS */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        /* Custom Input Styles */
+        .table-input {
+            width: 100%; padding: 4px; border: 1px solid #e2e8f0; border-radius: 2px;
+            text-align: right; font-size: 0.8rem; background-color: #fff;
+        }
+        .text-input {
+            width: 100%; padding: 4px; border: 1px solid #e2e8f0; border-radius: 2px;
+            font-size: 0.8rem; background-color: #fff;
+        }
+        .table-input:focus, .text-input:focus { outline: none; border-color: #3b82f6; }
+        
+        /* Modified disabled styles to show black text and remove opacity */
+        /* CRITICAL FIX: Ensure answers are visible and black when disabled */
+        input:disabled, select:disabled, textarea:disabled, .table-input:disabled, .text-input:disabled { 
+            background-color: #ffffff !important; 
+            color: #000000 !important; /* Force black text */
+            -webkit-text-fill-color: #000000 !important; /* Safari fix */
+            border-color: #e2e8f0;
+            opacity: 1 !important; /* Ensure visibility */
+            cursor: default;
+        }
+        
+        /* --- New Error Feedback Style --- */
+        .input-error-x {
+            border-color: #dc2626 !important; /* Red border */
+            background-color: #fef2f2 !important; /* Light red background */
+            box-shadow: 0 0 0 1px #ef4444 !important;
+            position: relative;
+        }
+        /* Ensure the error mark shows even on disabled inputs */
+        .input-error-x + .error-marker, .input-error-x::after {
+            content: "❌"; /* Red X symbol */
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            pointer-events: none;
+            color: #dc2626;
+            z-index: 10;
+        }
+
+        /* --- Success Feedback Style --- */
+        .input-success-check {
+            border-color: #16a34a !important; /* Green border */
+            background-color: #f0fdf4 !important; /* Light green bg */
+            box-shadow: 0 0 0 1px #22c55e !important;
+            position: relative;
+        }
+        .input-success-check::after {
+            content: "✓";
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            pointer-events: none;
+            color: #16a34a;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        /* HEADER & FOOTER COLORS */
+        .header-bg { background-color: #0f172a; color: white; }
+        .footer-bg { background-color: #334155; color: white; }
+        
+        /* Journal & Ledger Specifics */
+        .journal-row td { vertical-align: top; padding: 8px 4px; border-bottom: 1px solid #f1f5f9; }
+        .journal-row:last-child td { border-bottom: none; }
+        
+        /* Journal Grid Alignment Helpers */
+        .journal-line { height: 24px; display: flex; align-items: center; }
+        
+        .pr-box { 
+            cursor: pointer; height: 18px; width: 18px; border: 1px solid #cbd5e1; 
+            display: inline-flex; align-items: center; justify-content: center; background: white; user-select: none;
+            border-radius: 2px;
+            font-size: 10px;
+        }
+        .pr-box:hover { border-color: #3b82f6; }
+        .pr-checked { color: #16a34a; font-weight: bold; border-color: #16a34a; background-color: #dcfce7; }
+        .pr-error { color: #dc2626; font-weight: bold; border-color: #dc2626; background-color: #fef2f2; }
+        .pr-valid { background-color: #dcfce7; border-color: #16a34a; color: #16a34a; }
+        
+        /* Style for disabled/checked PR boxes */
+        .pr-box[disabled] { cursor: default; }
+
+        /* Layout & Scroll */
+        .split-panel { height: 600px; overflow: hidden; } 
+        .scroll-panel { height: 100%; overflow-y: auto; }
+        
+        /* Sticky Logic */
+        .sticky-section-header {
+            position: sticky; top: 0; z-index: 40;
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(8px);
+            padding: 12px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            border-top: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* Task Locking Overlay */
+        .locked-task {
+            position: relative;
+            user-select: none;
+        }
+        /* REMOVED blur-content styling completely to show answers */
+        .locked-task .blur-content {
+            filter: none !important;
+            opacity: 1; /* Ensure visibility */
+            transition: all 0.5s ease;
+        }
+        /* Added class to hide lock overlay when content is visible */
+        .lock-overlay-hidden {
+             display: none !important;
+        }
+        .lock-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255,255,255,0.3);
+        }
+        .lock-message {
+            background: white;
+            padding: 24px 48px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #cbd5e1;
+            text-align: center;
+            font-weight: bold;
+            color: #334155;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        /* Ledger Form Styling */
+        .ledger-form {
+            background: white; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .ledger-header {
+            background-color: #eff6ff; padding: 15px; text-align: center; border-bottom: 1px solid #dbeafe;
+        }
+        .ledger-title-input {
+            background: white; border: 1px solid #bfdbfe; padding: 5px 10px;
+            font-weight: 600; font-size: 1rem; text-align: center; width: 60%;
+            border-radius: 4px;
+        }
+        .ledger-col-header {
+            font-size: 0.7rem; font-weight: 700; color: #475569; text-transform: uppercase;
+            background-color: #f8fafc; padding: 6px 4px; border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* PCTB Tags */
+        .pctb-tag {
+            font-size: 0.75rem; border: 1px solid #e2e8f0; background-color: white;
+            padding: 4px 8px; border-radius: 4px; display: inline-flex; gap: 4px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05); white-space: nowrap;
+        }
+
+        /* Print Styles */
+        @media print {
+            @page { margin: 0.25in; size: auto; }
+            body { background-color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .printable-area { 
+                border: none !important; box-shadow: none !important; 
+                width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; 
+            }
+            .split-panel, .scroll-panel { 
+                height: auto !important; overflow: visible !important; display: block !important; 
+                max-height: none !important;
+            }
+            .sticky-section-header { 
+                position: static !important; border: none !important; box-shadow: none !important; 
+                background: none !important; padding: 10px 0 !important;
+            }
+            /* Explicitly show instructions in print even if toggled off on screen, or manage via JS state if preferred. Here we force show. */
+            #task1-instructions-panel, #task2-instructions-panel { display: block !important; }
+            
+            .table-input, .text-input { 
+                border: none !important; border-bottom: 1px solid #ccc !important; 
+                background: transparent !important; padding: 0 !important;
+                color: black !important; /* Ensure printed text is black */
+            }
+            #task1-grid { display: block !important; }
+            .explanation-box { display: block !important; border: 1px solid #ef4444; padding: 15px; margin-top: 30px; font-size: 0.85rem; page-break-inside: avoid; }
+            
+            /* Print Header Styling */
+            #print-header { display: block !important; margin-bottom: 20px; text-align: center; }
+            #screen-header { display: none !important; }
+            #screen-footer { display: none !important; }
+
+            /* Print Footer Styling */
+            #print-footer { 
+                display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; 
+                background: white; border-top: 2px solid black; padding-top: 5px; font-size: 10px;
+                justify-content: space-between; align-items: center; z-index: 100;
+            }
+            /* Add padding to body to prevent content overlap with fixed footer */
+            body { padding-bottom: 40px; }
+
+            .locked-task .blur-content { filter: none !important; opacity: 1 !important; }
+            .lock-overlay { display: none !important; }
+            
+            /* Force page breaks if needed */
+            .page-break { page-break-before: always; }
+        }
+        
+        /* PADDING FOR MOBILE/SMALL SCREENS */
+        @media (max-width: 1279px) {
+            body { padding: 1rem; }
+            #app { padding: 0; }
+        }
+        
+        /* PADDING FOR DESKTOP/WIDE SCREENS (NO MAX-WIDTH) */
+        @media (min-width: 1280px) {
+            #app { 
+                border: none; 
+                box-shadow: none; 
+                border-radius: 0;
+            }
+            .sticky-section-header {
+                padding-left: 1.5rem; /* Match spacing to content */
+                padding-right: 1.5rem;
+            }
+            .mx-4 { /* Ensure instructions and task content use padding on the sides */
+                margin-left: 1.5rem !important;
+                margin-right: 1.5rem !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- REMOVED TIMER FROM HERE (Moved inside #app) -->
+
+    <!-- Main Application Container: Removed max-w-7xl mx-auto for full width -->
+    <div id="app" class="printable-area bg-white shadow-xl rounded-xl p-0 md:p-0 border border-gray-200 relative pb-20">
+        
+        <!-- Timer Display (MOVED INSIDE #app FOR STRUCTURAL CORRECTION) -->
+        <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold sticky top-4 z-50 mx-auto max-w-xs">
+            Task Time: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
+        </div>
+
+        <!-- Screen Header -->
+        <header id="screen-header" class="text-center pb-4 border-b-4 border-indigo-600 header-bg p-4 rounded-t-xl no-print">
+            <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" onerror="this.style.display='none'"/>
+            <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-300">
+                T2 Performance Task 01
+            </h1>
+            <h2 id="company-name" class="text-xl md:text-2xl font-semibold text-gray-200 mt-1 hidden">[Company Name]</h2>
+        </header>
+
+        <!-- Print Header (Hidden on Screen) -->
+        <div id="print-header" class="hidden">
+            <div class="flex flex-col items-center justify-center mb-4">
+                <img src="./shs-adc-logo.png" alt="School Logo" class="h-16 w-auto mb-1" onerror="this.style.display='none'"/>
+                <div class="text-center font-serif text-blue-900 leading-tight">
+                    <h3 class="font-bold text-sm uppercase">Sacred Heart School - Ateneo de Cebu</h3>
+                    <h2 class="font-bold text-lg text-blue-800">Senior High School Department</h2>
+                    <p class="text-sm mt-1">SY 2025-2026 | 2nd Semester</p>
+                    <h1 class="text-2xl font-extrabold text-yellow-500 mt-2 uppercase">T2 Performance Task 01 Results</h1>
+                </div>
+            </div>
+            <!-- Student Info Strip -->
+            <div class="border-t-4 border-blue-600 w-full pt-2 flex justify-between items-end font-mono text-sm font-bold text-black mb-6">
+                <div class="text-left">
+                    <div>CN: <span id="print-cn">--</span></div>
+                    <div>Name: <span id="print-name">--</span></div>
+                </div>
+                <div class="text-right">
+                    <div>Section: <span id="print-section">--</span></div>
+                    <div>Date: <span id="print-date">--</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dynamic Content Area -->
+        <div id="task-container" class="pb-4">
+            <!-- Content will be injected here -->
+        </div>
+
+        <!-- Explanation / Error Summary Area (Visible in Print) -->
+        <div id="error-summary-area" class="hidden print:block mx-4 mt-6"></div>
+
+        <!-- Message Box Area -->
+        <div id="message-box" class="mx-4 mb-4 no-print"></div>
+
+        <!-- Footer -->
+        <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
+            <p id="footer-instructions-text" class="text-sm text-gray-300">
+                <!-- Static Version Number based on current revision -->
+                <strong>Version 2025-11-30 08:45:00 PST (HTML Revision)</strong>
+            </p>
+        </footer>
+
+        <!-- Print Specific Footer -->
+        <div id="print-footer" class="hidden w-full px-8">
+            <div class="font-bold text-black text-xs w-1/4">FABM 1</div>
+            <div class="border border-black px-4 py-1 text-center text-[10px] text-black w-1/2 font-bold uppercase">
+                4Cs: Christ-centeredness, Competence, Character, Compassion
+            </div>
+            <div class="text-right font-bold text-black text-xs w-1/4">Page 1 of 1</div>
+        </div>
+    </div>
+
+    <!-- Firebase & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+            authDomain: "jlvcpa-quizzes.firebaseapp.com",
+            projectId: "jlvcpa-quizzes",
+            storageBucket: "jlvcpa-quizzes.appspot.com",
+            messagingSenderId: "629158256557",
+            appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- STATE & DATA ---
+        let state = {
+            currentStep: 0, // 0: Login, 1: Task Started
+            attendanceId: "", studentInfo: null,
+            journalEntries: [], pctb: [], 
+            ledgers: [], 
+            tbInputs: {}, 
+            prChecks: {}, 
+            attempts: { 1: 0, 2: 0 },
+            // Detailed scoring
+            scores: { 
+                t1a: { current: 0, max: 0, grade: 'IR' }, 
+                t1b: { current: 0, max: 0, grade: 'IR' }, 
+                t1c: { current: 0, max: 0, grade: 'IR' }, 
+                t2: { current: 0, max: 0, grade: 'IR' } 
+            },
+            requiredAccounts: [],
+            isTask1Locked: false, isTask2Locked: false,
+            explanations: [] 
+        };
+
+        window.examDurationMins = 0; let timerInterval = null;
+
+        // Keys for localStorage persistence
+        const getLocalStorageKey = (attId) => `exam_state_${attId}`;
+        const getDataKey = (attId) => `exam_data_${attId}`;
+
+
+        // --- PERSISTENCE HELPERS ---
+        // DISABLED LOCAL STORAGE FOR TESTING
+        const saveStateToLocalStorage = () => {
+             // if (state.attendanceId) {
+             //     const persistState = {
+             //         studentInfo: state.studentInfo,
+             //         currentStep: state.currentStep,
+             //         isTask1Locked: state.isTask1Locked,
+             //         isTask2Locked: state.isTask2Locked,
+             //         attempts: state.attempts, // Save attempts too
+             //     };
+             //     localStorage.setItem(getLocalStorageKey(state.attendanceId), JSON.stringify(persistState));
+             // }
+        };
+
+        const loadStateFromLocalStorage = () => {
+            // if (state.attendanceId) {
+            //     const persisted = localStorage.getItem(getLocalStorageKey(state.attendanceId));
+            //     if (persisted) {
+            //         const persistState = JSON.parse(persisted);
+            //         state.studentInfo = persistState.studentInfo;
+            //         state.currentStep = persistState.currentStep;
+            //         state.isTask1Locked = persistState.isTask1Locked;
+            //         state.isTask2Locked = persistState.isTask2Locked;
+            //         state.attempts = persistState.attempts || { 1: 0, 2: 0 };
+            //         return true;
+            //     }
+            // }
+            return false;
+        };
+
+        // NEW: Persistence for the randomized test data (Crucial for validation)
+        const saveTestDatatoLocalStorage = () => {
+            // if (state.attendanceId) {
+            //      const testData = {
+            //         journalEntries: state.journalEntries,
+            //         pctb: state.pctb, 
+            //         ledgers: state.ledgers, 
+            //         requiredAccounts: state.requiredAccounts
+            //      };
+            //      localStorage.setItem(getDataKey(state.attendanceId), JSON.stringify(testData));
+            // }
+        };
+
+        const loadTestDataFromLocalStorage = () => {
+            // if (state.attendanceId) {
+            //     const persisted = localStorage.getItem(getDataKey(state.attendanceId));
+            //     if (persisted) {
+            //         const testData = JSON.parse(persisted);
+            //         state.journalEntries = testData.journalEntries;
+            //         state.pctb = testData.pctb;
+            //         state.ledgers = testData.ledgers;
+            //         state.requiredAccounts = testData.requiredAccounts;
+            //         return true;
+            //     }
+            // }
+            return false;
+        };
+
+
+        window.disableAllInputs = () => {
+            document.querySelectorAll('input, button, select').forEach(el => {
+                if(!el.id.includes('print')) { 
+                    el.disabled = true; 
+                    el.classList.add('cursor-not-allowed'); 
+                    // Ensure black text for visibility
+                    el.classList.remove('text-gray-400', 'text-gray-500');
+                    el.classList.add('text-black');
+                }
+            });
+        };
+
+        window.disableTaskInputs = (selector) => {
+            const container = document.querySelector(selector);
+            if(container) {
+                container.querySelectorAll('input, button, select').forEach(el => {
+                    el.disabled = true;
+                    // REVISION: Do NOT make background gray if it hides content. 
+                    // Make sure text is black and visible.
+                    el.classList.add('text-black', 'border-gray-200');
+                    el.classList.remove('bg-gray-100'); // Remove gray bg that might look "disabled/hidden"
+                    el.classList.add('bg-white'); // Keep it white for readability
+                });
+            }
+            // Also disable ledger add row button permanently if task is locked
+            if (selector === '#task1-grid') {
+                 const addRowBtns = container.querySelectorAll('button[onclick^="window.addRow"]');
+                 addRowBtns.forEach(btn => btn.disabled = true);
+            }
+        }
+        
+        // --- RUBRIC TOGGLE ---
+        window.toggleRubric = (panelId, btn) => {
+            const panel = document.getElementById(panelId);
+            if(panel) {
+                panel.classList.toggle('hidden');
+                if(panel.classList.contains('hidden')) {
+                    btn.innerText = "Show Instructions";
+                    btn.classList.add('bg-indigo-50', 'text-indigo-700');
+                    btn.classList.remove('bg-white', 'text-gray-600');
+                } else {
+                    btn.innerText = "Hide Instructions";
+                    btn.classList.remove('bg-indigo-50', 'text-indigo-700');
+                    btn.classList.add('bg-white', 'text-gray-600');
+                }
+            }
+        };
+
+        // --- Timer Logic ---
+        function updateTimerDisplay() {
+            if (!state.attendanceId) return; 
+            const displayElement = document.getElementById('countdown');
+            const boxElement = document.getElementById('timer-box');
+            
+            if (!window.endTime || !displayElement) { displayElement.textContent = "--:--:--"; return; }
+            
+            const now = Date.now();
+            const distance = parseInt(window.endTime) - now;
+            
+            if (distance < 0) {
+                displayElement.textContent = "00:00:00";
+                stopTimer();
+                window.disableAllInputs();
+                // Auto-submit if time runs out
+                window.finishAndPreview(true);
+                return;
+            }
+            
+            const h = Math.floor((distance % (86400000)) / 3600000);
+            const m = Math.floor((distance % 3600000) / 60000);
+            const s = Math.floor((distance % 60000) / 1000);
+            
+            displayElement.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            
+            // Visual timer warning
+            if (distance < 300000) { // Less than 5 mins
+                boxElement?.classList.remove('bg-red-800'); boxElement?.classList.add('animate-pulse', 'bg-red-600');
+            } else {
+                boxElement?.classList.remove('animate-pulse', 'bg-red-600'); boxElement?.classList.add('bg-red-800');
+            }
+        }
+
+        function stopTimer() { 
+            if (timerInterval) { 
+                clearInterval(timerInterval); 
+                timerInterval = null; 
+            } 
+        }
+
+        // Timer initialization logic (now called from startExam or resumeExam)
+        function startTimer() {
+            if (!state.attendanceId || window.examDurationMins <= 0) {
+                console.error("Cannot start timer: Missing Attendance ID or Duration is zero.");
+                document.getElementById('countdown').textContent = "No Timer";
+                return;
+            }
+            
+            if (timerInterval) stopTimer();
+            
+            if (!window.endTime) {
+                // Calculate and set end time if missing (Initial start)
+                const now = Date.now();
+                const durationMs = window.examDurationMins * 60 * 1000;
+                
+                window.endTime = now + durationMs;
+            }
+            
+            updateTimerDisplay(); // Initial call
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+        // --- End Timer Logic ---
+
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const formatMoney = (n) => 'P' + n.toLocaleString('en-US');
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        const generateData = () => {
+            const familyName = state.studentInfo.fullName.split(',')[0].trim();
+            const year = new Date().getFullYear();
+            
+            // 1. PCTB (Adjusted slightly to ensure liquidity for new transactions)
+            const assets = [
+                {name: 'Cash', bal: rand(200000, 300000)}, // Increased start cash
+                {name: 'Accounts Receivable', bal: rand(20000, 50000)},
+                {name: 'Supplies', bal: rand(5000, 15000)},
+                {name: 'Prepaid Rent', bal: 0}, // Will be increased by journal
+                {name: 'Equipment', bal: rand(150000, 250000)},
+            ];
+            const liabs = [
+                {name: 'Accounts Payable', bal: rand(20000, 40000)},
+                {name: 'Notes Payable', bal: rand(15000, 25000)},
+                {name: 'Unearned Revenue', bal: rand(10000, 20000)},
+            ];
+            const totalAsset = assets.reduce((a,b)=>a+b.bal,0);
+            const totalLiab = liabs.reduce((a,b)=>a+b.bal,0);
+            const capital = { name: `Owner, Capital`, bal: totalAsset - totalLiab };
+            
+            state.pctb = [...assets.map(a=>({...a, side:'Dr'})), ...liabs.map(l=>({...l, side:'Cr'})), {...capital, side:'Cr'}];
+
+            // 2. Journal Entries (Dynamic 15 Sources)
+            const entries = [];
+            const mIdx = rand(0, 5); 
+            const mStr = months[mIdx];
+            
+            // Temporary array to hold transaction data before sorting by date
+            let rawTrans = [];
+
+            // Helper to add raw transaction
+            const pushTrans = (dayRange, titles, drAmt, crAmt, desc) => {
+                // Ensure day is realistic and padded
+                let dayInt = Array.isArray(dayRange) ? rand(dayRange[0], dayRange[1]) : dayRange;
+                // Avoid duplicates if possible, or just allow overlap. 
+                // Specific logic for month-end to strictly be late.
+                
+                rawTrans.push({
+                    day: dayInt,
+                    titles: titles,
+                    drs: [drAmt, 0],
+                    crs: [0, crAmt], // Ensure Balance
+                    desc: desc
+                });
+            };
+
+            // 1. Payment for Prepaid Rent (Early Month)
+            let amt = rand(15000, 30000);
+            pushTrans([1, 5], ['Prepaid Rent', 'Cash'], amt, amt, "Paid advance rent for the quarter");
+
+            // 2. Payment for Prepaid Insurance (Early Month)
+            amt = rand(10000, 20000);
+            pushTrans([2, 6], ['Prepaid Insurance', 'Cash'], amt, amt, "Paid annual insurance premium");
+
+            // 3. Purchase of Supplies (Cash)
+            amt = rand(3000, 8000);
+            pushTrans([5, 15], ['Supplies', 'Cash'], amt, amt, "Purchased office supplies for cash");
+
+            // 4. Purchase of Supplies (On Account)
+            amt = rand(5000, 12000);
+            pushTrans([8, 20], ['Supplies', 'Accounts Payable'], amt, amt, "Bought supplies on credit");
+
+            // 5. Rendering Services (Cash)
+            amt = rand(20000, 50000);
+            pushTrans([5, 25], ['Cash', 'Service Revenue'], amt, amt, "Performed services for cash");
+
+            // 6. Rendering Services (On Account)
+            amt = rand(15000, 40000);
+            pushTrans([10, 28], ['Accounts Receivable', 'Service Revenue'], amt, amt, "Billed client for services rendered");
+
+            // 7. Salaries Payment (10th) - FIXED DATE
+            amt = rand(12000, 15000);
+            pushTrans(10, ['Salaries Expense', 'Cash'], amt, amt, "Paid salaries for first half of month");
+
+            // 8. Salaries Payment (25th) - FIXED DATE
+            pushTrans(25, ['Salaries Expense', 'Cash'], amt, amt, "Paid salaries for second half of month");
+
+            // 9. Collection of Accounts Receivable
+            amt = rand(5000, 15000);
+            pushTrans([12, 22], ['Cash', 'Accounts Receivable'], amt, amt, "Collected partial payment from customers");
+
+            // 10. Payment of Accounts Payable
+            amt = rand(5000, 15000);
+            pushTrans([15, 24], ['Accounts Payable', 'Cash'], amt, amt, "Paid outstanding balance to suppliers");
+
+            // 11. Another Revenue (Cash) to ensure activity
+            amt = rand(10000, 30000);
+            pushTrans([15, 27], ['Cash', 'Service Revenue'], amt, amt, "Received cash for services");
+
+            // --- Month End Expenses (28th - 30th) ---
+            
+            // 12. Utilities
+            amt = rand(4000, 8000);
+            pushTrans([28, 30], ['Utilities Expense', 'Cash'], amt, amt, "Paid monthly utility bill");
+
+            // 13. Advertising
+            amt = rand(3000, 6000);
+            pushTrans([28, 30], ['Advertising Expense', 'Cash'], amt, amt, "Paid for online advertising");
+
+            // 14. Software Subscriptions
+            amt = rand(2000, 5000);
+            pushTrans([28, 30], ['Software Subscription Expense', 'Cash'], amt, amt, "Paid monthly software subscription");
+
+            // 15. Miscellaneous
+            amt = rand(1000, 3000);
+            pushTrans([28, 30], ['Miscellaneous Expense', 'Cash'], amt, amt, "Paid miscellaneous office expenses");
+
+            // Sort entries by Day
+            rawTrans.sort((a, b) => a.day - b.day);
+
+            // Populate final state structure
+            rawTrans.forEach((t, i) => {
+                const day = String(t.day).padStart(2,'0');
+                const fullDate = `${year}-${String(mIdx+1).padStart(2,'0')}-${day}`;
+                entries.push({
+                    id: i,
+                    dateStr: fullDate,
+                    year: year,
+                    month: mStr,
+                    day: day,
+                    titles: t.titles,
+                    prs: ['',''],
+                    drs: t.drs,
+                    crs: t.crs,
+                    desc: t.desc
+                });
+            });
+            
+            state.journalEntries = entries;
+            
+            // Generate list of all required accounts for validation
+            state.requiredAccounts = [...new Set([...state.pctb.map(x=>x.name), ...state.journalEntries.flatMap(x=>x.titles)])].sort();
+
+            // Initialize 5 empty ledgers
+            state.ledgers = [];
+            for(let i=0; i<5; i++) { state.ledgers.push({ id: i, name: '', rowCount: 4 }); }
+
+            // Save the newly generated data
+            saveTestDatatoLocalStorage();
+        };
+
+        // --- RENDERERS ---
+        const createLedgerHTML = (ledgerObj) => {
+            const id = ledgerObj.id;
+            const name = ledgerObj.name;
+            const rowCount = ledgerObj.rowCount || 4;
+            // Year Input is now mandatory for validation.
+            // Row 0 below the year is for Beg Bal or first trans.
+
+            // Helper to generate rows
+            // We use 'i' for index. 
+            let drRows = "", crRows = "";
+            
+            // Year Row (Input Field)
+            drRows += `<div class="grid grid-cols-12 border-b border-gray-100 bg-gray-50 h-8 items-center"><div class="col-span-3 border-r px-1"><input type="number" id="l_${id}_dr_year" placeholder="YYYY" class="w-full text-center bg-transparent text-xs font-bold outline-none"></div><div class="col-span-9"></div></div>`;
+            crRows += `<div class="grid grid-cols-12 border-b border-gray-100 bg-gray-50 h-8 items-center"><div class="col-span-3 border-r px-1"><input type="number" id="l_${id}_cr_year" placeholder="YYYY" class="w-full text-center bg-transparent text-xs font-bold outline-none"></div><div class="col-span-9"></div></div>`;
+
+            for(let i=0; i<rowCount; i++) { 
+                // REVISION: Date alignment changed to text-right per user request
+                drRows += `<div class="grid grid-cols-12 border-b border-gray-100 text-sm">
+                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none" placeholder="MMM dd" id="l_${id}_dr_d_${i}"></div>
+                    <div class="col-span-5 border-r p-0"><input class="w-full h-full p-1 outline-none" id="l_${id}_dr_p_${i}"></div>
+                    <div class="col-span-1 border-r p-0"><input class="w-full h-full p-1 text-center outline-none" id="l_${id}_dr_pr_${i}"></div>
+                    <div class="col-span-3 p-0"><input type="number" class="w-full h-full p-1 text-right outline-none" placeholder="0" id="l_${id}_dr_a_${i}"></div>
+                </div>`;
+                crRows += `<div class="grid grid-cols-12 border-b border-gray-100 text-sm">
+                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none" placeholder="MMM dd" id="l_${id}_cr_d_${i}"></div>
+                    <div class="col-span-5 border-r p-0"><input class="w-full h-full p-1 outline-none" id="l_${id}_cr_p_${i}"></div>
+                    <div class="col-span-1 border-r p-0"><input class="w-full h-full p-1 text-center outline-none" id="l_${id}_cr_pr_${i}"></div>
+                    <div class="col-span-3 p-0"><input type="number" class="w-full h-full p-1 text-right outline-none" placeholder="0" id="l_${id}_cr_a_${i}"></div>
+                </div>`;
+            }
+
+            return `
+            <div id="ledger_${id}" class="ledger-form break-inside-avoid">
+                <div class="ledger-header relative">
+                    <div class="text-[10px] font-bold text-blue-500 tracking-widest mb-1 uppercase">Account Title</div>
+                    <input type="text" id="l_${id}_name" class="ledger-title-input shadow-sm focus:ring-2 focus:ring-blue-300 outline-none" placeholder="Enter Account Title" value="${name}">
+                </div>
+                <div class="grid grid-cols-2 divide-x divide-gray-200">
+                    <div>
+                        <div class="grid grid-cols-12 ledger-col-header text-center border-b"><div class="col-span-3">Date</div><div class="col-span-5">Particulars</div><div class="col-span-1">PR</div><div class="col-span-3">Amount</div></div>
+                        ${drRows}
+                        <div class="grid grid-cols-12 border-t-2 border-gray-300 py-1 bg-gray-50"><div class="col-span-9 text-right text-xs font-bold pr-2 self-center text-gray-500">TOTAL</div><div class="col-span-3 px-1"><input type="number" id="l_${id}_total_dr" class="w-full bg-white border-b border-gray-400 text-right text-sm font-bold p-1"></div></div>
+                    </div>
+                    <div>
+                        <div class="grid grid-cols-12 ledger-col-header text-center border-b"><div class="col-span-3">Date</div><div class="col-span-5">Particulars</div><div class="col-span-1">PR</div><div class="col-span-3">Amount</div></div>
+                        ${crRows}
+                        <div class="grid grid-cols-12 border-t-2 border-gray-300 py-1 bg-gray-50"><div class="col-span-9 text-right text-xs font-bold pr-2 self-center text-gray-500">TOTAL</div><div class="col-span-3 px-1"><input type="number" id="l_${id}_total_cr" class="w-full bg-white border-b border-gray-400 text-right text-sm font-bold p-1"></div></div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 border-t border-gray-200 p-3">
+                    <div class="flex flex-col items-center justify-center">
+                        <span class="text-[10px] text-gray-500 font-bold tracking-widest mb-1 uppercase">Balance</span>
+                        <div class="flex space-x-2">
+                            <select id="l_${id}_bal_type" class="border border-gray-300 rounded text-sm px-2 py-1 bg-white focus:outline-none focus:border-blue-500"><option value="">-</option><option value="dr">Debit</option><option value="cr">Credit</option></select>
+                            <input type="number" id="l_${id}_bal" class="border border-gray-300 rounded text-sm px-2 py-1 w-40 text-right font-bold focus:outline-none focus:border-blue-500 bg-white">
+                        </div>
+                    </div>
+                    <button onclick="window.addRow(${id})" class="mt-3 w-full text-center text-blue-600 text-xs font-bold hover:text-blue-800 transition flex items-center justify-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>Add Row</button>
+                </div>
+            </div>`;
+        }
+
+        window.addLedger = () => {
+            const container = document.getElementById('ledger-container');
+            const id = state.ledgers.length;
+            const newLedger = { id, name: '', rowCount: 4 };
+            state.ledgers.push(newLedger);
+            saveTestDatatoLocalStorage(); // Persist changes to ledger structure
+            container.insertAdjacentHTML('beforeend', createLedgerHTML(newLedger));
+            const rightPanel = document.querySelector('.scroll-panel');
+            if(rightPanel) rightPanel.scrollTop = rightPanel.scrollHeight;
+        };
+
+        window.addRow = (id) => {
+             const ledger = state.ledgers.find(l => l.id === id);
+             if(ledger) {
+                 ledger.rowCount += 1; 
+                 saveTestDatatoLocalStorage(); // Persist changes to ledger structure
+                 const oldEl = document.getElementById(`ledger_${id}`);
+                 const tempDiv = document.createElement('div');
+                 tempDiv.innerHTML = createLedgerHTML(ledger);
+                 oldEl.parentNode.replaceChild(tempDiv.firstElementChild, oldEl);
+             }
+        };
+
+        window.togglePR = (el, id) => {
+            if(state.isTask1Locked) return;
+            const current = el.innerText;
+            if(current === "") { el.innerText = "✓"; el.classList.add("pr-checked"); state.prChecks[id] = true; }
+            else { el.innerText = ""; el.classList.remove("pr-checked"); el.classList.remove("pr-error"); el.classList.remove("pr-valid"); state.prChecks[id] = false; }
+        };
+        
+        const getGrade = (current, max) => {
+            if (max === 0) return 'IR';
+            const pct = (current / max) * 100;
+            if (pct >= 95) return 'A';
+            if (pct >= 85) return 'P';
+            if (pct >= 75) return 'D';
+            return 'IR';
+        };
+
+        const getGradeColor = (grade) => {
+             if(grade === 'A') return 'text-green-600';
+             if(grade === 'P') return 'text-blue-600';
+             if(grade === 'D') return 'text-yellow-600';
+             return 'text-red-600';
+        };
+
+        const removeErrorClass = (selector) => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.classList.remove('input-error-x');
+                el.classList.remove('input-success-check');
+            });
+        };
+
+        const renderTaskContent = () => {
+            // CRITICAL CHECK: Ensure data is loaded or generated before rendering task content
+            if (!state.studentInfo || state.journalEntries.length === 0) {
+                 // This should only happen if called before resume/start
+                 return `<div class="p-10 text-center text-red-500 font-bold">Error: Task data is missing. Please refresh and ensure you click 'Start the Task'.</div>`;
+            }
+
+
+            const attempts1 = state.attempts[1];
+            const attempts2 = state.attempts[2];
+            const max = 3;
+            
+            // Determine button state for Task 1
+            const isT1BtnDisabled = state.isTask1Locked || state.attempts[1] >= max;
+            const t1BtnText = state.isTask1Locked ? "Task 1 Completed" : (state.attempts[1] >= max ? "Attempts Used" : "Validate Task 1");
+            const t1BtnClass = isT1BtnDisabled 
+                ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
+                : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
+            
+            // Determine button state for Task 2
+            // Task 2 unlocks if Task 1 is Locked OR if Task 1 is Passed (Score >= 60%)
+            // We calculate pass status dynamically
+            const t1Max = state.scores.t1a.max + state.scores.t1b.max + state.scores.t1c.max;
+            const t1Current = state.scores.t1a.current + state.scores.t1b.current + state.scores.t1c.current;
+            const task1Passed = t1Max > 0 && t1Current >= (t1Max * 0.6);
+            
+            const isT2BtnLockedByT1 = !(state.isTask1Locked || task1Passed);
+            const isT2BtnDisabled = isT2BtnLockedByT1 || state.isTask2Locked || state.attempts[2] >= max;
+             const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
+             const t2BtnClass = isT2BtnDisabled 
+                 ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
+                 : "px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition";
+
+
+            // --- TASK 1 SECTION ---
+            const task1ContentHTML = `
+                <div class="h-full">
+                    <div class="sticky-section-header" id="header-task1">
+                        <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2">
+                            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">Task 1</span>
+                            Posting to General Ledger
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                            <span id="lbl_attempts_1" class="text-xs text-gray-800 font-bold">Attempts: ${attempts1}/${max}</span>
+                            <button onclick="window.toggleRubric('task1-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
+                            <button id="btn-validate-1" onclick="window.validateTask1()" class="${t1BtnClass}" ${isT1BtnDisabled ? 'disabled' : ''} no-print>${t1BtnText}</button>
+                        </div>
+                    </div>
+                    
+                    <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task1-instructions-panel">
+                        <!-- Instructions (Updated) -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
+                            <h4 class="font-bold mb-2 text-gray-800">Instruction:</h4>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                <li>Complete all required fields.</li>
+                                <li>Enter amounts without commas and decimal places.</li>
+                                <li>Round off centavos to the nearest peso.</li>
+                                <li>Format Dates carefully: Row 1 (Year):  YYYY (e.g., ${new Date().getFullYear()}). Row 2 (Beg. Bal): MMM dd (e.g., Jan 01). Row 3+ (Transactions): dd (e.g., 05)</li>
+                                <li>Validate each task to unlock the next one.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Rubric -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-xs">
+                            <div class="bg-indigo-50 p-3 flex justify-between items-center border-b border-indigo-100">
+                                <h4 class="font-bold text-indigo-900 uppercase tracking-wider">TASK 1: POSTING TO THE LEDGER</h4>
+                                <div class="font-mono text-sm text-indigo-900 font-bold">
+                                    A = <span id="grade-a-display">${state.scores.t1a.current}/${state.scores.t1a.max || '-'} - ${state.scores.t1a.grade}</span> / 
+                                    B = <span id="grade-b-display">${state.scores.t1b.current}/${state.scores.t1b.max || '-'} - ${state.scores.t1b.grade}</span> / 
+                                    C = <span id="grade-c-display">${state.scores.t1c.current}/${state.scores.t1c.max || '-'} - ${state.scores.t1c.grade}</span>
+                                </div>
+                            </div>
+                            <!-- Detailed Rubric Table (Task 1) -->
+                            <div class="grid grid-cols-5 text-center text-white font-bold leading-tight">
+                                <div class="bg-slate-900 p-2 flex items-center justify-center">Competency</div>
+                                <div class="bg-green-600 p-2 flex items-center justify-center">Advanced (A)</div>
+                                <div class="bg-blue-600 p-2 flex items-center justify-center">Proficient (P)</div>
+                                <div class="bg-amber-600 p-2 flex items-center justify-center">Developing (D)</div>
+                                <div class="bg-red-600 p-2 flex items-center justify-center">Intervention Required (IR)</div>
+                            </div>
+                            <div class="grid grid-cols-5 text-center min-h-[70px] divide-x divide-gray-100 border-t border-gray-200">
+                                <div class="p-3 text-left text-gray-700 italic flex items-center bg-gray-50 text-[10px]">
+                                    To accurately post journal entries to the appropriate General Ledger (T-Accounts) and calculate the correct running balance for each account.
+                                </div>
+                                <div class="p-2 text-green-700 flex items-center justify-center font-medium bg-green-50/50">Excellent performance. (95-100%)</div>
+                                <div class="p-2 text-blue-700 flex items-center justify-center font-medium bg-blue-50/50">Good performance. (85-94.9%)</div>
+                                <div class="p-2 text-amber-700 flex items-center justify-center font-medium bg-amber-50/50">Acceptable performance. (75-84.9%)</div>
+                                <div class="p-2 text-red-700 flex items-center justify-center font-medium bg-red-50/50">Unacceptable performance. (<75%)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task 1 Internal Grid: 4/10 (Journal) and 6/10 (Ledger Forms) -->
+                    <!-- NOTE: Reverted back to xl:grid-cols-10 and adjusted spans for 4:6 ratio -->
+                    <div id="task1-grid" class="grid grid-cols-1 xl:grid-cols-10 gap-4 split-panel mb-4 relative mx-4">
+                        <!-- Journal (4/10 width) -->
+                        <div class="xl:col-span-4 bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
+                            <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
+                                <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
+                            </div>
+                            <div class="overflow-y-auto flex-1 bg-white">
+                                <table class="w-full text-sm border-collapse">
+                                    <thead class="bg-gray-50 sticky top-0 z-10 text-xs uppercase text-gray-500 font-bold">
+                                        <tr>
+                                            <th class="p-2 text-right w-16">Date</th>
+                                            <th class="p-2 text-left">Particulars</th>
+                                            <th class="p-2 text-center w-10">PR</th>
+                                            <th class="p-2 text-right w-20">Debit</th>
+                                            <th class="p-2 text-right w-20">Credit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        ${state.journalEntries.map((e, index) => {
+                                            let dateHTML = index === 0 
+                                                ? `<div class="text-[10px] font-bold text-gray-500 leading-tight mb-1">${e.year}</div><div>${e.month} ${e.day}</div>`
+                                                : `<div>${e.day}</div>`;
+                                            
+                                            const partHTML = `
+                                                <div class="font-bold text-gray-800 journal-line">${e.titles[0]}</div>
+                                                <div class="text-gray-800 journal-line pl-8">${e.titles[1]}</div>
+                                                <div class="text-xs italic text-gray-400 journal-line pl-4">${e.desc}</div>
+                                            `;
+
+                                            const prHTML = `
+                                                <div class="journal-line justify-center"><div class="pr-box" id="pr_box_j_${e.id}_0" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div></div>
+                                                <div class="journal-line justify-center"><div class="pr-box" id="pr_box_j_${e.id}_1" onclick="window.togglePR(this, 'j_${e.id}_1')" title="Post Credit"></div></div>
+                                                <div class="journal-line"></div>
+                                            `;
+
+                                            const drHTML = `
+                                                <div class="font-bold text-gray-700 journal-line text-right">${formatMoney(e.drs[0])}</div>
+                                                <div class="journal-line"></div>
+                                                <div class="journal-line"></div>
+                                            `;
+
+                                            const crHTML = `
+                                                <div class="journal-line"></div>
+                                                <div class="text-gray-700 journal-line text-right">${formatMoney(e.crs[1])}</div>
+                                                <div class="journal-line"></div>
+                                            `;
+
+                                            return `
+                                            <tr class="journal-row hover:bg-blue-50/50 transition-colors group">
+                                                <td class="text-xs font-bold text-gray-600 text-right pr-2 w-16 align-top pt-3">
+                                                    ${dateHTML}
+                                                </td>
+                                                <td class="align-top">
+                                                    ${partHTML}
+                                                </td>
+                                                <td class="align-top w-10">
+                                                    ${prHTML}
+                                                </td>
+                                                <td class="align-top w-20">
+                                                    ${drHTML}
+                                                </td>
+                                                <td class="align-top w-20">
+                                                    ${crHTML}
+                                                </td>
+                                            </tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Ledgers (6/10 width) -->
+                        <div class="xl:col-span-6 h-full overflow-hidden flex flex-col bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
+                            <div class="flex-none p-2 bg-white border-b">
+                                <div class="flex justify-between items-center pb-2">
+                                    <h4 class="font-bold text-xs uppercase tracking-wide">Beginning Balances</h4>
+                                    <button id="btn-add-ledger" onclick="window.addLedger()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded shadow">Add Ledger</button>
+                                </div>
+                                <div class="flex flex-wrap gap-2 pt-1 max-h-32 overflow-y-auto">
+                                    ${state.pctb.map(a => `
+                                        <div class="pctb-tag hover:border-blue-300 hover:shadow-md transition cursor-default">
+                                            <span class="font-bold text-gray-800">${a.name}</span>
+                                            <span class="text-gray-500">Beg: ${formatMoney(a.bal)} ${a.side}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="flex-none p-2 bg-indigo-50 border-t border-b border-indigo-100 font-bold text-indigo-900 text-sm">General Ledger Forms</div>
+                            <div id="ledger-container" class="scroll-panel p-4 pb-20">
+                                ${state.ledgers.map(l => createLedgerHTML(l)).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            
+            // --- TASK 2 SECTION ---
+            const tbRows = state.requiredAccounts.map((acc, i) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-1 border bg-white"><input id="tb_name_${i}" class="text-input text-left font-medium" placeholder="Select or Type Account..."></td>
+                    <td class="p-1 border bg-white"><input type="number" id="tb_dr_${i}" class="table-input" placeholder="0"></td>
+                    <td class="p-1 border bg-white"><input type="number" id="tb_cr_${i}" class="table-input" placeholder="0"></td>
+                </tr>
+            `).join('');
+
+            const task2ContentHTML = `
+                <div class="h-full">
+                    <div class="sticky-section-header" id="header-task2">
+                         <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2">
+                            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-sm">Task 2</span>
+                            Preparing the Trial Balance
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                             <span id="lbl_attempts_2" class="text-xs text-gray-800 font-bold">Attempts: ${attempts2}/${max}</span>
+                             <button onclick="window.toggleRubric('task2-instructions-panel', this)" class="text-xs font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm transition-colors no-print">Hide Instructions</button>
+                             <button id="btn-validate-2" onclick="window.validateTask2()" class="${t2BtnClass}" ${isT2BtnDisabled ? 'disabled' : ''} no-print>${t2BtnText}</button>
+                        </div>
+                    </div>
+
+                    <div class="mx-4 mb-4 transition-all duration-300 ease-in-out" id="task2-instructions-panel">
+                        <!-- Instructions -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 text-sm">
+                            <h4 class="font-bold mb-2 text-gray-800">Task 2 Instruction:</h4>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                <li>Prepare the Trial Balance based on the balances from the General Ledger.</li>
+                                <li>Ensure the header (Company Name, Title, Date) is correct.</li>
+                                <li>List all accounts with their Debit or Credit balances.</li>
+                                <li>Compute the total Debit and Credit columns.</li>
+                                <li>Ensure Total Debits equal Total Credits.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Rubric -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden text-xs">
+                            <div class="bg-indigo-50 p-3 flex justify-between items-center border-b border-indigo-100">
+                                <h4 class="font-bold text-indigo-900 uppercase tracking-wider">TASK 2: PREPARING THE TRIAL BALANCE</h4>
+                                <div class="font-bold text-indigo-900 bg-white px-3 py-1 rounded border border-indigo-200 shadow-sm">
+                                    Score: <span id="t2-score">0/${state.scores.t2.max || '-'}</span> <span class="mx-1 text-gray-300">|</span> Grade: <span id="t2-grade" class="text-red-600">--</span>
+                                </div>
+                            </div>
+                            <!-- Detailed Rubric Table (Task 2) -->
+                            <div class="grid grid-cols-5 text-center text-white font-bold leading-tight">
+                                <div class="bg-slate-900 p-2 flex items-center justify-center">Competency</div>
+                                <div class="bg-green-600 p-2 flex items-center justify-center">Advanced (A)</div>
+                                <div class="bg-blue-600 p-2 flex items-center justify-center">Proficient (P)</div>
+                                <div class="bg-amber-600 p-2 flex items-center justify-center">Developing (D)</div>
+                                <div class="bg-red-600 p-2 flex items-center justify-center">Intervention Required (IR)</div>
+                            </div>
+                            <div class="grid grid-cols-5 text-center min-h-[70px] divide-x divide-gray-100 border-t border-gray-200">
+                                <div class="p-3 text-left text-gray-700 italic flex items-center bg-gray-50 text-[10px]">
+                                    To accurately prepare a Trial Balance by listing all accounts with their correct debit or credit balances and ensuring total debits equal total credits.
+                                </div>
+                                <div class="p-2 text-green-700 flex items-center justify-center font-medium bg-green-50/50">Excellent performance. Accurate entries and balanced totals. (95-100%)</div>
+                                <div class="p-2 text-blue-700 flex items-center justify-center font-medium bg-blue-50/50">Good performance. Mostly accurate with minor errors. (85-94.9%)</div>
+                                <div class="p-2 text-amber-700 flex items-center justify-center font-medium bg-amber-50/50">Acceptable performance. Several errors in entries or totals. (75-84.9%)</div>
+                                <div class="p-2 text-red-700 flex items-center justify-center font-medium bg-red-50/50">Unacceptable performance. Unbalanced or significant errors. (<75%)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="task2-wrapper" class="relative ${isT2BtnLockedByT1 ? 'locked-task' : ''} transition-all duration-500 mx-4">
+                        <div class="blur-content">
+                            <div class="p-6 bg-gray-50 rounded shadow-inner border border-gray-200">
+                                <div class="bg-white p-6 border rounded shadow-sm max-w-4xl mx-auto">
+                                    <!-- Centered Header -->
+                                    <div class="text-center font-bold mb-6 text-gray-800">
+                                        <div class="text-2xl uppercase tracking-wide border-b-2 border-transparent inline-block pb-1">${document.getElementById('company-name').innerText}</div>
+                                        <div class="text-xl text-indigo-700 mt-1">Trial Balance</div>
+                                        <div class="text-md text-gray-500 mt-1 font-medium">December 31, ${new Date().getFullYear()}</div>
+                                    </div>
+                                    
+                                    <!-- 3 Column Table -->
+                                    <table class="w-full text-sm border-collapse border border-gray-300 shadow-sm">
+                                        <thead>
+                                            <tr class="bg-indigo-600 text-white uppercase text-xs tracking-wider">
+                                                <th class="border border-indigo-700 p-3 w-1/2 text-left">Account Titles</th>
+                                                <th class="border border-indigo-700 p-3 w-1/4">Debit</th>
+                                                <th class="border border-indigo-700 p-3 w-1/4">Credit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">${tbRows}
+                                            <tr class="font-bold bg-indigo-50 border-t-2 border-indigo-300">
+                                                <td class="text-right p-3 text-indigo-900 uppercase tracking-widest text-xs">Total:</td>
+                                                <td class="p-2 border border-indigo-200"><input type="number" id="tb_total_dr" class="table-input font-bold text-indigo-700 bg-transparent border-none text-base"></td>
+                                                <td class="p-2 border border-indigo-200"><input type="number" id="tb_total_cr" class="table-input font-bold text-indigo-700 bg-transparent border-none text-base"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="task2-overlay" class.class = "${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}">
+                            <div class="lock-message">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                <p>Task 2 is Locked</p>
+                                <p class="text-xs font-normal mt-1">Complete Task 1 or consume all attempts to unlock.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+            // --- COMBINING THEM INTO ONE PAGE (60/40 Split Task 1 / Task 2) ---
+            return `
+            <!-- Corrected Main Grid to maintain 60/40 Split (Task 1 / Task 2) -->
+            <div class="grid grid-cols-1 lg:grid-cols-10 gap-4 p-4 xl:p-6">
+                <!-- Task 1 Column (6/10 width) -->
+                <div class="lg:col-span-6 min-h-[600px] flex flex-col">
+                    ${task1ContentHTML}
+                </div>
+
+                <!-- Task 2 Column (4/10 width) -->
+                <div class="lg:col-span-4 min-h-[600px] flex flex-col">
+                    ${task2ContentHTML}
+                </div>
+            </div>
+            `;
+        };
+
+        // --- VALIDATION HELPERS ---
+        const getLedgerInput = (id, side, field, idx) => {
+            const el = document.getElementById(`l_${id}_${side}_${field}_${idx}`);
+            return el ? el.value.trim() : "";
+        };
+
+        window.validateTask1 = () => {
+            // 1. Clear previous error indicators
+            removeErrorClass('#task1-grid input');
+
+            state.attempts[1]++;
+            saveStateToLocalStorage(); // Persist attempt count
+            const attempts = state.attempts[1];
+            const max = 3;
+            const currentYear = new Date().getFullYear();
+
+            // Update Counter
+            const ctr = document.getElementById('lbl_attempts_1');
+            if(ctr) ctr.innerText = `Attempts: ${attempts}/${max}`;
+            
+            state.explanations = []; 
+            const userLedgers = state.ledgers.map(l => {
+                const nameInp = document.getElementById(`l_${l.id}_name`);
+                return { id: l.id, name: nameInp ? nameInp.value.trim() : '', ref: l };
+            });
+
+            // --- SUBTASK A: Setup General Ledger ---
+            let scoreA = 0;
+            const maxScoreA = state.requiredAccounts.length;
+            
+            state.requiredAccounts.forEach(req => {
+                if (userLedgers.some(ul => ul.name.toLowerCase() === req.toLowerCase())) {
+                    scoreA++;
+                } else {
+                    state.explanations.push(`Subtask A: Ledger for '${req}' is missing.`);
+                    // NOTE: Marking missing ledgers is hard, but we can visually mark the empty account title inputs.
+                }
+            });
+            state.scores.t1a.current = scoreA;
+            state.scores.t1a.max = maxScoreA;
+            state.scores.t1a.grade = getGrade(scoreA, maxScoreA);
+
+
+            // --- SUBTASK B: Input Beginning Balances (Simplified Error Marking) ---
+            let scoreB = 0;
+            const maxScoreB = state.pctb.length * 4; 
+
+            state.pctb.forEach(acc => {
+                const userL = userLedgers.find(ul => ul.name.toLowerCase() === acc.name.toLowerCase());
+                let accBScore = 0;
+                if (userL) {
+                    const side = acc.side.toLowerCase(); 
+                    
+                    // 1. Year Value in First Row (which is now an input field)
+                    const yearInp = document.getElementById(`l_${userL.id}_${side}_year`);
+                    const dateInpEl = document.getElementById(`l_${userL.id}_${side}_d_0`);
+                    const partInpEl = document.getElementById(`l_${userL.id}_${side}_p_0`);
+                    const amtInpEl = document.getElementById(`l_${userL.id}_${side}_a_0`);
+
+                    const dateInp = dateInpEl.value.trim(); 
+                    const partInp = partInpEl.value.trim();
+                    const amtInp = parseInt(amtInpEl.value.trim() || 0);
+
+                    // Score breakdown (and mark errors)
+                    if(yearInp && parseInt(yearInp.value) === currentYear) { accBScore++; yearInp.classList.add('input-success-check'); } else { yearInp?.classList.add('input-error-x'); }
+                    if(dateInp.length > 0) { accBScore++; dateInpEl.classList.add('input-success-check'); } else { dateInpEl?.classList.add('input-error-x'); }
+                    if(partInp.toLowerCase().includes('beg') || partInp.toLowerCase().includes('balance')) { accBScore++; partInpEl.classList.add('input-success-check'); } else { partInpEl?.classList.add('input-error-x'); }
+                    if(Math.abs(amtInp - acc.bal) < 1) { accBScore++; amtInpEl.classList.add('input-success-check'); } else { amtInpEl?.classList.add('input-error-x'); }
+                }
+                scoreB += accBScore;
+            });
+            state.scores.t1b.current = scoreB;
+            state.scores.t1b.max = maxScoreB;
+            state.scores.t1b.grade = getGrade(scoreB, maxScoreB);
+
+            // --- SUBTASK C: Post Journal Entries and Totals (REVISED LOGIC) ---
+            // Calculate max potential transactions points accurately based on actual journal data
+            let totalJournalTransPoints = 0;
+            const accountTotals = {}; 
+            state.requiredAccounts.forEach(a => accountTotals[a] = { dr:0, cr:0, begDr:0, begCr:0, hasBegDr:false, hasBegCr:false });
+            
+            // Map Beg Bals
+            state.pctb.forEach(a => {
+                if(accountTotals[a.name]) {
+                    if(a.side === 'Dr') { accountTotals[a.name].begDr = a.bal; accountTotals[a.name].hasBegDr = true; }
+                    else { accountTotals[a.name].begCr = a.bal; accountTotals[a.name].hasBegCr = true; }
+                }
+            });
+
+            // Map Journal Entries
+            state.journalEntries.forEach(e => {
+                const drAcc = e.titles[0]; const crAcc = e.titles[1];
+                if(accountTotals[drAcc]) accountTotals[drAcc].dr += e.drs[0];
+                if(accountTotals[crAcc]) accountTotals[crAcc].cr += e.crs[1];
+                totalJournalTransPoints += 2; // 1 point for dr, 1 point for cr
+            });
+            // Multiplier for difficulty? Let's say 2 pts per correct entry match (Date + Amount)
+            totalJournalTransPoints = totalJournalTransPoints * 2; 
+
+            const yearPointsMax = state.requiredAccounts.length * 1;
+            const totalsPointsMax = (state.requiredAccounts.length * 3);
+
+            const maxScoreC = totalJournalTransPoints + yearPointsMax + totalsPointsMax;
+            let scoreC = 0;
+
+            userLedgers.forEach(ul => {
+                const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
+                if(accName) {
+                    const expected = accountTotals[accName];
+                    const elTotalDr = document.getElementById(`l_${ul.id}_total_dr`);
+                    const elTotalCr = document.getElementById(`l_${ul.id}_total_cr`);
+                    const elBal = document.getElementById(`l_${ul.id}_bal`);
+                    
+                    const valTotalDr = parseInt(elTotalDr.value || 0);
+                    const valTotalCr = parseInt(elTotalCr.value || 0);
+                    const valBal = parseInt(elBal.value || 0);
+                    
+                    // Simple total check (2 pts)
+                    if (Math.abs(valTotalDr - (expected.dr + expected.begDr)) < 2) { scoreC++; elTotalDr?.classList.add('input-success-check'); } else { elTotalDr?.classList.add('input-error-x'); }
+                    if (Math.abs(valTotalCr - (expected.cr + expected.begCr)) < 2) { scoreC++; elTotalCr?.classList.add('input-success-check'); } else { elTotalCr?.classList.add('input-error-x'); }
+
+                    // Balance check (1 pt)
+                    const net = (expected.begDr + expected.dr) - (expected.begCr + expected.cr);
+                    if(Math.abs(valBal - Math.abs(net)) < 2) { scoreC++; elBal?.classList.add('input-success-check'); } else { elBal?.classList.add('input-error-x'); }
+
+                    // --- REVISED TRANSACTION SCORING ---
+                    // Get expected transactions for this account
+                    const expectedTrans = state.journalEntries.filter(e => e.titles.includes(accName)).map(e => {
+                        const isDr = e.titles[0] === accName;
+                        return {
+                            day: e.day,
+                            amount: isDr ? e.drs[0] : e.crs[1],
+                            side: isDr ? 'dr' : 'cr',
+                            matched: false
+                        };
+                    });
+
+                    // Iterate User Rows (Skipping 0 which is Beg Bal)
+                    // We assume max rows is what is rendered.
+                    // Note: This relies on DOM presence.
+                    const rowsToCheck = ul.ref.rowCount || 4;
+                    for(let r=1; r < rowsToCheck; r++) {
+                        // Check Dr Side
+                        const uDrD = getLedgerInput(ul.id, 'dr', 'd', r);
+                        const uDrA = parseInt(getLedgerInput(ul.id, 'dr', 'a', r) || 0);
+                        
+                        if (uDrA > 0) {
+                            // Find match in expected
+                            const matchIdx = expectedTrans.findIndex(et => et.side === 'dr' && !et.matched && Math.abs(et.amount - uDrA) < 1); // Looser check on Date for now to prevent frustration, stricter check on amount
+                            if (matchIdx > -1) {
+                                scoreC += 2;
+                                expectedTrans[matchIdx].matched = true;
+                                document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-success-check');
+                                document.getElementById(`l_${ul.id}_dr_d_${r}`)?.classList.add('input-success-check');
+                            } else {
+                                // Mark error on specific cell
+                                document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-error-x');
+                            }
+                        }
+
+                        // Check Cr Side
+                        const uCrD = getLedgerInput(ul.id, 'cr', 'd', r);
+                        const uCrA = parseInt(getLedgerInput(ul.id, 'cr', 'a', r) || 0);
+
+                        if (uCrA > 0) {
+                             const matchIdx = expectedTrans.findIndex(et => et.side === 'cr' && !et.matched && Math.abs(et.amount - uCrA) < 1);
+                             if (matchIdx > -1) {
+                                 scoreC += 2;
+                                 expectedTrans[matchIdx].matched = true;
+                                 document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-success-check');
+                                 document.getElementById(`l_${ul.id}_cr_d_${r}`)?.classList.add('input-success-check');
+                             } else {
+                                 document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-error-x');
+                             }
+                        }
+                    }
+                }
+            });
+            
+            // --- VALIDATE PR BOXES (New Feature) ---
+            // If the user checked a PR box, is the corresponding account created?
+            state.journalEntries.forEach(e => {
+                const drKey = `j_${e.id}_0`;
+                const crKey = `j_${e.id}_1`;
+                const drAccount = e.titles[0];
+                const crAccount = e.titles[1];
+
+                if(state.prChecks[drKey]) {
+                    const exists = userLedgers.some(ul => ul.name.toLowerCase() === drAccount.toLowerCase());
+                    const box = document.getElementById(`pr_box_${drKey}`);
+                    if(!exists) { 
+                        box?.classList.add('pr-error'); 
+                    } else {
+                        box?.classList.add('pr-valid');
+                    }
+                }
+                if(state.prChecks[crKey]) {
+                    const exists = userLedgers.some(ul => ul.name.toLowerCase() === crAccount.toLowerCase());
+                    const box = document.getElementById(`pr_box_${crKey}`);
+                    if(!exists) { 
+                        box?.classList.add('pr-error'); 
+                    } else {
+                        box?.classList.add('pr-valid');
+                    }
+                }
+            });
+            
+            // Clamp and finalize C score (keeping the original calculation structure)
+            if (scoreC > maxScoreC) scoreC = maxScoreC;
+            state.scores.t1c.current = scoreC;
+            state.scores.t1c.max = maxScoreC;
+            state.scores.t1c.grade = getGrade(scoreC, maxScoreC);
+
+
+            // --- UPDATE UI & PERSISTENCE ---
+            document.getElementById('grade-a-display').innerText = `${state.scores.t1a.current}/${state.scores.t1a.max} - ${state.scores.t1a.grade}`;
+            document.getElementById('grade-b-display').innerText = `${state.scores.t1b.current}/${state.scores.t1b.max} - ${state.scores.t1b.grade}`;
+            document.getElementById('grade-c-display').innerText = `${state.scores.t1c.current}/${state.scores.t1c.max} - ${state.scores.t1c.grade}`;
+
+            // Check for completion/attempts used
+            // Logic revised: ONLY lock if max attempts reached. Passing DOES NOT lock.
+            
+            if (attempts >= max) { 
+                state.isTask1Locked = true;
+                saveStateToLocalStorage(); // Persist lock state
+                
+                const btn1 = document.getElementById('btn-validate-1');
+                btn1.innerText = "Attempts Used";
+                btn1.className = "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed";
+                btn1.disabled = true;
+
+                // Disable inputs to make them uneditable (but now visible in black text)
+                window.disableTaskInputs('#task1-grid');
+                document.getElementById('btn-add-ledger').disabled = true;
+                
+                // --- VISUAL FIX: Remove lock/blur classes on task completion ---
+                const t2Wrapper = document.getElementById('task2-wrapper');
+                // Ensure Task 2 visual unlock is handled below in renderApp() for the button state, 
+                // but here we ensure Task 1 itself looks complete and editable.
+                const task1Grid = document.getElementById('task1-grid');
+                if (task1Grid.classList.contains('locked-task')) {
+                    task1Grid.classList.remove('locked-task');
+                    task1Grid.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
+                }
+                
+                // Re-render app to update T2 button/lock state
+                renderApp();
+
+                renderMessageBox("Task 1 Attempts Used. Proceed to Task 2.", false);
+            } else {
+                // If not locked, we still want to show success if they passed so they know they can move on
+                const t1Max = state.scores.t1a.max + state.scores.t1b.max + state.scores.t1c.max;
+                const t1Current = state.scores.t1a.current + state.scores.t1b.current + state.scores.t1c.current;
+                const passed = t1Max > 0 && t1Current >= (t1Max * 0.6);
+                
+                if (passed) {
+                     renderApp(); // Update Task 2 unlock state visually
+                     renderMessageBox(`Task 1 Validated (Passing Score). You have ${max - attempts} attempts left to improve or proceed to Task 2.`, false);
+                } else {
+                     renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+                }
+            }
+        };
