@@ -326,7 +326,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 09:48:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 10:06:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -1211,6 +1211,9 @@
             // Structure: { AccountName: [ { amount, side, day, matched: false } ] }
             const accountTransactions = {};
             state.requiredAccounts.forEach(a => accountTransactions[a] = []);
+            
+            // Map to track posted status of specific journal lines
+            const journalLinePostedStatus = {};
 
             state.journalEntries.forEach(e => {
                 const drAcc = e.titles[0]; const crAcc = e.titles[1];
@@ -1219,9 +1222,15 @@
                 if(accountTotals[drAcc]) accountTotals[drAcc].dr += e.drs[0];
                 if(accountTotals[crAcc]) accountTotals[crAcc].cr += e.crs[1];
 
-                // Store expected ledger lines
-                if(accountTransactions[drAcc]) accountTransactions[drAcc].push({ amount: e.drs[0], side: 'dr', day: e.day, matched: false });
-                if(accountTransactions[crAcc]) accountTransactions[crAcc].push({ amount: e.crs[1], side: 'cr', day: e.day, matched: false });
+                // Keys for PR status
+                const keyDr = `j_${e.id}_0`;
+                const keyCr = `j_${e.id}_1`;
+                journalLinePostedStatus[keyDr] = false;
+                journalLinePostedStatus[keyCr] = false;
+
+                // Store expected ledger lines with reference to journal key
+                if(accountTransactions[drAcc]) accountTransactions[drAcc].push({ amount: e.drs[0], side: 'dr', day: e.day, matched: false, key: keyDr });
+                if(accountTransactions[crAcc]) accountTransactions[crAcc].push({ amount: e.crs[1], side: 'cr', day: e.day, matched: false, key: keyCr });
             });
 
             // 1. Score Ledger Rows & Totals
@@ -1272,6 +1281,11 @@
                                     // Found a matching amount. Now check formatting strictly.
                                     expectedTransList[matchIdx].matched = true; // Mark as found
                                     
+                                    // Mark the specific journal line as posted
+                                    if(expectedTransList[matchIdx].key) {
+                                        journalLinePostedStatus[expectedTransList[matchIdx].key] = true;
+                                    }
+                                    
                                     // 1. Amount Score
                                     scoreC++; aEl.classList.add('input-success-check');
 
@@ -1303,53 +1317,28 @@
             
             // 2. Score Journal PR Boxes
             // Logic: Check if box is checked AND if the corresponding transaction was successfully matched in the ledger logic above.
-            // Since we updated 'matched' status in 'accountTransactions', we can re-verify.
-            
-            // We need to map Journal IDs back to the 'accountTransactions' array.
-            // But 'accountTransactions' just aggregated them.
-            // Let's iterate Journal Entries again.
-            
             state.journalEntries.forEach(e => {
-                // DR Side
-                const drKey = `j_${e.id}_0`;
-                const boxDr = document.getElementById(`pr_box_${drKey}`);
-                const drAcc = e.titles[0];
-                const drAmt = e.drs[0];
-                
-                // Find if this specific debit was matched in the verification step above
-                // We look into accountTransactions[drAcc] for a matched entry with this amount.
-                // Note: If duplicates exist (e.g. two salaries of 9000), we need to ensure we don't double count.
-                // Simplified: If there is *any* matched entry with this amount in that account list, we assume this journal line corresponds to it.
-                // (Robust enough for this level).
-                const drMathedEntry = accountTransactions[drAcc]?.find(t => t.side === 'dr' && t.amount === drAmt && t.matched);
-                
-                if (state.prChecks[drKey]) {
-                    if (drMathedEntry) {
-                        scoreC++; // Point for checking the box correctly
-                        boxDr?.classList.add('pr-valid');
+                ['0', '1'].forEach(sideIdx => {
+                    const key = `j_${e.id}_${sideIdx}`;
+                    const box = document.getElementById(`pr_box_${key}`);
+                    const isChecked = state.prChecks[key];
+                    const isPosted = journalLinePostedStatus[key];
+
+                    if (isChecked) {
+                        if (isPosted) {
+                            scoreC++; // Point for checking the box correctly
+                            box?.classList.add('pr-valid');
+                        } else {
+                            // Checked but not found in ledger -> Error
+                            box?.classList.add('pr-error');
+                        }
                     } else {
-                        // Checked but not found in ledger -> Error
-                        boxDr?.classList.add('pr-error');
+                        if (isPosted) {
+                            // Posted but not checked -> Error (Visual warning to student)
+                            box?.classList.add('pr-error');
+                        }
                     }
-                }
-
-                // CR Side
-                const crKey = `j_${e.id}_1`;
-                const boxCr = document.getElementById(`pr_box_${crKey}`);
-                const crAcc = e.titles[1];
-                const crAmt = e.crs[1];
-
-                const crMathedEntry = accountTransactions[crAcc]?.find(t => t.side === 'cr' && t.amount === crAmt && t.matched);
-
-                if (state.prChecks[crKey]) {
-                    if (crMathedEntry) {
-                        scoreC++; // Point for checking the box correctly
-                        boxCr?.classList.add('pr-valid');
-                    } else {
-                        // Checked but not found in ledger -> Error
-                        boxCr?.classList.add('pr-error');
-                    }
-                }
+                });
             });
             
             // Clamp and finalize C score
