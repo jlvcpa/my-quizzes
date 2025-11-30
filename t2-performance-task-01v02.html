@@ -317,7 +317,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 01:00:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 01:21:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -678,14 +678,17 @@
 
             for(let i=0; i<rowCount; i++) { 
                 // REVISION: Date alignment changed to text-right per user request
+                // REVISION: Placeholder logic - first row (i=0) is MMM dd, others (i>0) is dd
+                const ph = i === 0 ? "MMM dd" : "dd";
+
                 drRows += `<div class="grid grid-cols-12 border-b border-gray-100 text-sm">
-                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none" placeholder="MMM dd" id="l_${id}_dr_d_${i}"></div>
+                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none" placeholder="${ph}" id="l_${id}_dr_d_${i}"></div>
                     <div class="col-span-5 border-r p-0"><input class="w-full h-full p-1 outline-none" id="l_${id}_dr_p_${i}"></div>
                     <div class="col-span-1 border-r p-0"><input class="w-full h-full p-1 text-center outline-none" id="l_${id}_dr_pr_${i}"></div>
                     <div class="col-span-3 p-0"><input type="number" class="w-full h-full p-1 text-right outline-none" placeholder="0" id="l_${id}_dr_a_${i}"></div>
                 </div>`;
                 crRows += `<div class="grid grid-cols-12 border-b border-gray-100 text-sm">
-                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none" placeholder="MMM dd" id="l_${id}_cr_d_${i}"></div>
+                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none" placeholder="${ph}" id="l_${id}_cr_d_${i}"></div>
                     <div class="col-span-5 border-r p-0"><input class="w-full h-full p-1 outline-none" id="l_${id}_cr_p_${i}"></div>
                     <div class="col-span-1 border-r p-0"><input class="w-full h-full p-1 text-center outline-none" id="l_${id}_cr_pr_${i}"></div>
                     <div class="col-span-3 p-0"><input type="number" class="w-full h-full p-1 text-right outline-none" placeholder="0" id="l_${id}_cr_a_${i}"></div>
