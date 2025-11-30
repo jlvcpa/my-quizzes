@@ -315,7 +315,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 11:35:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 12:06:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -938,7 +938,7 @@
                                     <h4 class="font-bold text-xs uppercase tracking-wide">Beginning Balances</h4>
                                     <button id="btn-add-ledger" onclick="window.addLedger()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded shadow">Add Ledger</button>
                                 </div>
-                                <div class="flex flex-wrap gap-2 pt-1 max-h-32 overflow-y-auto">
+                                <div class="flex flex-wrap gap-2 pt-1">
                                     ${state.pctb.map(a => `
                                         <div class="pctb-tag hover:border-blue-300 hover:shadow-md transition cursor-default">
                                             <span class="font-bold text-gray-800">${a.name}</span>
@@ -1363,18 +1363,40 @@
                     task1Grid.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
                 }
                 
-                // Re-render app to update T2 button/lock state
-                renderApp();
-
+                // Unlock T2 if T1 exhausted
+                unlockTask2Visuals();
+                
                 renderMessageBox("Task 1 Attempts Used. Proceed to Task 2.", false);
             } else {
-                // If not locked, we still want to show success if they passed so they know they can move on
-                // UPDATED LOGIC: If T1 is exhausted, T2 unlocks. 
-                // We re-render app so T2 button updates.
-                renderApp();
-                renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+                const t1Max = state.scores.t1a.max + state.scores.t1b.max + state.scores.t1c.max;
+                const t1Current = state.scores.t1a.current + state.scores.t1b.current + state.scores.t1c.current;
+                const passed = t1Max > 0 && t1Current >= (t1Max * 0.6);
+                
+                if (passed) {
+                     unlockTask2Visuals();
+                     renderMessageBox(`Task 1 Validated (Passing Score). You have ${max - attempts} attempts left to improve or proceed to Task 2.`, false);
+                } else {
+                     renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+                }
             }
         };
+        
+        const unlockTask2Visuals = () => {
+            const t2Btn = document.getElementById('btn-validate-2');
+            if(t2Btn) {
+                t2Btn.disabled = false;
+                t2Btn.className = "px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition";
+                t2Btn.innerText = "Validate Task 2";
+            }
+            const t2Wrapper = document.getElementById('task2-wrapper');
+            if(t2Wrapper) {
+                t2Wrapper.classList.remove('locked-task');
+                const overlay = document.getElementById('task2-overlay');
+                if(overlay) {
+                    overlay.classList.add('hidden'); 
+                }
+            }
+        }
 
         window.validateTask2 = () => {
             // 1. Clear previous error indicators
