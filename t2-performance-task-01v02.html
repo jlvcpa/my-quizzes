@@ -326,7 +326,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 09:15:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 09:48:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -1096,9 +1096,16 @@
             return el ? el.value.trim() : "";
         };
 
+        const getLedgerInputEl = (id, side, field, idx) => {
+            return document.getElementById(`l_${id}_${side}_${field}_${idx}`);
+        };
+
         window.validateTask1 = () => {
             // 1. Clear previous error indicators
             removeErrorClass('#task1-grid input');
+            document.querySelectorAll('.pr-box').forEach(b => {
+                b.classList.remove('pr-error', 'pr-valid');
+            });
 
             state.attempts[1]++;
             saveStateToLocalStorage(); // Persist attempt count
@@ -1133,9 +1140,9 @@
             state.scores.t1a.grade = getGrade(scoreA, maxScoreA);
 
 
-            // --- SUBTASK B: Input Beginning Balances (Simplified Error Marking) ---
+            // --- SUBTASK B: Input Beginning Balances (Strict 'BB' & blank PR) ---
             let scoreB = 0;
-            const maxScoreB = state.pctb.length * 4; 
+            const maxScoreB = state.pctb.length * 5; // Year, Date, Part, PR, Amount
 
             state.pctb.forEach(acc => {
                 const userL = userLedgers.find(ul => ul.name.toLowerCase() === acc.name.toLowerCase());
@@ -1143,24 +1150,24 @@
                 if (userL) {
                     const side = acc.side.toLowerCase(); 
                     
-                    // 1. Year Value in First Row (which is now an input field)
-                    // If side is Dr, check Dr Year. If side is Cr, check Cr Year.
-                    // This row is usually reserved for Beginning Balance context.
                     const yearInp = document.getElementById(`l_${userL.id}_${side}_year`);
                     
                     // Row Index 0 is strictly for Beg Bal
                     const dateInpEl = document.getElementById(`l_${userL.id}_${side}_d_0`);
                     const partInpEl = document.getElementById(`l_${userL.id}_${side}_p_0`);
+                    const prInpEl = document.getElementById(`l_${userL.id}_${side}_pr_0`);
                     const amtInpEl = document.getElementById(`l_${userL.id}_${side}_a_0`);
 
                     const dateInp = dateInpEl.value.trim(); 
                     const partInp = partInpEl.value.trim();
+                    const prInp = prInpEl.value.trim();
                     const amtInp = parseInt(amtInpEl.value.trim() || 0);
 
-                    // Score breakdown (and mark errors)
+                    // Score breakdown (Strict conditions)
                     if(yearInp && parseInt(yearInp.value) === currentYear) { accBScore++; yearInp.classList.add('input-success-check'); } else { yearInp?.classList.add('input-error-x'); }
                     if(dateInp.length > 0) { accBScore++; dateInpEl.classList.add('input-success-check'); } else { dateInpEl?.classList.add('input-error-x'); }
-                    if(partInp.toLowerCase().includes('beg') || partInp.toLowerCase().includes('balance')) { accBScore++; partInpEl.classList.add('input-success-check'); } else { partInpEl?.classList.add('input-error-x'); }
+                    if(partInp.toUpperCase() === 'BB') { accBScore++; partInpEl.classList.add('input-success-check'); } else { partInpEl?.classList.add('input-error-x'); }
+                    if(prInp === '') { accBScore++; prInpEl.classList.add('input-success-check'); } else { prInpEl?.classList.add('input-error-x'); }
                     if(Math.abs(amtInp - acc.bal) < 1) { accBScore++; amtInpEl.classList.add('input-success-check'); } else { amtInpEl?.classList.add('input-error-x'); }
                 }
                 scoreB += accBScore;
@@ -1169,9 +1176,26 @@
             state.scores.t1b.max = maxScoreB;
             state.scores.t1b.grade = getGrade(scoreB, maxScoreB);
 
-            // --- SUBTASK C: Post Journal Entries and Totals (REVISED LOGIC) ---
-            // Calculate max potential transactions points accurately based on actual journal data
-            let totalJournalTransPoints = 0;
+            // --- SUBTASK C: Post Journal Entries (Strict 'GJ', PR='1', and Journal Box Check) ---
+            // Max score components:
+            // 1. Ledger Rows: Date, Part, PR, Amount (4 pts per valid entry)
+            // 2. Journal Checkboxes: 1 pt per valid check
+            // 3. Totals/Balances: 3 pts per account
+            
+            // Calculate Ledger Row & Checkbox Max Points
+            let totalJournalEntries = 0;
+            state.journalEntries.forEach(e => {
+                totalJournalEntries += 2; // 1 debit + 1 credit line
+            });
+            
+            const maxLedgerRowPoints = totalJournalEntries * 4; // 4 fields per entry
+            const maxJournalBoxPoints = totalJournalEntries * 1; // 1 point per checkbox
+            
+            const totalsPointsMax = (state.requiredAccounts.length * 3); // Total Dr, Total Cr, Balance
+
+            const maxScoreC = maxLedgerRowPoints + maxJournalBoxPoints + totalsPointsMax;
+            let scoreC = 0;
+
             const accountTotals = {}; 
             state.requiredAccounts.forEach(a => accountTotals[a] = { dr:0, cr:0, begDr:0, begCr:0, hasBegDr:false, hasBegCr:false });
             
@@ -1183,26 +1207,31 @@
                 }
             });
 
-            // Map Journal Entries
+            // Expected Transactions for Verification
+            // Structure: { AccountName: [ { amount, side, day, matched: false } ] }
+            const accountTransactions = {};
+            state.requiredAccounts.forEach(a => accountTransactions[a] = []);
+
             state.journalEntries.forEach(e => {
                 const drAcc = e.titles[0]; const crAcc = e.titles[1];
+                
+                // Add totals
                 if(accountTotals[drAcc]) accountTotals[drAcc].dr += e.drs[0];
                 if(accountTotals[crAcc]) accountTotals[crAcc].cr += e.crs[1];
-                totalJournalTransPoints += 2; // 1 point for dr, 1 point for cr
+
+                // Store expected ledger lines
+                if(accountTransactions[drAcc]) accountTransactions[drAcc].push({ amount: e.drs[0], side: 'dr', day: e.day, matched: false });
+                if(accountTransactions[crAcc]) accountTransactions[crAcc].push({ amount: e.crs[1], side: 'cr', day: e.day, matched: false });
             });
-            // Multiplier for difficulty? Let's say 2 pts per correct entry match (Date + Amount)
-            totalJournalTransPoints = totalJournalTransPoints * 2; 
 
-            const yearPointsMax = state.requiredAccounts.length * 1;
-            const totalsPointsMax = (state.requiredAccounts.length * 3);
-
-            const maxScoreC = totalJournalTransPoints + yearPointsMax + totalsPointsMax;
-            let scoreC = 0;
-
+            // 1. Score Ledger Rows & Totals
             userLedgers.forEach(ul => {
                 const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
                 if(accName) {
                     const expected = accountTotals[accName];
+                    const expectedTransList = accountTransactions[accName];
+
+                    // Totals & Balance
                     const elTotalDr = document.getElementById(`l_${ul.id}_total_dr`);
                     const elTotalCr = document.getElementById(`l_${ul.id}_total_cr`);
                     const elBal = document.getElementById(`l_${ul.id}_bal`);
@@ -1211,118 +1240,119 @@
                     const valTotalCr = parseInt(elTotalCr.value || 0);
                     const valBal = parseInt(elBal.value || 0);
                     
-                    // Simple total check (2 pts)
                     if (Math.abs(valTotalDr - (expected.dr + expected.begDr)) < 2) { scoreC++; elTotalDr?.classList.add('input-success-check'); } else { elTotalDr?.classList.add('input-error-x'); }
                     if (Math.abs(valTotalCr - (expected.cr + expected.begCr)) < 2) { scoreC++; elTotalCr?.classList.add('input-success-check'); } else { elTotalCr?.classList.add('input-error-x'); }
 
-                    // Balance check (1 pt)
                     const net = (expected.begDr + expected.dr) - (expected.begCr + expected.cr);
                     if(Math.abs(valBal - Math.abs(net)) < 2) { scoreC++; elBal?.classList.add('input-success-check'); } else { elBal?.classList.add('input-error-x'); }
 
-                    // --- REVISED TRANSACTION SCORING & FEEDBACK ---
-                    // Get expected transactions for this account
-                    const expectedTrans = state.journalEntries.filter(e => e.titles.includes(accName)).map(e => {
-                        const isDr = e.titles[0] === accName;
-                        return {
-                            day: e.day,
-                            amount: isDr ? e.drs[0] : e.crs[1],
-                            side: isDr ? 'dr' : 'cr',
-                            matched: false
-                        };
-                    });
-
-                    // Determine Beg Bal Side
+                    // Determine Beg Bal Side (to skip correct row)
                     const begBalSide = expected.hasBegDr ? 'dr' : (expected.hasBegCr ? 'cr' : 'none');
 
-                    // Check Year on Opposite Side (Scored in C)
-                    if (begBalSide !== 'none') {
-                        const opposite = begBalSide === 'dr' ? 'cr' : 'dr';
-                        const oppYearInp = document.getElementById(`l_${ul.id}_${opposite}_year`);
-                        if (oppYearInp && parseInt(oppYearInp.value) === currentYear) {
-                             scoreC++; oppYearInp.classList.add('input-success-check');
-                        } else if (oppYearInp && oppYearInp.value.length > 0) {
-                             oppYearInp.classList.add('input-error-x');
-                        }
-                    }
-
-                    // Iterate User Rows
+                    // Iterate User Rows to Score Transactions
                     const rowsToCheck = ul.ref.rowCount || 4;
                     for(let r=0; r < rowsToCheck; r++) {
                         
-                        // DEBIT SIDE CHECK
-                        let shouldCheckDr = true;
-                        // If BegBal is Dr, skip row 0 (Scored in B)
-                        if (begBalSide === 'dr' && r === 0) shouldCheckDr = false;
+                        // Check Both Sides
+                        ['dr', 'cr'].forEach(side => {
+                            // Skip Beg Bal Row
+                            if (begBalSide === side && r === 0) return;
 
-                        if (shouldCheckDr) {
-                            const uDrA = parseInt(getLedgerInput(ul.id, 'dr', 'a', r) || 0);
-                            if (uDrA > 0) {
-                                // Find match
-                                const matchIdx = expectedTrans.findIndex(et => et.side === 'dr' && !et.matched && Math.abs(et.amount - uDrA) < 1);
+                            const uAmt = parseInt(getLedgerInput(ul.id, side, 'a', r) || 0);
+                            if (uAmt > 0) {
+                                // Find match in expected transactions
+                                const matchIdx = expectedTransList.findIndex(et => et.side === side && !et.matched && Math.abs(et.amount - uAmt) < 1);
+                                
+                                const pEl = getLedgerInputEl(ul.id, side, 'p', r);
+                                const prEl = getLedgerInputEl(ul.id, side, 'pr', r);
+                                const dEl = getLedgerInputEl(ul.id, side, 'd', r);
+                                const aEl = getLedgerInputEl(ul.id, side, 'a', r);
+
                                 if (matchIdx > -1) {
-                                    scoreC += 2;
-                                    expectedTrans[matchIdx].matched = true;
-                                    document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-success-check');
-                                    document.getElementById(`l_${ul.id}_dr_d_${r}`)?.classList.add('input-success-check');
+                                    // Found a matching amount. Now check formatting strictly.
+                                    expectedTransList[matchIdx].matched = true; // Mark as found
+                                    
+                                    // 1. Amount Score
+                                    scoreC++; aEl.classList.add('input-success-check');
+
+                                    // 2. Particulars must be 'GJ'
+                                    if(pEl.value.trim().toUpperCase() === 'GJ') { scoreC++; pEl.classList.add('input-success-check'); } 
+                                    else { pEl.classList.add('input-error-x'); }
+
+                                    // 3. PR must be '1'
+                                    if(prEl.value.trim() === '1') { scoreC++; prEl.classList.add('input-success-check'); } 
+                                    else { prEl.classList.add('input-error-x'); }
+
+                                    // 4. Date (Simple check for existence/correct day)
+                                    if(dEl.value.trim().length > 0) { scoreC++; dEl.classList.add('input-success-check'); } 
+                                    else { dEl.classList.add('input-error-x'); }
+
                                 } else {
-                                    document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-error-x');
+                                    // No match found -> Wrong Entry
+                                    aEl.classList.add('input-error-x');
+                                    // Mark others as error too if they have content
+                                    if(pEl.value) pEl.classList.add('input-error-x');
+                                    if(prEl.value) prEl.classList.add('input-error-x');
+                                    if(dEl.value) dEl.classList.add('input-error-x');
                                 }
                             }
-                        }
-
-                        // CREDIT SIDE CHECK
-                        let shouldCheckCr = true;
-                        // If BegBal is Cr, skip row 0 (Scored in B)
-                        if (begBalSide === 'cr' && r === 0) shouldCheckCr = false;
-
-                        if (shouldCheckCr) {
-                            const uCrA = parseInt(getLedgerInput(ul.id, 'cr', 'a', r) || 0);
-                            if (uCrA > 0) {
-                                // Find match
-                                const matchIdx = expectedTrans.findIndex(et => et.side === 'cr' && !et.matched && Math.abs(et.amount - uCrA) < 1);
-                                if (matchIdx > -1) {
-                                    scoreC += 2;
-                                    expectedTrans[matchIdx].matched = true;
-                                    document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-success-check');
-                                    document.getElementById(`l_${ul.id}_cr_d_${r}`)?.classList.add('input-success-check');
-                                } else {
-                                    document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-error-x');
-                                }
-                            }
-                        }
+                        });
                     }
                 }
             });
             
-            // --- VALIDATE PR BOXES (New Feature) ---
-            // If the user checked a PR box, is the corresponding account created?
+            // 2. Score Journal PR Boxes
+            // Logic: Check if box is checked AND if the corresponding transaction was successfully matched in the ledger logic above.
+            // Since we updated 'matched' status in 'accountTransactions', we can re-verify.
+            
+            // We need to map Journal IDs back to the 'accountTransactions' array.
+            // But 'accountTransactions' just aggregated them.
+            // Let's iterate Journal Entries again.
+            
             state.journalEntries.forEach(e => {
+                // DR Side
                 const drKey = `j_${e.id}_0`;
-                const crKey = `j_${e.id}_1`;
-                const drAccount = e.titles[0];
-                const crAccount = e.titles[1];
-
-                if(state.prChecks[drKey]) {
-                    const exists = userLedgers.some(ul => ul.name.toLowerCase() === drAccount.toLowerCase());
-                    const box = document.getElementById(`pr_box_${drKey}`);
-                    if(!exists) { 
-                        box?.classList.add('pr-error'); 
+                const boxDr = document.getElementById(`pr_box_${drKey}`);
+                const drAcc = e.titles[0];
+                const drAmt = e.drs[0];
+                
+                // Find if this specific debit was matched in the verification step above
+                // We look into accountTransactions[drAcc] for a matched entry with this amount.
+                // Note: If duplicates exist (e.g. two salaries of 9000), we need to ensure we don't double count.
+                // Simplified: If there is *any* matched entry with this amount in that account list, we assume this journal line corresponds to it.
+                // (Robust enough for this level).
+                const drMathedEntry = accountTransactions[drAcc]?.find(t => t.side === 'dr' && t.amount === drAmt && t.matched);
+                
+                if (state.prChecks[drKey]) {
+                    if (drMathedEntry) {
+                        scoreC++; // Point for checking the box correctly
+                        boxDr?.classList.add('pr-valid');
                     } else {
-                        box?.classList.add('pr-valid');
+                        // Checked but not found in ledger -> Error
+                        boxDr?.classList.add('pr-error');
                     }
                 }
-                if(state.prChecks[crKey]) {
-                    const exists = userLedgers.some(ul => ul.name.toLowerCase() === crAccount.toLowerCase());
-                    const box = document.getElementById(`pr_box_${crKey}`);
-                    if(!exists) { 
-                        box?.classList.add('pr-error'); 
+
+                // CR Side
+                const crKey = `j_${e.id}_1`;
+                const boxCr = document.getElementById(`pr_box_${crKey}`);
+                const crAcc = e.titles[1];
+                const crAmt = e.crs[1];
+
+                const crMathedEntry = accountTransactions[crAcc]?.find(t => t.side === 'cr' && t.amount === crAmt && t.matched);
+
+                if (state.prChecks[crKey]) {
+                    if (crMathedEntry) {
+                        scoreC++; // Point for checking the box correctly
+                        boxCr?.classList.add('pr-valid');
                     } else {
-                        box?.classList.add('pr-valid');
+                        // Checked but not found in ledger -> Error
+                        boxCr?.classList.add('pr-error');
                     }
                 }
             });
             
-            // Clamp and finalize C score (keeping the original calculation structure)
+            // Clamp and finalize C score
             if (scoreC > maxScoreC) scoreC = maxScoreC;
             state.scores.t1c.current = scoreC;
             state.scores.t1c.max = maxScoreC;
@@ -1335,8 +1365,6 @@
             document.getElementById('grade-c-display').innerText = `${state.scores.t1c.current}/${state.scores.t1c.max} - ${state.scores.t1c.grade}`;
 
             // Check for completion/attempts used
-            // Logic revised: ONLY lock if max attempts reached. Passing DOES NOT lock.
-            
             if (attempts >= max) { 
                 state.isTask1Locked = true;
                 saveStateToLocalStorage(); // Persist lock state
@@ -1352,8 +1380,6 @@
                 
                 // --- VISUAL FIX: Remove lock/blur classes on task completion ---
                 const t2Wrapper = document.getElementById('task2-wrapper');
-                // Ensure Task 2 visual unlock is handled below in renderApp() for the button state, 
-                // but here we ensure Task 1 itself looks complete and editable.
                 const task1Grid = document.getElementById('task1-grid');
                 if (task1Grid.classList.contains('locked-task')) {
                     task1Grid.classList.remove('locked-task');
