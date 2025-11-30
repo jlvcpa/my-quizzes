@@ -572,16 +572,16 @@
             const familyName = state.studentInfo.fullName.split(',')[0].trim();
             const year = new Date().getFullYear();
             
-            // 1. PCTB
+            // 1. PCTB (Adjusted slightly to ensure liquidity for new transactions)
             const assets = [
-                {name: 'Cash', bal: rand(100000, 200000)},
+                {name: 'Cash', bal: rand(200000, 300000)}, // Increased start cash
                 {name: 'Accounts Receivable', bal: rand(20000, 50000)},
                 {name: 'Supplies', bal: rand(5000, 15000)},
-                {name: 'Prepaid Rent', bal: rand(30000, 60000)},
+                {name: 'Prepaid Rent', bal: 0}, // Will be increased by journal
                 {name: 'Equipment', bal: rand(150000, 250000)},
             ];
             const liabs = [
-                {name: 'Accounts Payable', bal: rand(10000, 30000)},
+                {name: 'Accounts Payable', bal: rand(20000, 40000)},
                 {name: 'Notes Payable', bal: rand(15000, 25000)},
                 {name: 'Unearned Revenue', bal: rand(10000, 20000)},
             ];
@@ -591,39 +591,111 @@
             
             state.pctb = [...assets.map(a=>({...a, side:'Dr'})), ...liabs.map(l=>({...l, side:'Cr'})), {...capital, side:'Cr'}];
 
-            // 2. Journal Entries
+            // 2. Journal Entries (Dynamic 15 Sources)
             const entries = [];
             const mIdx = rand(0, 5); 
             const mStr = months[mIdx];
+            
+            // Temporary array to hold transaction data before sorting by date
+            let rawTrans = [];
 
-            const addEntry = (d, titles, prs, drs, crs, desc) => {
-                const day = String(d).padStart(2,'0');
-                const fullDate = `${year}-${String(mIdx+1).padStart(2,'0')}-${day}`;
-                entries.push({ 
-                    dateStr: fullDate, year: year, month: mStr, day: day,
-                    titles, prs, drs, crs, desc, id: entries.length 
+            // Helper to add raw transaction
+            const pushTrans = (dayRange, titles, drAmt, crAmt, desc) => {
+                // Ensure day is realistic and padded
+                let dayInt = Array.isArray(dayRange) ? rand(dayRange[0], dayRange[1]) : dayRange;
+                // Avoid duplicates if possible, or just allow overlap. 
+                // Specific logic for month-end to strictly be late.
+                
+                rawTrans.push({
+                    day: dayInt,
+                    titles: titles,
+                    drs: [drAmt, 0],
+                    crs: [0, crAmt], // Ensure Balance
+                    desc: desc
                 });
             };
-            
-            // Ensure balanced entries by using a single random amount
-            let amt;
 
-            amt = rand(9000,9000); addEntry(3, ['Rent Expense','Cash'], ['',''], [amt,0], [0,amt], "Paid rent for the month");
-            amt = rand(4000,4000); addEntry(4, ['Supplies','Cash'], ['',''], [amt,0], [0,amt], "Purchased supplies for cash");
-            amt = rand(24000,24000); addEntry(8, ['Cash','Service Revenue'], ['',''], [amt,0], [0,amt], "Performed services for cash");
-            amt = rand(9000,9000); addEntry(10, ['Salaries Expense','Cash'], ['',''], [amt,0], [0,amt], "Paid bi-monthly salaries");
-            amt = rand(13000,13000); addEntry(14, ['Accounts Receivable','Service Revenue'], ['',''], [amt,0], [0,amt], "Performed services on account");
+            // 1. Payment for Prepaid Rent (Early Month)
+            let amt = rand(15000, 30000);
+            pushTrans([1, 5], ['Prepaid Rent', 'Cash'], amt, amt, "Paid advance rent for the quarter");
+
+            // 2. Payment for Prepaid Insurance (Early Month)
+            amt = rand(10000, 20000);
+            pushTrans([2, 6], ['Prepaid Insurance', 'Cash'], amt, amt, "Paid annual insurance premium");
+
+            // 3. Purchase of Supplies (Cash)
+            amt = rand(3000, 8000);
+            pushTrans([5, 15], ['Supplies', 'Cash'], amt, amt, "Purchased office supplies for cash");
+
+            // 4. Purchase of Supplies (On Account)
+            amt = rand(5000, 12000);
+            pushTrans([8, 20], ['Supplies', 'Accounts Payable'], amt, amt, "Bought supplies on credit");
+
+            // 5. Rendering Services (Cash)
+            amt = rand(20000, 50000);
+            pushTrans([5, 25], ['Cash', 'Service Revenue'], amt, amt, "Performed services for cash");
+
+            // 6. Rendering Services (On Account)
+            amt = rand(15000, 40000);
+            pushTrans([10, 28], ['Accounts Receivable', 'Service Revenue'], amt, amt, "Billed client for services rendered");
+
+            // 7. Salaries Payment (10th) - FIXED DATE
+            amt = rand(12000, 15000);
+            pushTrans(10, ['Salaries Expense', 'Cash'], amt, amt, "Paid salaries for first half of month");
+
+            // 8. Salaries Payment (25th) - FIXED DATE
+            pushTrans(25, ['Salaries Expense', 'Cash'], amt, amt, "Paid salaries for second half of month");
+
+            // 9. Collection of Accounts Receivable
+            amt = rand(5000, 15000);
+            pushTrans([12, 22], ['Cash', 'Accounts Receivable'], amt, amt, "Collected partial payment from customers");
+
+            // 10. Payment of Accounts Payable
+            amt = rand(5000, 15000);
+            pushTrans([15, 24], ['Accounts Payable', 'Cash'], amt, amt, "Paid outstanding balance to suppliers");
+
+            // 11. Another Revenue (Cash) to ensure activity
+            amt = rand(10000, 30000);
+            pushTrans([15, 27], ['Cash', 'Service Revenue'], amt, amt, "Received cash for services");
+
+            // --- Month End Expenses (28th - 30th) ---
             
-            amt = rand(5000,10000); addEntry(16, ['Cash','Accounts Receivable'], ['',''], [amt,0], [0,amt], "Collected from customer");
-            amt = rand(2000,5000); addEntry(18, ['Accounts Payable','Cash'], ['',''], [amt,0], [0,amt], "Paid supplier on account");
-            amt = rand(5000,10000); addEntry(20, ['Cash','Unearned Revenue'], ['',''], [amt,0], [0,amt], "Received advance payment");
-            amt = rand(3000,6000); addEntry(22, ['Utilities Expense','Cash'], ['',''], [amt,0], [0,amt], "Paid utilities");
-            amt = rand(9000,9000); addEntry(25, ['Salaries Expense','Cash'], ['',''], [amt,0], [0,amt], "Paid bi-monthly salaries");
-            amt = rand(2000,4000); addEntry(28, ['Advertising Expense','Cash'], ['',''], [amt,0], [0,amt], "Paid advertising");
-            amt = rand(1000,2000); addEntry(29, ['Miscellaneous Expense','Cash'], ['',''], [amt,0], [0,amt], "Paid misc expenses");
-            amt = rand(5000,10000); addEntry(30, [`Owner, Withdrawals`,'Cash'], ['',''], [amt,0], [0,amt], "Owner personal withdrawal");
-            amt = rand(3000,5000); addEntry(31, ['Supplies','Accounts Payable'], ['',''], [amt,0], [0,amt], "Bought supplies on credit");
-            amt = rand(10000,20000); addEntry(31, ['Equipment','Notes Payable'], ['',''], [amt,0], [0,amt], "Bought equipment via note");
+            // 12. Utilities
+            amt = rand(4000, 8000);
+            pushTrans([28, 30], ['Utilities Expense', 'Cash'], amt, amt, "Paid monthly utility bill");
+
+            // 13. Advertising
+            amt = rand(3000, 6000);
+            pushTrans([28, 30], ['Advertising Expense', 'Cash'], amt, amt, "Paid for online advertising");
+
+            // 14. Software Subscriptions
+            amt = rand(2000, 5000);
+            pushTrans([28, 30], ['Software Subscription Expense', 'Cash'], amt, amt, "Paid monthly software subscription");
+
+            // 15. Miscellaneous
+            amt = rand(1000, 3000);
+            pushTrans([28, 30], ['Miscellaneous Expense', 'Cash'], amt, amt, "Paid miscellaneous office expenses");
+
+            // Sort entries by Day
+            rawTrans.sort((a, b) => a.day - b.day);
+
+            // Populate final state structure
+            rawTrans.forEach((t, i) => {
+                const day = String(t.day).padStart(2,'0');
+                const fullDate = `${year}-${String(mIdx+1).padStart(2,'0')}-${day}`;
+                entries.push({
+                    id: i,
+                    dateStr: fullDate,
+                    year: year,
+                    month: mStr,
+                    day: day,
+                    titles: t.titles,
+                    prs: ['',''],
+                    drs: t.drs,
+                    crs: t.crs,
+                    desc: t.desc
+                });
+            });
             
             state.journalEntries = entries;
             
