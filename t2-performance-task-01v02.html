@@ -40,7 +40,7 @@
         /* Modified disabled styles to show black text and remove opacity */
         /* CRITICAL FIX: Ensure answers are visible and black when disabled */
         input:disabled, select:disabled, textarea:disabled, .table-input:disabled, .text-input:disabled { 
-            background-color: #ffffff; /* Removed !important to allow error bg to override */
+            background-color: #ffffff; 
             color: #000000 !important; /* Force black text */
             -webkit-text-fill-color: #000000 !important; /* Safari fix */
             border-color: #e2e8f0;
@@ -81,14 +81,14 @@
         .footer-bg { background-color: #334155; color: white; }
         
         /* Journal & Ledger Specifics */
-        .journal-row td { vertical-align: top; padding: 8px 4px; border-bottom: 1px solid #f1f5f9; }
+        .journal-row td { vertical-align: top; padding: 4px 4px; border-bottom: 1px solid #f1f5f9; }
         .journal-row:last-child td { border-bottom: none; }
         
         /* Journal Grid Alignment Helpers */
         .journal-line { height: 24px; display: flex; align-items: center; }
         
         .pr-box { 
-            cursor: pointer; height: 18px; width: 18px; border: 1px solid #cbd5e1; 
+            cursor: pointer; height: 16px; width: 16px; border: 1px solid #cbd5e1; 
             display: inline-flex; align-items: center; justify-content: center; background: white; user-select: none;
             border-radius: 2px;
             font-size: 10px;
@@ -315,7 +315,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 11:22:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 11:18:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -865,54 +865,58 @@
                                 <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
                             </div>
                             <div class="overflow-x-auto flex-1 bg-white">
-                                <table class="table-fixed w-full text-sm border-collapse min-w-[800px]">
+                                <table class="table-auto min-w-full text-sm border-collapse">
                                     <thead class="bg-gray-50 sticky top-0 z-10 text-xs uppercase text-gray-500 font-bold">
                                         <tr>
-                                            <th class="p-2 text-right border-b w-[19%]">Date</th>
-                                            <th class="p-2 text-left border-b w-[38%]">Particulars</th>
-                                            <th class="p-2 text-center border-b w-[5%]">PR</th>
-                                            <th class="p-2 text-right border-b w-[19%]">Debit</th>
-                                            <th class="p-2 text-right border-b w-[19%]">Credit</th>
+                                            <th class="p-2 text-right border-b whitespace-nowrap min-w-max">Date</th>
+                                            <th class="p-2 text-left border-b w-full min-w-[200px]">Particulars</th>
+                                            <th class="p-2 text-center border-b min-w-[40px]">PR</th>
+                                            <th class="p-2 text-right border-b min-w-[80px]">Debit</th>
+                                            <th class="p-2 text-right border-b min-w-[80px]">Credit</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
                                         <!-- Year Row -->
                                         <tr>
-                                            <td colspan="5" class="font-bold text-gray-500 bg-gray-50 text-center text-xs py-1">${new Date().getFullYear()}</td>
+                                            <td class="align-top p-1 text-center font-bold text-gray-500 bg-gray-50 text-xs">${new Date().getFullYear()}</td>
+                                            <td colspan="4" class="bg-gray-50"></td>
                                         </tr>
                                         ${state.journalEntries.map((e, index) => {
-                                            // Split into 3 Rows: Dr, Cr, Desc
                                             return `
+                                            <!-- Debit Row -->
                                             <tr class="hover:bg-blue-50/50 transition-colors group border-b-0">
-                                                <td class="text-xs text-gray-600 text-right pr-2 align-top pt-3 whitespace-nowrap">
+                                                <td class="text-xs text-gray-600 text-right pr-2 align-top pt-2 whitespace-nowrap">
                                                     ${e.month} ${e.day}
                                                 </td>
-                                                <td class="align-top text-gray-800 whitespace-nowrap">
+                                                <td class="align-top text-gray-800 whitespace-nowrap pt-2">
                                                     ${e.titles[0]}
                                                 </td>
-                                                <td class="align-top text-center">
+                                                <td class="align-top text-center pt-2">
                                                     <div class="pr-box" id="pr_box_j_${e.id}_0" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div>
                                                 </td>
-                                                <td class="align-top text-right text-gray-700 whitespace-nowrap">
+                                                <td class="align-top text-right text-gray-700 whitespace-nowrap pt-2">
                                                     ${formatMoney(e.drs[0])}
                                                 </td>
-                                                <td class="align-top"></td>
+                                                <td class="align-top pt-2"></td>
                                             </tr>
+                                            <!-- Credit Row -->
                                             <tr class="hover:bg-blue-50/50 transition-colors group border-b-0">
                                                 <td class="align-top"></td>
-                                                <td class="align-top text-gray-800 pl-8 whitespace-nowrap">
+                                                <td class="align-top text-gray-800 pl-8 whitespace-nowrap pt-1">
                                                     ${e.titles[1]}
                                                 </td>
-                                                <td class="align-top text-center">
+                                                <td class="align-top text-center pt-1">
                                                     <div class="pr-box" id="pr_box_j_${e.id}_1" onclick="window.togglePR(this, 'j_${e.id}_1')" title="Post Credit"></div>
                                                 </td>
-                                                <td class="align-top"></td>
-                                                <td class="align-top text-right text-gray-700 whitespace-nowrap">
+                                                <td class="align-top pt-1"></td>
+                                                <td class="align-top text-right text-gray-700 whitespace-nowrap pt-1">
                                                     ${formatMoney(e.crs[1])}
                                                 </td>
                                             </tr>
+                                            <!-- Description Row -->
                                             <tr class="hover:bg-blue-50/50 transition-colors group border-b border-gray-100">
-                                                <td colspan="5" class="text-xs italic text-gray-400 pl-10 pb-2">
+                                                <td class="align-top"></td>
+                                                <td colspan="4" class="text-xs italic text-gray-400 pl-16 pb-2 pt-1">
                                                     ${e.desc}
                                                 </td>
                                             </tr>`;
@@ -1350,6 +1354,7 @@
                 const task1Grid = document.getElementById('task1-grid');
                 if (task1Grid.classList.contains('locked-task')) {
                     task1Grid.classList.remove('locked-task');
+                    // CRITICAL FIX: Hide overlay on completion so answers/marks are visible
                     task1Grid.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
                 }
                 
@@ -1652,6 +1657,7 @@
                  
                  // Keep visible, remove lock overlay
                  document.getElementById('task1-grid')?.classList.remove('locked-task');
+                 // CRITICAL FIX: Hide overlay on completion so answers/marks are visible
                  document.getElementById('task1-grid')?.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
                  
                  // Unlock T2 visuals
