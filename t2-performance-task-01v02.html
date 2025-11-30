@@ -326,7 +326,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 08:50:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 09:15:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -1144,7 +1144,11 @@
                     const side = acc.side.toLowerCase(); 
                     
                     // 1. Year Value in First Row (which is now an input field)
+                    // If side is Dr, check Dr Year. If side is Cr, check Cr Year.
+                    // This row is usually reserved for Beginning Balance context.
                     const yearInp = document.getElementById(`l_${userL.id}_${side}_year`);
+                    
+                    // Row Index 0 is strictly for Beg Bal
                     const dateInpEl = document.getElementById(`l_${userL.id}_${side}_d_0`);
                     const partInpEl = document.getElementById(`l_${userL.id}_${side}_p_0`);
                     const amtInpEl = document.getElementById(`l_${userL.id}_${side}_a_0`);
@@ -1215,7 +1219,7 @@
                     const net = (expected.begDr + expected.dr) - (expected.begCr + expected.cr);
                     if(Math.abs(valBal - Math.abs(net)) < 2) { scoreC++; elBal?.classList.add('input-success-check'); } else { elBal?.classList.add('input-error-x'); }
 
-                    // --- REVISED TRANSACTION SCORING ---
+                    // --- REVISED TRANSACTION SCORING & FEEDBACK ---
                     // Get expected transactions for this account
                     const expectedTrans = state.journalEntries.filter(e => e.titles.includes(accName)).map(e => {
                         const isDr = e.titles[0] === accName;
@@ -1227,43 +1231,64 @@
                         };
                     });
 
-                    // Iterate User Rows (Skipping 0 which is Beg Bal)
-                    // We assume max rows is what is rendered.
-                    // Note: This relies on DOM presence.
+                    // Determine Beg Bal Side
+                    const begBalSide = expected.hasBegDr ? 'dr' : (expected.hasBegCr ? 'cr' : 'none');
+
+                    // Check Year on Opposite Side (Scored in C)
+                    if (begBalSide !== 'none') {
+                        const opposite = begBalSide === 'dr' ? 'cr' : 'dr';
+                        const oppYearInp = document.getElementById(`l_${ul.id}_${opposite}_year`);
+                        if (oppYearInp && parseInt(oppYearInp.value) === currentYear) {
+                             scoreC++; oppYearInp.classList.add('input-success-check');
+                        } else if (oppYearInp && oppYearInp.value.length > 0) {
+                             oppYearInp.classList.add('input-error-x');
+                        }
+                    }
+
+                    // Iterate User Rows
                     const rowsToCheck = ul.ref.rowCount || 4;
-                    for(let r=1; r < rowsToCheck; r++) {
-                        // Check Dr Side
-                        const uDrD = getLedgerInput(ul.id, 'dr', 'd', r);
-                        const uDrA = parseInt(getLedgerInput(ul.id, 'dr', 'a', r) || 0);
+                    for(let r=0; r < rowsToCheck; r++) {
                         
-                        if (uDrA > 0) {
-                            // Find match in expected
-                            const matchIdx = expectedTrans.findIndex(et => et.side === 'dr' && !et.matched && Math.abs(et.amount - uDrA) < 1); // Looser check on Date for now to prevent frustration, stricter check on amount
-                            if (matchIdx > -1) {
-                                scoreC += 2;
-                                expectedTrans[matchIdx].matched = true;
-                                document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-success-check');
-                                document.getElementById(`l_${ul.id}_dr_d_${r}`)?.classList.add('input-success-check');
-                            } else {
-                                // Mark error on specific cell
-                                document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-error-x');
+                        // DEBIT SIDE CHECK
+                        let shouldCheckDr = true;
+                        // If BegBal is Dr, skip row 0 (Scored in B)
+                        if (begBalSide === 'dr' && r === 0) shouldCheckDr = false;
+
+                        if (shouldCheckDr) {
+                            const uDrA = parseInt(getLedgerInput(ul.id, 'dr', 'a', r) || 0);
+                            if (uDrA > 0) {
+                                // Find match
+                                const matchIdx = expectedTrans.findIndex(et => et.side === 'dr' && !et.matched && Math.abs(et.amount - uDrA) < 1);
+                                if (matchIdx > -1) {
+                                    scoreC += 2;
+                                    expectedTrans[matchIdx].matched = true;
+                                    document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-success-check');
+                                    document.getElementById(`l_${ul.id}_dr_d_${r}`)?.classList.add('input-success-check');
+                                } else {
+                                    document.getElementById(`l_${ul.id}_dr_a_${r}`)?.classList.add('input-error-x');
+                                }
                             }
                         }
 
-                        // Check Cr Side
-                        const uCrD = getLedgerInput(ul.id, 'cr', 'd', r);
-                        const uCrA = parseInt(getLedgerInput(ul.id, 'cr', 'a', r) || 0);
+                        // CREDIT SIDE CHECK
+                        let shouldCheckCr = true;
+                        // If BegBal is Cr, skip row 0 (Scored in B)
+                        if (begBalSide === 'cr' && r === 0) shouldCheckCr = false;
 
-                        if (uCrA > 0) {
-                             const matchIdx = expectedTrans.findIndex(et => et.side === 'cr' && !et.matched && Math.abs(et.amount - uCrA) < 1);
-                             if (matchIdx > -1) {
-                                 scoreC += 2;
-                                 expectedTrans[matchIdx].matched = true;
-                                 document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-success-check');
-                                 document.getElementById(`l_${ul.id}_cr_d_${r}`)?.classList.add('input-success-check');
-                             } else {
-                                 document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-error-x');
-                             }
+                        if (shouldCheckCr) {
+                            const uCrA = parseInt(getLedgerInput(ul.id, 'cr', 'a', r) || 0);
+                            if (uCrA > 0) {
+                                // Find match
+                                const matchIdx = expectedTrans.findIndex(et => et.side === 'cr' && !et.matched && Math.abs(et.amount - uCrA) < 1);
+                                if (matchIdx > -1) {
+                                    scoreC += 2;
+                                    expectedTrans[matchIdx].matched = true;
+                                    document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-success-check');
+                                    document.getElementById(`l_${ul.id}_cr_d_${r}`)?.classList.add('input-success-check');
+                                } else {
+                                    document.getElementById(`l_${ul.id}_cr_a_${r}`)?.classList.add('input-error-x');
+                                }
+                            }
                         }
                     }
                 }
