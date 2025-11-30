@@ -318,7 +318,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-12-01 03:36:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-12-01 03:53:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -527,10 +527,10 @@
             
             // 1. PCTB (Adjusted slightly to ensure liquidity for new transactions)
             const assets = [
-                {name: 'Cash', bal: rand(200000, 300000)}, // Increased start cash
+                {name: 'Cash', bal: rand(200000, 300000)},
                 {name: 'Accounts Receivable', bal: rand(20000, 50000)},
                 {name: 'Supplies', bal: rand(5000, 15000)},
-                {name: 'Prepaid Rent', bal: 0}, // Will be increased by journal
+                {name: 'Prepaid Rent', bal: rand(15000, 30000)}, // Changed from 0
                 {name: 'Equipment', bal: rand(150000, 250000)},
             ];
             const liabs = [
@@ -914,8 +914,9 @@
                     <div id="task1-grid" class="grid grid-cols-1 xl:grid-cols-10 gap-4 split-panel mb-4 relative mx-4">
                         <!-- Journal (4/10 width) -->
                         <div class="xl:col-span-4 bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
-                            <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
+                            <div class="bg-white border-b-2 border-indigo-100 p-3 flex justify-between items-center sticky top-0 z-10">
                                 <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
+                                <span class="font-bold text-gray-500 text-sm">Page 1</span>
                             </div>
                             <div class="overflow-x-auto flex-1 bg-white">
                                 <table class="table-auto min-w-full text-sm border-collapse">
