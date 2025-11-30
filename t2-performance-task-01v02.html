@@ -40,7 +40,7 @@
         /* Modified disabled styles to show black text and remove opacity */
         /* CRITICAL FIX: Ensure answers are visible and black when disabled */
         input:disabled, select:disabled, textarea:disabled, .table-input:disabled, .text-input:disabled { 
-            background-color: #ffffff !important; 
+            background-color: #ffffff; /* Removed !important to allow error bg to override */
             color: #000000 !important; /* Force black text */
             -webkit-text-fill-color: #000000 !important; /* Safari fix */
             border-color: #e2e8f0;
@@ -49,7 +49,8 @@
         }
         
         /* --- New Error Feedback Style (Using Background Images for Inputs) --- */
-        .input-error-x {
+        /* Added :disabled selector to ensure it persists after locking */
+        .input-error-x, .input-error-x:disabled {
             border-color: #dc2626 !important; /* Red border */
             background-color: #fef2f2 !important; /* Light red background */
             box-shadow: 0 0 0 1px #ef4444 !important;
@@ -62,7 +63,8 @@
         }
 
         /* --- Success Feedback Style (Using Background Images for Inputs) --- */
-        .input-success-check {
+        /* Added :disabled selector to ensure it persists after locking */
+        .input-success-check, .input-success-check:disabled {
             border-color: #16a34a !important; /* Green border */
             background-color: #f0fdf4 !important; /* Light green bg */
             box-shadow: 0 0 0 1px #22c55e !important;
@@ -313,7 +315,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 10:29:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 10:49:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -862,8 +864,8 @@
                             <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
                                 <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
                             </div>
-                            <div class="overflow-y-auto flex-1 bg-white">
-                                <table class="w-full text-sm border-collapse">
+                            <div class="overflow-x-auto flex-1 bg-white">
+                                <table class="w-full text-sm border-collapse min-w-[800px]">
                                     <thead class="bg-gray-50 sticky top-0 z-10 text-xs uppercase text-gray-500 font-bold">
                                         <tr>
                                             <th class="p-2 text-right w-16">Date</th>
@@ -879,46 +881,38 @@
                                                 ? `<div class="text-[10px] font-bold text-gray-500 leading-tight mb-1">${e.year}</div><div>${e.month} ${e.day}</div>`
                                                 : `<div>${e.day}</div>`;
                                             
-                                            const partHTML = `
-                                                <div class="font-bold text-gray-800 journal-line">${e.titles[0]}</div>
-                                                <div class="text-gray-800 journal-line pl-8">${e.titles[1]}</div>
-                                                <div class="text-xs italic text-gray-400 journal-line pl-4">${e.desc}</div>
-                                            `;
-
-                                            const prHTML = `
-                                                <div class="journal-line justify-center"><div class="pr-box" id="pr_box_j_${e.id}_0" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div></div>
-                                                <div class="journal-line justify-center"><div class="pr-box" id="pr_box_j_${e.id}_1" onclick="window.togglePR(this, 'j_${e.id}_1')" title="Post Credit"></div></div>
-                                                <div class="journal-line"></div>
-                                            `;
-
-                                            const drHTML = `
-                                                <div class="font-bold text-gray-700 journal-line text-right">${formatMoney(e.drs[0])}</div>
-                                                <div class="journal-line"></div>
-                                                <div class="journal-line"></div>
-                                            `;
-
-                                            const crHTML = `
-                                                <div class="journal-line"></div>
-                                                <div class="text-gray-700 journal-line text-right">${formatMoney(e.crs[1])}</div>
-                                                <div class="journal-line"></div>
-                                            `;
-
+                                            // Split into 3 Rows: Dr, Cr, Desc
                                             return `
-                                            <tr class="journal-row hover:bg-blue-50/50 transition-colors group">
-                                                <td class="text-xs font-bold text-gray-600 text-right pr-2 w-16 align-top pt-3">
+                                            <tr class="hover:bg-blue-50/50 transition-colors group border-b-0">
+                                                <td class="text-xs font-bold text-gray-600 text-right pr-2 w-16 align-top pt-3 whitespace-nowrap" rowspan="3">
                                                     ${dateHTML}
                                                 </td>
-                                                <td class="align-top">
-                                                    ${partHTML}
+                                                <td class="align-top font-bold text-gray-800 whitespace-nowrap">
+                                                    ${e.titles[0]}
                                                 </td>
-                                                <td class="align-top w-10">
-                                                    ${prHTML}
+                                                <td class="align-top text-center">
+                                                    <div class="pr-box" id="pr_box_j_${e.id}_0" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div>
                                                 </td>
-                                                <td class="align-top w-20">
-                                                    ${drHTML}
+                                                <td class="align-top text-right font-bold text-gray-700 whitespace-nowrap">
+                                                    ${formatMoney(e.drs[0])}
                                                 </td>
-                                                <td class="align-top w-20">
-                                                    ${crHTML}
+                                                <td class="align-top"></td>
+                                            </tr>
+                                            <tr class="hover:bg-blue-50/50 transition-colors group border-b-0">
+                                                <td class="align-top text-gray-800 pl-8 whitespace-nowrap">
+                                                    ${e.titles[1]}
+                                                </td>
+                                                <td class="align-top text-center">
+                                                    <div class="pr-box" id="pr_box_j_${e.id}_1" onclick="window.togglePR(this, 'j_${e.id}_1')" title="Post Credit"></div>
+                                                </td>
+                                                <td class="align-top"></td>
+                                                <td class="align-top text-right text-gray-700 whitespace-nowrap">
+                                                    ${formatMoney(e.crs[1])}
+                                                </td>
+                                            </tr>
+                                            <tr class="hover:bg-blue-50/50 transition-colors group border-b border-gray-100">
+                                                <td colspan="4" class="text-xs italic text-gray-400 pl-4 pb-2">
+                                                    ${e.desc}
                                                 </td>
                                             </tr>`;
                                         }).join('')}
@@ -1046,13 +1040,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="task2-overlay" class="${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}">
-                            <div class="lock-message">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                                <p>Task 2 is Locked</p>
-                                <p class="text-xs font-normal mt-1">Complete Task 1 or consume all attempts to unlock.</p>
-                            </div>
-                        </div>
+                        <!-- REMOVED REDUNDANT OVERLAY PANEL HERE -->
                     </div>
                 </div>`;
 
