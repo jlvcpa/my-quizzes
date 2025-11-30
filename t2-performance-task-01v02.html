@@ -326,7 +326,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-11-30 08:33:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-11-30 08:50:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -387,59 +387,21 @@
         // --- PERSISTENCE HELPERS ---
         // DISABLED LOCAL STORAGE FOR TESTING
         const saveStateToLocalStorage = () => {
-             // if (state.attendanceId) {
-             //     const persistState = {
-             //         studentInfo: state.studentInfo,
-             //         currentStep: state.currentStep,
-             //         isTask1Locked: state.isTask1Locked,
-             //         isTask2Locked: state.isTask2Locked,
-             //         attempts: state.attempts, // Save attempts too
-             //     };
-             //     localStorage.setItem(getLocalStorageKey(state.attendanceId), JSON.stringify(persistState));
-             // }
+             // Disabled
         };
 
         const loadStateFromLocalStorage = () => {
-            // if (state.attendanceId) {
-            //     const persisted = localStorage.getItem(getLocalStorageKey(state.attendanceId));
-            //     if (persisted) {
-            //         const persistState = JSON.parse(persisted);
-            //         state.studentInfo = persistState.studentInfo;
-            //         state.currentStep = persistState.currentStep;
-            //         state.isTask1Locked = persistState.isTask1Locked;
-            //         state.isTask2Locked = persistState.isTask2Locked;
-            //         state.attempts = persistState.attempts || { 1: 0, 2: 0 };
-            //         return true;
-            //     }
-            // }
+            // Disabled
             return false;
         };
 
         // NEW: Persistence for the randomized test data (Crucial for validation)
         const saveTestDatatoLocalStorage = () => {
-            // if (state.attendanceId) {
-            //      const testData = {
-            //         journalEntries: state.journalEntries,
-            //         pctb: state.pctb, 
-            //         ledgers: state.ledgers, 
-            //         requiredAccounts: state.requiredAccounts
-            //      };
-            //      localStorage.setItem(getDataKey(state.attendanceId), JSON.stringify(testData));
-            // }
+            // Disabled
         };
 
         const loadTestDataFromLocalStorage = () => {
-            // if (state.attendanceId) {
-            //     const persisted = localStorage.getItem(getDataKey(state.attendanceId));
-            //     if (persisted) {
-            //         const testData = JSON.parse(persisted);
-            //         state.journalEntries = testData.journalEntries;
-            //         state.pctb = testData.pctb;
-            //         state.ledgers = testData.ledgers;
-            //         state.requiredAccounts = testData.requiredAccounts;
-            //         return true;
-            //     }
-            // }
+            // Disabled
             return false;
         };
 
@@ -497,16 +459,14 @@
             if (!state.attendanceId) return; 
             const displayElement = document.getElementById('countdown');
             const boxElement = document.getElementById('timer-box');
-            // DISABLED STORAGE
-            // const storageKey = `exam_end_time_${state.attendanceId}`;
-            // const endTime = localStorage.getItem(storageKey);
             
             if (!window.endTime || !displayElement) { displayElement.textContent = "--:--:--"; return; }
             
             const now = Date.now();
             const distance = parseInt(window.endTime) - now;
             
-            if (distance < 0) {
+            // CRITICAL FIX: Ensure timer finish does not trigger if window.examDurationMins was invalid
+            if (distance < 0 && window.examDurationMins > 0) {
                 displayElement.textContent = "00:00:00";
                 stopTimer();
                 window.disableAllInputs();
@@ -538,7 +498,8 @@
 
         // Timer initialization logic (now called from startExam or resumeExam)
         function startTimer() {
-            if (!state.attendanceId || window.examDurationMins <= 0) {
+            // Check for valid attendance ID and Duration
+            if (!state.attendanceId || !window.examDurationMins || window.examDurationMins <= 0) {
                 console.error("Cannot start timer: Missing Attendance ID or Duration is zero.");
                 document.getElementById('countdown').textContent = "No Timer";
                 return;
@@ -546,17 +507,11 @@
             
             if (timerInterval) stopTimer();
             
-            // DISABLED STORAGE
-            // const storageKey = `exam_end_time_${state.attendanceId}`;
-            // let endTime = localStorage.getItem(storageKey);
-            
             if (!window.endTime) {
                 // Calculate and set end time if missing (Initial start)
                 const now = Date.now();
                 const durationMs = window.examDurationMins * 60 * 1000;
-                
                 window.endTime = now + durationMs;
-                // localStorage.setItem(storageKey, endTime);
             }
             
             updateTimerDisplay(); // Initial call
@@ -603,8 +558,6 @@
             const pushTrans = (dayRange, titles, drAmt, crAmt, desc) => {
                 // Ensure day is realistic and padded
                 let dayInt = Array.isArray(dayRange) ? rand(dayRange[0], dayRange[1]) : dayRange;
-                // Avoid duplicates if possible, or just allow overlap. 
-                // Specific logic for month-end to strictly be late.
                 
                 rawTrans.push({
                     day: dayInt,
@@ -845,8 +798,14 @@
                 ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
                 : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
             
-            // Determine button state for Task 2 (Locked if Task 1 is NOT completed)
-            const isT2BtnLockedByT1 = !state.isTask1Locked;
+            // Determine button state for Task 2
+            // Task 2 unlocks if Task 1 is Locked OR if Task 1 is Passed (Score >= 60%)
+            // We calculate pass status dynamically
+            const t1Max = state.scores.t1a.max + state.scores.t1b.max + state.scores.t1c.max;
+            const t1Current = state.scores.t1a.current + state.scores.t1b.current + state.scores.t1c.current;
+            const task1Passed = t1Max > 0 && t1Current >= (t1Max * 0.6);
+            
+            const isT2BtnLockedByT1 = !(state.isTask1Locked || task1Passed);
             const isT2BtnDisabled = isT2BtnLockedByT1 || state.isTask2Locked || state.attempts[2] >= max;
              const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
              const t2BtnClass = isT2BtnDisabled 
@@ -1351,15 +1310,14 @@
             document.getElementById('grade-c-display').innerText = `${state.scores.t1c.current}/${state.scores.t1c.max} - ${state.scores.t1c.grade}`;
 
             // Check for completion/attempts used
-            const allMax = maxScoreA + maxScoreB + maxScoreC;
-            const totalScore = scoreA + scoreB + scoreC;
+            // Logic revised: ONLY lock if max attempts reached. Passing DOES NOT lock.
             
-            if (attempts >= max || totalScore >= (allMax * 0.6)) { 
+            if (attempts >= max) { 
                 state.isTask1Locked = true;
                 saveStateToLocalStorage(); // Persist lock state
                 
                 const btn1 = document.getElementById('btn-validate-1');
-                btn1.innerText = attempts >= max ? "Attempts Used" : "Task 1 Completed";
+                btn1.innerText = "Attempts Used";
                 btn1.className = "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed";
                 btn1.disabled = true;
 
@@ -1380,9 +1338,19 @@
                 // Re-render app to update T2 button/lock state
                 renderApp();
 
-                renderMessageBox("Task 1 Submitted. Proceed to Task 2.", false);
+                renderMessageBox("Task 1 Attempts Used. Proceed to Task 2.", false);
             } else {
-                renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+                // If not locked, we still want to show success if they passed so they know they can move on
+                const t1Max = state.scores.t1a.max + state.scores.t1b.max + state.scores.t1c.max;
+                const t1Current = state.scores.t1a.current + state.scores.t1b.current + state.scores.t1c.current;
+                const passed = t1Max > 0 && t1Current >= (t1Max * 0.6);
+                
+                if (passed) {
+                     renderApp(); // Update Task 2 unlock state visually
+                     renderMessageBox(`Task 1 Validated (Passing Score). You have ${max - attempts} attempts left to improve or proceed to Task 2.`, false);
+                } else {
+                     renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+                }
             }
         };
 
@@ -1612,9 +1580,10 @@
                  // Switch UI
                  document.getElementById('login-actions').classList.add('hidden');
                  
+                 // REVISED: Ensure container has flex classes for centering
                  const startArea = document.getElementById('start-actions');
                  startArea.classList.remove('hidden');
-                 startArea.classList.add('flex'); // Explicitly add flex to ensure centering
+                 startArea.classList.add('flex'); // Explicitly add flex
                  
                  // Make Student ID input read-only/disabled AFTER successful login
                  document.getElementById('studentId').disabled = true;
@@ -1810,8 +1779,8 @@
                          </div>
                      </div>
                      
-                     <!-- REVISED LOCATION: Verify Button immediately after inputs -->
-                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-center mt-2 mb-6'}">
+                     <!-- REVISED LOCATION: Verify Button immediately after inputs, CENTERED -->
+                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'w-full flex justify-center mt-2 mb-6'}">
                           <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
                      </div>
  
@@ -1835,7 +1804,8 @@
                          </div>
                      </div>
  
-                     <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
+                     <!-- REVISED LOCATION: Start Actions CENTERED -->
+                     <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} w-full flex-col items-center justify-center text-center space-y-3 pt-4 border-t border-gray-100 mt-2">
                          <div class="text-green-600 font-medium text-sm text-center">Verification Successful. Click below to begin the exam.</div>
                          <button onclick="window.startExam()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transition transform hover:scale-105 text-sm">Start the Task</button>
                      </div>
