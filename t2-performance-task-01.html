@@ -36,24 +36,44 @@
             font-size: 0.8rem; background-color: #fff;
         }
         .table-input:focus, .text-input:focus { outline: none; border-color: #3b82f6; }
-        .table-input:disabled, .text-input:disabled { background-color: #f8fafc; color: #64748b; border-color: #e2e8f0; }
         
-        /* --- New Error Feedback Style --- */
-        .input-error-x {
+        /* Modified disabled styles to show black text and remove opacity */
+        /* CRITICAL FIX: Ensure answers are visible and black when disabled */
+        input:disabled, select:disabled, textarea:disabled, .table-input:disabled, .text-input:disabled { 
+            background-color: #ffffff; 
+            color: #000000 !important; /* Force black text */
+            -webkit-text-fill-color: #000000 !important; /* Safari fix */
+            border-color: #e2e8f0;
+            opacity: 1 !important; /* Ensure visibility */
+            cursor: default;
+        }
+        
+        /* --- New Error Feedback Style (Using Background Images for Inputs) --- */
+        /* Added :disabled selector to ensure it persists after locking */
+        .input-error-x, .input-error-x:disabled {
             border-color: #dc2626 !important; /* Red border */
             background-color: #fef2f2 !important; /* Light red background */
             box-shadow: 0 0 0 1px #ef4444 !important;
-            position: relative;
+            /* SVG Data URI for Red X */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23dc2626'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 18L18 6M6 6l12 12'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 4px center;
+            background-size: 14px;
+            padding-right: 22px !important; /* Make space for icon */
         }
-        .input-error-x::after {
-            content: "❌"; /* Red X symbol */
-            position: absolute;
-            right: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 10px;
-            pointer-events: none;
-            color: #dc2626;
+
+        /* --- Success Feedback Style (Using Background Images for Inputs) --- */
+        /* Added :disabled selector to ensure it persists after locking */
+        .input-success-check, .input-success-check:disabled {
+            border-color: #16a34a !important; /* Green border */
+            background-color: #f0fdf4 !important; /* Light green bg */
+            box-shadow: 0 0 0 1px #22c55e !important;
+            /* SVG Data URI for Green Check */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2316a34a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 4px center;
+            background-size: 14px;
+            padding-right: 22px !important; /* Make space for icon */
         }
         
         /* HEADER & FOOTER COLORS */
@@ -61,23 +81,29 @@
         .footer-bg { background-color: #334155; color: white; }
         
         /* Journal & Ledger Specifics */
-        .journal-row td { vertical-align: top; padding: 8px 4px; border-bottom: 1px solid #f1f5f9; }
+        .journal-row td { vertical-align: top; padding: 4px 4px; border-bottom: 1px solid #f1f5f9; }
         .journal-row:last-child td { border-bottom: none; }
         
         /* Journal Grid Alignment Helpers */
         .journal-line { height: 24px; display: flex; align-items: center; }
         
         .pr-box { 
-            cursor: pointer; height: 18px; width: 18px; border: 1px solid #cbd5e1; 
+            cursor: pointer; height: 16px; width: 16px; border: 1px solid #cbd5e1; 
             display: inline-flex; align-items: center; justify-content: center; background: white; user-select: none;
             border-radius: 2px;
             font-size: 10px;
         }
         .pr-box:hover { border-color: #3b82f6; }
         .pr-checked { color: #16a34a; font-weight: bold; border-color: #16a34a; background-color: #dcfce7; }
+        .pr-error { color: #dc2626; font-weight: bold; border-color: #dc2626; background-color: #fef2f2; }
+        .pr-valid { background-color: #dcfce7; border-color: #16a34a; color: #16a34a; }
+        
+        /* Style for disabled/checked PR boxes */
+        .pr-box[disabled] { cursor: default; }
 
         /* Layout & Scroll */
-        .split-panel { height: 600px; overflow: hidden; } 
+        /* INCREASED HEIGHT BY 70% (600 * 1.7 = 1020px) */
+        .split-panel { height: 1020px; overflow: hidden; } 
         .scroll-panel { height: 100%; overflow-y: auto; }
         
         /* Sticky Logic */
@@ -96,13 +122,17 @@
         /* Task Locking Overlay */
         .locked-task {
             position: relative;
-            pointer-events: none;
             user-select: none;
         }
+        /* REMOVED blur-content styling completely to show answers */
         .locked-task .blur-content {
-            filter: blur(4px);
-            opacity: 0.5;
+            filter: none !important;
+            opacity: 1; /* Ensure visibility */
             transition: all 0.5s ease;
+        }
+        /* Added class to hide lock overlay when content is visible */
+        .lock-overlay-hidden {
+             display: none !important;
         }
         .lock-overlay {
             position: absolute;
@@ -111,7 +141,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: rgba(255,255,255,0.3);
+            background-color: rgba(255,255,255,0.95); /* Slightly opaque to hide content if truly locked */
         }
         .lock-message {
             background: white;
@@ -133,6 +163,7 @@
         }
         .ledger-header {
             background-color: #eff6ff; padding: 15px; text-align: center; border-bottom: 1px solid #dbeafe;
+            position: relative; /* Needed for absolute positioning of delete icon */
         }
         .ledger-title-input {
             background: white; border: 1px solid #bfdbfe; padding: 5px 10px;
@@ -174,6 +205,8 @@
             .table-input, .text-input { 
                 border: none !important; border-bottom: 1px solid #ccc !important; 
                 background: transparent !important; padding: 0 !important;
+                color: black !important; /* Ensure printed text is black */
+                background-image: none !important; /* No validation icons on print */
             }
             #task1-grid { display: block !important; }
             .explanation-box { display: block !important; border: 1px solid #ef4444; padding: 15px; margin-top: 30px; font-size: 0.85rem; page-break-inside: avoid; }
@@ -231,7 +264,8 @@
     <div id="app" class="printable-area bg-white shadow-xl rounded-xl p-0 md:p-0 border border-gray-200 relative pb-20">
         
         <!-- Timer Display (MOVED INSIDE #app FOR STRUCTURAL CORRECTION) -->
-        <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold sticky top-4 z-50 mx-auto max-w-xs">
+        <!-- REVISED: Centered horizontally at 25% of the container width -->
+        <div id="timer-box" class="no-print bg-red-800 text-white p-3 rounded-lg shadow-xl mb-4 flex items-center justify-center font-mono text-lg font-bold sticky top-4 z-50 max-w-xs ml-[25%] -translate-x-1/2">
             Task Time: <span id="countdown" class="ml-2 text-yellow-300">--:--:--</span>
         </div>
 
@@ -284,7 +318,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025.11.29 214111</strong>
+                <strong>Version 2025-12-01 05:47:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -343,67 +377,36 @@
 
 
         // --- PERSISTENCE HELPERS ---
+        // DISABLED LOCAL STORAGE FOR TESTING
         const saveStateToLocalStorage = () => {
-             if (state.attendanceId) {
-                 const persistState = {
-                     studentInfo: state.studentInfo,
-                     currentStep: state.currentStep,
-                     isTask1Locked: state.isTask1Locked,
-                     isTask2Locked: state.isTask2Locked,
-                     attempts: state.attempts, // Save attempts too
-                 };
-                 localStorage.setItem(getLocalStorageKey(state.attendanceId), JSON.stringify(persistState));
-             }
+             // Disabled
         };
 
         const loadStateFromLocalStorage = () => {
-            if (state.attendanceId) {
-                const persisted = localStorage.getItem(getLocalStorageKey(state.attendanceId));
-                if (persisted) {
-                    const persistState = JSON.parse(persisted);
-                    state.studentInfo = persistState.studentInfo;
-                    state.currentStep = persistState.currentStep;
-                    state.isTask1Locked = persistState.isTask1Locked;
-                    state.isTask2Locked = persistState.isTask2Locked;
-                    state.attempts = persistState.attempts || { 1: 0, 2: 0 };
-                    return true;
-                }
-            }
+            // Disabled
             return false;
         };
 
         // NEW: Persistence for the randomized test data (Crucial for validation)
         const saveTestDatatoLocalStorage = () => {
-            if (state.attendanceId) {
-                 const testData = {
-                    journalEntries: state.journalEntries,
-                    pctb: state.pctb, 
-                    ledgers: state.ledgers, 
-                    requiredAccounts: state.requiredAccounts
-                 };
-                 localStorage.setItem(getDataKey(state.attendanceId), JSON.stringify(testData));
-            }
+            // Disabled
         };
 
         const loadTestDataFromLocalStorage = () => {
-            if (state.attendanceId) {
-                const persisted = localStorage.getItem(getDataKey(state.attendanceId));
-                if (persisted) {
-                    const testData = JSON.parse(persisted);
-                    state.journalEntries = testData.journalEntries;
-                    state.pctb = testData.pctb;
-                    state.ledgers = testData.ledgers;
-                    state.requiredAccounts = testData.requiredAccounts;
-                    return true;
-                }
-            }
+            // Disabled
             return false;
         };
 
 
         window.disableAllInputs = () => {
             document.querySelectorAll('input, button, select').forEach(el => {
-                if(!el.id.includes('print')) { el.disabled = true; el.classList.add('cursor-not-allowed', 'opacity-75'); }
+                if(!el.id.includes('print')) { 
+                    el.disabled = true; 
+                    el.classList.add('cursor-not-allowed'); 
+                    // Ensure black text for visibility
+                    el.classList.remove('text-gray-400', 'text-gray-500');
+                    el.classList.add('text-black');
+                }
             });
         };
 
@@ -412,9 +415,22 @@
             if(container) {
                 container.querySelectorAll('input, button, select').forEach(el => {
                     el.disabled = true;
-                    el.classList.add('bg-gray-100', 'text-gray-500', 'border-gray-200');
-                    el.classList.remove('bg-white');
+                    // REVISION: Do NOT make background gray if it hides content. 
+                    // Make sure text is black and visible.
+                    el.classList.add('text-black', 'border-gray-200');
+                    el.classList.remove('bg-gray-100'); // Remove gray bg that might look "disabled/hidden"
+                    el.classList.add('bg-white'); // Keep it white for readability
                 });
+            }
+            // Also disable ledger add row button permanently if task is locked
+            if (selector === '#task1-grid') {
+                 const addRowBtns = container.querySelectorAll('button[onclick^="window.addRow"]');
+                 addRowBtns.forEach(btn => btn.disabled = true);
+                 const addLedgerBtn = document.getElementById('btn-add-ledger');
+                 if(addLedgerBtn) addLedgerBtn.disabled = true;
+                 // Also disable delete buttons
+                 const delBtns = container.querySelectorAll('button[onclick^="window.deleteLedger"]');
+                 delBtns.forEach(btn => btn.disabled = true);
             }
         }
         
@@ -440,15 +456,14 @@
             if (!state.attendanceId) return; 
             const displayElement = document.getElementById('countdown');
             const boxElement = document.getElementById('timer-box');
-            const storageKey = `exam_end_time_${state.attendanceId}`;
-            const endTime = localStorage.getItem(storageKey);
             
-            if (!endTime || !displayElement) { displayElement.textContent = "--:--:--"; return; }
+            if (!window.endTime || !displayElement) { displayElement.textContent = "--:--:--"; return; }
             
             const now = Date.now();
-            const distance = parseInt(endTime) - now;
+            const distance = parseInt(window.endTime) - now;
             
-            if (distance < 0) {
+            // CRITICAL FIX: Ensure timer finish does not trigger if window.examDurationMins was invalid
+            if (distance < 0 && window.examDurationMins > 0) {
                 displayElement.textContent = "00:00:00";
                 stopTimer();
                 window.disableAllInputs();
@@ -480,7 +495,8 @@
 
         // Timer initialization logic (now called from startExam or resumeExam)
         function startTimer() {
-            if (!state.attendanceId || window.examDurationMins <= 0) {
+            // Check for valid attendance ID and Duration
+            if (!state.attendanceId || !window.examDurationMins || window.examDurationMins <= 0) {
                 console.error("Cannot start timer: Missing Attendance ID or Duration is zero.");
                 document.getElementById('countdown').textContent = "No Timer";
                 return;
@@ -488,16 +504,11 @@
             
             if (timerInterval) stopTimer();
             
-            const storageKey = `exam_end_time_${state.attendanceId}`;
-            let endTime = localStorage.getItem(storageKey);
-            
-            if (!endTime) {
+            if (!window.endTime) {
                 // Calculate and set end time if missing (Initial start)
                 const now = Date.now();
                 const durationMs = window.examDurationMins * 60 * 1000;
-                
-                endTime = now + durationMs;
-                localStorage.setItem(storageKey, endTime);
+                window.endTime = now + durationMs;
             }
             
             updateTimerDisplay(); // Initial call
@@ -507,59 +518,161 @@
 
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const formatMoney = (n) => 'P' + n.toLocaleString('en-US');
+        const formatNumber = (n) => n.toLocaleString('en-US');
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
         const generateData = () => {
             const familyName = state.studentInfo.fullName.split(',')[0].trim();
             const year = new Date().getFullYear();
             
-            // 1. PCTB
+            // 1. PCTB (Adjusted slightly to ensure liquidity for new transactions)
             const assets = [
-                {name: 'Cash', bal: rand(100000, 200000)},
+                {name: 'Cash', bal: rand(200000, 300000)}, // Increased start cash
                 {name: 'Accounts Receivable', bal: rand(20000, 50000)},
                 {name: 'Supplies', bal: rand(5000, 15000)},
-                {name: 'Prepaid Rent', bal: rand(30000, 60000)},
+                {name: 'Prepaid Rent', bal: rand(15000, 30000)}, // Changed from 0
                 {name: 'Equipment', bal: rand(150000, 250000)},
             ];
             const liabs = [
-                {name: 'Accounts Payable', bal: rand(10000, 30000)},
+                {name: 'Accounts Payable', bal: rand(20000, 40000)},
                 {name: 'Notes Payable', bal: rand(15000, 25000)},
                 {name: 'Unearned Revenue', bal: rand(10000, 20000)},
             ];
-            const totalAsset = assets.reduce((a,b)=>a+b.bal,0);
-            const totalLiab = liabs.reduce((a,b)=>a+b.bal,0);
-            const capital = { name: `Owner, Capital`, bal: totalAsset - totalLiab };
             
-            state.pctb = [...assets.map(a=>({...a, side:'Dr'})), ...liabs.map(l=>({...l, side:'Cr'})), {...capital, side:'Cr'}];
+            // Accumulated Depreciation Logic
+            // Find depreciable assets (Equipment) and add accumulated depreciation
+            const depreciableAssets = assets.filter(a => a.name === 'Equipment');
+            const accDepItems = [];
+            let totalAccDep = 0;
+            
+            depreciableAssets.forEach(asset => {
+                const accDepVal = Math.floor(asset.bal * 0.2); // 20% accumulated depreciation
+                totalAccDep += accDepVal;
+                accDepItems.push({name: `Accumulated Depreciation - ${asset.name}`, bal: accDepVal, side: 'Cr'});
+            });
 
-            // 2. Journal Entries
+            const totalAssetVal = assets.reduce((a,b)=>a+b.bal,0);
+            const totalLiabVal = liabs.reduce((a,b)=>a+b.bal,0);
+            
+            // Capital = (Assets) - (Liabilities + AccDep)
+            // Or in debit/credit terms: Debits (Assets) must equal Credits (Liabs + AccDep + Capital)
+            // Total Debits = totalAssetVal
+            // Total Credits = totalLiabVal + totalAccDep + Capital
+            // Capital = totalAssetVal - totalLiabVal - totalAccDep
+            const capitalBal = totalAssetVal - totalLiabVal - totalAccDep;
+            const capital = { name: `Owner, Capital`, bal: capitalBal, side: 'Cr' };
+            
+            state.pctb = [
+                ...assets.map(a=>({...a, side:'Dr'})), 
+                ...accDepItems,
+                ...liabs.map(l=>({...l, side:'Cr'})), 
+                capital
+            ];
+
+            // 2. Journal Entries (Dynamic 15 Sources)
             const entries = [];
             const mIdx = rand(0, 5); 
             const mStr = months[mIdx];
+            
+            // Temporary array to hold transaction data before sorting by date
+            let rawTrans = [];
 
-            const addEntry = (d, titles, prs, drs, crs, desc) => {
-                const day = String(d).padStart(2,'0');
-                const fullDate = `${year}-${String(mIdx+1).padStart(2,'0')}-${day}`;
-                entries.push({ 
-                    dateStr: fullDate, year: year, month: mStr, day: day,
-                    titles, prs, drs, crs, desc, id: entries.length 
+            // Helper to add raw transaction
+            const pushTrans = (dayRange, titles, drAmt, crAmt, desc) => {
+                // Ensure day is realistic and padded
+                let dayInt = Array.isArray(dayRange) ? rand(dayRange[0], dayRange[1]) : dayRange;
+                
+                rawTrans.push({
+                    day: dayInt,
+                    titles: titles,
+                    drs: [drAmt, 0],
+                    crs: [0, crAmt], // Ensure Balance
+                    desc: desc
                 });
             };
-            addEntry(3, ['Rent Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid rent for the month");
-            addEntry(4, ['Supplies','Cash'], ['',''], [rand(4000,4000),0], [0,rand(4000,4000)], "Purchased supplies for cash");
-            addEntry(8, ['Cash','Service Revenue'], ['',''], [rand(24000,24000),0], [0,rand(24000,24000)], "Performed services for cash");
-            addEntry(10, ['Salaries Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid bi-monthly salaries");
-            addEntry(14, ['Accounts Receivable','Service Revenue'], ['',''], [rand(13000,13000),0], [0,rand(13000,13000)], "Performed services on account");
-            addEntry(16, ['Cash','Accounts Receivable'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Collected from customer");
-            addEntry(18, ['Accounts Payable','Cash'], ['',''], [rand(2000,5000),0], [0,rand(2000,5000)], "Paid supplier on account");
-            addEntry(20, ['Cash','Unearned Revenue'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Received advance payment");
-            addEntry(22, ['Utilities Expense','Cash'], ['',''], [rand(3000,6000),0], [0,rand(3000,6000)], "Paid utilities");
-            addEntry(25, ['Salaries Expense','Cash'], ['',''], [rand(9000,9000),0], [0,rand(9000,9000)], "Paid bi-monthly salaries");
-            addEntry(28, ['Advertising Expense','Cash'], ['',''], [rand(2000,4000),0], [0,rand(2000,4000)], "Paid advertising");
-            addEntry(29, ['Miscellaneous Expense','Cash'], ['',''], [rand(1000,2000),0], [0,rand(1000,2000)], "Paid misc expenses");
-            addEntry(30, [`Owner, Withdrawals`,'Cash'], ['',''], [rand(5000,10000),0], [0,rand(5000,10000)], "Owner personal withdrawal");
-            addEntry(31, ['Supplies','Accounts Payable'], ['',''], [rand(3000,5000),0], [0,rand(3000,5000)], "Bought supplies on credit");
-            addEntry(31, ['Equipment','Notes Payable'], ['',''], [rand(10000,20000),0], [0,rand(10000,20000)], "Bought equipment via note");
+
+            // 1. Payment for Prepaid Rent (Early Month)
+            let amt = rand(15000, 30000);
+            pushTrans([1, 5], ['Prepaid Rent', 'Cash'], amt, amt, "Paid advance rent for the quarter");
+
+            // 2. Payment for Prepaid Insurance (Early Month)
+            amt = rand(10000, 20000);
+            pushTrans([2, 6], ['Prepaid Insurance', 'Cash'], amt, amt, "Paid annual insurance premium");
+
+            // 3. Purchase of Supplies (Cash)
+            amt = rand(3000, 8000);
+            pushTrans([5, 15], ['Supplies', 'Cash'], amt, amt, "Purchased office supplies for cash");
+
+            // 4. Purchase of Supplies (On Account)
+            amt = rand(5000, 12000);
+            pushTrans([8, 20], ['Supplies', 'Accounts Payable'], amt, amt, "Bought supplies on credit");
+
+            // 5. Rendering Services (Cash)
+            amt = rand(20000, 50000);
+            pushTrans([5, 25], ['Cash', 'Service Revenue'], amt, amt, "Performed services for cash");
+
+            // 6. Rendering Services (On Account)
+            amt = rand(15000, 40000);
+            pushTrans([10, 28], ['Accounts Receivable', 'Service Revenue'], amt, amt, "Billed client for services rendered");
+
+            // 7. Salaries Payment (10th) - FIXED DATE
+            amt = rand(12000, 15000);
+            pushTrans(10, ['Salaries Expense', 'Cash'], amt, amt, "Paid salaries for first half of month");
+
+            // 8. Salaries Payment (25th) - FIXED DATE
+            pushTrans(25, ['Salaries Expense', 'Cash'], amt, amt, "Paid salaries for second half of month");
+
+            // 9. Collection of Accounts Receivable
+            amt = rand(5000, 15000);
+            pushTrans([12, 22], ['Cash', 'Accounts Receivable'], amt, amt, "Collected partial payment from customers");
+
+            // 10. Payment of Accounts Payable
+            amt = rand(5000, 15000);
+            pushTrans([15, 24], ['Accounts Payable', 'Cash'], amt, amt, "Paid outstanding balance to suppliers");
+
+            // 11. Another Revenue (Cash) to ensure activity
+            amt = rand(10000, 30000);
+            pushTrans([15, 27], ['Cash', 'Service Revenue'], amt, amt, "Received cash for services");
+
+            // --- Month End Expenses (28th - 30th) ---
+            
+            // 12. Utilities
+            amt = rand(4000, 8000);
+            pushTrans([28, 30], ['Utilities Expense', 'Cash'], amt, amt, "Paid monthly utility bill");
+
+            // 13. Advertising
+            amt = rand(3000, 6000);
+            pushTrans([28, 30], ['Advertising Expense', 'Cash'], amt, amt, "Paid for online advertising");
+
+            // 14. Software Subscriptions
+            amt = rand(2000, 5000);
+            pushTrans([28, 30], ['Software Subscription Expense', 'Cash'], amt, amt, "Paid monthly software subscription");
+
+            // 15. Miscellaneous
+            amt = rand(1000, 3000);
+            pushTrans([28, 30], ['Miscellaneous Expense', 'Cash'], amt, amt, "Paid miscellaneous office expenses");
+
+            // Sort entries by Day
+            rawTrans.sort((a, b) => a.day - b.day);
+
+            // Populate final state structure
+            rawTrans.forEach((t, i) => {
+                const day = String(t.day).padStart(2,'0');
+                const fullDate = `${year}-${String(mIdx+1).padStart(2,'0')}-${day}`;
+                entries.push({
+                    id: i,
+                    dateStr: fullDate,
+                    year: year,
+                    month: mStr,
+                    day: day,
+                    titles: t.titles,
+                    prs: ['',''],
+                    drs: t.drs,
+                    crs: t.crs,
+                    desc: t.desc
+                });
+            });
+            
             state.journalEntries = entries;
             
             // Generate list of all required accounts for validation
@@ -590,14 +703,18 @@
             crRows += `<div class="grid grid-cols-12 border-b border-gray-100 bg-gray-50 h-8 items-center"><div class="col-span-3 border-r px-1"><input type="number" id="l_${id}_cr_year" placeholder="YYYY" class="w-full text-center bg-transparent text-xs font-bold outline-none"></div><div class="col-span-9"></div></div>`;
 
             for(let i=0; i<rowCount; i++) { 
+                // REVISION: Date alignment changed to text-right per user request
+                // REVISION: Placeholder logic - first row (i=0) is MMM dd, others (i>0) is dd
+                const ph = i === 0 ? "MMM dd" : "dd";
+
                 drRows += `<div class="grid grid-cols-12 border-b border-gray-100 text-sm">
-                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-center outline-none" placeholder="MMM dd" id="l_${id}_dr_d_${i}"></div>
+                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none" placeholder="${ph}" id="l_${id}_dr_d_${i}"></div>
                     <div class="col-span-5 border-r p-0"><input class="w-full h-full p-1 outline-none" id="l_${id}_dr_p_${i}"></div>
                     <div class="col-span-1 border-r p-0"><input class="w-full h-full p-1 text-center outline-none" id="l_${id}_dr_pr_${i}"></div>
                     <div class="col-span-3 p-0"><input type="number" class="w-full h-full p-1 text-right outline-none" placeholder="0" id="l_${id}_dr_a_${i}"></div>
                 </div>`;
                 crRows += `<div class="grid grid-cols-12 border-b border-gray-100 text-sm">
-                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-center outline-none" placeholder="MMM dd" id="l_${id}_cr_d_${i}"></div>
+                    <div class="col-span-3 border-r p-0"><input class="w-full h-full p-1 text-right outline-none" placeholder="${ph}" id="l_${id}_cr_d_${i}"></div>
                     <div class="col-span-5 border-r p-0"><input class="w-full h-full p-1 outline-none" id="l_${id}_cr_p_${i}"></div>
                     <div class="col-span-1 border-r p-0"><input class="w-full h-full p-1 text-center outline-none" id="l_${id}_cr_pr_${i}"></div>
                     <div class="col-span-3 p-0"><input type="number" class="w-full h-full p-1 text-right outline-none" placeholder="0" id="l_${id}_cr_a_${i}"></div>
@@ -606,9 +723,18 @@
 
             return `
             <div id="ledger_${id}" class="ledger-form break-inside-avoid">
-                <div class="ledger-header relative">
-                    <div class="text-[10px] font-bold text-blue-500 tracking-widest mb-1 uppercase">Account Title</div>
-                    <input type="text" id="l_${id}_name" class="ledger-title-input shadow-sm focus:ring-2 focus:ring-blue-300 outline-none" placeholder="Enter Account Title" value="${name}">
+                <div class="ledger-header relative flex justify-between items-center">
+                    <div class="w-6"></div> <!-- Spacer for alignment -->
+                    <div class="flex flex-col items-center w-full">
+                        <div class="text-[10px] font-bold text-blue-500 tracking-widest mb-1 uppercase">Account Title</div>
+                        <input type="text" id="l_${id}_name" class="ledger-title-input shadow-sm focus:ring-2 focus:ring-blue-300 outline-none" placeholder="Enter Account Title" value="${name}">
+                    </div>
+                    <!-- DELETE ICON -->
+                    <button onclick="window.deleteLedger(${id})" class="text-red-400 hover:text-red-600 transition p-1" title="Delete Ledger">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
                 </div>
                 <div class="grid grid-cols-2 divide-x divide-gray-200">
                     <div>
@@ -637,7 +763,8 @@
 
         window.addLedger = () => {
             const container = document.getElementById('ledger-container');
-            const id = state.ledgers.length;
+            // Robust ID Generation
+            const id = state.ledgers.length > 0 ? Math.max(...state.ledgers.map(l => l.id)) + 1 : 0;
             const newLedger = { id, name: '', rowCount: 4 };
             state.ledgers.push(newLedger);
             saveTestDatatoLocalStorage(); // Persist changes to ledger structure
@@ -645,16 +772,46 @@
             const rightPanel = document.querySelector('.scroll-panel');
             if(rightPanel) rightPanel.scrollTop = rightPanel.scrollHeight;
         };
+        
+        window.deleteLedger = (id) => {
+            if(state.isTask1Locked) return;
+            if(confirm("This action is irreversible. Are you sure you want to delete this ledger?")) {
+                // Remove from state
+                state.ledgers = state.ledgers.filter(l => l.id !== id);
+                // Remove from DOM
+                const el = document.getElementById(`ledger_${id}`);
+                if(el) el.remove();
+                saveTestDatatoLocalStorage();
+            }
+        };
 
         window.addRow = (id) => {
+             if(state.isTask1Locked) return;
              const ledger = state.ledgers.find(l => l.id === id);
              if(ledger) {
+                 // CAPTURE CURRENT INPUT VALUES
+                 const container = document.getElementById(`ledger_${id}`);
+                 const inputs = container.querySelectorAll('input, select');
+                 const values = {};
+                 inputs.forEach(input => {
+                     values[input.id] = input.value;
+                 });
+                 
+                 // UPDATE STATE
                  ledger.rowCount += 1; 
                  saveTestDatatoLocalStorage(); // Persist changes to ledger structure
-                 const oldEl = document.getElementById(`ledger_${id}`);
+                 
+                 // RE-RENDER
                  const tempDiv = document.createElement('div');
                  tempDiv.innerHTML = createLedgerHTML(ledger);
-                 oldEl.parentNode.replaceChild(tempDiv.firstElementChild, oldEl);
+                 container.parentNode.replaceChild(tempDiv.firstElementChild, container);
+                 
+                 // RESTORE INPUT VALUES
+                 const newContainer = document.getElementById(`ledger_${id}`);
+                 Object.keys(values).forEach(key => {
+                     const el = document.getElementById(key);
+                     if(el) el.value = values[key];
+                 });
              }
         };
 
@@ -662,7 +819,7 @@
             if(state.isTask1Locked) return;
             const current = el.innerText;
             if(current === "") { el.innerText = "✓"; el.classList.add("pr-checked"); state.prChecks[id] = true; }
-            else { el.innerText = ""; el.classList.remove("pr-checked"); state.prChecks[id] = false; }
+            else { el.innerText = ""; el.classList.remove("pr-checked"); el.classList.remove("pr-error"); el.classList.remove("pr-valid"); state.prChecks[id] = false; }
         };
         
         const getGrade = (current, max) => {
@@ -684,6 +841,7 @@
         const removeErrorClass = (selector) => {
             document.querySelectorAll(selector).forEach(el => {
                 el.classList.remove('input-error-x');
+                el.classList.remove('input-success-check');
             });
         };
 
@@ -706,7 +864,9 @@
                 ? "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed"
                 : "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition";
             
-            // Determine button state for Task 2 (Locked if Task 1 is NOT completed)
+            // Determine button state for Task 2
+            // Task 2 unlocks if Task 1 is Locked OR if Task 1 is Passed (Score >= 60%) - NO, user requested just completed/attempts used.
+            // Simplified logic: T2 Unlocks if T1 is locked (which happens on pass or exhaust)
             const isT2BtnLockedByT1 = !state.isTask1Locked;
             const isT2BtnDisabled = isT2BtnLockedByT1 || state.isTask2Locked || state.attempts[2] >= max;
              const t2BtnText = state.isTask2Locked ? "Task 2 Completed" : (state.attempts[2] >= max ? "Attempts Used" : "Validate Task 2");
@@ -775,69 +935,72 @@
 
                     <!-- Task 1 Internal Grid: 4/10 (Journal) and 6/10 (Ledger Forms) -->
                     <!-- NOTE: Reverted back to xl:grid-cols-10 and adjusted spans for 4:6 ratio -->
+                    <!-- INCREASED HEIGHT for split-panel -->
                     <div id="task1-grid" class="grid grid-cols-1 xl:grid-cols-10 gap-4 split-panel mb-4 relative mx-4">
                         <!-- Journal (4/10 width) -->
                         <div class="xl:col-span-4 bg-white shadow border border-gray-200 rounded-lg h-full overflow-hidden flex flex-col">
-                            <div class="bg-white border-b-2 border-indigo-100 p-3 flex items-center gap-2 sticky top-0 z-10">
+                            <div class="bg-white border-b-2 border-indigo-100 p-3 flex justify-between items-center sticky top-0 z-10">
                                 <span class="font-bold text-indigo-900 text-lg">Source: General Journal</span>
+                                <span class="font-bold text-gray-500 text-sm">Page 1</span>
                             </div>
-                            <div class="overflow-y-auto flex-1 bg-white">
-                                <table class="w-full text-sm border-collapse">
+                            <div class="overflow-x-auto flex-1 bg-white">
+                                <table class="table-auto min-w-full text-sm border-collapse">
                                     <thead class="bg-gray-50 sticky top-0 z-10 text-xs uppercase text-gray-500 font-bold">
                                         <tr>
-                                            <th class="p-2 text-right w-16">Date</th>
-                                            <th class="p-2 text-left">Particulars</th>
-                                            <th class="p-2 text-center w-10">PR</th>
-                                            <th class="p-2 text-right w-20">Debit</th>
-                                            <th class="p-2 text-right w-20">Credit</th>
+                                            <th class="p-2 text-right border-b whitespace-nowrap min-w-max">Date</th>
+                                            <th class="p-2 text-left border-b w-full min-w-[200px]">Particulars</th>
+                                            <th class="p-2 text-center border-b min-w-[40px]">PR</th>
+                                            <th class="p-2 text-right border-b min-w-[80px]">Debit</th>
+                                            <th class="p-2 text-right border-b min-w-[80px]">Credit</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
+                                        <!-- Year Row -->
+                                        <tr>
+                                            <td class="align-top p-1 text-center font-bold text-gray-500 bg-gray-50 text-xs">${new Date().getFullYear()}</td>
+                                            <td colspan="4" class="bg-gray-50"></td>
+                                        </tr>
                                         ${state.journalEntries.map((e, index) => {
                                             let dateHTML = index === 0 
-                                                ? `<div class="text-[10px] font-bold text-gray-500 leading-tight mb-1">${e.year}</div><div>${e.month} ${e.day}</div>`
+                                                ? `<div class="text-[10px] font-bold text-gray-500 leading-tight mb-1">${e.month}</div><div>${e.day}</div>`
                                                 : `<div>${e.day}</div>`;
                                             
-                                            const partHTML = `
-                                                <div class="font-bold text-gray-800 journal-line">${e.titles[0]}</div>
-                                                <div class="text-gray-800 journal-line pl-8">${e.titles[1]}</div>
-                                                <div class="text-xs italic text-gray-400 journal-line pl-4">${e.desc}</div>
-                                            `;
-
-                                            const prHTML = `
-                                                <div class="journal-line justify-center"><div class="pr-box" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div></div>
-                                                <div class="journal-line justify-center"><div class="pr-box" onclick="window.togglePR(this, 'j_${e.id}_1')" title="Post Credit"></div></div>
-                                                <div class="journal-line"></div>
-                                            `;
-
-                                            const drHTML = `
-                                                <div class="font-bold text-gray-700 journal-line text-right">${formatMoney(e.drs[0])}</div>
-                                                <div class="journal-line"></div>
-                                                <div class="journal-line"></div>
-                                            `;
-
-                                            const crHTML = `
-                                                <div class="journal-line"></div>
-                                                <div class="text-gray-700 journal-line text-right">${formatMoney(e.crs[1])}</div>
-                                                <div class="journal-line"></div>
-                                            `;
-
                                             return `
-                                            <tr class="journal-row hover:bg-blue-50/50 transition-colors group">
-                                                <td class="text-xs font-bold text-gray-600 text-right pr-2 w-16 align-top pt-3">
+                                            <!-- Debit Row -->
+                                            <tr class="hover:bg-blue-50/50 transition-colors group border-b-0">
+                                                <td class="text-xs text-gray-600 text-right pr-2 align-top pt-2 whitespace-nowrap">
                                                     ${dateHTML}
                                                 </td>
-                                                <td class="align-top">
-                                                    ${partHTML}
+                                                <td class="align-top text-gray-800 whitespace-nowrap pt-2">
+                                                    ${e.titles[0]}
                                                 </td>
-                                                <td class="align-top w-10">
-                                                    ${prHTML}
+                                                <td class="align-top text-center pt-2">
+                                                    <div class="pr-box" id="pr_box_j_${e.id}_0" onclick="window.togglePR(this, 'j_${e.id}_0')" title="Post Debit"></div>
                                                 </td>
-                                                <td class="align-top w-20">
-                                                    ${drHTML}
+                                                <td class="align-top text-right text-gray-700 whitespace-nowrap pt-2">
+                                                    ${formatNumber(e.drs[0])}
                                                 </td>
-                                                <td class="align-top w-20">
-                                                    ${crHTML}
+                                                <td class="align-top pt-2"></td>
+                                            </tr>
+                                            <!-- Credit Row -->
+                                            <tr class="hover:bg-blue-50/50 transition-colors group border-b-0">
+                                                <td class="align-top"></td>
+                                                <td class="align-top text-gray-800 pl-8 whitespace-nowrap pt-1">
+                                                    ${e.titles[1]}
+                                                </td>
+                                                <td class="align-top text-center pt-1">
+                                                    <div class="pr-box" id="pr_box_j_${e.id}_1" onclick="window.togglePR(this, 'j_${e.id}_1')" title="Post Credit"></div>
+                                                </td>
+                                                <td class="align-top pt-1"></td>
+                                                <td class="align-top text-right text-gray-700 whitespace-nowrap pt-1">
+                                                    ${formatNumber(e.crs[1])}
+                                                </td>
+                                            </tr>
+                                            <!-- Description Row -->
+                                            <tr class="hover:bg-blue-50/50 transition-colors group border-b border-gray-100">
+                                                <td class="align-top"></td>
+                                                <td colspan="4" class="text-xs italic text-gray-400 pl-16 pb-2 pt-1">
+                                                    ${e.desc}
                                                 </td>
                                             </tr>`;
                                         }).join('')}
@@ -853,7 +1016,8 @@
                                     <h4 class="font-bold text-xs uppercase tracking-wide">Beginning Balances</h4>
                                     <button id="btn-add-ledger" onclick="window.addLedger()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded shadow">Add Ledger</button>
                                 </div>
-                                <div class="flex flex-wrap gap-2 pt-1 max-h-32 overflow-y-auto">
+                                <!-- REMOVED max-h-32 to show all balances -->
+                                <div class="flex flex-wrap gap-2 pt-1">
                                     ${state.pctb.map(a => `
                                         <div class="pctb-tag hover:border-blue-300 hover:shadow-md transition cursor-default">
                                             <span class="font-bold text-gray-800">${a.name}</span>
@@ -934,7 +1098,7 @@
                         </div>
                     </div>
 
-                    <div id="task2-wrapper" class="relative ${isT2BtnLockedByT1 ? 'locked-task' : ''} transition-all duration-500 mx-4">
+                    <div id="task2-wrapper" class="relative">
                         <div class="blur-content">
                             <div class="p-6 bg-gray-50 rounded shadow-inner border border-gray-200">
                                 <div class="bg-white p-6 border rounded shadow-sm max-w-4xl mx-auto">
@@ -965,7 +1129,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="task2-overlay" class.class = "${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}">
+                        <div id="task2-overlay" class="${isT2BtnLockedByT1 && !state.isTask2Locked ? 'lock-overlay' : 'lock-overlay hidden'}">
                             <div class="lock-message">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                                 <p>Task 2 is Locked</p>
@@ -998,9 +1162,24 @@
             return el ? el.value.trim() : "";
         };
 
+        const getLedgerInputEl = (id, side, field, idx) => {
+            return document.getElementById(`l_${id}_${side}_${field}_${idx}`);
+        };
+
         window.validateTask1 = () => {
             // 1. Clear previous error indicators
             removeErrorClass('#task1-grid input');
+            document.querySelectorAll('.pr-box').forEach(b => {
+                b.classList.remove('pr-error', 'pr-valid');
+                b.classList.remove('input-success-check');
+                b.classList.remove('input-error-x');
+            });
+            // Clear balance dropdown classes
+             document.querySelectorAll('select').forEach(b => {
+                b.classList.remove('input-success-check');
+                b.classList.remove('input-error-x');
+            });
+
 
             state.attempts[1]++;
             saveStateToLocalStorage(); // Persist attempt count
@@ -1027,7 +1206,6 @@
                     scoreA++;
                 } else {
                     state.explanations.push(`Subtask A: Ledger for '${req}' is missing.`);
-                    // NOTE: Marking missing ledgers is hard, but we can visually mark the empty account title inputs.
                 }
             });
             state.scores.t1a.current = scoreA;
@@ -1035,9 +1213,15 @@
             state.scores.t1a.grade = getGrade(scoreA, maxScoreA);
 
 
-            // --- SUBTASK B: Input Beginning Balances (Simplified Error Marking) ---
+            // --- SUBTASK B: Input Beginning Balances (Strict 'BB' & blank PR) ---
             let scoreB = 0;
-            const maxScoreB = state.pctb.length * 4; 
+            const maxScoreB = state.pctb.length * 5; // Year, Date, Part, PR, Amount
+
+            // Get transaction month for validation
+            const transMonth = state.journalEntries.length > 0 ? state.journalEntries[0].month : "Jan";
+            // Construct strict valid date strings: "MMM 01" or "MMM 1"
+            const expectedBegDate1 = `${transMonth} 01`;
+            const expectedBegDate2 = `${transMonth} 1`;
 
             state.pctb.forEach(acc => {
                 const userL = userLedgers.find(ul => ul.name.toLowerCase() === acc.name.toLowerCase());
@@ -1045,21 +1229,29 @@
                 if (userL) {
                     const side = acc.side.toLowerCase(); 
                     
-                    // 1. Year Value in First Row (which is now an input field)
                     const yearInp = document.getElementById(`l_${userL.id}_${side}_year`);
+                    
+                    // Row Index 0 is strictly for Beg Bal
                     const dateInpEl = document.getElementById(`l_${userL.id}_${side}_d_0`);
                     const partInpEl = document.getElementById(`l_${userL.id}_${side}_p_0`);
+                    const prInpEl = document.getElementById(`l_${userL.id}_${side}_pr_0`);
                     const amtInpEl = document.getElementById(`l_${userL.id}_${side}_a_0`);
 
                     const dateInp = dateInpEl.value.trim(); 
                     const partInp = partInpEl.value.trim();
+                    const prInp = prInpEl.value.trim();
                     const amtInp = parseInt(amtInpEl.value.trim() || 0);
 
-                    // Score breakdown (and mark errors)
-                    if(yearInp && parseInt(yearInp.value) === currentYear) { accBScore++; } else { yearInp?.classList.add('input-error-x'); }
-                    if(dateInp.length > 0) { accBScore++; } else { dateInpEl?.classList.add('input-error-x'); }
-                    if(partInp.toLowerCase().includes('beg') || partInp.toLowerCase().includes('balance')) { accBScore++; } else { partInpEl?.classList.add('input-error-x'); }
-                    if(Math.abs(amtInp - acc.bal) < 1) { accBScore++; } else { amtInpEl?.classList.add('input-error-x'); }
+                    // Score breakdown (Strict conditions)
+                    if(yearInp && parseInt(yearInp.value) === currentYear) { accBScore++; yearInp.classList.add('input-success-check'); } else { yearInp?.classList.add('input-error-x'); }
+                    
+                    // Strict Date Check
+                    const validDate = dateInp === expectedBegDate1 || dateInp === expectedBegDate2;
+                    if(validDate) { accBScore++; dateInpEl.classList.add('input-success-check'); } else { dateInpEl?.classList.add('input-error-x'); }
+                    
+                    if(partInp.toUpperCase() === 'BB') { accBScore++; partInpEl.classList.add('input-success-check'); } else { partInpEl?.classList.add('input-error-x'); }
+                    if(prInp === '') { accBScore++; prInpEl.classList.add('input-success-check'); } else { prInpEl?.classList.add('input-error-x'); }
+                    if(Math.abs(amtInp - acc.bal) < 1) { accBScore++; amtInpEl.classList.add('input-success-check'); } else { amtInpEl?.classList.add('input-error-x'); }
                 }
                 scoreB += accBScore;
             });
@@ -1067,12 +1259,21 @@
             state.scores.t1b.max = maxScoreB;
             state.scores.t1b.grade = getGrade(scoreB, maxScoreB);
 
-            // --- SUBTASK C: Post Journal Entries and Totals (Simplified Error Marking) ---
-            const transactionPointsMax = (state.journalEntries.length * 2 * 4);
-            const yearPointsMax = state.requiredAccounts.length * 1;
-            const totalsPointsMax = (state.requiredAccounts.length * 3);
+            // --- SUBTASK C: Post Journal Entries (Strict 'GJ', PR='1', and Journal Box Check) ---
+            
+            // Calculate Ledger Row & Checkbox Max Points
+            let totalJournalEntries = 0;
+            state.journalEntries.forEach(e => {
+                totalJournalEntries += 2; // 1 debit + 1 credit line
+            });
+            
+            const maxLedgerRowPoints = totalJournalEntries * 4; // 4 fields per entry
+            const maxJournalBoxPoints = totalJournalEntries * 1; // 1 point per checkbox
+            
+            // --- Subtask C: Scoring Update for Balance (1 pt for correct amount AND correct dropdown side) ---
+            const totalsPointsMax = (state.requiredAccounts.length * 3); // Total Dr(1) + Total Cr(1) + Balance(1)
 
-            const maxScoreC = transactionPointsMax + yearPointsMax + totalsPointsMax;
+            const maxScoreC = maxLedgerRowPoints + maxJournalBoxPoints + totalsPointsMax;
             let scoreC = 0;
 
             const accountTotals = {}; 
@@ -1086,126 +1287,297 @@
                 }
             });
 
-            // Map Journal Entries
+            // Expected Transactions for Verification
+            const accountTransactions = {};
+            state.requiredAccounts.forEach(a => accountTransactions[a] = []);
+            
+            const journalLinePostedStatus = {};
+
             state.journalEntries.forEach(e => {
                 const drAcc = e.titles[0]; const crAcc = e.titles[1];
+                
                 if(accountTotals[drAcc]) accountTotals[drAcc].dr += e.drs[0];
                 if(accountTotals[crAcc]) accountTotals[crAcc].cr += e.crs[1];
+
+                const keyDr = `j_${e.id}_0`;
+                const keyCr = `j_${e.id}_1`;
+                journalLinePostedStatus[keyDr] = false;
+                journalLinePostedStatus[keyCr] = false;
+
+                if(accountTransactions[drAcc]) accountTransactions[drAcc].push({ amount: e.drs[0], side: 'dr', day: e.day, matched: false, key: keyDr, month: e.month });
+                if(accountTransactions[crAcc]) accountTransactions[crAcc].push({ amount: e.crs[1], side: 'cr', day: e.day, matched: false, key: keyCr, month: e.month });
             });
 
+            // 1. Score Ledger Rows & Totals
             userLedgers.forEach(ul => {
                 const accName = state.requiredAccounts.find(r => r.toLowerCase() === ul.name.toLowerCase());
                 if(accName) {
                     const expected = accountTotals[accName];
+                    const expectedTransList = accountTransactions[accName];
+
                     const elTotalDr = document.getElementById(`l_${ul.id}_total_dr`);
                     const elTotalCr = document.getElementById(`l_${ul.id}_total_cr`);
                     const elBal = document.getElementById(`l_${ul.id}_bal`);
+                    const elBalType = document.getElementById(`l_${ul.id}_bal_type`); // DROPDOWN
                     
                     const valTotalDr = parseInt(elTotalDr.value || 0);
                     const valTotalCr = parseInt(elTotalCr.value || 0);
                     const valBal = parseInt(elBal.value || 0);
+                    const valBalType = elBalType.value;
                     
-                    // Simple total check (2 pts)
-                    if (Math.abs(valTotalDr - (expected.dr + expected.begDr)) < 2) { scoreC++; } else { elTotalDr?.classList.add('input-error-x'); }
-                    if (Math.abs(valTotalCr - (expected.cr + expected.begCr)) < 2) { scoreC++; } else { elTotalCr?.classList.add('input-error-x'); }
+                    // Total Dr & Cr Checks (1 pt each)
+                    if (Math.abs(valTotalDr - (expected.dr + expected.begDr)) < 2) { scoreC++; elTotalDr?.classList.add('input-success-check'); } else { elTotalDr?.classList.add('input-error-x'); }
+                    if (Math.abs(valTotalCr - (expected.cr + expected.begCr)) < 2) { scoreC++; elTotalCr?.classList.add('input-success-check'); } else { elTotalCr?.classList.add('input-error-x'); }
 
-                    // Balance check (1 pt)
+                    // --- Subtask C Balance Logic Update ---
+                    // 1 Point ONLY if Amount AND Side are correct.
                     const net = (expected.begDr + expected.dr) - (expected.begCr + expected.cr);
-                    if(Math.abs(valBal - Math.abs(net)) < 2) { scoreC++; } else { elBal?.classList.add('input-error-x'); }
+                    const expectedSide = net >= 0 ? 'dr' : 'cr'; 
+                    const absNet = Math.abs(net);
 
-                    // Increment for transaction posting (Highly simplified)
-                    // If the account title is correct, give points proportional to the number of transactions it should contain.
-                    const transactionsForAcc = state.journalEntries.filter(e => e.titles.includes(accName));
-                    if (transactionsForAcc.length > 0) {
-                        scoreC += 10; // Placeholder points for transactions
+                    if(Math.abs(valBal - absNet) < 2 && valBalType === expectedSide) {
+                        scoreC++;
+                        elBal?.classList.add('input-success-check');
+                        elBalType?.classList.add('input-success-check'); // Mark dropdown green
+                    } else {
+                        if (Math.abs(valBal - absNet) >= 2) elBal?.classList.add('input-error-x');
+                        if (valBalType !== expectedSide) elBalType?.classList.add('input-error-x'); // Mark dropdown red
+                    }
+
+                    // Determine Beg Bal Side (to skip correct row)
+                    const begBalSide = expected.hasBegDr ? 'dr' : (expected.hasBegCr ? 'cr' : 'none');
+
+                    // Iterate User Rows
+                    const rowsToCheck = ul.ref.rowCount || 4;
+                    for(let r=0; r < rowsToCheck; r++) {
+                        ['dr', 'cr'].forEach(side => {
+                            if (begBalSide === side && r === 0) return;
+
+                            const uAmt = parseInt(getLedgerInput(ul.id, side, 'a', r) || 0);
+                            if (uAmt > 0) {
+                                const matchIdx = expectedTransList.findIndex(et => et.side === side && !et.matched && Math.abs(et.amount - uAmt) < 1);
+                                
+                                const pEl = getLedgerInputEl(ul.id, side, 'p', r);
+                                const prEl = getLedgerInputEl(ul.id, side, 'pr', r);
+                                const dEl = getLedgerInputEl(ul.id, side, 'd', r);
+                                const aEl = getLedgerInputEl(ul.id, side, 'a', r);
+
+                                if (matchIdx > -1) {
+                                    const matchedTrans = expectedTransList[matchIdx];
+                                    matchedTrans.matched = true; 
+                                    if(matchedTrans.key) journalLinePostedStatus[matchedTrans.key] = true;
+                                    
+                                    scoreC++; aEl.classList.add('input-success-check');
+
+                                    if(pEl.value.trim().toUpperCase() === 'GJ') { scoreC++; pEl.classList.add('input-success-check'); } else { pEl.classList.add('input-error-x'); }
+                                    if(prEl.value.trim() === '1') { scoreC++; prEl.classList.add('input-success-check'); } else { prEl.classList.add('input-error-x'); }
+
+                                    const inputDate = dEl.value.trim();
+                                    const expectedDay = matchedTrans.day; 
+                                    const expectedMonth = matchedTrans.month;
+                                    
+                                    const validFormats = [
+                                        expectedDay, parseInt(expectedDay).toString(), 
+                                        `${expectedMonth} ${expectedDay}`, `${expectedMonth} ${parseInt(expectedDay)}`
+                                    ];
+
+                                    if(validFormats.includes(inputDate)) { scoreC++; dEl.classList.add('input-success-check'); } 
+                                    else { dEl.classList.add('input-error-x'); }
+
+                                } else {
+                                    aEl.classList.add('input-error-x');
+                                    if(pEl.value) pEl.classList.add('input-error-x');
+                                    if(prEl.value) prEl.classList.add('input-error-x');
+                                    if(dEl.value) dEl.classList.add('input-error-x');
+                                }
+                            }
+                        });
                     }
                 }
             });
             
-            // Clamp and finalize C score (keeping the original calculation structure)
+            // 2. Score Journal PR Boxes
+            state.journalEntries.forEach(e => {
+                ['0', '1'].forEach(sideIdx => {
+                    const key = `j_${e.id}_${sideIdx}`;
+                    const box = document.getElementById(`pr_box_${key}`);
+                    const isChecked = state.prChecks[key];
+                    const isPosted = journalLinePostedStatus[key];
+
+                    if (isChecked) {
+                        if (isPosted) {
+                            scoreC++; 
+                            box?.classList.add('pr-valid');
+                        } else {
+                            box?.classList.add('pr-error');
+                        }
+                    } else {
+                        if (isPosted) {
+                            box?.classList.add('pr-error');
+                        }
+                    }
+                });
+            });
+            
             if (scoreC > maxScoreC) scoreC = maxScoreC;
             state.scores.t1c.current = scoreC;
             state.scores.t1c.max = maxScoreC;
             state.scores.t1c.grade = getGrade(scoreC, maxScoreC);
 
-
-            // --- UPDATE UI & PERSISTENCE ---
+            // ... rest of validation UI logic ...
             document.getElementById('grade-a-display').innerText = `${state.scores.t1a.current}/${state.scores.t1a.max} - ${state.scores.t1a.grade}`;
             document.getElementById('grade-b-display').innerText = `${state.scores.t1b.current}/${state.scores.t1b.max} - ${state.scores.t1b.grade}`;
             document.getElementById('grade-c-display').innerText = `${state.scores.t1c.current}/${state.scores.t1c.max} - ${state.scores.t1c.grade}`;
 
-            // Unlock Task 2 logic
-            const allMax = maxScoreA + maxScoreB + maxScoreC;
-            const totalScore = scoreA + scoreB + scoreC;
-            
-            if (attempts >= max || totalScore >= (allMax * 0.6)) { 
+            if (attempts >= max) { 
                 state.isTask1Locked = true;
-                saveStateToLocalStorage(); // Persist lock state
-                
+                saveStateToLocalStorage(); 
                 const btn1 = document.getElementById('btn-validate-1');
-                btn1.innerText = attempts >= max ? "Attempts Used" : "Task 1 Completed";
+                btn1.innerText = "Attempts Used";
                 btn1.className = "px-4 py-2 bg-gray-500 text-white font-bold rounded cursor-not-allowed";
                 btn1.disabled = true;
-
                 window.disableTaskInputs('#task1-grid');
                 document.getElementById('btn-add-ledger').disabled = true;
-
-                // Unlock T2 visuals
                 const t2Wrapper = document.getElementById('task2-wrapper');
-                t2Wrapper.classList.remove('locked-task');
-                document.getElementById('task2-overlay').style.display = 'none';
-                
-                // Re-render task content to update T2 button state now that Task 1 is complete
-                renderApp();
-
-                renderMessageBox("Task 1 Submitted. Proceed to Task 2.", false);
+                const task1Grid = document.getElementById('task1-grid');
+                if (task1Grid.classList.contains('locked-task')) {
+                    task1Grid.classList.remove('locked-task');
+                    task1Grid.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
+                }
+                unlockTask2Visuals();
+                renderMessageBox("Task 1 Attempts Used. Proceed to Task 2.", false);
             } else {
-                renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+                const t1Max = state.scores.t1a.max + state.scores.t1b.max + state.scores.t1c.max;
+                const t1Current = state.scores.t1a.current + state.scores.t1b.current + state.scores.t1c.current;
+                const passed = t1Max > 0 && t1Current >= (t1Max * 0.6);
+                if (passed) {
+                     unlockTask2Visuals();
+                     renderMessageBox(`Task 1 Validated (Passing Score). You have ${max - attempts} attempts left to improve or proceed to Task 2.`, false);
+                } else {
+                     renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}.`, true);
+                }
             }
         };
+        
+        const unlockTask2Visuals = () => {
+            const t2Btn = document.getElementById('btn-validate-2');
+            if(t2Btn) {
+                t2Btn.disabled = false;
+                t2Btn.className = "px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow transition";
+                t2Btn.innerText = "Validate Task 2";
+            }
+            const t2Wrapper = document.getElementById('task2-wrapper');
+            if(t2Wrapper) {
+                t2Wrapper.classList.remove('locked-task');
+                const overlay = document.getElementById('task2-overlay');
+                if(overlay) {
+                    overlay.classList.add('hidden'); 
+                }
+            }
+        }
 
         window.validateTask2 = () => {
-            // 1. Clear previous error indicators
             removeErrorClass('#task2-wrapper input');
-            
             state.attempts[2]++;
-            saveStateToLocalStorage(); // Persist attempt count
+            saveStateToLocalStorage(); 
             
-            // Calculate Max Score dynamically based on rows
+            // --- Task 2 Scoring Update ---
+            // Max Score = (Num Accounts * 2) + 2 (for totals)
+            // This handles BOTH existing and new accounts because state.requiredAccounts contains ALL unique accounts found in PCTB + Journal.
             const numAccounts = state.requiredAccounts.length;
-            const maxScoreT2 = (numAccounts * 3) + 2; 
+            const maxScoreT2 = (numAccounts * 2) + 2; 
             state.scores.t2.max = maxScoreT2;
 
             let hasData = false;
             let currentScore = 0;
             let totalDr = 0;
             let totalCr = 0;
-            
-            const errorInputs = []; // To store IDs of inputs that are wrong
 
+            // 1. Build Answer Key (True Ending Balances)
+            const accountFinalBalances = {};
+            state.requiredAccounts.forEach(acc => accountFinalBalances[acc] = 0);
+
+            // Add Beg Bal
+            state.pctb.forEach(item => {
+                if (item.side === 'Dr') accountFinalBalances[item.name] += item.bal;
+                else accountFinalBalances[item.name] -= item.bal;
+            });
+
+            // Add Journal
+            state.journalEntries.forEach(e => {
+                const drAcc = e.titles[0];
+                const crAcc = e.titles[1];
+                if (accountFinalBalances[drAcc] !== undefined) accountFinalBalances[drAcc] += e.drs[0];
+                if (accountFinalBalances[crAcc] !== undefined) accountFinalBalances[crAcc] -= e.crs[1];
+            });
+            
             for(let i=0; i<numAccounts; i++) {
                 const nEl = document.getElementById(`tb_name_${i}`);
                 const dEl = document.getElementById(`tb_dr_${i}`);
                 const cEl = document.getElementById(`tb_cr_${i}`);
                 
-                const n = nEl.value.trim();
-                const d = Number(dEl.value) || 0;
-                const c = Number(cEl.value) || 0;
+                const nameVal = nEl.value.trim();
+                const drVal = Number(dEl.value) || 0;
+                const crVal = Number(cEl.value) || 0;
                 
-                if(n || d!==0 || c!==0) hasData = true;
-                totalDr += d;
-                totalCr += c;
+                if(nameVal || drVal!==0 || crVal!==0) hasData = true;
+                totalDr += drVal;
+                totalCr += crVal;
 
-                // Simplified check: If name exists, score 1
-                const isNameCorrect = state.requiredAccounts.some(r => r.toLowerCase() === n.toLowerCase());
-                if (isNameCorrect) { currentScore++; } else if (n.length > 0) { nEl.classList.add('input-error-x'); }
+                // Match Logic: Find account in Answer Key
+                const matchedAccount = state.requiredAccounts.find(acc => acc.toLowerCase() === nameVal.toLowerCase());
 
-                // Very basic scoring for Dr/Cr presence
-                if (d > 0) { currentScore++; }
-                if (c > 0) { currentScore++; }
+                if (matchedAccount) {
+                    // Point 1: Correct Account Name Input
+                    currentScore++; 
+                    nEl.classList.add('input-success-check');
+                    
+                    // Determine expected balance
+                    const finalBal = accountFinalBalances[matchedAccount];
+                    // Logic: If finalBal > 0, it's Dr. If < 0, it's Cr.
+                    // Note: Some accounts might be 0, we treat 0 as valid in either if user enters 0, but usually irrelevant.
+                    
+                    const isDr = finalBal >= 0; 
+                    const absBal = Math.abs(finalBal);
+                    
+                    // Point 2: Correct Debit OR Credit Balance
+                    if (isDr) {
+                        if (Math.abs(drVal - absBal) < 2 && crVal === 0) {
+                             currentScore++;
+                             dEl.classList.add('input-success-check');
+                        } else {
+                             // If wrong amount or in wrong column
+                             dEl.classList.add('input-error-x');
+                             if(crVal !== 0) cEl.classList.add('input-error-x');
+                        }
+                    } else {
+                        // Expect Credit
+                        if (Math.abs(crVal - absBal) < 2 && drVal === 0) {
+                             currentScore++;
+                             cEl.classList.add('input-success-check');
+                        } else {
+                             cEl.classList.add('input-error-x');
+                             if(drVal !== 0) dEl.classList.add('input-error-x');
+                        }
+                    }
+
+                } else if (nameVal.length > 0) {
+                    nEl.classList.add('input-error-x'); // Name not found
+                    // Also mark numbers as potentially wrong context
+                    if(drVal > 0) dEl.classList.add('input-error-x');
+                    if(crVal > 0) cEl.classList.add('input-error-x');
+                }
             }
             
-            // Check Totals (1 pt each)
+            // Calculate Expected Totals for Scoring
+            let expectedTotalDr = 0;
+            // For a balanced trial balance, Dr sum equals Cr sum.
+            // We sum positive balances.
+            Object.values(accountFinalBalances).forEach(val => {
+                if (val > 0) expectedTotalDr += val;
+            });
+            const expectedTotalCr = expectedTotalDr; // Should match
+
             const inputTotalDrEl = document.getElementById('tb_total_dr');
             const inputTotalCrEl = document.getElementById('tb_total_cr');
 
@@ -1214,28 +1586,24 @@
             
             let isBalanced = false;
             
-            // Check if input total matches calculated total
-            if(Math.abs(inputTotalDr - totalDr) < 1 && totalDr > 0) {
+            // Point 3 (Total Dr) & Point 4 (Total Cr) [Aggregate 2 points for totals]
+            if(Math.abs(inputTotalDr - expectedTotalDr) < 2 && inputTotalDr > 0) {
                  currentScore++;
+                 inputTotalDrEl.classList.add('input-success-check');
             } else {
                  inputTotalDrEl.classList.add('input-error-x');
             }
 
-            // Check if input total matches calculated total
-            if(Math.abs(inputTotalCr - totalCr) < 1 && totalCr > 0) {
+            if(Math.abs(inputTotalCr - expectedTotalCr) < 2 && inputTotalCr > 0) {
                  currentScore++;
+                 inputTotalCrEl.classList.add('input-success-check');
             } else {
                  inputTotalCrEl.classList.add('input-error-x');
             }
 
-            // Check if the overall balance is achieved
             if(Math.abs(totalDr - totalCr) < 1 && totalDr > 0) {
                 isBalanced = true;
-            } else if (totalDr > 0 || totalCr > 0) {
-                // If it's not balanced, mark both total fields as error regardless of whether the sums matched their inputs
-                inputTotalDrEl.classList.add('input-error-x');
-                inputTotalCrEl.classList.add('input-error-x');
-            }
+            } 
 
 
             const attempts = state.attempts[2];
@@ -1250,11 +1618,13 @@
                 state.explanations.push(message);
                 currentScore = 0;
             } else {
-                if(isBalanced) {
+                // Pass threshold? Let's say > 75% or perfect? "Validated" usually means passed threshold.
+                // Using 85% as pass for Task 2
+                if(currentScore >= (maxScoreT2 * 0.85)) {
                     passed = true;
                     message = "Task 2 Validated!";
                 } else {
-                    message = `Task 2 Unbalanced.`;
+                    message = `Task 2 Incomplete or Incorrect.`;
                     state.explanations.push(message);
                 }
             }
@@ -1269,10 +1639,8 @@
 
             if (attempts >= max || passed) {
                 state.isTask2Locked = true;
-                saveStateToLocalStorage(); // Persist final lock state
-                
+                saveStateToLocalStorage(); 
                 const btn2 = document.getElementById('btn-validate-2');
-                
                 if (passed) {
                     btn2.innerText = "Task 2 Completed";
                     btn2.className = "px-4 py-2 bg-blue-600 text-white font-bold rounded cursor-not-allowed";
@@ -1284,6 +1652,9 @@
                 }
                 btn2.disabled = true;
                 window.disableTaskInputs('#task2-wrapper');
+                const t2Wrapper = document.getElementById('task2-wrapper');
+                t2Wrapper.classList.remove('locked-task');
+                t2Wrapper.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
                 window.finishAndPreview();
             } else {
                 renderMessageBox(`Validation Failed. Attempt ${attempts}/${max}. ${message}`, true);
@@ -1340,9 +1711,9 @@
                     studentInfo: state.studentInfo,
                     scores: state.scores,
                     ledgersStructure: state.ledgers, 
-                    userInputs: userInputs,         
+                    userInputs: userInputs,          
                     journalEntries: state.journalEntries, 
-                    pctb: state.pctb,                     
+                    pctb: state.pctb,                       
                     explanations: state.explanations,
                     timestamp: new Date().toISOString()
                 };
@@ -1383,7 +1754,11 @@
 
                  // Switch UI
                  document.getElementById('login-actions').classList.add('hidden');
-                 document.getElementById('start-actions').classList.remove('hidden');
+                 
+                 // REVISED: Ensure container has flex classes for centering
+                 const startArea = document.getElementById('start-actions');
+                 startArea.classList.remove('hidden');
+                 startArea.classList.add('flex'); // Explicitly add flex
                  
                  // Make Student ID input read-only/disabled AFTER successful login
                  document.getElementById('studentId').disabled = true;
@@ -1396,7 +1771,8 @@
                  const msgBox = document.getElementById('message-box');
                  if(msgBox) {
                     msgBox.innerHTML = "Verification Successful. Please click Start Task.";
-                    msgBox.className = "p-4 mx-4 mb-4 font-bold text-center md:text-left rounded text-green-600 bg-green-50 border border-green-200";
+                    // Center the text
+                    msgBox.className = "p-4 mx-4 mb-4 font-bold text-center rounded text-green-600 bg-green-50 border border-green-200";
                  }
              } else {
                  renderMessageBox(res.message, true);
@@ -1435,14 +1811,25 @@
              if (state.isTask1Locked) {
                  window.disableTaskInputs('#task1-grid');
                  document.getElementById('btn-add-ledger').disabled = true;
+                 
+                 // Keep visible, remove lock overlay
+                 document.getElementById('task1-grid')?.classList.remove('locked-task');
+                 // CRITICAL FIX: Hide overlay on completion so answers/marks are visible
+                 document.getElementById('task1-grid')?.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
+                 
                  // Unlock T2 visuals
                  const t2Wrapper = document.getElementById('task2-wrapper');
                  t2Wrapper.classList.remove('locked-task');
-                 document.getElementById('task2-overlay').style.display = 'none';
+                 // Ensure T2 overlay is hidden if T1 is done
+                 t2Wrapper.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden'); 
              }
              if (state.isTask2Locked) {
                  window.disableTaskInputs('#task2-wrapper');
                  window.disableAllInputs(); // Final lock
+                 
+                 // Keep visible, remove lock overlay
+                 document.getElementById('task2-wrapper')?.classList.remove('locked-task');
+                 document.getElementById('task2-wrapper')?.querySelector('.lock-overlay')?.classList.add('lock-overlay-hidden');
              }
         };
 
@@ -1568,6 +1955,11 @@
                              <input type="text" id="studentId" class="w-full p-2 border border-indigo-500 rounded focus:ring-2 focus:ring-indigo-700 outline-none bg-white text-sm font-bold shadow-md" value="${isResumingLogin && info ? info.idNumber : ''}">
                          </div>
                      </div>
+                     
+                     <!-- REVISED LOCATION: Verify Button immediately after inputs, CENTERED -->
+                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'w-full flex justify-center mt-2 mb-6'}">
+                          <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
+                     </div>
  
                      <div class="border-t border-gray-100 pt-4 mb-6">
                          <p class="text-xs font-bold text-gray-800 uppercase mb-3">Student Details (Auto-Populated)</p>
@@ -1588,13 +1980,10 @@
                              </div>
                          </div>
                      </div>
-                     
-                     <div id="login-actions" class="${isResumingLogin ? 'hidden' : 'flex justify-end'}">
-                          <button onclick="window.handleLogin()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow transition text-sm">Verify & Login</button>
-                     </div>
  
-                     <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} flex-col items-center justify-center space-y-3 pt-4 border-t border-gray-100 mt-2">
-                         <div class="text-green-600 font-medium text-sm">Verification Successful. Click below to begin the exam.</div>
+                     <!-- REVISED LOCATION: Start Actions CENTERED -->
+                     <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} w-full flex-col items-center justify-center text-center space-y-3 pt-4 border-t border-gray-100 mt-2">
+                         <!-- REMOVED: Redundant success text -->
                          <button onclick="window.startExam()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transition transform hover:scale-105 text-sm">Start the Task</button>
                      </div>
                  </div>
