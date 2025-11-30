@@ -318,7 +318,7 @@
         <footer id="screen-footer" class="mt-8 pt-4 border-t-4 border-indigo-600 footer-bg p-4 text-center no-print rounded-b-xl">
             <p id="footer-instructions-text" class="text-sm text-gray-300">
                 <!-- Static Version Number based on current revision -->
-                <strong>Version 2025-12-01 03:53:00 PST (HTML Revision)</strong>
+                <strong>Version 2025-12-01 04:19:00 PST (HTML Revision)</strong>
             </p>
         </footer>
 
@@ -527,7 +527,7 @@
             
             // 1. PCTB (Adjusted slightly to ensure liquidity for new transactions)
             const assets = [
-                {name: 'Cash', bal: rand(200000, 300000)},
+                {name: 'Cash', bal: rand(200000, 300000)}, // Increased start cash
                 {name: 'Accounts Receivable', bal: rand(20000, 50000)},
                 {name: 'Supplies', bal: rand(5000, 15000)},
                 {name: 'Prepaid Rent', bal: rand(15000, 30000)}, // Changed from 0
@@ -538,11 +538,36 @@
                 {name: 'Notes Payable', bal: rand(15000, 25000)},
                 {name: 'Unearned Revenue', bal: rand(10000, 20000)},
             ];
-            const totalAsset = assets.reduce((a,b)=>a+b.bal,0);
-            const totalLiab = liabs.reduce((a,b)=>a+b.bal,0);
-            const capital = { name: `Owner, Capital`, bal: totalAsset - totalLiab };
             
-            state.pctb = [...assets.map(a=>({...a, side:'Dr'})), ...liabs.map(l=>({...l, side:'Cr'})), {...capital, side:'Cr'}];
+            // Accumulated Depreciation Logic
+            // Find depreciable assets (Equipment) and add accumulated depreciation
+            const depreciableAssets = assets.filter(a => a.name === 'Equipment');
+            const accDepItems = [];
+            let totalAccDep = 0;
+            
+            depreciableAssets.forEach(asset => {
+                const accDepVal = Math.floor(asset.bal * 0.2); // 20% accumulated depreciation
+                totalAccDep += accDepVal;
+                accDepItems.push({name: `Accumulated Depreciation - ${asset.name}`, bal: accDepVal, side: 'Cr'});
+            });
+
+            const totalAssetVal = assets.reduce((a,b)=>a+b.bal,0);
+            const totalLiabVal = liabs.reduce((a,b)=>a+b.bal,0);
+            
+            // Capital = (Assets) - (Liabilities + AccDep)
+            // Or in debit/credit terms: Debits (Assets) must equal Credits (Liabs + AccDep + Capital)
+            // Total Debits = totalAssetVal
+            // Total Credits = totalLiabVal + totalAccDep + Capital
+            // Capital = totalAssetVal - totalLiabVal - totalAccDep
+            const capitalBal = totalAssetVal - totalLiabVal - totalAccDep;
+            const capital = { name: `Owner, Capital`, bal: capitalBal, side: 'Cr' };
+            
+            state.pctb = [
+                ...assets.map(a=>({...a, side:'Dr'})), 
+                ...accDepItems,
+                ...liabs.map(l=>({...l, side:'Cr'})), 
+                capital
+            ];
 
             // 2. Journal Entries (Dynamic 15 Sources)
             const entries = [];
@@ -1930,7 +1955,7 @@
  
                      <!-- REVISED LOCATION: Start Actions CENTERED -->
                      <div id="start-actions" class="${isResumingLogin ? 'flex' : 'hidden'} w-full flex-col items-center justify-center text-center space-y-3 pt-4 border-t border-gray-100 mt-2">
-                         
+                         <div class="text-green-600 font-medium text-sm text-center">Verification Successful. Click below to begin the exam.</div>
                          <button onclick="window.startExam()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded shadow-lg transition transform hover:scale-105 text-sm">Start the Task</button>
                      </div>
                  </div>
