@@ -1741,6 +1741,7 @@
                 const docName = `students.${info.classNumber}-students.${info.idNumber}-${info.fullName}`;
                 
                 await setDoc(doc(db, collectionName, docName), results);
+                await setDoc(doc(db, "results_list", collectionName), { created: new Date().toISOString() });
                 console.log("Saved to", collectionName, docName);
 
                 // Clean up local storage after final submission
