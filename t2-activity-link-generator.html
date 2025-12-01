@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Link Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center font-sans">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full border-t-8 border-blue-800">
+        <h1 class="text-2xl font-bold text-blue-900 mb-6 text-center">Quiz Link Generator</h1>
+
+        <div class="space-y-4">
+            <!-- Attendance Dropdown -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Select Attendance Record</label>
+                <select id="attendance-select" class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
+                    <option value="">Loading records...</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Fetching last 10 records from Firebase...</p>
+            </div>
+
+            <!-- NEW: Activity Dropdown -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Select Activity Name</label>
+                <select id="activity-select" class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
+                    <option value="">-- Select Activity --</option>
+                    <option value="T2 Summative Test 01">T2 Summative Test 01</option>
+                    <option value="T2 Performance Task 01">T2 Performance Task 01</option>
+                    <option value="T2 Performance Task 02">T2 Performance Task 02</option>
+                </select>
+            </div>
+            
+            <!-- Expiration Date/Time -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Link Expiration Date & Time</label>
+                <input type="datetime-local" id="expiry-date" class="w-full p-2 border border-gray-300 rounded-lg">
+            </div>
+
+            <!-- Duration -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Time Limit (Minutes)</label>
+                <input type="number" id="duration-mins" value="60" class="w-full p-2 border border-gray-300 rounded-lg">
+            </div>
+
+            <!-- Status/Error Message Area -->
+            <div id="status-message" class="text-sm h-5 text-center my-2 font-medium"></div>
+
+            <button onclick="generateLink()" class="w-full bg-blue-800 text-white font-bold py-3 rounded-lg hover:bg-blue-900 transition shadow-md">
+                Generate Link
+            </button>
+
+            <!-- Result Area -->
+            <div id="result-area" class="hidden mt-4 bg-green-50 p-4 rounded-lg border border-green-200">
+                <p class="text-sm font-bold text-green-800 mb-2">Generated URL:</p>
+                <textarea id="generated-url" class="w-full p-2 text-xs font-mono border rounded-lg h-24 mb-2" readonly></textarea>
+                <button onclick="copyToClipboard()" class="bg-green-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-green-700 transition">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgOsKAZWwExUzupxSNytsfOo9BOppF0ng",
+            authDomain: "jlvcpa-quizzes.firebaseapp.com",
+            projectId: "jlvcpa-quizzes",
+            storageBucket: "jlvcpa-quizzes.appspot.com",
+            messagingSenderId: "629158256557",
+            appId: "1:629158256557:web:b3d1a424b32e28cd578b24"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        /** Converts "T2 Summative Test 01" -> "t2-summative-test-01" */
+        const slugify = (text) => {
+            return text
+                .toLowerCase()
+                .replace(/\s+/g, '-') // Replace spaces with -
+                .replace(/[^\w-]+/g, '') // Remove all non-word characters
+                .replace(/--+/g, '-') // Replace multiple - with single -
+                .replace(/^-+/, '') // Trim - from start of text
+                .replace(/-+$/, ''); // Trim - from end of text
+        };
+
+        // Load Attendance Records on Init
+        window.onload = async function() {
+            const select = document.getElementById('attendance-select');
+            try {
+                // Using the specific imports from the original code
+                const q = query(collection(db, "attendance"), orderBy("date", "desc"), limit(10)); 
+                const querySnapshot = await getDocs(q);
+                
+                select.innerHTML = '<option value="">-- Select Class Record --</option>';
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const date = data.date || "No Date";
+                    const section = data.section || "No Section";
+                    // Value is the Doc ID, Text is readable info
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.text = `${date} - ${section} (${doc.id})`;
+                    select.appendChild(option);
+                });
+            } catch (e) {
+                console.error("Error loading attendance records:", e);
+                select.innerHTML = '<option value="">Error loading records</option>';
+            }
+        };
+
+        window.generateLink = function() {
+            const attId = document.getElementById('attendance-select').value;
+            const activityName = document.getElementById('activity-select').value; // NEW
+            const expiryInput = document.getElementById('expiry-date').value;
+            const duration = document.getElementById('duration-mins').value;
+            const statusBox = document.getElementById('status-message');
+
+            if(!attId || !expiryInput || !duration || !activityName) {
+                statusBox.className = 'text-sm h-5 text-center my-2 text-red-600';
+                statusBox.textContent = "Please fill in all fields.";
+                document.getElementById('result-area').classList.add('hidden');
+                return;
+            }
+
+            statusBox.textContent = ''; // Clear status
+
+            // 1. Convert activity name to URL slug
+            const slug = slugify(activityName);
+            
+            // 2. Define Base URL using the slugified name
+            // Assuming the GitHub base path remains the same as your original hardcoded example
+            const baseHostPath = "https://jlvcpa.github.io/my-quizzes/"; 
+            const targetHtml = `${slug}.html`;
+            const baseUrl = baseHostPath + targetHtml;
+            
+            // 3. Get Expiry Timestamp
+            const expiryTimestamp = new Date(expiryInput).getTime();
+            
+            // 4. Construct Query Parameters
+            // att: Attendance ID, exp: Expiration Timestamp (milliseconds), dur: Duration (minutes)
+            const fullUrl = `${baseUrl}?att=${attId}&exp=${expiryTimestamp}&dur=${duration}`;
+
+            document.getElementById('generated-url').value = fullUrl;
+            document.getElementById('result-area').classList.remove('hidden');
+        };
+
+        window.copyToClipboard = function() {
+            const copyText = document.getElementById("generated-url");
+            const statusBox = document.getElementById('status-message');
+            // Use fallback copy command since navigator.clipboard might fail in certain environments
+            copyText.select();
+            document.execCommand("copy");
+            
+            statusBox.className = 'text-sm h-5 text-center my-2 text-green-600';
+            statusBox.textContent = "Link copied successfully!";
+            // Clear message after 3 seconds
+            setTimeout(() => statusBox.textContent = '', 3000); 
+        }
+    </script>
+</body>
+</html>
