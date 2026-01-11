@@ -8,6 +8,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
+        /* --- SECURITY ENHANCEMENTS --- */
+        /* Prevent text selection to stop copying */
+        body {
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+
+        /* Privacy Curtain (Black Screen) */
+        #privacy-curtain {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* --- EXISTING STYLES --- */
         /* Times New Roman Font Application */
         body {
             font-family: 'Times New Roman', Times, serif;
@@ -28,6 +54,7 @@
             background: white;
             position: relative;
             min-height: 100%;
+            user-select: text; /* Allow selection only in generated PDF preview */
         }
         
         /* PDF-specific styling for correct/incorrect */
@@ -138,9 +165,16 @@
 
     </style>
 </head>
-<body class="min-h-screen antialiased no-scroll relative">
+<body class="min-h-screen antialiased no-scroll relative" oncontextmenu="return false;">
 
-    <!-- SECURITY OVERLAY -->
+    <div id="privacy-curtain">
+        <div>
+            <h1 class="text-4xl font-bold text-red-500 mb-4">SECURITY ALERT</h1>
+            <p class="text-xl">Focus Lost. Please return to the examination window immediately.</p>
+            <p class="text-sm mt-4 text-gray-500">Screen content is hidden for security.</p>
+        </div>
+    </div>
+
     <div id="security-overlay" class="fixed inset-0 bg-gray-900 z-[60] flex items-center justify-center text-white p-6 text-center">
         <div>
             <h1 class="text-3xl font-bold mb-4 text-red-500">Access Denied</h1>
@@ -148,7 +182,6 @@
         </div>
     </div>
 
-    <!-- TIMER OVERLAY (Sticky Header) -->
     <div id="timer-bar" class="hidden fixed top-0 left-0 w-full bg-red-600 text-white z-50 px-4 py-2 shadow-md flex justify-between items-center">
         <span class="font-bold font-serif text-lg">TIME REMAINING</span>
         <span id="timer-display" class="font-mono text-2xl font-bold">00:00:00</span>
@@ -156,16 +189,13 @@
 
     <div id="app" class="max-w-5xl mx-auto p-4 md:p-6 pt-16">
 
-        <!-- Student Info Section (Locks the rest of the app) -->
         <section id="student-info-section" class="hidden bg-white p-8 rounded-xl shadow-2xl mb-6 border-t-8 border-blue-800 max-w-2xl mx-auto mt-10">
             
-            <!-- Logo -->
             <img src="./shs-adc-logo.png" alt="School Logo" class="mx-auto mb-2 h-20 w-auto" />
             <h2 class="text-3xl font-extrabold text-gray-800 mb-2 text-center font-serif">SUMMATIVE TEST</h2>
             <p class="text-center text-gray-500 mb-8 font-serif italic">Accounting Cycle Mastery</p>
             
             <div class="space-y-4">
-                <!-- Firebase Attendance Check Section -->
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <h3 class="text-blue-800 font-bold mb-3 border-b border-blue-200 pb-1">Attendance Verification</h3>
                     <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
@@ -173,7 +203,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
                             <input type="text" id="id-number" placeholder="Enter your Student ID" class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        <!-- Hidden input to store attendance ID from URL -->
                         <input type="hidden" id="attendance-record">
                     </div>
                     <button onclick="window.checkAttendance()" class="mt-3 w-full py-2 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700 transition flex justify-center items-center">
@@ -182,7 +211,6 @@
                     <p id="firebase-msg" class="text-xs mt-2 text-center min-h-[1rem]"></p>
                 </div>
 
-                <!-- Auto-populated Fields (Read Only to prevent tampering) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Class Number</label>
@@ -204,10 +232,8 @@
             </button>
         </section>
 
-        <!-- Main Test Interface (Hidden initially) -->
         <div id="main-interface" class="hidden">
             
-            <!-- Header -->
             <header class="bg-white shadow-lg rounded-xl mb-6 overflow-hidden">
                 <div class="bg-blue-900 text-white p-4 flex justify-between items-center">
                     <div>
@@ -215,14 +241,12 @@
                         <p class="text-xs text-blue-200 font-serif" id="student-display-name">Student Name</p>
                     </div>
                     <div class="text-right">
-                        <!-- MODIFIED: Directly calls finishAndPreview() which now handles auto-submit flow -->
                         <button onclick="window.finishAndPreview()" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 px-4 rounded shadow font-serif">
                             Submit & Print Results
                         </button>
                     </div>
                 </div>
 
-                <!-- Tabs -->
                 <nav class="flex overflow-x-auto bg-gray-50 border-b border-gray-200">
                     <button onclick="window.switchTestPart(1)" id="tab-1" class="flex-1 py-4 px-6 text-sm font-bold text-gray-500 hover:text-blue-800 border-b-4 border-transparent hover:border-blue-300 transition-all whitespace-nowrap font-serif">
                         TEST 1: Adjustments
@@ -238,13 +262,10 @@
 
             <div class="flex flex-col lg:flex-row gap-6">
                 
-                <!-- Left Column: Question Area -->
                 <div class="flex-1">
                     <div id="question-card" class="bg-white p-6 rounded-xl shadow-md min-h-[400px] relative">
-                        <!-- Question Content Injected Here -->
                         <div id="question-content"></div>
                         
-                        <!-- Navigation Buttons -->
                         <div class="mt-8 flex justify-between items-center pt-4 border-t border-gray-100">
                             <button onclick="window.prevQuestion()" id="btn-prev" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium flex items-center font-serif">
                                 ← Previous
@@ -257,13 +278,11 @@
                     </div>
                 </div>
 
-                <!-- Right Column: Navigation Palette -->
                 <div class="w-full lg:w-64 flex-shrink-0">
                     <div class="bg-white p-4 rounded-xl shadow-md">
                         <h3 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider font-serif">Question Navigator</h3>
                         <div id="question-palette" class="grid grid-cols-5 gap-2">
-                            <!-- Dots injected via JS -->
-                        </div>
+                            </div>
                         <div class="mt-4 text-xs text-gray-500 flex flex-col gap-1 font-serif">
                             <div class="flex items-center"><span class="w-3 h-3 rounded-full border border-gray-300 mr-2"></span> Unanswered</div>
                             <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> Current</div>
@@ -276,28 +295,23 @@
         </div>
     </div>
 
-    <!-- Print Preview Modal (Buttons are dynamic now) -->
     <div id="print-preview-modal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-95 z-[70] flex justify-center items-start overflow-y-auto pt-10 pb-10">
         <div class="bg-white w-full max-w-4xl rounded-lg shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
                 <h2 class="text-xl font-bold text-gray-800 font-serif">Result Preview</h2>
-                <!-- Dynamic Buttons Injected Here -->
                 <div class="space-x-2" id="preview-actions"></div>
             </div>
             <div id="print-content" class="p-8 overflow-y-auto print-layout">
-                <!-- Report injected here -->
-            </div>
+                </div>
         </div>
     </div>
 
-    <!-- Submitting Loader Overlay -->
     <div id="submission-overlay" class="hidden fixed inset-0 bg-white bg-opacity-90 z-[80] flex flex-col items-center justify-center text-blue-900">
         <div class="loader" style="width: 50px; height: 50px; border-width: 6px;"></div>
         <p class="mt-4 text-xl font-bold">Submitting Results to Server...</p>
         <p class="text-sm">Please wait. Do not close this window.</p>
     </div>
 
-    <!-- Use Type Module for Firebase Imports -->
     <script type="module">
         // 🔹 FIREBASE SETUP & LOGIC
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
@@ -345,7 +359,7 @@
             document.getElementById('student-info-section').classList.remove('hidden');
         };
 
-        // Check Attendance against Param ID
+        // Check Attendance against Param ID AND Check if already taken
         window.checkAttendance = async function() {
             const recordId = document.getElementById('attendance-record').value; // From URL
             const idNumber = document.getElementById('id-number').value.trim();
@@ -361,6 +375,7 @@
             msg.innerText = "Checking database...";
 
             try {
+                // 1. VERIFY STUDENT IDENTITY
                 const docRef = doc(db, "attendance", recordId);
                 const docSnap = await getDoc(docRef);
 
@@ -374,21 +389,41 @@
                         if (student) {
                             const status = student.status || "";
                             if (status.includes("✔") || status.includes("✓") || status.includes("✔️")) {
-                                const cn = student.CN || "";
-                                const name = student.fullName || "";
-                                const section = data.section || ""; 
-
-                                document.getElementById('class-number').value = cn;
-                                document.getElementById('full-name').value = name;
-                                document.getElementById('grade-section').value = section;
                                 
-                                // Enable Start Button
-                                const btn = document.getElementById('btn-start-exam');
-                                btn.disabled = false;
-                                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                                btn.classList.add('bg-blue-800', 'hover:bg-blue-900', 'hover:scale-[1.02]');
+                                // 🔹 DUPLICATE SUBMISSION CHECK 🔹
+                                const collectionName = `results_T2 Summative Test 01_${recordId}`;
+                                const resultDocName = `students.${student.CN}-students.${student.Idnumber}-${student.fullName}`;
+                                
+                                const resultRef = doc(db, collectionName, resultDocName);
+                                const resultSnap = await getDoc(resultRef);
 
-                                msg.innerHTML = "<span class='text-green-600 font-bold'>✓ Student Found & Verified!</span>";
+                                if (resultSnap.exists()) {
+                                    // STOP: ALREADY TAKEN
+                                    msg.innerHTML = `<span class='text-red-600 font-bold'>⚠ Access Denied: You have already submitted this test.</span>`;
+                                    // Disable Start
+                                    const btn = document.getElementById('btn-start-exam');
+                                    btn.disabled = true;
+                                    btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                                    btn.classList.remove('bg-blue-800', 'hover:bg-blue-900');
+                                } else {
+                                    // SUCCESS: NOT TAKEN YET
+                                    const cn = student.CN || "";
+                                    const name = student.fullName || "";
+                                    const section = data.section || ""; 
+
+                                    document.getElementById('class-number').value = cn;
+                                    document.getElementById('full-name').value = name;
+                                    document.getElementById('grade-section').value = section;
+                                    
+                                    // Enable Start Button
+                                    const btn = document.getElementById('btn-start-exam');
+                                    btn.disabled = false;
+                                    btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                                    btn.classList.add('bg-blue-800', 'hover:bg-blue-900', 'hover:scale-[1.02]');
+
+                                    msg.innerHTML = "<span class='text-green-600 font-bold'>✓ Student Verified! Ready to start.</span>";
+                                }
+
                             } else {
                                 msg.innerHTML = `<span class='text-red-600 font-bold'>⚠ Student is marked absent (Status: ${status}). Login denied.</span>`;
                             }
@@ -457,6 +492,46 @@
         let studentAnswers = { 1: {}, 2: {}, 3: {} };
         let timerInterval;
         let timeRemaining; // Seconds
+
+        // --- SECURITY LOGIC ---
+        // 1. Prevent Right Click
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // 2. Prevent Keyboard Shortcuts (Copy, Print, Save)
+        document.addEventListener('keydown', function(event) {
+            // Check for Ctrl (or Command on Mac)
+            if (event.ctrlKey || event.metaKey) {
+                const char = String.fromCharCode(event.which).toLowerCase();
+                if (char === 'c' || char === 'p' || char === 's') {
+                    event.preventDefault();
+                    // Optionally alert the user or just silently block
+                    console.log("Action blocked for security.");
+                }
+            }
+            // Attempt to intercept PrintScreen key (varies by OS/Browser)
+            if (event.key === "PrintScreen") {
+                // We cannot stop the OS screenshot, but we can try to clear the clipboard or flash the curtain
+                navigator.clipboard.writeText(""); // Clear clipboard
+                document.getElementById('privacy-curtain').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('privacy-curtain').style.display = 'none';
+                }, 1000);
+            }
+        });
+
+        // 3. Black Screen on Focus Loss (Tab switching/Alt-Tab)
+        window.addEventListener('blur', () => {
+             // Only activate if the test has started and hasn't finished
+             const curtain = document.getElementById('privacy-curtain');
+             const mainInterface = document.getElementById('main-interface');
+             if(!mainInterface.classList.contains('hidden')) {
+                 curtain.style.display = 'flex';
+             }
+        });
+
+        window.addEventListener('focus', () => {
+             document.getElementById('privacy-curtain').style.display = 'none';
+        });
 
         // --- INITIALIZATION LOGIC ---
         window.initializeTest = function() {
