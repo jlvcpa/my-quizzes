@@ -3,41 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accounting Cycle Summative Test</title>
+    <title>Merchandising Summative Test 01</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* --- SECURITY ENHANCEMENTS --- */
-        /* Prevent text selection to stop copying */
-        body {
-            -webkit-user-select: none; /* Safari */
-            -ms-user-select: none; /* IE 10 and IE 11 */
-            user-select: none; /* Standard syntax */
-        }
-
-        /* Privacy Curtain (Black Screen) */
-        #privacy-curtain {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        /* --- EXISTING STYLES --- */
         /* Times New Roman Font Application */
         body {
             font-family: 'Times New Roman', Times, serif;
             background-color: #f4f6f8;
+            /* ENHANCEMENT: Disable Text Selection */
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
         }
         
         /* Custom style to lock scrolling */
@@ -54,7 +32,8 @@
             background: white;
             position: relative;
             min-height: 100%;
-            user-select: text; /* Allow selection only in generated PDF preview */
+            /* Allow selection in print preview so PDF generation works */
+            user-select: text; 
         }
         
         /* PDF-specific styling for correct/incorrect */
@@ -163,22 +142,44 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* ENHANCEMENT: Black Screen Curtain for Copy/Screenshot Protection */
+        #black-curtain {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            z-index: 9999;
+        }
+
     </style>
 </head>
 <body class="min-h-screen antialiased no-scroll relative" oncontextmenu="return false;">
 
-    <div id="privacy-curtain">
-        <div>
-            <h1 class="text-4xl font-bold text-red-500 mb-4">SECURITY ALERT</h1>
-            <p class="text-xl">Focus Lost. Please return to the examination window immediately.</p>
-            <p class="text-sm mt-4 text-gray-500">Screen content is hidden for security.</p>
-        </div>
-    </div>
+    <div id="black-curtain"></div>
 
     <div id="security-overlay" class="fixed inset-0 bg-gray-900 z-[60] flex items-center justify-center text-white p-6 text-center">
         <div>
             <h1 class="text-3xl font-bold mb-4 text-red-500">Access Denied</h1>
             <p id="security-msg" class="text-xl">Validating link parameters...</p>
+        </div>
+    </div>
+
+    <div id="cheat-lockout" class="hidden fixed inset-0 bg-gray-900 z-[100] flex items-center justify-center text-white p-6 text-center">
+        <div class="max-w-md w-full">
+            <div class="text-6xl mb-4">⚠️</div>
+            <h1 class="text-3xl font-bold mb-4 text-red-500">Test Paused</h1>
+            <p class="text-lg mb-6">Focus lost. Navigation away from the test is monitored.</p>
+            
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-6">
+                <p class="text-sm text-gray-400">To resume, click the button below <span class="font-bold text-white">3 times</span>.</p>
+            </div>
+
+            <button id="btn-unlock" onclick="window.handleUnlockClick()" class="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xl shadow-lg transition-transform transform active:scale-95">
+                Resume Test (3)
+            </button>
         </div>
     </div>
 
@@ -359,7 +360,7 @@
             document.getElementById('student-info-section').classList.remove('hidden');
         };
 
-        // Check Attendance against Param ID AND Check if already taken
+        // Check Attendance against Param ID
         window.checkAttendance = async function() {
             const recordId = document.getElementById('attendance-record').value; // From URL
             const idNumber = document.getElementById('id-number').value.trim();
@@ -375,7 +376,6 @@
             msg.innerText = "Checking database...";
 
             try {
-                // 1. VERIFY STUDENT IDENTITY
                 const docRef = doc(db, "attendance", recordId);
                 const docSnap = await getDoc(docRef);
 
@@ -389,41 +389,40 @@
                         if (student) {
                             const status = student.status || "";
                             if (status.includes("✔") || status.includes("✓") || status.includes("✔️")) {
-                                
-                                // 🔹 DUPLICATE SUBMISSION CHECK 🔹
+                                const cn = student.CN || "";
+                                const name = student.fullName || "";
+                                const section = data.section || ""; 
+
+                                // ---------------------------------------------------------
+                                // ENHANCEMENT: DUPLICATE SUBMISSION CHECK
+                                // ---------------------------------------------------------
                                 const collectionName = `results_S2T1 Summative Test 01_${recordId}`;
-                                const resultDocName = `students.${student.CN}-students.${student.Idnumber}-${student.fullName}`;
+                                const docName = `students.${cn}-students.${idNumber}-${name}`;
                                 
-                                const resultRef = doc(db, collectionName, resultDocName);
-                                const resultSnap = await getDoc(resultRef);
-
+                                // Check if a result file already exists for this student
+                                msg.innerText = "Verifying previous attempts...";
+                                const resultSnap = await getDoc(doc(db, collectionName, docName));
+                                
                                 if (resultSnap.exists()) {
-                                    // STOP: ALREADY TAKEN
-                                    msg.innerHTML = `<span class='text-red-600 font-bold'>⚠ Access Denied: You have already submitted this test.</span>`;
-                                    // Disable Start
-                                    const btn = document.getElementById('btn-start-exam');
-                                    btn.disabled = true;
-                                    btn.classList.add('bg-gray-400', 'cursor-not-allowed');
-                                    btn.classList.remove('bg-blue-800', 'hover:bg-blue-900');
-                                } else {
-                                    // SUCCESS: NOT TAKEN YET
-                                    const cn = student.CN || "";
-                                    const name = student.fullName || "";
-                                    const section = data.section || ""; 
-
-                                    document.getElementById('class-number').value = cn;
-                                    document.getElementById('full-name').value = name;
-                                    document.getElementById('grade-section').value = section;
-                                    
-                                    // Enable Start Button
-                                    const btn = document.getElementById('btn-start-exam');
-                                    btn.disabled = false;
-                                    btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                                    btn.classList.add('bg-blue-800', 'hover:bg-blue-900', 'hover:scale-[1.02]');
-
-                                    msg.innerHTML = "<span class='text-green-600 font-bold'>✓ Student Verified! Ready to start.</span>";
+                                     msg.innerHTML = `<span class='text-red-700 font-bold'>⛔ Access Denied: You have already taken this test. No retakes allowed.</span>`;
+                                     spinner.classList.add('hidden');
+                                     return; // STOP EXECUTION
                                 }
+                                // ---------------------------------------------------------
+                                // END ENHANCEMENT
+                                // ---------------------------------------------------------
 
+                                document.getElementById('class-number').value = cn;
+                                document.getElementById('full-name').value = name;
+                                document.getElementById('grade-section').value = section;
+                                
+                                // Enable Start Button
+                                const btn = document.getElementById('btn-start-exam');
+                                btn.disabled = false;
+                                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                                btn.classList.add('bg-blue-800', 'hover:bg-blue-900', 'hover:scale-[1.02]');
+
+                                msg.innerHTML = "<span class='text-green-600 font-bold'>✓ Student Found & Verified!</span>";
                             } else {
                                 msg.innerHTML = `<span class='text-red-600 font-bold'>⚠ Student is marked absent (Status: ${status}). Login denied.</span>`;
                             }
@@ -450,8 +449,8 @@
             overlay.classList.remove('hidden');
 
             const attendanceId = document.getElementById('attendance-record').value;
-            // Collection: results_T2 Summative Test 01_ATTENDANCE_ID
-            const collectionName = `results_T2 Summative Test 01_${attendanceId}`;
+            // Collection: results_S2T1 Summative Test 01_ATTENDANCE_ID
+            const collectionName = `results_S2T1 Summative Test 01_${attendanceId}`;
             
             const docName = `students.${resultData.studentInfo.cn}-students.${resultData.studentInfo.idNumber}-${resultData.studentInfo.fn}`;
 
@@ -492,46 +491,10 @@
         let studentAnswers = { 1: {}, 2: {}, 3: {} };
         let timerInterval;
         let timeRemaining; // Seconds
+        let testActive = false; // Flag for anti-cheat
 
-        // --- SECURITY LOGIC ---
-        // 1. Prevent Right Click
-        document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // 2. Prevent Keyboard Shortcuts (Copy, Print, Save)
-        document.addEventListener('keydown', function(event) {
-            // Check for Ctrl (or Command on Mac)
-            if (event.ctrlKey || event.metaKey) {
-                const char = String.fromCharCode(event.which).toLowerCase();
-                if (char === 'c' || char === 'p' || char === 's') {
-                    event.preventDefault();
-                    // Optionally alert the user or just silently block
-                    console.log("Action blocked for security.");
-                }
-            }
-            // Attempt to intercept PrintScreen key (varies by OS/Browser)
-            if (event.key === "PrintScreen") {
-                // We cannot stop the OS screenshot, but we can try to clear the clipboard or flash the curtain
-                navigator.clipboard.writeText(""); // Clear clipboard
-                document.getElementById('privacy-curtain').style.display = 'flex';
-                setTimeout(() => {
-                    document.getElementById('privacy-curtain').style.display = 'none';
-                }, 1000);
-            }
-        });
-
-        // 3. Black Screen on Focus Loss (Tab switching/Alt-Tab)
-        window.addEventListener('blur', () => {
-             // Only activate if the test has started and hasn't finished
-             const curtain = document.getElementById('privacy-curtain');
-             const mainInterface = document.getElementById('main-interface');
-             if(!mainInterface.classList.contains('hidden')) {
-                 curtain.style.display = 'flex';
-             }
-        });
-
-        window.addEventListener('focus', () => {
-             document.getElementById('privacy-curtain').style.display = 'none';
-        });
+        // --- ENHANCEMENT: ANTI-CHEAT VARIABLES ---
+        let unlockClicks = 0; // Counts clicks to return focus
 
         // --- INITIALIZATION LOGIC ---
         window.initializeTest = function() {
@@ -554,8 +517,101 @@
 
             generateQuestions();
             renderQuestionUI();
+            
+            // Set flag
+            testActive = true;
+            
+            // Start Timers and Monitors
             startTimer();
+            enableAntiCheat(); 
         }
+
+        // --- ENHANCEMENT: ANTI-CHEAT LOGIC ---
+        function enableAntiCheat() {
+            // 1. Monitor Tab Switching / Window Minifying
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            window.addEventListener('blur', handleWindowBlur);
+
+            // 2. Monitor Copy/Paste shortcuts
+            document.addEventListener('keydown', handleKeyGuard);
+            
+            // 3. Monitor Context Menu is already disabled in <body> tag
+        }
+
+        function handleVisibilityChange() {
+            if (document.hidden && testActive) {
+                showLockout();
+            }
+        }
+
+        function handleWindowBlur() {
+            // Only trigger if test is active and we haven't already finished
+            if (testActive) {
+                showLockout();
+            }
+        }
+
+        function showLockout() {
+            const lockout = document.getElementById('cheat-lockout');
+            lockout.classList.remove('hidden');
+            // Reset click counter
+            unlockClicks = 0;
+            updateUnlockButton();
+        }
+
+        window.handleUnlockClick = function() {
+            unlockClicks++;
+            const clicksNeeded = 3 - unlockClicks;
+            
+            if (clicksNeeded <= 0) {
+                // Unlock
+                document.getElementById('cheat-lockout').classList.add('hidden');
+                unlockClicks = 0;
+            } else {
+                updateUnlockButton();
+            }
+        }
+
+        function updateUnlockButton() {
+            const btn = document.getElementById('btn-unlock');
+            const remaining = 3 - unlockClicks;
+            btn.innerText = `Resume Test (${remaining})`;
+            
+            // Visual feedback animation
+            btn.classList.add('scale-95');
+            setTimeout(() => btn.classList.remove('scale-95'), 100);
+        }
+
+        // Key Guard for Shortcuts
+        function handleKeyGuard(e) {
+            if (!testActive) return;
+
+            // Detect PrintScreen
+            if (e.key === 'PrintScreen') {
+                triggerBlackCurtain();
+            }
+
+            // Detect Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+Shift+S (Snipping tool combos)
+            if ((e.ctrlKey || e.metaKey) && 
+                (['c', 'v', 'x', 'p', 's'].includes(e.key.toLowerCase()))) {
+                e.preventDefault();
+                triggerBlackCurtain();
+                alert("Security Warning: Copying or Screenshots are not allowed.");
+            }
+        }
+
+        function triggerBlackCurtain() {
+            const curtain = document.getElementById('black-curtain');
+            curtain.style.display = 'block';
+            
+            // Keep it black for 2 seconds then fade out? 
+            // Or just flash it. Let's keep it for 500ms to ruin the screenshot
+            setTimeout(() => {
+                curtain.style.display = 'none';
+            }, 1000);
+        }
+
+        // -------------------------------------
 
         function startTimer() {
             timeRemaining = window.examDurationMins * 60;
@@ -712,6 +768,9 @@
             clearInterval(timerInterval);
             document.getElementById('timer-bar').classList.add('hidden');
 
+            // DISABLE ANTI-CHEAT (So they can print/pdf without black screens)
+            testActive = false;
+
             // Prepare Data
             const fullData = {
                 studentInfo: studentInfo,
@@ -739,6 +798,7 @@
                 
                 // Hide the overlay (it was shown by saveResultsToFirebase)
                 document.getElementById('submission-overlay').classList.add('hidden');
+                document.getElementById('main-interface').classList.add('hidden'); // Hide quiz
             } else {
                 // If failed, remove overlay so they can try again.
                 document.getElementById('submission-overlay').classList.add('hidden');
@@ -746,6 +806,7 @@
                 if (!isAutoSubmit) {
                      document.getElementById('timer-bar').classList.remove('hidden');
                      startTimer();
+                     testActive = true; // Re-enable anti-cheat
                 }
             }
         }
@@ -856,6 +917,7 @@
                         statusClass = 'feedback-correct';
                         statusHtml = '<span class="text-green-700 font-bold">✓ Correct</span>';
                         explanationHtml = '';
+                        // explanationHtml = `<div class="text-xs mt-1 text-gray-500">${item.s}</div>`;
                     } else {
                         // INCORRECT
                         statusClass = 'feedback-incorrect';
