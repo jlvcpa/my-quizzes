@@ -18,7 +18,7 @@
             user-select: none; /* Standard syntax */
         }
         
-        /* Custom style to lock scrolling */
+        /* Custom style to lock scrolling - REMOVED from Body tag usage, kept here just in case */
         .no-scroll {
             overflow: hidden;
             height: 100vh; 
@@ -156,7 +156,7 @@
 
     </style>
 </head>
-<body class="min-h-screen antialiased no-scroll relative" oncontextmenu="return false;">
+<body class="min-h-screen antialiased relative" oncontextmenu="return false;">
 
     <div id="black-curtain"></div>
 
@@ -803,7 +803,7 @@
             document.getElementById('student-display-name').innerText = `${fn} (${gs})`;
             document.getElementById('student-info-section').classList.add('hidden');
             document.getElementById('main-interface').classList.remove('hidden');
-            document.body.classList.remove('no-scroll');
+            // document.body.classList.remove('no-scroll'); // Redundant now as logic changed in body tag
             document.getElementById('timer-bar').classList.remove('hidden');
 
             generateQuestions();
@@ -870,7 +870,8 @@
                 currentQuestionIndex = 0;
                 renderQuestionUI();
                 
-                alert("Security Alert: Because you navigated away, your question set has been regenerated and answers wiped.");
+                // UPDATED: ALERT REMOVED to prevent focus loop
+                // alert("Security Alert: Because you navigated away, your question set has been regenerated and answers wiped.");
                 // --------------------------------------------------
 
             } else {
