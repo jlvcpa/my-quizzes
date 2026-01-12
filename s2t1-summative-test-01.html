@@ -642,10 +642,9 @@
 
         function generateQuestions() {
             // Logic matches original provided logic
-            const pool1 = allQuestionsPool.filter(q => q.topic === 'Adjustments');
-            const pool2 = allQuestionsPool.filter(q => q.topic === 'Worksheet' || q.topic === 'Statements');
-            const pool3 = allQuestionsPool.filter(q => ['Step 7', 'Step 8', 'Step 9', 'Step 10'].includes(q.topic));
-
+            const pool1 = allQuestionsPool.filter(q => ['merchandising foundations', 'fifo periodic theory', 'weighted average periodic theory', 'fifo perpetual theory', 'moving average perpetual theory'].includes(q.topic));
+            const pool2 = allQuestionsPool.filter(q => ['fifo periodic problem', 'weighted average periodic problem', 'fifo perpetual problem', 'moving average perpetual problem'].includes(q.topic));
+            
             activeTestParts[1] = getRandomSubset(pool1, 50);
             activeTestParts[2] = getRandomSubset(pool2, 25);
         }
