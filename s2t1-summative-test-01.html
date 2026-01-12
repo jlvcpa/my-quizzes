@@ -173,6 +173,8 @@
             <h1 class="text-3xl font-bold mb-4 text-red-500">Test Paused</h1>
             <p class="text-lg mb-6">Focus lost. Navigation away from the test is monitored.</p>
             
+            <p class="text-sm text-red-300 italic mb-4">Warning: Resuming will generate a new set of questions.</p>
+
             <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-6">
                 <p class="text-sm text-gray-400">To resume, click the button below <span class="font-bold text-white">3 times</span>.</p>
             </div>
@@ -212,19 +214,19 @@
                     <p id="firebase-msg" class="text-xs mt-2 text-center min-h-[1rem]"></p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Class Number</label>
-                        <input type="number" id="class-number" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                        <input type="number" id="class-number" class="w-full p-1.5 border border-gray-300 rounded-lg bg-gray-50 text-sm" readonly>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level & Section</label>
-                        <input type="text" id="grade-section" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                        <input type="text" id="grade-section" class="w-full p-1.5 border border-gray-300 rounded-lg bg-gray-50 text-sm" readonly>
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                    <input type="text" id="full-name" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                    <input type="text" id="full-name" class="w-full p-1.5 border border-gray-300 rounded-lg bg-gray-50 text-sm" readonly>
                 </div>
             </div>
 
@@ -235,6 +237,25 @@
 
         <div id="main-interface" class="hidden">
             
+            <div class="bg-yellow-50 border-l-4 border-yellow-600 p-4 mb-6 shadow-md rounded-r-lg">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-800 font-bold font-serif uppercase">
+                            Strict Anti-Cheating Protocol Active
+                        </p>
+                        <p class="text-xs md:text-sm text-yellow-700 mt-1 font-serif">
+                            Do not navigate away, switch tabs, or minimize this window. 
+                            <span class="font-bold text-red-600 block sm:inline">Focus loss will cause the page to reload a new set of questions and your answers will be lost immediately.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <header class="bg-white shadow-lg rounded-xl mb-6 overflow-hidden">
                 <div class="bg-blue-900 text-white p-4 flex justify-between items-center">
                     <div>
@@ -750,7 +771,7 @@
   { id: 272, type: 'Problem', topic: 'periodic cogs problem', q: 'TGAS: ₱150,500. Beg Inv: ₱20,500. What are Net Purchases?', options: ['₱130,000', '₱135,000', '₱120,000', '₱125,000'], a: '₱130,000', s: 'Purch = TGAS - BI = 150,500 - 20,500 = ₱130,000.' },
   { id: 273, type: 'Problem', topic: 'periodic cogs problem', q: 'Beg Inv: ₱1,234. Purchases: ₱9,876. Ending Inv: ₱1,110. Calculate COGS.', options: ['₱10,000', '₱11,000', '₱9,000', '₱10,100'], a: '₱10,000', s: 'TGAS = 11,110. COGS = 11,110 - 1,110 = ₱10,000.' },
   { id: 274, type: 'Problem', topic: 'periodic cogs problem', q: 'Purchases: ₱500,000. Ending Inv is equal to Beg Inv. Calculate COGS.', options: ['₱500,000', '₱450,000', '₱550,000', 'Impossible to determine'], a: '₱500,000', s: 'If BI = EI, they cancel out. COGS = Purchases. ₱500,000.' },
-  { id: 275, type: 'Problem', topic: 'periodic cogs problem', q: 'Beg Inv: ₱15,000. Purchases: ₱60,000. COGS is ₱65,000. What is Ending Inv as a percentage of TGAS?', options: ['13.33%', '20.00%', '10.00%', '25.00%'], a: '13.33%', s: 'TGAS=75k. EI = 75k - 65k = 10k. % = 10k/75k = 0.1333... = 13.33%.' }           
+  { id: 275, type: 'Problem', topic: 'periodic cogs problem', q: 'Beg Inv: ₱15,000. Purchases: ₱60,000. COGS is ₱65,000. What is Ending Inv as a percentage of TGAS?', options: ['13.33%', '20.00%', '10.00%', '25.00%'], a: '13.33%', s: 'TGAS=75k. EI = 75k - 65k = 10k. % = 10k/75k = 0.1333... = 13.33%.' }
 ];
         
         // --- STATE MANAGEMENT ---
@@ -799,7 +820,10 @@
         // --- ENHANCEMENT: ANTI-CHEAT LOGIC ---
         function enableAntiCheat() {
             // 1. Monitor Tab Switching / Window Minifying
-            document.addEventListener('visibilitychange', handleVisibilityChange);
+            // REMOVED 'visibilitychange' listener to comply with "exclude screen time-out". 
+            // Screen timeout typically triggers visibility change but not immediate blur on some devices.
+            // window.addEventListener('blur') is sufficient to catch navigation away (Alt-Tab, Click other window).
+            
             window.addEventListener('blur', handleWindowBlur);
 
             // 2. Monitor Copy/Paste shortcuts
@@ -808,12 +832,8 @@
             // 3. Monitor Context Menu is already disabled in <body> tag
         }
 
-        function handleVisibilityChange() {
-            if (document.hidden && testActive) {
-                showLockout();
-            }
-        }
-
+        // handleVisibilityChange removed to support "screen time-out exclusion"
+        
         function handleWindowBlur() {
             // Only trigger if test is active and we haven't already finished
             if (testActive) {
@@ -837,6 +857,22 @@
                 // Unlock
                 document.getElementById('cheat-lockout').classList.add('hidden');
                 unlockClicks = 0;
+
+                // --- ENHANCEMENT: RESELECT QUESTIONS ON REFOCUS ---
+                // Randomize questions again
+                generateQuestions();
+                
+                // Clear existing answers to prevent data mismatch with new questions
+                // (Since questions are shuffled, old Question 1 answer doesn't apply to new Question 1)
+                studentAnswers = { 1: {}, 2: {}, 3: {} };
+                
+                // Reset view
+                currentQuestionIndex = 0;
+                renderQuestionUI();
+                
+                alert("Security Alert: Because you navigated away, your question set has been regenerated and answers wiped.");
+                // --------------------------------------------------
+
             } else {
                 updateUnlockButton();
             }
@@ -1081,7 +1117,7 @@
 
         function calculateScores() {
            let scores = {};
-           [1,2,3].forEach(part => {
+           [1,2].forEach(part => {
                 scores[part] = gradePart(part);
            });
            return scores;
@@ -1210,14 +1246,6 @@
 
             const grandPct = overallTotal > 0 ? ((overallScore / overallTotal) * 100).toFixed(1) : 0;
             const overallLetter = getLetterGrade(grandPct);
-
-            /* html += `
-                <div class="mt-8 p-6 bg-blue-900 text-white rounded-xl text-center break-inside-avoid font-serif">
-                    <h3 class="text-xl font-bold uppercase">Overall Performance</h3>
-                    <div class="text-4xl font-extrabold mt-2">${overallScore} / ${overallTotal}</div>
-                    <div class="text-2xl font-light mt-1">${grandPct}% - Rating: ${overallLetter}</div>
-                </div>
-            `; */
 
             html += `
                 <div class="print-footer">
