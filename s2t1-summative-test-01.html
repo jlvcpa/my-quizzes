@@ -646,9 +646,8 @@
             const pool2 = allQuestionsPool.filter(q => q.topic === 'Worksheet' || q.topic === 'Statements');
             const pool3 = allQuestionsPool.filter(q => ['Step 7', 'Step 8', 'Step 9', 'Step 10'].includes(q.topic));
 
-            activeTestParts[1] = getRandomSubset(pool1, 25);
+            activeTestParts[1] = getRandomSubset(pool1, 50);
             activeTestParts[2] = getRandomSubset(pool2, 25);
-            activeTestParts[3] = getRandomSubset(pool3, 25);
         }
 
         function getRandomSubset(arr, size) {
@@ -867,15 +866,13 @@
             `;
 
             const competencies = {
-                1: "To analyze the effects of accrual and deferral transactions to the account balances, and net income or loss.",
-                2: "To create the 10-Columns worksheet.",
-                3: "To remember the significant purpose and procedures of the closing stage of the accounting cycle."
+                1: "To understand the mechanics of the Periodic and Perpetual Inventory System.",
+                2: "To analyze how the inventory cost flows from Purchases to Cost of Goods Sold(COGS) under FIFO, Weighted Average, and Moving Average costing methods.",                
             };
 
             const parts = [
-                { id: 1, title: "Test 1: Accrual & Deferral Adjustments" },
-                { id: 2, title: "Test 2: Worksheet & Financial Statements" },
-                { id: 3, title: "Test 3: Closing, Post-Closing & Reversing" }
+                { id: 1, title: "Test 1: Multiple Choice Theory" },
+                { id: 2, title: "Test 2: Multiple Choice Problem Solving" }
             ];
 
             let overallScore = 0;
