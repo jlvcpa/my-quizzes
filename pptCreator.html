@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart PPT Creator (AI Auto-Fix)</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+    <style>
+        /* --- STYLES --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 5px; height: 100vh; display: grid; grid-template-columns: 1fr 350px; grid-template-rows: auto 1fr 200px; gap: 10px; box-sizing: border-box; }
+        header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 5px; height: 40px; }
+        h1 { margin: 0; color: #4facfe; font-size: 1.2rem; }
+        
+        .config-panel { grid-column: 1 / 2; grid-row: 2 / 3; background: #1e1e1e; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+        .right-sidebar { grid-column: 2 / 3; grid-row: 2 / 4; display: flex; flex-direction: column; gap: 10px; height: 100%; overflow: hidden; }
+        
+        .file-panel { background: #1e1e1e; padding: 15px; border-radius: 8px; border-left: 2px solid #2ed573; flex: 0 0 auto; display: flex; flex-direction: column; gap: 10px; }
+        .preview-panel { background: #2d2d2d; border-radius: 8px; border: 1px solid #444; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .preview-header { background: #333; padding: 5px 10px; font-size: 0.8rem; color: #aaa; border-bottom: 1px solid #444; font-weight: bold; }
+        
+        #mini-stage-container { flex-grow: 1; position: relative; background: #1a1a1a; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        #mini-stage { width: 900px; height: 600px; transform-origin: center center; transform: scale(0.35); background: #2d2d2d; border: 2px solid #4facfe; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; position: absolute; }
+        #mini-stage h1 { color: #4facfe; font-size: 2.2rem; margin-bottom: 10px; }
+        #mini-stage h2 { color: #2ed573; font-size: 1.4rem; margin-bottom: 20px; }
+        #mini-stage p { color: #eee; font-size: 1.1rem; line-height: 1.5; }
+        #mini-stage ul { text-align: left; color: #ddd; padding-left: 40px; font-size: 1rem; line-height: 1.6; }
+
+        .slides-preview-panel { grid-column: 1 / 2; grid-row: 3 / 4; background: #252525; padding: 10px; border-radius: 8px; display: flex; gap: 10px; overflow-x: auto; align-items: center; white-space: nowrap; }
+
+        label { display: block; margin-bottom: 2px; color: #aaa; font-size: 0.85em; }
+        input[type="text"], input[type="password"], textarea, input[type="file"] { width: 100%; background: #333; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; }
+        textarea { resize: vertical; }
+
+        button { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.85rem; }
+        .btn-primary { background: #4facfe; color: #000; } 
+        .btn-update { background: #e056fd; color: white; }
+        .btn-cancel { background: #555; color: white; margin-right: 5px; display: none; }
+        .btn-magic { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 5px; width: 100%; }
+        
+        .btn-ai { background: linear-gradient(90deg, #FF3CAC 0%, #784BA0 50%, #2B86C5 100%); color: white; margin-top: 5px; width: 100%; }
+        
+        .btn-save { background: #2ed573; color: white; width: 100%; margin-bottom: 5px;}
+        .btn-load { background: #444; color: white; width: 100%; }
+        .btn-download-html { background: #ffa502; color: black; width: 100%; font-weight: 800; margin-top: 10px;}
+
+        .api-section { background: rgba(255, 60, 172, 0.1); padding: 10px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #FF3CAC; }
+
+        .slide-card { min-width: 160px; height: 130px; background: #333; border: 2px solid #555; border-radius: 5px; padding: 5px; position: relative; display: flex; flex-direction: column; justify-content: space-between; cursor: grab; transition: transform 0.2s, border-color 0.2s; }
+        .slide-card:active { cursor: grabbing; }
+        .slide-card:hover { transform: translateY(-3px); border-color: #4facfe; }
+        .slide-card.editing { border: 2px solid #e056fd; background: #2a2a2a; }
+        .slide-card.drag-over { border-color: #2ed573; transform: scale(1.05); background: #444; }
+        .slide-card h4 { margin: 15px 0 0 0; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: normal; height: 40px; }
+        .slide-index { font-size: 0.75rem; color: #4facfe; font-weight: bold; }
+        .audio-badge { font-size: 0.65rem; background: #e056fd; color: white; padding: 2px 5px; border-radius: 3px; display: inline-block; }
+        .delete-slide { position: absolute; top: 2px; right: 2px; background: transparent; color: #ff4757; font-size: 1.2rem; padding: 0 5px; z-index: 10; }
+        .delete-slide:hover { color: red; background: rgba(255,0,0,0.1); }
+        .card-controls { display: flex; justify-content: space-between; margin-top: 5px; }
+        .btn-move { background: #444; color: #fff; padding: 2px 8px; font-size: 0.8rem; border-radius: 3px; cursor: pointer; }
+
+        .editor-container { flex-grow: 1; display: flex; flex-direction: column; }
+        #editor-content { flex-grow: 1; font-family: monospace; font-size: 0.85rem; min-height: 150px; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: none; justify-content: center; align-items: center; z-index: 2000; font-size: 1.5rem; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div id="loading-text">Processing...</div>
+    </div>
+
+    <header>
+        <div>
+            <h1>PPT Creator</h1>
+            <small>Ultimate: AI + Offline + Source Text</small>
+        </div>
+        <div id="status-msg" style="color: #2ed573; font-size: 0.9rem; font-weight: bold;"></div>
+    </header>
+
+    <div class="config-panel">
+        <div class="api-section">
+            <label style="color:#FF3CAC; font-weight:bold;">Gemini API Key</label>
+            <input type="password" id="gemini-api-key" placeholder="Paste key starting with AIza..." onchange="saveApiKey()">
+        </div>
+
+        <div>
+            <label>Presentation Title</label>
+            <input type="text" id="pres-title" placeholder="e.g., Purchases and AP Cycle">
+        </div>
+        
+        <div style="border-top: 1px solid #444; margin-top: 5px; padding-top: 5px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label style="color: #4facfe;">Slide Details</label>
+                <span id="edit-indicator" style="font-size:0.8em; color:#e056fd; display:none;">● EDITING MODE</span>
+            </div>
+            
+            <input type="text" id="slide-title" placeholder="Enter Topic (e.g. 'Purchase Requisition')" style="margin-bottom: 5px;">
+            
+            <button class="btn-ai" onclick="generateWithAI()">🤖 Generate Content with Gemini</button>
+            
+            <label style="margin-top:10px;">Voiceover Audio</label>
+            <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 5px;">
+                <input type="file" id="slide-audio-file" accept="audio/*" style="flex-grow: 1;">
+                <span id="current-audio-status" style="font-size: 0.8em; color: #888; white-space: nowrap;">No audio</span>
+            </div>
+            
+            <label>Narrative Script (Voiceover)</label>
+            <textarea id="slide-narrative" rows="3" placeholder="Script for the speech..."></textarea>
+
+            <label style="margin-top:10px; color:#2ed573;">Content Source Text (For Visuals)</label>
+            <textarea id="slide-source-text" rows="3" placeholder="Bullets/Summary for the slide..."></textarea>
+        </div>
+
+        <div>
+            <label style="color: #4facfe;">Slide Content (HTML)</label>
+            <button class="btn-magic" onclick="autoGenerateLayout()">✨ Smart Generate Layout</button>
+            <textarea id="editor-content"></textarea>
+        </div>
+
+        <div style="display:flex; gap: 10px;">
+            <button id="btn-cancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+            <button id="btn-action" class="btn-primary" style="flex-grow:1;" onclick="handleSlideAction()">+ Add Slide</button>
+        </div>
+    </div>
+
+    <div class="right-sidebar">
+        <div class="file-panel">
+            <h3 style="margin: 0 0 10px 0; color: #2ed573;">Project Files</h3>
+            <button class="btn-save" onclick="saveProjectToJSON()">💾 Save Project to PC (.json)</button>
+            <button class="btn-load" onclick="document.getElementById('load-file-input').click()">📂 Open Project (.json)</button>
+            <input type="file" id="load-file-input" accept=".json" style="display: none;" onchange="loadProjectFromJSON(this)">
+            
+            <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 10px 0;">
+            <button class="btn-download-html" onclick="downloadFinalHTML()">🚀 Download HTML Presentation</button>
+        </div>
+
+        <div class="preview-panel">
+            <div class="preview-header">Slide Preview</div>
+            <div id="mini-stage-container">
+                <div id="mini-stage">
+                    <p style="color:#666;">Select a slide below to preview.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slides-preview-panel" id="slides-container"></div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // --- GLOBAL STATE ---
+        let currentSlides = [];
+        let editingIndex = -1;
+        
+        const titleInput = document.getElementById('pres-title');
+        const slideTitleInput = document.getElementById('slide-title');
+        const slideNarrativeInput = document.getElementById('slide-narrative');
+        const slideSourceInput = document.getElementById('slide-source-text');
+        const contentEditor = document.getElementById('editor-content');
+        const audioFileInput = document.getElementById('slide-audio-file');
+        const slidesContainer = document.getElementById('slides-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const btnAction = document.getElementById('btn-action');
+        const btnCancel = document.getElementById('btn-cancel');
+        const audioStatus = document.getElementById('current-audio-status');
+        const editIndicator = document.getElementById('edit-indicator');
+        const miniStage = document.getElementById('mini-stage');
+        const apiKeyInput = document.getElementById('gemini-api-key');
+
+        if(localStorage.getItem("gemini_key")) {
+            apiKeyInput.value = localStorage.getItem("gemini_key");
+        }
+        window.saveApiKey = function() {
+            localStorage.setItem("gemini_key", apiKeyInput.value.trim());
+        }
+
+        // --- GEMINI AI GENERATOR (MULTI-MODEL FALLBACK) ---
+        window.generateWithAI = async function() {
+            const apiKey = apiKeyInput.value.trim();
+            const topic = slideTitleInput.value.trim();
+            
+            if(!apiKey) { alert("Please enter your Gemini API Key."); return; }
+            if(!topic) { alert("Please enter a Slide Topic."); return; }
+
+            loadingOverlay.style.display = "flex";
+            loadingText.innerText = "Gemini is writing...";
+
+            const genAI = new GoogleGenerativeAI(apiKey);
+            
+            // List of models to try in order. If one 404s, we try the next.
+            const modelsToTry = [
+                "gemini-1.5-flash",
+                "gemini-1.5-flash-latest",
+                "gemini-1.5-pro",
+                "gemini-pro"
+            ];
+
+            let success = false;
+            let lastError = null;
+
+            for (const modelName of modelsToTry) {
+                try {
+                    console.log(`Attempting model: ${modelName}`);
+                    const model = genAI.getGenerativeModel({ model: modelName });
+                    
+                    const prompt = `You are an expert university instructor. 
+                    Topic: "${topic}".
+                    Task: Write two things strictly separated by "|||":
+                    1. A Narrative Script: Engaging explanation for voiceover (3-4 sentences).
+                    2. Source Text: Bullet points for the slide visual (max 4 bullets, just facts).
+                    
+                    Example Output:
+                    The purchase order is a binding contract sent to the vendor... ||| - Legally binding contract\n- Sent to vendor\n- Contains price & qty`;
+
+                    const result = await model.generateContent(prompt);
+                    const response = await result.response;
+                    const text = response.text();
+
+                    const parts = text.split("|||");
+                    if(parts.length >= 2) {
+                        slideNarrativeInput.value = parts[0].trim();
+                        slideSourceInput.value = parts[1].trim();
+                    } else {
+                        slideNarrativeInput.value = text;
+                        slideSourceInput.value = text;
+                    }
+                    
+                    window.autoGenerateLayout();
+                    success = true;
+                    break; // Stop if successful
+
+                } catch (error) {
+                    console.warn(`Model ${modelName} failed:`, error);
+                    lastError = error;
+                    // Loop continues to next model...
+                }
+            }
+
+            loadingOverlay.style.display = "none";
+
+            if (!success) {
+                alert("AI Error: Could not find a working model. \nDetails: " + lastError.message);
+            }
+        }
+
+        // --- SMART LAYOUT GENERATOR (CONTEXT AWARE) ---
+        window.autoGenerateLayout = function() {
+            const title = slideTitleInput.value.trim();
+            const narrative = slideNarrativeInput.value.trim();
+            const sourceText = slideSourceInput.value.trim();
+
+            if (!title) { alert("Enter a title."); return; }
+            
+            const textToAnalyze = sourceText || narrative;
+            if (!textToAnalyze) { alert("Enter Content Source Text or Narrative."); return; }
+
+            const lowerText = textToAnalyze.toLowerCase();
+            let generatedHTML = "";
+
+            // 1. CLOSING SLIDE
+            if (lowerText.includes("thank you") || lowerText.includes("this concludes")) {
+                generatedHTML = `
+                <div style="display: flex; flex-direction: column; width: 100%; height: 100%; align-items: center; justify-content: center; text-align: center;">
+                    <div style="width: 100px; height: 100px; border-radius:50%; border: 4px solid #2ed573; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <span style="font-size: 50px; color: #2ed573;">✓</span>
+                    </div>
+                    <h1 style="color: #4facfe; font-size: 2.5rem; margin-bottom: 10px;">End of Presentation</h1>
+                    <p style="font-size: 1.2rem; color: #fff; margin-bottom: 30px; max-width: 80%;">${textToAnalyze}</p>
+                    <div style="padding: 15px 30px; background: rgba(255,255,255,0.1); border-radius: 50px; border: 1px solid #4facfe; box-shadow: 0 0 20px rgba(79, 172, 254, 0.4);">
+                        <p style="margin: 0; color: #4facfe; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">↻ Click 'Start' to Watch Again</p>
+                    </div>
+                </div>`;
+            }
+            // 2. OPENING SLIDE
+            else if (lowerText.includes("welcome to")) {
+                let sentences = textToAnalyze.split(/\n|(?<=[.!?])\s+/);
+                const sentence1 = sentences[0] || ""; 
+                const sentence2 = sentences[1] || ""; 
+                const bullets = sentences.slice(2); 
+                let bulletHTML = "";
+                bullets.forEach(s => bulletHTML += `<li>${s.replace(/^-|•/, '').trim()}</li>`);
+
+                generatedHTML = `
+                <div style="display: flex; width: 100%; height: 100%; align-items: stretch; justify-content: space-between;">
+                    <div style="width: 65%; padding-right: 20px; text-align: left; display: flex; flex-direction: column; justify-content: center;">
+                        <h1 style="margin-bottom: 10px; font-size: 2.5rem;">${title}</h1>
+                        <h2 style="color: #2ed573; font-size: 1.4rem; margin-bottom: 25px;">${sentence1.trim()}</h2>
+                        <div class="content-box" style="flex-grow: 1; display:flex; flex-direction:column; border-left: 5px solid #2ed573;">
+                            <p style="font-size: 1.1rem; margin-bottom: 20px; font-weight: bold;">${sentence2.trim()}</p>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 1rem; line-height: 1.8;">${bulletHTML}</ul>
+                        </div>
+                    </div>
+                    <div class="illustration" style="width: 35%; height: 100%; display: flex; justify-content: center; align-items: center;">
+                        <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none">
+                            <circle cx="50" cy="50" r="40" stroke="#4facfe" stroke-width="2" stroke-dasharray="5 5" />
+                            <path d="M35 50 L45 60 L65 40" stroke="#2ed573" stroke-width="4" fill="none" stroke-linecap="round" />
+                            <text x="50" y="55" text-anchor="middle" fill="#fff" font-size="10" stroke="none">START</text>
+                        </svg>
+                    </div>
+                </div>`;
+            }
+            // 3. STANDARD SLIDE
+            else {
+                let lines = textToAnalyze.split(/\n|(?<=[.!?])\s+/);
+                lines = lines.filter(l => l.trim().length > 0);
+                const intro = lines[0] || "Overview";
+                let bulletHTML = "";
+                let middleLines = [];
+                let takeaway = "Review key points.";
+
+                if(lines.length > 2) {
+                    middleLines = lines.slice(1, lines.length - 1);
+                    takeaway = lines[lines.length - 1];
+                } else if(lines.length === 2) {
+                    middleLines = [lines[1]];
+                }
+                middleLines.slice(0, 5).forEach(s => {
+                    bulletHTML += `<li>${s.replace(/^-|•/, '').trim()}</li>`;
+                });
+
+                generatedHTML = `
+                <div style="display: flex; width: 100%; height: 100%; align-items: stretch; justify-content: space-between;">
+                    <div style="width: 65%; padding-right: 20px; text-align: left; display: flex; flex-direction: column;">
+                        <h1>${title}</h1>
+                        <div class="content-box" style="flex-grow: 1; display:flex; flex-direction:column; justify-content:center;">
+                            <p style="color: #4facfe; font-weight:bold; margin-bottom:10px;">Concept:</p>
+                            <p style="margin-bottom: 15px; font-size: 1rem;">${intro}</p>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 0.95rem; line-height: 1.6;">${bulletHTML || "<li>See Key Takeaway below.</li>"}</ul>
+                            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+                            <p style="font-size: 0.9rem;"><strong><span class="emphasis" style="color: #ff6b6b; font-weight: bold;">Takeaway:</span></strong> ${takeaway}</p>
+                        </div>
+                    </div>
+                    <div class="illustration" style="width: 35%; height: 100%; display: flex; justify-content: center; align-items: center;">
+                        <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none">
+                            <defs>
+                                <linearGradient id="grad${Date.now()}" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#2d2d2d;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <rect x="5" y="5" width="90" height="90" rx="10" fill="url(#grad${Date.now()})" stroke="#4facfe" stroke-width="2" />
+                            <circle cx="50" cy="50" r="30" stroke="#00f2fe" stroke-width="1" stroke-dasharray="4 2" />
+                            <text x="50" y="45" text-anchor="middle" fill="#4facfe" font-size="8" font-weight="bold">TOPIC</text>
+                            <text x="50" y="55" text-anchor="middle" fill="#fff" font-size="7">${title.split(':')[0].substring(0,12)}</text>
+                        </svg>
+                    </div>
+                </div>`;
+            }
+            contentEditor.value = generatedHTML;
+        }
+
+        const fileToBase64 = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        };
+
+        window.editSlide = function(index) {
+            editingIndex = index;
+            const slide = currentSlides[index];
+            slideTitleInput.value = slide.title || "";
+            slideNarrativeInput.value = slide.narrate || "";
+            slideSourceInput.value = slide.sourceText || "";
+            contentEditor.value = slide.innerHtml || "";
+            miniStage.innerHTML = slide.innerHtml || "<p>Empty Slide</p>";
+            if(slide.audio) {
+                audioStatus.innerText = "✅ Audio Loaded";
+                audioStatus.style.color = "#2ed573";
+            } else {
+                audioStatus.innerText = "No Audio";
+                audioStatus.style.color = "#888";
+            }
+            audioFileInput.value = "";
+            btnAction.innerText = "💾 Update Slide";
+            btnAction.className = "btn-update";
+            btnCancel.style.display = "inline-block";
+            editIndicator.style.display = "inline";
+            renderSlides();
+        }
+
+        window.cancelEdit = function() {
+            editingIndex = -1;
+            slideTitleInput.value = "";
+            slideNarrativeInput.value = "";
+            slideSourceInput.value = "";
+            contentEditor.value = "";
+            audioFileInput.value = "";
+            audioStatus.innerText = "No audio";
+            miniStage.innerHTML = '<p style="color:#666;">Select a slide to preview.</p>';
+            btnAction.innerText = "+ Add Slide";
+            btnAction.className = "btn-primary";
+            btnCancel.style.display = "none";
+            editIndicator.style.display = "none";
+            renderSlides();
+        }
+
+        window.handleSlideAction = async function() {
+            const title = slideTitleInput.value.trim();
+            const narrative = slideNarrativeInput.value.trim();
+            const sourceText = slideSourceInput.value.trim();
+            let content = contentEditor.value;
+            const audioFile = audioFileInput.files[0];
+
+            if(!title) { alert("Please enter a slide title"); return; }
+            if(!content) { alert("Please generate content first."); return; }
+
+            let audioBase64 = "";
+            if (audioFile) {
+                loadingOverlay.style.display = "flex";
+                loadingText.innerText = "Processing Audio...";
+                try { audioBase64 = await fileToBase64(audioFile); } 
+                catch (e) { alert("Audio failed."); loadingOverlay.style.display = "none"; return; }
+                loadingOverlay.style.display = "none";
+            }
+
+            let finalAudio = audioBase64;
+            if (editingIndex > -1 && !audioFile) {
+                finalAudio = currentSlides[editingIndex].audio || "";
+            }
+
+            const slideObject = { title, narrate: narrative, sourceText, audio: finalAudio, innerHtml: content };
+
+            if (editingIndex > -1) {
+                currentSlides[editingIndex] = slideObject;
+                cancelEdit();
+            } else {
+                currentSlides.push(slideObject);
+                slideTitleInput.value = "";
+                slideNarrativeInput.value = "";
+                slideSourceInput.value = "";
+                contentEditor.value = "";
+                audioFileInput.value = "";
+            }
+            renderSlides();
+        }
+
+        window.deleteSlide = function(index) {
+            event.stopPropagation(); 
+            if(confirm("Delete this slide?")) {
+                currentSlides.splice(index, 1);
+                if(index === editingIndex) cancelEdit();
+                renderSlides();
+            }
+        }
+
+        let dragSrcIndex = -1;
+        window.handleDragStart = function(e, index) { dragSrcIndex = index; e.dataTransfer.effectAllowed = 'move'; e.target.style.opacity = '0.4'; }
+        window.handleDragOver = function(e, index) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const cards = document.querySelectorAll('.slide-card'); cards.forEach(c => c.classList.remove('drag-over')); cards[index].classList.add('drag-over'); return false; }
+        window.handleDrop = function(e, index) { e.stopPropagation(); if (dragSrcIndex !== index) { const movedItem = currentSlides.splice(dragSrcIndex, 1)[0]; currentSlides.splice(index, 0, movedItem); if(editingIndex === dragSrcIndex) editingIndex = index; else if(editingIndex === index && dragSrcIndex < index) editingIndex--; else if(editingIndex === index && dragSrcIndex > index) editingIndex++; } renderSlides(); return false; }
+        window.handleDragEnd = function(e) { e.target.style.opacity = '1'; const cards = document.querySelectorAll('.slide-card'); cards.forEach(c => c.classList.remove('drag-over')); }
+
+        window.saveProjectToJSON = function() {
+            const presTitle = titleInput.value.trim() || "Presentation";
+            const dataStr = JSON.stringify({ title: presTitle, slides: currentSlides, savedAt: new Date().toISOString() });
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', presTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.json');
+            linkElement.click();
+        }
+
+        window.loadProjectFromJSON = function(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    titleInput.value = data.title || "";
+                    currentSlides = data.slides || [];
+                    cancelEdit();
+                    renderSlides();
+                    if(currentSlides.length > 0) miniStage.innerHTML = currentSlides[0].innerHtml;
+                    alert("Project loaded!");
+                } catch (err) { alert("Error parsing JSON file."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderSlides() {
+            slidesContainer.innerHTML = "";
+            currentSlides.forEach((slide, index) => {
+                const card = document.createElement('div');
+                const isEditing = (index === editingIndex);
+                card.className = isEditing ? 'slide-card editing' : 'slide-card';
+                card.setAttribute('draggable', 'true');
+                card.ondragstart = (e) => handleDragStart(e, index);
+                card.ondragover = (e) => handleDragOver(e, index);
+                card.ondrop = (e) => handleDrop(e, index);
+                card.ondragend = (e) => handleDragEnd(e);
+                card.onclick = function() { editSlide(index); };
+                
+                const audioBadge = slide.audio ? '<div class="audio-badge">🎵 Audio Linked</div>' : '';
+                card.innerHTML = `
+                    <button class="delete-slide" onclick="deleteSlide(${index})">&times;</button>
+                    <span class="slide-index">Slide ${index + 1}</span>
+                    <h4>${slide.title}</h4>
+                    ${audioBadge}
+                `;
+                slidesContainer.appendChild(card);
+            });
+        }
+
+        window.downloadFinalHTML = function() {
+            if(currentSlides.length === 0) { alert("Add slides first."); return; }
+            const presTitle = titleInput.value.trim() || "Presentation";
+            const htmlContent = generateFullHTML(presTitle, currentSlides);
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${presTitle.replace(/\s+/g, '_')}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function generateFullHTML(title, slides) {
+            let slidesHtml = '';
+            slides.forEach((slide, index) => {
+                const activeClass = (index === 0) ? 'active' : '';
+                slidesHtml += `<div class="slide ${activeClass}" id="slide-${index}" data-audio="${slide.audio || ''}" data-narrate="${slide.narrate.replace(/"/g, '&quot;')}">${slide.innerHtml}</div>`;
+            });
+            
+            return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title><style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+                #stage { width: 80%; max-width: 900px; height: 70vh; background: #2d2d2d; border-radius: 15px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; border-top: 5px solid #4facfe; }
+                .slide { position: absolute; opacity: 0; transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out; transform: translateY(30px) scale(0.95); width: 85%; height: 85%; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+                .slide.active { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; z-index: 10; }
+                h1 { color: #4facfe; margin: 0 0 5px 0; font-size: 1.6rem; }
+                .content-box { background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 8px; border-left: 4px solid #4facfe; text-align: left; font-size: 0.9rem; line-height: 1.5; width: 100%; box-sizing: border-box; }
+                .emphasis { color: #ff6b6b; font-weight: bold; }
+                .illustration { height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
+                .controls { margin-top: 25px; display: flex; gap: 15px; z-index: 20; }
+                button { padding: 10px 20px; border: none; border-radius: 25px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+                button:active { transform: translateY(2px); }
+                #btn-play { background: linear-gradient(45deg, #28a745, #218838); color: white; }
+                #btn-pause { background: linear-gradient(45deg, #dc3545, #c82333); color: white; display: none; }
+                #btn-next { background: linear-gradient(45deg, #007bff, #0056b3); color: white; }
+                #btn-prev { background: #4a4a4a; color: white; }
+                .progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: linear-gradient(90deg, #4facfe, #00f2fe); width: 0%; transition: width 0.3s linear; }
+                .status { margin-top: 15px; font-size: 0.8rem; color: #666; font-style: italic; }
+            </style></head><body>
+            <div id="stage"><div id="progress" class="progress-bar"></div>${slidesHtml}</div>
+            <div class="controls"><button id="btn-prev" onclick="changeSlide(-1)">Prev</button><button id="btn-play" onclick="startPresentation()">Start</button><button id="btn-pause" onclick="stopNarration()">Stop</button><button id="btn-next" onclick="changeSlide(1)">Next</button></div>
+            <div class="status" id="status-text">Ready...</div>
+            <script>
+            let currentSlide = 0; const slides = document.querySelectorAll('.slide'); const synth = window.speechSynthesis; let isPlaying = false; let autoAdvanceTimer; let audioPlayer = new Audio();
+            audioPlayer.onerror = function() { console.warn("Audio failed/missing. Fallback to Robot."); const slide = slides[currentSlide]; const text = slide.getAttribute('data-narrate'); speakTextFallback(text); };
+            function updateSlide() { slides.forEach((slide, index) => { slide.classList.remove('active'); if (index === currentSlide) slide.classList.add('active'); }); document.getElementById('progress').style.width = ((currentSlide) / (slides.length - 1)) * 100 + '%'; }
+            function changeSlide(direction) { stopNarration(); currentSlide += direction; if (currentSlide < 0) currentSlide = 0; if (currentSlide >= slides.length) currentSlide = slides.length - 1; updateSlide(); if (isPlaying) setTimeout(() => { if(isPlaying) speakCurrentSlide(); }, 500); }
+            function startPresentation() { isPlaying = true; document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'inline-block'; stopNarration(false); speakCurrentSlide(); }
+            function stopNarration(resetState = true) { if (resetState) isPlaying = false; if (synth.speaking) synth.cancel(); if(!audioPlayer.paused) { audioPlayer.pause(); audioPlayer.currentTime = 0; } clearTimeout(autoAdvanceTimer); if (resetState) { document.getElementById('btn-play').style.display = 'inline-block'; document.getElementById('btn-pause').style.display = 'none'; } }
+            function speakCurrentSlide() { if (!isPlaying) return; const slide = slides[currentSlide]; const audioFile = slide.getAttribute('data-audio'); const text = slide.getAttribute('data-narrate'); if (audioFile && audioFile !== "null" && audioFile !== "") { audioPlayer.src = audioFile; audioPlayer.onended = function() { handleSlideEnd(); }; audioPlayer.play().catch(e => console.log("Play error", e)); } else { speakTextFallback(text); } }
+            function speakTextFallback(text) { if (!text || !isPlaying) return; const utterance = new SpeechSynthesisUtterance(text); const voices = synth.getVoices(); const preferredVoice = voices.find(v => v.name.includes('Google US English')) || voices.find(v => v.lang.startsWith('en')); if (preferredVoice) utterance.voice = preferredVoice; utterance.onend = function() { handleSlideEnd(); }; synth.speak(utterance); }
+            function handleSlideEnd() { if (isPlaying && currentSlide < slides.length - 1) { autoAdvanceTimer = setTimeout(() => { currentSlide++; updateSlide(); speakCurrentSlide(); }, 1000); } else if (currentSlide === slides.length - 1) { stopNarration(); document.getElementById('status-text').innerText = "Finished."; } }
+            window.onload = function() { synth.getVoices(); };
+            <\/script></body></html>`;
+        }
+    </script>
+</body>
+</html>
