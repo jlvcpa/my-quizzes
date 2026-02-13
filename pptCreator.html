@@ -195,19 +195,17 @@
 
             const genAI = new GoogleGenerativeAI(apiKey);
             
-            // Updated models list to include specific versions which are more reliable
-            // than generic aliases which sometimes 404 on specific API endpoints.
+            // --- UPDATED MODEL LIST (STANDARD ALIASES ONLY) ---
+            // Removed specific versions (001, 002) to avoid 404s.
+            // Added 1.0-pro as fallback.
             const modelsToTry = [
-                "gemini-1.5-flash",
-                "gemini-1.5-flash-001",
-                "gemini-1.5-flash-002",
+                "gemini-1.5-flash", 
                 "gemini-1.5-pro",
-                "gemini-1.5-pro-001",
-                "gemini-1.5-pro-002"
+                "gemini-1.0-pro"
             ];
 
             let success = false;
-            let lastError = null;
+            let firstError = null;
 
             for (const modelName of modelsToTry) {
                 try {
@@ -242,15 +240,14 @@
 
                 } catch (error) {
                     console.warn(`Model ${modelName} failed:`, error);
-                    lastError = error;
-                    // Loop continues to next model...
+                    if (!firstError) firstError = error; // Capture the first error for debugging
                 }
             }
 
             loadingOverlay.style.display = "none";
 
             if (!success) {
-                alert("AI Error: All models failed. \nLast Error: " + lastError.message + "\n\nCheck your API Key permissions.");
+                alert("AI Error: All models failed. \nFirst failure reason (most likely cause): " + firstError.message);
             }
         }
 
