@@ -195,12 +195,10 @@
 
             const genAI = new GoogleGenerativeAI(apiKey);
             
-            // List of models to try in order. If one 404s, we try the next.
+            // Updated models list to remove deprecated models causing 404
             const modelsToTry = [
                 "gemini-1.5-flash",
-                "gemini-1.5-flash-latest",
-                "gemini-1.5-pro",
-                "gemini-pro"
+                "gemini-1.5-pro"
             ];
 
             let success = false;
