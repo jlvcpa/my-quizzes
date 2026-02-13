@@ -182,7 +182,7 @@
             localStorage.setItem("gemini_key", apiKeyInput.value.trim());
         }
 
-        // --- GEMINI AI GENERATOR (MULTI-MODEL FALLBACK) ---
+        // --- GEMINI AI GENERATOR ---
         window.generateWithAI = async function() {
             const apiKey = apiKeyInput.value.trim();
             const topic = slideTitleInput.value.trim();
@@ -195,59 +195,44 @@
 
             const genAI = new GoogleGenerativeAI(apiKey);
             
-            // --- UPDATED MODEL LIST (STANDARD ALIASES ONLY) ---
-            // Removed specific versions (001, 002) to avoid 404s.
-            // Added 1.0-pro as fallback.
-            const modelsToTry = [
-                "gemini-1.5-flash", 
-                "gemini-1.5-pro",
-                "gemini-1.0-pro"
-            ];
+            // WE USE ONLY "gemini-1.5-flash" 
+            // This is the current, standard, widely supported model.
+            // Removing the loop prevents the code from trying dead models like 1.0-pro.
+            const targetModel = "gemini-1.5-flash";
 
-            let success = false;
-            let firstError = null;
+            try {
+                console.log(`Calling model: ${targetModel}`);
+                const model = genAI.getGenerativeModel({ model: targetModel });
+                
+                const prompt = `You are an expert university instructor. 
+                Topic: "${topic}".
+                Task: Write two things strictly separated by "|||":
+                1. A Narrative Script: Engaging explanation for voiceover (3-4 sentences).
+                2. Source Text: Bullet points for the slide visual (max 4 bullets, just facts).
+                
+                Example Output:
+                The purchase order is a binding contract sent to the vendor... ||| - Legally binding contract\n- Sent to vendor\n- Contains price & qty`;
 
-            for (const modelName of modelsToTry) {
-                try {
-                    console.log(`Attempting model: ${modelName}`);
-                    const model = genAI.getGenerativeModel({ model: modelName });
-                    
-                    const prompt = `You are an expert university instructor. 
-                    Topic: "${topic}".
-                    Task: Write two things strictly separated by "|||":
-                    1. A Narrative Script: Engaging explanation for voiceover (3-4 sentences).
-                    2. Source Text: Bullet points for the slide visual (max 4 bullets, just facts).
-                    
-                    Example Output:
-                    The purchase order is a binding contract sent to the vendor... ||| - Legally binding contract\n- Sent to vendor\n- Contains price & qty`;
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = response.text();
 
-                    const result = await model.generateContent(prompt);
-                    const response = await result.response;
-                    const text = response.text();
-
-                    const parts = text.split("|||");
-                    if(parts.length >= 2) {
-                        slideNarrativeInput.value = parts[0].trim();
-                        slideSourceInput.value = parts[1].trim();
-                    } else {
-                        slideNarrativeInput.value = text;
-                        slideSourceInput.value = text;
-                    }
-                    
-                    window.autoGenerateLayout();
-                    success = true;
-                    break; // Stop if successful
-
-                } catch (error) {
-                    console.warn(`Model ${modelName} failed:`, error);
-                    if (!firstError) firstError = error; // Capture the first error for debugging
+                const parts = text.split("|||");
+                if(parts.length >= 2) {
+                    slideNarrativeInput.value = parts[0].trim();
+                    slideSourceInput.value = parts[1].trim();
+                } else {
+                    slideNarrativeInput.value = text;
+                    slideSourceInput.value = text;
                 }
-            }
+                
+                window.autoGenerateLayout();
 
-            loadingOverlay.style.display = "none";
-
-            if (!success) {
-                alert("AI Error: All models failed. \nFirst failure reason (most likely cause): " + firstError.message);
+            } catch (error) {
+                console.error("AI Generation Error:", error);
+                alert(`AI Error (${targetModel}): ${error.message}\n\nTip: If you see "404", check if your API Key supports the selected model region.`);
+            } finally {
+                loadingOverlay.style.display = "none";
             }
         }
 
