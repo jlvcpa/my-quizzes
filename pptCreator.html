@@ -3,14 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart PPT Creator (Fixed)</title>
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai@0.21.0"
-        }
-      }
-    </script>
+    <title>Smart PPT Creator (Direct API)</title>
     <style>
         /* --- STYLES --- */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 5px; height: 100vh; display: grid; grid-template-columns: 1fr 350px; grid-template-rows: auto 1fr 200px; gap: 10px; box-sizing: border-box; }
@@ -86,7 +79,7 @@
     <div class="config-panel">
         <div class="api-section">
             <label style="color:#FF3CAC; font-weight:bold;">Gemini API Key</label>
-            <input type="password" id="gemini-api-key" placeholder="Paste your AIza key here..." onchange="saveApiKey()">
+            <input type="password" id="gemini-api-key" placeholder="Paste key starting with AIza..." onchange="saveApiKey()">
         </div>
 
         <div>
@@ -102,10 +95,9 @@
 
             <label style="margin-top:5px; font-size:0.8em; color:#ccc;">Select AI Model</label>
             <select id="model-selector" style="margin-bottom: 5px;">
-                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Recommended)</option>
-                <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
-                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                <option value="gemini-pro">Gemini 1.0 Pro (Legacy)</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fastest)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Smarter)</option>
+                <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Experimental)</option>
             </select>
             
             <input type="text" id="slide-title" placeholder="Enter Topic (e.g. 'Purchase Requisition')" style="margin-bottom: 5px;">
@@ -160,10 +152,7 @@
 
     <div class="slides-preview-panel" id="slides-container"></div>
 
-    <script type="module">
-        // IMPORT SPECIFIC VERSION
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai@0.21.0";
-
+    <script>
         // --- GLOBAL STATE ---
         let currentSlides = [];
         let editingIndex = -1;
@@ -192,7 +181,7 @@
             localStorage.setItem("gemini_key", apiKeyInput.value.trim());
         }
 
-        // --- GEMINI AI GENERATOR ---
+        // --- GEMINI AI GENERATOR (PURE FETCH / NO LIBRARY) ---
         window.generateWithAI = async function() {
             const apiKey = apiKeyInput.value.trim();
             const topic = slideTitleInput.value.trim();
@@ -204,25 +193,42 @@
             loadingOverlay.style.display = "flex";
             loadingText.innerText = "Gemini is writing...";
 
-            // Initialize the SDK
-            const genAI = new GoogleGenerativeAI(apiKey);
-            
-            try {
-                console.log(`Calling model: ${selectedModel}`);
-                const model = genAI.getGenerativeModel({ model: selectedModel });
-                
-                const prompt = `You are an expert university instructor. 
-                Topic: "${topic}".
-                Task: Write two things strictly separated by "|||":
-                1. A Narrative Script: Engaging explanation for voiceover (3-4 sentences).
-                2. Source Text: Bullet points for the slide visual (max 4 bullets, just facts).
-                
-                Example Output:
-                The purchase order is a binding contract sent to the vendor... ||| - Legally binding contract\n- Sent to vendor\n- Contains price & qty`;
+            // Direct REST API Call
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
 
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const text = response.text();
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: `You are an expert university instructor. 
+                        Topic: "${topic}".
+                        Task: Write two things strictly separated by "|||":
+                        1. A Narrative Script: Engaging explanation for voiceover (3-4 sentences).
+                        2. Source Text: Bullet points for the slide visual (max 4 bullets, just facts).
+                        
+                        Example Output:
+                        The purchase order is a binding contract sent to the vendor... ||| - Legally binding contract\n- Sent to vendor\n- Contains price & qty`
+                    }]
+                }]
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error.message || `HTTP Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Safely extract text
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!text) throw new Error("No text generated.");
 
                 const parts = text.split("|||");
                 if(parts.length >= 2) {
@@ -237,7 +243,7 @@
 
             } catch (error) {
                 console.error("AI Generation Error:", error);
-                alert(`AI Error: ${error.message}\n\nTry selecting a different model from the dropdown above.`);
+                alert(`API Error: ${error.message}\n\nCheck your API Key and try a different model in the dropdown.`);
             } finally {
                 loadingOverlay.style.display = "none";
             }
