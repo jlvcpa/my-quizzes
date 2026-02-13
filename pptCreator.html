@@ -195,10 +195,15 @@
 
             const genAI = new GoogleGenerativeAI(apiKey);
             
-            // Updated models list to remove deprecated models causing 404
+            // Updated models list to include specific versions which are more reliable
+            // than generic aliases which sometimes 404 on specific API endpoints.
             const modelsToTry = [
                 "gemini-1.5-flash",
-                "gemini-1.5-pro"
+                "gemini-1.5-flash-001",
+                "gemini-1.5-flash-002",
+                "gemini-1.5-pro",
+                "gemini-1.5-pro-001",
+                "gemini-1.5-pro-002"
             ];
 
             let success = false;
@@ -245,7 +250,7 @@
             loadingOverlay.style.display = "none";
 
             if (!success) {
-                alert("AI Error: Could not find a working model. \nDetails: " + lastError.message);
+                alert("AI Error: All models failed. \nLast Error: " + lastError.message + "\n\nCheck your API Key permissions.");
             }
         }
 
