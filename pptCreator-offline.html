@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart PPT Creator (Audio Filenames)</title>
+    <style>
+        /* --- APP UI STYLES (Dark Mode) --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 5px;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 5px 500px; /* Wider sidebar */
+            grid-template-rows: auto 1fr 200px;
+            gap: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            height: 40px;
+            margin-bottom: 5px;
+        }
+
+        h1 { margin: 0; color: #4facfe; font-size: 1.2rem; }
+
+        /* Left Config Panel */
+        .config-panel {
+            grid-column: 1 / 2;
+            grid-row: 2 / 3;
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px 0 0 8px; 
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            margin-right: 2px;
+        }
+
+	/* --- COMPONENT HEADER COLORS --- */
+        .comp-header.intro { color: #4facfe; border-bottom: 1px solid #4facfe; }
+        .comp-header.bullet { color: #2ed573; border-bottom: 1px solid #2ed573; }
+        .comp-header.takeaway { color: #ff4757; border-bottom: 1px solid #ff4757; }
+        
+        /* Update this specific class in your <style> section */
+.comp-header {
+    display: flex;
+    justify-content: space-between; /* This pushes the X to the far right */
+    align-items: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    padding-bottom: 5px; /* Spacing for the border underline */
+}
+
+	/* --- EXPAND/COLLAPSE STYLES --- */
+        .comp-body { display: block; padding-top: 10px; }
+        .comp-body.hidden { display: none; }
+        
+        .toggle-btn { 
+            cursor: pointer; 
+            margin-right: 8px; 
+            color: #aaa; 
+            font-size: 0.9rem; 
+            transition: transform 0.2s; 
+            display: inline-block;
+        }
+        .toggle-btn:hover { color: #fff; }
+        .toggle-btn.rotated { transform: rotate(-90deg); }
+
+
+        /* Resizer Bar */
+        .resizer {
+            grid-column: 2 / 3;
+            grid-row: 2 / 4; 
+            background-color: #333;
+            cursor: col-resize;
+            transition: background-color 0.2s;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .resizer:hover, .resizer.dragging { background-color: #4facfe; }
+        .resizer::after { content: "||"; color: #777; font-size: 10px; font-weight: bold; transform: rotate(90deg); }
+
+        /* Right Sidebar */
+        .right-sidebar {
+            grid-column: 3 / 4; 
+            grid-row: 2 / 4;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+            overflow: hidden;
+            padding-left: 10px;
+        }
+
+        .file-panel {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 2px solid #2ed573;
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Preview Area */
+        .preview-panel {
+            background: #111; 
+            border-radius: 8px;
+            border: 1px solid #444;
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative; 
+        }
+
+        .preview-header {
+            background: #333;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            color: #aaa;
+            border-bottom: 1px solid #444;
+            font-weight: bold;
+            flex: 0 0 auto;
+            z-index: 10;
+        }
+
+        #mini-stage-container {
+            flex-grow: 1;
+            position: relative;
+            background-image: radial-gradient(#333 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: #1a1a1a;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* PREVIEW STAGE (1280x720 Fixed) */
+        #mini-stage {
+            width: 1280px;  
+            height: 720px;  
+            background: #2d2d2d;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            border: 1px solid #555;
+            transform-origin: center center;
+            flex-shrink: 0; 
+            position: absolute;
+        }
+        
+        /* Slides Filmstrip */
+        .slides-preview-panel {
+            grid-column: 1 / 2;
+            grid-row: 3 / 4;
+            background: #252525;
+            padding: 10px;
+            border-radius: 0 0 0 8px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            align-items: center;
+            white-space: nowrap;
+            margin-top: 10px;
+            margin-right: 2px;
+        }
+
+        /* Controls */
+        label { display: block; margin-bottom: 3px; color: #aaa; font-size: 0.85em; font-weight: bold; }
+        input[type="text"], input[type="number"], textarea, input[type="file"], select {
+            width: 100%; background: #333; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem;
+        }
+        textarea { resize: vertical; }
+
+        .row-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .col { flex: 1; }
+
+        /* AUDIO FILENAME DISPLAY (50/50 Split) */
+        .audio-row { display: flex; align-items: center; gap: 10px; }
+        #slide-audio-file { flex: 1; width: 50%; }
+        #audio-filename-display { 
+            flex: 1; 
+            width: 50%;
+            font-size: 0.85rem; 
+            color: #888; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            white-space: nowrap; 
+            background: rgba(0,0,0,0.2);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+
+        button {
+            padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.85rem;
+        }
+        .btn-primary { background: #4facfe; color: #000; }
+        .btn-update { background: #e056fd; color: white; }
+        .btn-cancel { background: #555; color: white; margin-right: 5px; display: none; }
+        .btn-magic { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 5px; width: 100%; }
+        .save-group { display: flex; gap: 5px; width: 100%; margin-bottom: 5px; }
+        .btn-save { background: #2ed573; color: white; flex: 1; }
+        .btn-save-as { background: #26af61; color: white; flex: 1; }
+        .btn-load { background: #444; color: white; width: 100%; }
+        .btn-download-html { background: #ffa502; color: black; width: 100%; font-weight: 800; margin-top: 10px;}
+
+        /* --- CARD STYLES (Fixed & Enhanced) --- */
+        .slide-card {
+            min-width: 170px;
+            height: 120px; /* Slightly taller for footer controls */
+            background: #333;
+            border: 2px solid #555; /* Default border */
+            border-radius: 5px;
+            padding: 6px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .slide-card:active { cursor: grabbing; }
+
+        /* Hover Effect (Blue) - Only applies if NOT editing */
+        .slide-card:not(.editing):hover {
+            border-color: #4facfe;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        /* ACTIVE EDITING STATE (Pink) - Forces priority */
+        .slide-card.editing {
+            border: 2px solid #ff4757 !important; 
+            background: #2a2a2a;
+            box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+        }
+
+        /* Drag Target Visual */
+        .slide-card.drag-over {
+            border: 2px dashed #2ed573 !important;
+            background: #444;
+            transform: scale(1.05);
+        }
+
+        .slide-card h4 {
+            margin: 5px 0;
+            font-size: 0.75rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap; 
+            color: #fff;
+        }
+
+        /* Header Row inside card (Index and Delete) */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .slide-index { font-size: 0.75rem; color: #4facfe; font-weight: bold; }
+        .delete-slide { color: #ff4757; font-size: 1.1rem; cursor: pointer; background: transparent; border: none; padding: 0; }
+        .delete-slide:hover { color: red; transform: scale(1.2); }
+
+        /* Footer Row inside card (Arrows and Badge) */
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .badge { font-size: 0.6rem; padding: 2px 4px; border-radius: 3px; color: white; background: #666; }
+        .badge.quiz { background: #ffa502; color: black; }
+        .badge.audio { background: #e056fd; }
+
+        /* Move Arrows */
+        .move-controls { display: flex; gap: 2px; }
+        .move-btn {
+            background: #444;
+            color: #aaa;
+            border: 1px solid #555;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+        }
+        .move-btn:hover { background: #4facfe; color: #000; border-color: #4facfe; }
+
+        .editor-container { flex-grow: 1; display: flex; flex-direction: column; }
+        #editor-content { display: none; }
+        
+        /* Quiz Form Specifics */
+        .quiz-builder { background: #252525; padding: 10px; border-radius: 5px; border: 1px solid #444; }
+        .quiz-builder input, .quiz-builder select, .quiz-builder textarea { background: #333; border-color: #555; margin-bottom: 8px; }
+        
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); color: white; display: none;
+            justify-content: center; align-items: center; z-index: 2000;
+            font-size: 1.5rem; flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div id="loading-text">Processing Audio...</div>
+    </div>
+
+    <header>
+        <div>
+            <h1>PPT Creator</h1>
+            <small>Pro Layouts • Quiz Generator • Play All</small>
+        </div>
+        <div id="status-msg" style="color: #2ed573; font-size: 0.9rem; font-weight: bold;"></div>
+    </header>
+
+    <div class="config-panel">
+        <div>
+            <label>Presentation Title</label>
+            <input type="text" id="pres-title" placeholder="e.g., Accounting Cycle">
+        </div>
+        
+        <div style="border-top: 1px solid #444; margin-top: 5px; padding-top: 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <label style="color: #4facfe; margin:0;">Slide Configuration</label>
+                <span id="edit-indicator" style="font-size:0.8em; color:#e056fd; display:none;">● EDITING MODE</span>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <label>Slide Type</label>
+                <select id="slide-type" onchange="toggleSlideType()">
+                    <option value="content">Content Slide</option>
+                    <option value="quiz">Quiz / Checkpoint</option>
+                </select>
+            </div>
+            
+            <input type="text" id="slide-title" placeholder="Slide Title (Header spans full width)" style="margin-bottom: 10px;">
+
+            <div id="content-inputs">
+                <label>Slide Components</label>
+                <div class="component-tools">
+                    <button class="comp-btn" onclick="addComponent('intro')">+ Intro</button>
+                    <button class="comp-btn" onclick="addComponent('bullet')">+ Bullet Box</button>
+                    <button class="comp-btn" onclick="addComponent('takeaway')">+ Takeaway</button>
+                </div>
+
+                <div id="component-list">
+                    <p style="color:#666; font-size:0.8rem; text-align:center; padding:20px;">No components added yet.</p>
+                </div>
+                
+                <button class="btn-magic" style="margin-top:10px;" onclick="generatePreview()">✨ Generate Preview</button>
+            </div>
+
+            <div id="quiz-inputs" style="display:none;">
+                <div class="quiz-builder">
+                    <div class="row-group">
+                        <div class="col"><label>Subject Code</label><input type="text" id="q-subject" placeholder="FABM1" oninput="generateQuizJSON()"></div>
+                        <div class="col"><label>Type</label>
+                            <select id="q-type" onchange="generateQuizJSON()">
+                                <option value="Multiple Choice">Multiple Choice</option>
+                                <option value="Open Ended">Open Ended</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <label>Topic</label><input type="text" id="q-topic" placeholder="Merchandising" oninput="generateQuizJSON()">
+                    <label>Subtopic</label><input type="text" id="q-subtopic" placeholder="Cash Discount" oninput="generateQuizJSON()">
+                    <label>Competency</label><input type="text" id="q-competency" placeholder="Understand" oninput="generateQuizJSON()">
+                    
+                    <label>Question</label>
+                    <textarea id="q-question" rows="2" placeholder="Enter question..." oninput="generateQuizJSON()"></textarea>
+                    
+                    <label>Options (One per line)</label>
+                    <textarea id="q-options" rows="4" placeholder="Option 1&#10;Option 2&#10;Option 3&#10;Option 4" oninput="generateQuizJSON()"></textarea>
+                    
+                    <div class="row-group">
+                        <div class="col"><label>Correct Answer Index (0-based)</label><input type="number" id="q-answer" value="0" min="0" oninput="generateQuizJSON()"></div>
+                    </div>
+
+                    <label>Explanation</label>
+                    <textarea id="q-explanation" rows="2" placeholder="Why is this correct?" oninput="generateQuizJSON()"></textarea>
+                </div>
+
+                <label style="color:#2ed573; margin-top:10px;">Generated JSON (Editable)</label>
+                <textarea id="quiz-json" rows="6" placeholder="JSON will appear here..." oninput="parseQuizJSON()"></textarea>
+                
+                <button class="btn-magic" style="background: linear-gradient(135deg, #f0932b 0%, #eb4d4b 100%); margin-top:5px;" onclick="generatePreview()">🎲 Generate Quiz Slide</button>
+            </div>
+        </div>
+
+        <div style="display:flex; gap: 10px; margin-top: 10px;">
+            <button id="btn-cancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+            <button id="btn-action" class="btn-primary" style="flex-grow:1;" onclick="handleSlideAction()">+ Add Slide</button>
+        </div>
+    </div>
+
+    <div id="resizer" class="resizer"></div>
+
+    <div class="right-sidebar">
+        <div class="file-panel">
+            <h3 style="margin: 0 0 10px 0; color: #2ed573;">Project Files</h3>
+            <p id="current-filename" style="margin: 0 0 5px 0; font-size: 0.8em; color: #888;">Current File: <em>(Unsaved)</em></p>
+            
+            <div class="save-group">
+                <button class="btn-save" onclick="handleQuickSave()">💾 Save</button>
+                <button class="btn-save-as" onclick="handleSaveAs()">💾 Save As...</button>
+            </div>
+
+            <button class="btn-load" onclick="document.getElementById('load-file-input').click()">📂 Open Project (.json)</button>
+            <input type="file" id="load-file-input" accept=".json" style="display: none;" onchange="loadProjectFromJSON(this)">
+            
+            <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 10px 0;">
+            <button class="btn-download-html" onclick="downloadFinalHTML()">🚀 Download HTML Presentation</button>
+        </div>
+
+        <div class="preview-panel">
+            <div class="preview-header">Slide Preview</div>
+            <div id="mini-stage-container">
+                <div id="mini-stage">
+                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#666; font-size: 2rem;">
+                        No Slide Selected
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slides-preview-panel" id="slides-container"></div>
+    <textarea id="editor-content"></textarea>
+
+    <script>
+        // --- SHARED CSS ---
+        const SHARED_CSS = `
+            body { margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1a1a1a; color: #f0f0f0; }
+            * { box-sizing: border-box; }
+            .slide-container { display: flex; flex-direction: column; width: 100%; height: 100%; padding: 40px; background: #2d2d2d; }
+            
+            /* Header spans full width */
+            .slide-header { width: 100%; margin-bottom: 30px; flex: 0 0 auto; border-bottom: 2px solid #444; padding-bottom: 10px; }
+            .slide-header h1 { font-size: 3.5rem; color: #4facfe; margin: 0; line-height: 1.1; font-weight: 600; }
+            
+            /* Body has 2 columns: 65% Text, 35% Visual */
+            .slide-body { display: flex; flex: 1; width: 100%; align-items: stretch; gap: 10px; position: relative; }
+            .col-left { width: 65%; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; padding-right: 2px; }
+            .col-right { width: 35%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+            
+            /* ANIMATION STATES */
+            .comp-wrapper { opacity: 0; transition: opacity 0.5s ease-in; margin-bottom: 20px; }
+            .comp-wrapper.visible { opacity: 1; }
+            .comp-visual { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+            .comp-visual.visible { opacity: 1; }
+
+            /* TEXT CONTENT STYLES */
+            .intro-text h2 { font-size: 2rem; color: #2ed573; margin: 0 0 10px 0; }
+            .intro-text p { font-size: 1.4rem; margin: 0; }
+            
+            /* RESTORED BULLET BOX LAYOUT */
+            .bullet-box { 
+                background: rgba(255, 255, 255, 0.05); 
+                border-left: 6px solid #2ed573; 
+                padding:0px 20px 0px 40px; /* Left padding for bullet spacing */
+                border-radius: 0 8px 8px 0;
+            }
+            .bullet-box p { font-size: 1.4rem; margin: 0; display: list-item; list-style-type: disc; color: #eee; }
+            
+            .takeaway-box { margin-top: 5px; border-left: 5px solid #ff4757; padding-left: 20px; font-size: 1.3rem; background: rgba(255, 71, 87, 0.1); padding: 15px; border-radius: 0 10px 10px 0; }
+
+            /* QUIZ STYLES */
+            .quiz-container { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 0 50px; }
+            .quiz-meta { font-size: 1rem; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+            .quiz-question { font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: bold; }
+            .quiz-options { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+            .quiz-btn { padding: 15px 25px; background: #333; border: 2px solid #555; color: #eee; text-align: left; font-size: 1.3rem; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+            .quiz-btn:hover { border-color: #4facfe; background: #444; }
+            .quiz-btn.correct { border-color: #2ed573; background: rgba(46, 213, 115, 0.2); }
+            .quiz-reveal-btn { align-self: flex-start; padding: 12px 30px; background: #ffa502; color: #000; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; font-size: 1.1rem; }
+            .quiz-explanation { margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-left: 5px solid #ffa502; font-size: 1.2rem; display: none; border-radius: 5px; }
+            .open-ended-area { width: 100%; height: 150px; background: #222; border: 1px solid #555; padding: 15px; color: white; font-size: 1.2rem; border-radius: 5px; margin-bottom: 20px; }
+        `;
+
+        const styleTag = document.createElement('style');
+        styleTag.innerHTML = SHARED_CSS;
+        document.head.appendChild(styleTag);
+
+        // --- STATE ---
+        const TARGET_WIDTH = 1280;
+        const TARGET_HEIGHT = 720;
+        let currentSlides = [];
+        let editingIndex = -1;
+        let currentFileName = null; 
+        let activeComponents = []; 
+
+        // --- DOM REFERENCES ---
+        const els = {
+            presTitle: document.getElementById('pres-title'),
+            slideTitle: document.getElementById('slide-title'),
+            compList: document.getElementById('component-list'),
+            miniStage: document.getElementById('mini-stage'),
+            loadingOverlay: document.getElementById('loading-overlay'),
+            slideType: document.getElementById('slide-type'),
+            // Quiz
+            quizJson: document.getElementById('quiz-json'),
+            qSubject: document.getElementById('q-subject'),
+            qTopic: document.getElementById('q-topic'),
+            qSubtopic: document.getElementById('q-subtopic'),
+            qType: document.getElementById('q-type'),
+            qCompetency: document.getElementById('q-competency'),
+            qQuestion: document.getElementById('q-question'),
+            qOptions: document.getElementById('q-options'),
+            qAnswer: document.getElementById('q-answer'),
+            qExplanation: document.getElementById('q-explanation'),
+        };
+
+        // --- UI LOGIC ---
+        function toggleSlideType() {
+            const isQuiz = els.slideType.value === 'quiz';
+            document.getElementById('content-inputs').style.display = isQuiz ? 'none' : 'block';
+            document.getElementById('quiz-inputs').style.display = isQuiz ? 'block' : 'none';
+            // Disable slide title input for quiz, as it's auto-generated from JSON topic
+            els.slideTitle.disabled = isQuiz;
+            if(isQuiz) els.slideTitle.value = "(Auto-generated from Quiz Topic)";
+        }
+
+        // --- QUIZ JSON LOGIC ---
+        function generateQuizJSON() {
+            const subject = els.qSubject.value.trim() || " ";
+            const topic = els.qTopic.value.trim() || " ";
+            const subtopic = els.qSubtopic.value.trim() || " ";
+            const type = els.qType.value || "Multiple Choice";
+            
+            const safeSubject = subject.replace(/[^a-zA-Z0-9]/g, '');
+            const safeTopic = topic.substring(0,10).replace(/[^a-zA-Z0-9]/g, '');
+            const safeType = type === "Multiple Choice" ? "MCQ" : "OEQ";
+            const randomId = Math.floor(Math.random() * 900) + 100;
+            const qId = `${safeSubject}-${safeTopic}${safeType}-${randomId}`;
+
+            const optionsList = els.qOptions.value.split('\n').map(o => o.trim()).filter(o => o.length > 0);
+            
+            const dataObj = {
+                [qId]: {
+                    subject: subject,
+                    topic: topic,
+                    subtopic: subtopic,
+                    type: type,
+                    competency: els.qCompetency.value.trim() || " ",
+                    question: els.qQuestion.value.trim() || " ",
+                    options: optionsList.length > 0 ? optionsList : [" "],
+                    answer: parseInt(els.qAnswer.value) || 0,
+                    explanation: els.qExplanation.value.trim() || " "
+                }
+            };
+            els.quizJson.value = JSON.stringify(dataObj, null, 4);
+        }
+
+        function parseQuizJSON() {
+            try {
+                const raw = els.quizJson.value;
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                const keys = Object.keys(data);
+                if (keys.length === 0) return;
+                const q = data[keys[0]];
+                
+                els.qSubject.value = q.subject || "";
+                els.qTopic.value = q.topic || "";
+                els.qSubtopic.value = q.subtopic || "";
+                els.qType.value = q.type || "Multiple Choice";
+                els.qCompetency.value = q.competency || "";
+                els.qQuestion.value = q.question || "";
+                els.qOptions.value = Array.isArray(q.options) ? q.options.join('\n') : "";
+                els.qAnswer.value = q.answer !== undefined ? q.answer : 0;
+                els.qExplanation.value = q.explanation || "";
+            } catch(e) {}
+        }
+
+        // --- COMPONENT BUILDER ---
+        function addComponent(type, data = null) {
+            const id = Date.now() + Math.floor(Math.random() * 1000);
+            const comp = data || {
+                id: id,
+                type: type,
+                text: "",
+                svg: type === 'bullet' ? `<svg width="200" height="200" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#2ed573"/></svg>` : "",
+                audio: null,
+                narrative: "",
+                collapsed: false // NEW: Track state
+            };
+            if (!data) activeComponents.push(comp);
+            renderComponentUI();
+        }
+
+	function toggleComponent(id) {
+            const comp = activeComponents.find(c => c.id === id);
+            if (comp) {
+                comp.collapsed = !comp.collapsed;
+                renderComponentUI();
+            }
+        }
+
+        function removeComponent(id) {
+            activeComponents = activeComponents.filter(c => c.id !== id);
+            renderComponentUI();
+        }
+
+        function updateComponentData(id, field, value) {
+            const comp = activeComponents.find(c => c.id === id);
+            if (comp) {
+                comp[field] = value;
+                document.getElementById(`json-text-${id}`).value = JSON.stringify({text: comp.text}, null, 2);
+                document.getElementById(`json-svg-${id}`).value = JSON.stringify({svg: comp.svg}, null, 2);
+            }
+        }
+
+        async function handleCompAudio(id, file) {
+            if (!file) return;
+            els.loadingOverlay.style.display = 'flex';
+            try {
+                const base64 = await fileToBase64(file);
+                const comp = activeComponents.find(c => c.id === id);
+                if (comp) comp.audio = base64;
+                els.loadingOverlay.style.display = 'none';
+            } catch (e) {
+                alert("Audio failed");
+                els.loadingOverlay.style.display = 'none';
+            }
+        }
+
+        function renderComponentUI() {
+            els.compList.innerHTML = "";
+            if (activeComponents.length === 0) {
+                els.compList.innerHTML = '<p style="color:#666; font-size:0.8rem; text-align:center; padding:20px;">No components added yet.</p>';
+                return;
+            }
+
+            let bulletCount = 0;
+
+            activeComponents.forEach((comp) => {
+                // Determine Label and Color
+                let label = comp.type.toUpperCase();
+                let colorClass = comp.type; 
+                
+                if (comp.type === 'bullet') {
+                    bulletCount++;
+                    label = `BULLET ${bulletCount}`;
+                }
+
+                // Determine Expand/Collapse visual state
+                const isHidden = comp.collapsed ? 'hidden' : '';
+                const arrowClass = comp.collapsed ? 'rotated' : '';
+
+                const div = document.createElement('div');
+                div.className = 'component-item';
+                div.innerHTML = `
+                    <div class="comp-header ${colorClass}">
+                        <div style="display:flex; align-items:center;">
+                            <span class="toggle-btn ${arrowClass}" onclick="toggleComponent(${comp.id})">▼</span>
+                            <span>${label} COMPONENT</span>
+                        </div>
+                        <span class="remove-comp" onclick="removeComponent(${comp.id})">×</span>
+                    </div>
+                    
+                    <div class="comp-body ${isHidden}">
+                        <div class="split-row">
+                            <div class="half">
+                                <label>Text Source</label>
+                                <textarea rows="3" oninput="updateComponentData(${comp.id}, 'text', this.value)">${comp.text}</textarea>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <label style="font-size:0.7rem; color:#888;">Generated JSON</label>
+                                    <button class="edit-json-btn" onclick="toggleEdit('json-text-${comp.id}')">Edit</button>
+                                </div>
+                                <textarea id="json-text-${comp.id}" class="json-box" rows="2" readonly>${JSON.stringify({text: comp.text}, null, 2)}</textarea>
+                            </div>
+                            <div class="half">
+                                <label>Visual SVG Source</label>
+                                <textarea rows="3" oninput="updateComponentData(${comp.id}, 'svg', this.value)">${comp.svg}</textarea>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <label style="font-size:0.7rem; color:#888;">Generated JSON</label>
+                                    <button class="edit-json-btn" onclick="toggleEdit('json-svg-${comp.id}')">Edit</button>
+                                </div>
+                                <textarea id="json-svg-${comp.id}" class="json-box" rows="2" readonly>${JSON.stringify({svg: comp.svg}, null, 2)}</textarea>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:10px;">
+                            <label>Voiceover Narrative</label>
+                            <textarea rows="2" placeholder="Script..." oninput="updateComponentData(${comp.id}, 'narrative', this.value)">${comp.narrative}</textarea>
+                            
+                            <label style="margin-top:5px;">Component Audio</label>
+                            <div class="audio-row">
+                                <input type="file" accept="audio/*" onchange="handleCompAudio(${comp.id}, this.files[0])">
+                                <span style="font-size:0.7rem; color:${comp.audio ? '#2ed573' : '#555'}">${comp.audio ? '✓ Audio Attached' : 'No audio'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                els.compList.appendChild(div);
+            });
+        }
+
+        function toggleEdit(id) {
+            const el = document.getElementById(id);
+            if (el.hasAttribute('readonly')) {
+                el.removeAttribute('readonly');
+                el.style.borderColor = '#e056fd';
+            } else {
+                el.setAttribute('readonly', true);
+                el.style.borderColor = '#333';
+            }
+        }
+
+        // --- PREVIEW GENERATOR ---
+        function generatePreview() {
+            // Determine type
+            if(els.slideType.value === 'quiz') {
+                return renderQuizSlidePreview();
+            } else {
+                return renderContentSlidePreview();
+            }
+        }
+
+        function renderContentSlidePreview() {
+            const title = els.slideTitle.value || "Untitled Slide";
+            
+            let leftHTML = "";
+            let rightHTML = "";
+
+            activeComponents.forEach((comp, index) => {
+                // Generate Text HTML - Restored Bullet Layout
+                let textHtml = "";
+                if (comp.type === 'intro') {
+                    textHtml = `<div id="comp-text-${index}" class="comp-wrapper intro-text"><h2>Introduction</h2><p>${comp.text}</p></div>`;
+                } else if (comp.type === 'bullet') {
+                    // Gray box with green border for bullets
+                    textHtml = `<div id="comp-text-${index}" class="comp-wrapper bullet-box"><p>${comp.text}</p></div>`;
+                } else if (comp.type === 'takeaway') {
+                    textHtml = `<div id="comp-text-${index}" class="comp-wrapper takeaway-box"><strong>Takeaway:</strong> ${comp.text}</div>`;
+                }
+                leftHTML += textHtml;
+
+                // Generate Visual HTML (Stacked)
+                rightHTML += `<div id="comp-visual-${index}" class="comp-visual">${comp.svg || ''}</div>`;
+            });
+
+            const fullHtml = `
+                <div class="slide-container">
+                    <div class="slide-header"><h1>${title}</h1></div>
+                    <div class="slide-body">
+                        <div class="col-left">${leftHTML}</div>
+                        <div class="col-right">${rightHTML}</div>
+                    </div>
+                </div>
+            `;
+
+            els.miniStage.innerHTML = fullHtml;
+            autoScalePreview();
+            
+            // Show all in preview immediately
+            setTimeout(() => {
+                const wrappers = els.miniStage.querySelectorAll('.comp-wrapper, .comp-visual');
+                wrappers.forEach(w => w.classList.add('visible'));
+            }, 100);
+
+            return fullHtml;
+        }
+
+        function renderQuizSlidePreview() {
+            const rawJson = els.quizJson.value.trim();
+            if (!rawJson) generateQuizJSON(); // ensure json exists
+            
+            let dataRoot, qId, data;
+            try {
+                dataRoot = JSON.parse(els.quizJson.value);
+                qId = Object.keys(dataRoot)[0];
+                data = dataRoot[qId];
+            } catch (e) { return alert("Invalid JSON"); }
+
+            const question = data.question || " ";
+            const answerIndex = data.answer;
+            const explanation = data.explanation || " ";
+            const meta = `${data.subject} | ${data.topic} | ${data.subtopic} (${data.competency})`;
+
+            let contentHtml = "";
+            if (data.type && data.type.toLowerCase().includes("multiple")) {
+                let optionsHtml = "";
+                if(data.options && Array.isArray(data.options)) {
+                    data.options.forEach((opt, idx) => {
+                        const isCorrect = idx === answerIndex; 
+                        optionsHtml += `<div class="quiz-btn" onclick="this.classList.add('${isCorrect ? 'correct' : 'wrong'}')">${opt}</div>`;
+                    });
+                }
+                contentHtml = `<div class="quiz-options">${optionsHtml}</div>`;
+            } else {
+                contentHtml = `<textarea class="open-ended-area" placeholder="Type your answer here..."></textarea>`;
+            }
+
+            const html = `
+                <div class="slide-container">
+                    <div class="slide-header"><h1>${data.topic || "Quiz"}</h1></div>
+                    <div class="quiz-container">
+                        <div class="quiz-meta">${meta}</div>
+                        <div class="quiz-question">${question}</div>
+                        ${contentHtml}
+                        <button class="quiz-reveal-btn" onclick="document.getElementById('${qId}-exp').style.display='block'">Show Explanation</button>
+                        <div id="${qId}-exp" class="quiz-explanation">
+                            <strong>Explanation:</strong><br>
+                            ${explanation}
+                        </div>
+                    </div>
+                </div>
+            `;
+            els.miniStage.innerHTML = html;
+            autoScalePreview();
+            return html;
+        }
+
+        // --- MAIN ACTIONS ---
+        async function handleSlideAction() {
+    const htmlContent = generatePreview(); 
+    
+    let slideData = {};
+    if(els.slideType.value === 'quiz') {
+       slideData = {
+           type: 'quiz',
+           json: els.quizJson.value,
+           title: "Quiz: " + (document.getElementById('q-topic').value || "Quiz")
+       };
+    } else {
+       slideData = {
+           type: 'content',
+           title: els.slideTitle.value,
+           components: JSON.parse(JSON.stringify(activeComponents))
+       };
+    }
+
+    // Global audio removed, setting empty defaults
+    const slideObj = {
+        ...slideData,
+        narrate: "", 
+        audio: "",
+        audioName: "",
+        innerHtml: htmlContent
+    };
+
+    if (editingIndex > -1) {
+        currentSlides[editingIndex] = slideObj;
+        cancelEdit();
+    } else {
+        currentSlides.push(slideObj);
+        els.slideTitle.value = "";
+        activeComponents = [];
+        renderComponentUI();
+    }
+    renderFilmstrip();
+}
+
+       function editSlide(index) {
+    editingIndex = index;
+    const s = currentSlides[index];
+
+    // --- VISUAL FIX: Update the Pink Border ---
+    // We loop through all cards to ensure only the selected one is pink.
+    // We do this manually instead of calling renderFilmstrip() to prevent the 
+    // sidebar from scrolling back to the top.
+    const cards = document.querySelectorAll('.slide-card');
+    cards.forEach((c, i) => {
+        if (i === index) {
+            c.classList.add('editing');
+        } else {
+            c.classList.remove('editing');
+        }
+    });
+    // ------------------------------------------
+    
+    if (s.type === 'quiz') {
+        els.slideType.value = 'quiz';
+        els.quizJson.value = s.json || "";
+        parseQuizJSON();
+        generatePreview();
+    } else {
+        els.slideType.value = 'content';
+        els.slideTitle.value = s.title || "";
+        activeComponents = JSON.parse(JSON.stringify(s.components || []));
+        renderComponentUI();
+        generatePreview();
+    }
+    toggleSlideType();
+    
+    document.getElementById('btn-action').innerText = "💾 Update Slide";
+    document.getElementById('btn-action').className = "btn-update";
+    document.getElementById('btn-cancel').style.display = "inline-block";
+    document.getElementById('edit-indicator').style.display = "inline";
+}
+
+        function cancelEdit() {
+    editingIndex = -1;
+    els.slideTitle.value = "";
+    activeComponents = [];
+    renderComponentUI();
+    
+    // --- VISUAL FIX: Remove Pink Border ---
+    document.querySelectorAll('.slide-card').forEach(c => c.classList.remove('editing'));
+    // --------------------------------------
+
+    els.miniStage.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#666;font-size:2rem;">No Slide Selected</div>';
+    
+    document.getElementById('btn-action').innerText = "+ Add Slide";
+    document.getElementById('btn-action').className = "btn-primary";
+    document.getElementById('btn-cancel').style.display = "none";
+    document.getElementById('edit-indicator').style.display = "none";
+}
+
+        // --- DRAG & DROP VARIABLES ---
+        // --- DRAG & DROP VARIABLES ---
+        let dragSrcIndex = -1;
+
+        // --- RENDER FILMSTRIP (Fixed Arrows & Selection) ---
+        function renderFilmstrip() {
+            const container = document.getElementById('slides-container');
+            container.innerHTML = "";
+            
+            if (currentSlides.length === 0) {
+                container.innerHTML = "<span style='color:#666; padding:10px; font-size:0.8rem;'>No slides added.</span>";
+                return;
+            }
+
+            currentSlides.forEach((s, i) => {
+                const div = document.createElement('div');
+                // The 'editing' class is applied if i matches the global editingIndex
+                div.className = `slide-card ${i === editingIndex ? 'editing' : ''}`;
+                
+                // Enable Dragging
+                div.setAttribute('draggable', 'true');
+                div.ondragstart = (e) => handleDragStart(e, i);
+                div.ondragover = (e) => handleDragOver(e);
+                div.ondrop = (e) => handleDrop(e, i);
+                div.ondragend = (e) => handleDragEnd(e); // Added missing handler
+                
+                // Clicking selects the slide
+                div.onclick = () => editSlide(i);
+
+                // Badges
+                let badges = "";
+                if (s.type === 'quiz') badges += '<span class="badge quiz">Quiz</span> ';
+                const hasAudio = s.audio || (s.components && s.components.some(c => c.audio));
+                if (hasAudio) badges += '<span class="badge audio">♫</span>';
+
+                div.innerHTML = `
+                    <div class="card-header">
+                        <span class="slide-index">Slide ${i + 1}</span>
+                        <button class="delete-slide" onclick="deleteSlide(${i})">×</button>
+                    </div>
+                    
+                    <h4>${s.title || "Untitled"}</h4>
+                    
+                    <div class="card-footer">
+                        <div class="move-controls">
+                            <button class="move-btn" onclick="moveSlide(event, ${i}, -1)">◀</button>
+                            <button class="move-btn" onclick="moveSlide(event, ${i}, 1)">▶</button>
+                        </div>
+                        <div>${badges}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // --- ARROW MOVE LOGIC ---
+        function moveSlide(e, index, direction) {
+            e.stopPropagation(); // Stop click from selecting the card immediately
+            const newIndex = index + direction;
+            
+            if (newIndex < 0 || newIndex >= currentSlides.length) return;
+
+            // Swap
+            const temp = currentSlides[index];
+            currentSlides[index] = currentSlides[newIndex];
+            currentSlides[newIndex] = temp;
+
+            // Update Selection
+            if (editingIndex === index) editingIndex = newIndex;
+            else if (editingIndex === newIndex) editingIndex = index;
+
+            renderFilmstrip();
+        }
+
+        // --- DRAG HANDLERS ---
+        function handleDragStart(e, index) {
+            dragSrcIndex = index;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+            e.target.style.opacity = '0.4';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            // Visual feedback handled by CSS hover, but we could add class here if needed
+            return false;
+        }
+
+        // Missing Handler Added
+        function handleDragEnd(e) {
+            e.target.style.opacity = '1';
+            // Remove any potential drag classes
+            document.querySelectorAll('.slide-card').forEach(c => c.classList.remove('drag-over'));
+        }
+
+        function handleDrop(e, index) {
+            e.stopPropagation();
+            
+            if (dragSrcIndex !== index) {
+                // Move item
+                const movedItem = currentSlides.splice(dragSrcIndex, 1)[0];
+                currentSlides.splice(index, 0, movedItem);
+
+                // Smart Selection Logic: Keep the PINK border on the correct slide
+                if (editingIndex === dragSrcIndex) {
+                    editingIndex = index; // Selected slide moved
+                } else if (editingIndex > dragSrcIndex && editingIndex <= index) {
+                    editingIndex--; // Slide shifted down
+                } else if (editingIndex < dragSrcIndex && editingIndex >= index) {
+                    editingIndex++; // Slide shifted up
+                }
+            }
+            renderFilmstrip(); // Re-render to show new order and selection
+            return false;
+        }
+
+        function deleteSlide(i) {
+            event.stopPropagation();
+            if(confirm("Delete slide?")) {
+                currentSlides.splice(i, 1);
+                if(i === editingIndex) cancelEdit();
+                renderFilmstrip();
+            }
+        }
+
+        function autoScalePreview() {
+            const container = document.getElementById('mini-stage-container');
+            const stage = document.getElementById('mini-stage');
+            if(!container || !stage) return;
+            const padding = 20;
+            const w = container.clientWidth - padding;
+            const h = container.clientHeight - padding;
+            const scale = Math.min(w / 1280, h / 720);
+            stage.style.transform = `scale(${Math.max(scale, 0.1)})`;
+        }
+        window.addEventListener('resize', autoScalePreview);
+        window.addEventListener('mousemove', () => { if(isResizing) requestAnimationFrame(autoScalePreview); });
+        setTimeout(autoScalePreview, 200);
+
+        const fileToBase64 = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        // --- SAVE / LOAD ---
+        function handleQuickSave() { triggerSave(currentFileName || (els.presTitle.value || "pres") + ".json"); }
+        function handleSaveAs() {
+            const name = prompt("Filename:", currentFileName || "presentation.json");
+            if(name) triggerSave(name.endsWith('.json') ? name : name + '.json');
+        }
+        function triggerSave(name) {
+            currentFileName = name;
+            const data = JSON.stringify({ title: els.presTitle.value, slides: currentSlides });
+            const a = document.createElement('a');
+            a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(data);
+            a.download = name;
+            a.click();
+        }
+        function loadProjectFromJSON(input) {
+            const file = input.files[0];
+            if(!file) return;
+            const r = new FileReader();
+            r.onload = e => {
+                const d = JSON.parse(e.target.result);
+                els.presTitle.value = d.title || "";
+                currentSlides = d.slides || [];
+                renderFilmstrip();
+                cancelEdit();
+            };
+            r.readAsText(file);
+        }
+
+        // --- DOWNLOAD HTML ---
+        // --- DOWNLOAD HTML ---
+        function downloadFinalHTML() {
+            if(currentSlides.length === 0) return alert("No slides.");
+            const slidesHtml = currentSlides.map((s, i) => {
+                let compsData = "";
+                // Only embed components for content slides
+                if(s.type !== 'quiz' && s.components) {
+                    compsData = encodeURIComponent(JSON.stringify(s.components));
+                }
+                return `<div class="slide ${i===0?'active':''}" id="slide-${i}" data-components="${compsData}" data-audio="${s.audio||''}" data-narrate="${(s.narrate||'').replace(/"/g, '&quot;')}">${s.innerHtml}</div>`;
+            }).join('');
+
+            const title = els.presTitle.value || "Presentation";
+            const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title>
+            <style>
+                ${SHARED_CSS}
+                body { background: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+                #stage-wrapper { flex-grow: 1; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+                #stage { width: ${TARGET_WIDTH}px; height: ${TARGET_HEIGHT}px; background: #2d2d2d; position: absolute; box-shadow: 0 0 50px rgba(0,0,0,0.5); transform-origin: center center; }
+                .slide { position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0; pointer-events: none; transition: opacity 0.5s; background: #2d2d2d; }
+                .slide.active { opacity: 1; pointer-events: all; z-index: 10; }
+                .controls-area { height: 60px; width: 100%; background: #111; display: flex; align-items: center; justify-content: center; gap: 20px; z-index: 1000; border-top: 1px solid #333; flex: 0 0 auto; }
+                button { padding: 10px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; background: #4facfe; color: #000; transition: 0.2s; font-size: 1rem; }
+                button:hover { background: #fff; }
+                #status-text { position: absolute; right: 20px; bottom: 20px; color: #666; font-family:sans-serif; font-size: 0.9rem; }
+            </style></head><body>
+            <div id="stage-wrapper"><div id="stage">${slidesHtml}</div></div>
+            <div class="controls-area">
+                <button onclick="changeSlide(-1)">Prev</button>
+                <button id="btn-play-all" onclick="togglePlayAll()">Play All</button>
+                <button id="btn-play" onclick="playCurrentSlide()">Play Slide</button>
+                <button id="btn-pause" style="display:none;" onclick="stopNarration()">Stop</button>
+                <button onclick="changeSlide(1)">Next</button>
+            </div>
+            <div id="status-text">Ready</div>
+            <script>
+                function autoScale() {
+                    const stage = document.getElementById('stage');
+                    const wrapper = document.getElementById('stage-wrapper');
+                    const scale = Math.min(wrapper.clientWidth / 1280, wrapper.clientHeight / 720);
+                    stage.style.transform = 'scale(' + (scale * 0.95) + ')';
+                }
+                window.addEventListener('resize', autoScale); setTimeout(autoScale, 50);
+
+                let currentSlideIndex = 0; 
+                let isAutoPlay = false;
+                let audioPlayer = new Audio();
+                let synth = window.speechSynthesis;
+                let componentQueue = [];
+                let componentIndex = 0;
+                let isSequenceRunning = false;
+
+                const slides = document.querySelectorAll('.slide');
+
+                function updateSlide() { 
+                    slides.forEach((s, i) => { 
+                        s.classList.remove('active'); 
+                        if (i === currentSlideIndex) {
+                            s.classList.add('active'); 
+                            // Reset components to hidden
+                            const wrappers = s.querySelectorAll('.comp-wrapper, .comp-visual');
+                            wrappers.forEach(w => w.classList.remove('visible'));
+                        }
+                    }); 
+                }
+
+                function togglePlayAll() {
+                    const btn = document.getElementById('btn-play-all');
+                    if(!isAutoPlay) {
+                        isAutoPlay = true;
+                        btn.innerText = "Stop Audio";
+                        btn.style.backgroundColor = "#ff4757";
+                        playCurrentSlide();
+                    } else {
+                        isAutoPlay = false;
+                        stopNarration();
+                        btn.innerText = "Play All";
+                        btn.style.backgroundColor = "#4facfe";
+                    }
+                }
+
+                function changeSlide(d) {
+                    // FIX: Pass false to stopNarration to preserve the isAutoPlay flag
+                    stopNarration(false);
+                    
+                    currentSlideIndex += d;
+                    if(currentSlideIndex < 0) currentSlideIndex = 0;
+                    if(currentSlideIndex >= slides.length) currentSlideIndex = slides.length - 1;
+                    updateSlide();
+                    if(isAutoPlay) setTimeout(playCurrentSlide, 1000);
+                }
+
+                function playCurrentSlide() {
+                    stopNarration(false); 
+                    document.getElementById('btn-play').style.display = 'none';
+                    document.getElementById('btn-pause').style.display = 'inline-block';
+                    document.getElementById('status-text').innerText = "Playing...";
+
+                    const slide = slides[currentSlideIndex];
+                    const rawComponents = slide.getAttribute('data-components');
+                    
+                    // IF CONTENT SLIDE WITH COMPONENTS
+                    if(rawComponents) {
+                        componentQueue = JSON.parse(decodeURIComponent(rawComponents));
+                        componentIndex = 0;
+                        isSequenceRunning = true;
+                        playNextComponent();
+                    } 
+                    // IF QUIZ or SIMPLE SLIDE (Just main audio)
+                    else {
+                        playMainAudio();
+                    }
+                }
+
+                // --- COMPONENT SEQUENCE LOGIC ---
+                function playNextComponent() {
+                    if(!isSequenceRunning) return;
+
+                    if (componentIndex >= componentQueue.length) {
+                        handleSlideFinish();
+                        return;
+                    }
+
+                    const compData = componentQueue[componentIndex];
+                    const slide = slides[currentSlideIndex];
+                    const wrappers = slide.querySelectorAll('.comp-wrapper');
+                    const visuals = slide.querySelectorAll('.comp-visual');
+
+                    if(wrappers[componentIndex]) wrappers[componentIndex].classList.add('visible');
+                    visuals.forEach(v => v.classList.remove('visible'));
+                    if(visuals[componentIndex]) visuals[componentIndex].classList.add('visible');
+
+                    document.getElementById('status-text').innerText = "Waiting (1s)...";
+                    setTimeout(() => {
+                        if(!isSequenceRunning) return;
+                        playAudioSource(compData.audio, compData.narrative, () => {
+                            componentIndex++;
+                            playNextComponent();
+                        });
+                    }, 1000);
+                }
+
+                // --- MAIN AUDIO LOGIC (For Quiz/Simple Slides) ---
+                function playMainAudio() {
+                    const slide = slides[currentSlideIndex];
+                    const audio = slide.getAttribute('data-audio');
+                    const text = slide.getAttribute('data-narrate');
+                    playAudioSource(audio, text, handleSlideFinish);
+                }
+
+                function playAudioSource(audioBase64, narrativeText, callback) {
+                    document.getElementById('status-text').innerText = "Speaking...";
+                    
+                    if (audioBase64) {
+                        audioPlayer.src = audioBase64;
+                        audioPlayer.onended = callback;
+                        audioPlayer.play();
+                    } else if (narrativeText) {
+                        const u = new SpeechSynthesisUtterance(narrativeText);
+                        u.onend = callback;
+                        synth.speak(u);
+                    } else {
+                        // No audio, wait 2s then next
+                        setTimeout(callback, 2000);
+                    }
+                }
+
+                function handleSlideFinish() {
+                    if(isAutoPlay && currentSlideIndex < slides.length - 1) {
+                        setTimeout(() => changeSlide(1), 1000);
+                    } else {
+                        // End of all slides
+                        if (isAutoPlay) {
+                            // Turn off autoplay visuals if we reached the very end
+                            isAutoPlay = false;
+                            const btn = document.getElementById('btn-play-all');
+                            btn.innerText = "Play All";
+                            btn.style.backgroundColor = "#4facfe";
+                        }
+                        stopNarration();
+                        document.getElementById('status-text').innerText = "Finished.";
+                    }
+                }
+
+                function stopNarration(resetUI = true) {
+                    isSequenceRunning = false;
+                    synth.cancel();
+                    audioPlayer.pause();
+                    if(resetUI) {
+                        document.getElementById('btn-play').style.display='inline-block'; 
+                        document.getElementById('btn-pause').style.display='none';
+                        if(isAutoPlay) {
+                            isAutoPlay = false;
+                            const btn = document.getElementById('btn-play-all');
+                            btn.innerText = "Play All";
+                            btn.style.backgroundColor = "#4facfe";
+                        }
+                    }
+                }
+            <\/script></body></html>`;
+
+            const blob = new Blob([fullHtml], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (els.presTitle.value || "presentation") + ".html";
+            a.click();
+        }
+
+        // --- RESIZER LOGIC ---
+        let isResizing = false;
+        const resizer = document.getElementById('resizer');
+        resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'col-resize'; });
+        window.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; });
+        window.addEventListener('mousemove', e => {
+            if(!isResizing) return;
+            const rightW = Math.max(350, Math.min(800, window.innerWidth - e.clientX));
+            document.body.style.gridTemplateColumns = `1fr 5px ${rightW}px`;
+            autoScalePreview();
+        });
+    </script>
+</body>
+</html>
